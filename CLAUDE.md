@@ -21,3 +21,7 @@ Use the default five canonical triage-label names. See `docs/agents/triage-label
 ### Domain docs
 
 This repository uses a single-context domain-doc layout. See `docs/agents/domain.md`.
+
+## Restrictions
+
+The `TES5Edit` directory is to be used only for reference and shall not be written to for any reason.
