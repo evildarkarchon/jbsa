@@ -175,7 +175,8 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#reactorContainsExactlyTheSpecifiedProjectsAtOneVersion"
   - id: JBSA-BUILD-002
     owner:
       document: docs/spec/modules-and-build.md
@@ -185,7 +186,8 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#reactorContainsExactlyTheSpecifiedProjectsAtOneVersion"
   - id: JBSA-BUILD-003
     owner:
       document: docs/spec/modules-and-build.md
@@ -196,7 +198,8 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#productionPomsKeepBuildSupportOutsideTheProductGraph"
   - id: JBSA-BUILD-004
     owner:
       document: docs/spec/modules-and-build.md
@@ -206,7 +209,9 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsExposeOnlyTheSpecifiedModules"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsRemainUsableOnTheClassPath"
   - id: JBSA-BUILD-005
     owner:
       document: docs/spec/modules-and-build.md
@@ -217,7 +222,9 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#productionPomsKeepBuildSupportOutsideTheProductGraph"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsExposeOnlyTheSpecifiedModules"
   - id: JBSA-BUILD-006
     owner:
       document: docs/spec/modules-and-build.md
@@ -227,7 +234,8 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#exportedLibrarySignaturesContainNoThirdPartyOrInternalTypes"
   - id: JBSA-BUILD-007
     owner:
       document: docs/spec/modules-and-build.md
@@ -237,7 +245,9 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#flattenedLibraryPomIsSelfContainedAndComplete"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#libraryArtifactsAreJava25AndReproduciblyTimestamped"
   - id: JBSA-BUILD-008
     owner:
       document: docs/spec/modules-and-build.md
@@ -269,7 +279,10 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - ".github/workflows/build.yml"
+      - "build/run-ci-gate.ps1"
+      - "build/verify-reproducible-build.ps1"
   - id: JBSA-CLI-001
     owner:
       document: docs/spec/bsarch-cli.md
@@ -2598,7 +2611,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-qualification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#libraryArtifactsAreJava25AndReproduciblyTimestamped"
   - id: JBSA-SCOPE-002
     owner:
       document: docs/spec/scope.md
@@ -2659,7 +2673,8 @@ requirements:
     lifecycle_state: active
     verification_class: build-verification
     implementing_issue: 28
-    test_evidence: []
+    test_evidence:
+      - ".github/workflows/build.yml"
   - id: JBSA-SCOPE-008
     owner:
       document: docs/spec/scope.md

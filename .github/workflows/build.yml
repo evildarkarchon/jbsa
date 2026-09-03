@@ -1,0 +1,45 @@
+name: Hosted Windows build gates
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-gate:
+    name: ${{ matrix.gate }} (hosted evidence; not Release Qualification)
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        gate:
+          - compile
+          - unit
+          - architecture
+          - formatting
+          - policy
+
+    steps:
+      - name: Check out source without the Reference Snapshot submodule
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          submodules: false
+
+      - name: Set up the pinned Java 25 build
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          architecture: x64
+          cache: maven
+          cache-dependency-path: |
+            **/pom.xml
+            .mvn/wrapper/maven-wrapper.properties
+          check-latest: false
+          distribution: temurin
+          java-version: '25.0.4+7'
+
+      - name: Run ${{ matrix.gate }} gate
+        shell: pwsh
+        run: .\build\run-ci-gate.ps1 -Gate '${{ matrix.gate }}'
