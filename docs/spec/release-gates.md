@@ -11,12 +11,12 @@ is sufficient to advance a candidate.
 
 Every gate evaluation **MUST** identify one immutable candidate by Git commit,
 specification-set version, product version, compatibility-profile identity,
-codec-profile identifier and digest, complete packaging-input identity, and
-release-candidate artifact-manifest digest. A gate **MUST** record `PASS` or
-`OPEN` plus its evaluator, time, procedure version, inputs, and stable evidence
-locations. A failure, missing result, stale result, invalid run, expected
-failure, percentage threshold, or waiver **MUST** leave the gate `OPEN`; it
-**MUST NOT** be represented as a partial pass.
+codec-profile identifier and digest, complete packaging-input identity, and the
+detached release-candidate artifact-manifest and human-readable-checksum digests.
+A gate **MUST** record `PASS` or `OPEN` plus its evaluator, time, procedure
+version, inputs, and stable evidence locations. A failure, missing result, stale
+result, invalid run, expected failure, percentage threshold, or waiver **MUST**
+leave the gate `OPEN`; it **MUST NOT** be represented as a partial pass.
 
 _Source decisions: [accepted evidence-gated sequence](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [first-release approval acceptance](https://github.com/evildarkarchon/jbsa/issues/59)._
 
@@ -118,8 +118,9 @@ requirement in [Distribution](distribution.md), together with the applicable
 [Modules and build](modules-and-build.md), CLI, codec, and compliance inputs, for
 one exact release-candidate artifact set. It **MUST** establish the final
 application image, ZIP, library artifacts, runtime and native inventory,
-process behavior, clean-machine result, checksums, and artifact-manifest digest
-that every downstream qualification consumes.
+process behavior, clean-machine result, checksums, and detached final digests
+for the artifact manifest and human-readable checksum file that every downstream
+qualification consumes.
 
 _Source decisions: [accepted final packaging sequence](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [application-image acceptance](https://github.com/evildarkarchon/jbsa/issues/53)._
 
@@ -236,11 +237,13 @@ _Source decisions: [accepted publication terminus](https://github.com/evildarkar
 ## JBSA-REL-018
 
 Publication verification **MUST** download every asset anonymously from the
-created GitHub Release, verify its name, size, checksum, and approved digest,
-recheck release-note and evidence links, and repeat the clean-machine launch
-smoke on the downloaded ZIP. A mismatch or unavailable asset **MUST** leave
-publication incomplete and **MUST** return approval and every affected gate to
-`OPEN`; replacing an approved asset in place **MUST NOT** be used as remediation.
+created GitHub Release, verify its name and size, verify every inventoried asset
+against both inventories, and verify the artifact manifest and human-readable
+checksum file against their detached Packaging Gate digests. It **MUST** recheck
+release-note and evidence links and repeat the clean-machine launch smoke on the
+downloaded ZIP. A mismatch or unavailable asset **MUST** leave publication
+incomplete and **MUST** return approval and every affected gate to `OPEN`;
+replacing an approved asset in place **MUST NOT** be used as remediation.
 
 _Source decision: [post-publication verification acceptance](https://github.com/evildarkarchon/jbsa/issues/60)._
 

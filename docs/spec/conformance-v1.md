@@ -165,17 +165,18 @@ case.
 | `bsa-069` | SSE/Skyrim AE BSA `0x69` | decode and encode | `stored`, `lz4-frame`, `mixed` |
 | `fo4-gnrl-v1` | FO4 General BA2 version 1 | decode and encode | `stored`, `zlib` |
 | `fo4-dx10-v1` | FO4 DDS BA2 version 1 | decode and encode | `zlib` |
-| `fo4-gnrl-v7` | FO4 General BA2 version 7 | decode only | every observed valid version-7 codec |
-| `fo4-gnrl-v8` | FO4 General BA2 version 8 | decode only | every observed valid version-8 codec |
-| `fo4-dx10-v7` | FO4 DDS BA2 version 7 | decode only | every observed valid version-7 codec |
-| `fo4-dx10-v8` | FO4 DDS BA2 version 8 | decode only | every observed valid version-8 codec |
+| `fo4-gnrl-v7` | FO4 General BA2 version 7 | decode only | `stored`, `zlib` |
+| `fo4-gnrl-v8` | FO4 General BA2 version 8 | decode only | `stored`, `zlib` |
+| `fo4-dx10-v7` | FO4 DDS BA2 version 7 | decode only | `zlib` |
+| `fo4-dx10-v8` | FO4 DDS BA2 version 8 | decode only | `zlib` |
 | `sf-gnrl-v2` | Starfield General BA2 version 2 | decode and encode | `stored`, `zlib` |
 | `sf-gnrl-v3-m3` | Starfield General BA2 version 3, method 3 | decode and encode | `raw-lz4` |
 | `sf-dx10-v2` | Starfield DDS BA2 version 2 | decode and encode | `zlib` |
 | `sf-dx10-v3-m3` | Starfield DDS BA2 version 3, method 3 | decode and encode | `raw-lz4` |
 
-Observed valid v7/v8 fixture codecs **MUST** be recorded rather than inferred.
-All cross-family codecs, stored DDS encode, TES3 compression, other Starfield
+Version-7 and version-8 fixtures **MUST** record their observed codec, and the
+mandatory fixture set **MUST** cover every codec token listed above. All
+cross-family codecs, stored DDS encode, TES3 compression, other Starfield
 version-3 methods, and other unsupported combinations **MUST** have explicit
 negative cases. The matrix verifies, and **MUST NOT** broaden, the direction and
 codec permissions owned by
@@ -196,7 +197,9 @@ manifest **MUST** assign targeted cases that collectively cover:
   Windows-932 wire names, unmappable encode names, deterministic ASCII
   lowercasing, and non-ASCII lowercase rejection and qualified-profile behavior;
 - every versioned-BSA directory/file-name presence-flag combination and its
-  absent-component and synthetic-display-name metadata;
+  absent-component and synthetic-display-name metadata, plus explicit embedded-
+  name framing for `0x68` and `0x69`, canonical prefix derivation, and bounded
+  prefix/index mismatch;
 - compression size boundaries, mixed compression, complete codec consumption,
   and decoded-size mismatch;
 - DDS writable formats, materially distinct dimensions and mip counts, both the
@@ -274,7 +277,7 @@ class applicable.
 Expected disposition and diagnostics **MUST** be taken from
 [JBSA-OPS-002](operation-semantics.md#jbsa-ops-002),
 [JBSA-OPS-003](operation-semantics.md#jbsa-ops-003),
-[JBSA-TES3-005](formats/tes3-bsa.md#jbsa-tes3-005),
+[JBSA-TES3-004](formats/tes3-bsa.md#jbsa-tes3-004),
 [JBSA-BSA-014](formats/versioned-bsa.md#jbsa-bsa-014),
 [JBSA-GNRL-010](formats/general-ba2.md#jbsa-gnrl-010), and the corresponding
 [DDS BA2](formats/dds-ba2.md) and [DDS payload](formats/dds-payload.md)

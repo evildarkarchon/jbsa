@@ -81,13 +81,14 @@ Reference Performance Qualification **MUST** execute the candidate and
 Conformance Oracle together on the same available Windows x64/NTFS machine; a
 post-first-release qualification **MUST** also execute the current
 digest-pinned Performance Baseline in those same rounds. Acceptance **MUST** use
-within-round candidate/oracle and candidate/baseline ratios, never a comparison
-with stored absolute timings or a result from another machine. CPU, memory,
-storage, Windows, firmware, and power-plan details **MUST** be captured as
-non-normative diagnostic context. A particular CPU, memory configuration,
-storage device, or Windows build **MUST NOT** define acceptance. The first
-release **MUST** compare candidate with oracle and use the
-passing candidate artifacts to establish the first baseline.
+within-round candidate/oracle ratios and, when a Performance Baseline is
+required, candidate/baseline ratios, never a comparison with stored absolute
+timings or a result from another machine. CPU, memory, storage, Windows,
+firmware, and power-plan details **MUST** be captured as non-normative diagnostic
+context. A particular CPU, memory configuration, storage device, or Windows
+build **MUST NOT** define acceptance. The first release **MUST** compare
+candidate with oracle and use the passing candidate artifacts to establish the
+first baseline.
 
 _Source decision: [accepted hardware-neutral paired authority](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706)._
 
@@ -101,9 +102,9 @@ including the release's selected provider and native-access configuration, and
 with exactly `-Xms4g -Xmx4g -XX:+AlwaysPreTouch -XX:+UseG1GC`. A JVM major,
 vendor, patch, distribution digest, garbage collector, option, codec-profile,
 provider version, or provider-configuration mismatch **MUST** make the run
-`INVALID`. Adoption of another Java 25 security update **MUST** rerun candidate,
-oracle, and baseline together on that JVM; historical absolute timings remain
-evidence only.
+`INVALID`. Adoption of another Java 25 security update **MUST** rerun candidate
+and oracle, plus the Performance Baseline when one exists, together on that JVM;
+historical absolute timings remain evidence only.
 
 _Source decision: [accepted pinned software environment](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706)._
 
@@ -170,8 +171,9 @@ _Source decisions: [accepted Performance Case gating matrix](https://github.com/
 
 ## JBSA-PERF-009
 
-Base pack cases **MUST** invoke candidate, baseline, and Conformance Oracle with
-equivalent semantics represented by:
+Base pack cases **MUST** invoke the candidate and Conformance Oracle and, when a
+Performance Baseline exists, the baseline, with equivalent semantics represented
+by:
 
 ```text
 pack <source> <archive> -<family> [-z:<codec>] -split:<limit> -share:no -mt:<yes|no>
@@ -183,7 +185,7 @@ TES3 and versioned-BSA cases **MUST** use `-split:2`; all BA2 cases **MUST** use
 for a candidate automatic or multiworker case **MUST** use `-mt:yes` because the
 oracle exposes no explicit worker count. The case manifest **MUST** provide the
 exact family, codec, sharing, split, and threading switch mapping for each
-executable.
+required executable.
 
 Unpack cases **MUST** give all compared executables the same
 Conformance-Oracle-produced archive and equivalent semantics represented by:
@@ -206,8 +208,9 @@ and no concurrent build, synchronization, or foreground workload. Normative
 measurements **MUST** use a warmed filesystem page cache produced by pre-reading
 the exact inputs before warmup rounds; an after-reboot cold observation **MAY**
 be retained but **MUST NOT** gate. The harness **MUST** verify oracle, candidate,
-baseline, corpus, and protocol digests before invocation and **MUST** report a
-mismatch or failed environmental precondition as `INVALID`.
+corpus, and protocol digests, plus the baseline digest when a Performance
+Baseline exists, before invocation and **MUST** report a mismatch or failed
+environmental precondition as `INVALID`.
 
 External monotonic wall time **MUST** include process creation, JVM startup, the
 operation, and process exit. Corpus generation, cache warming, setup, cleanup,
@@ -241,15 +244,18 @@ _Source decision: [accepted balanced sampling and confidence protocol](https://g
 
 ## JBSA-PERF-012
 
-In-process random-access cases **MUST** alternate candidate and baseline JMH
-JARs. Each artifact **MUST** run three forks, five two-second warmup iterations
-per fork, and ten two-second measurement iterations per fork. Setup **MUST** be
-trial-scoped, a manifest-pinned seed **MUST** select entries, and results **MUST**
-be consumed to prevent dead-code elimination. JMH `SampleTime` **MUST** supply
-random-access latency percentiles, `Throughput` **MUST** supply operations per
-second, and allocation or memory profiling **MUST** run separately from
-unprofiled timing. JMH JSON and every fork and iteration sample **MUST** be
-retained.
+During a post-first-release qualification, in-process random-access cases
+**MUST** alternate candidate and current digest-pinned Performance Baseline JMH
+JARs. During the first-release qualification, they **MUST** run the candidate
+JMH JAR without a baseline comparator and apply the bootstrap gates in
+[JBSA-PERF-015](#jbsa-perf-015). Each executed artifact **MUST** run three forks,
+five two-second warmup iterations per fork, and ten two-second measurement
+iterations per fork. Setup **MUST** be trial-scoped, a manifest-pinned seed
+**MUST** select entries, and results **MUST** be consumed to prevent dead-code
+elimination. JMH `SampleTime` **MUST** supply random-access latency percentiles,
+`Throughput` **MUST** supply operations per second, and allocation or memory
+profiling **MUST** run separately from unprofiled timing. JMH JSON and every fork
+and iteration sample **MUST** be retained.
 
 _Source decision: [accepted JMH protocol](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706)._
 
@@ -412,14 +418,16 @@ _Source decisions: [accepted baseline lifecycle and rebaseline policy](https://g
 Every qualification **MUST** retain the committed protocol manifest and
 Benchmark Corpus definition; machine-readable JSON with every raw sample,
 paired ratio, median, dispersion, confidence interval, metric result, and case
-outcome; a concise Markdown case matrix; oracle, baseline, candidate, JVM,
-corpus, codec-profile, provider, and protocol digests; and compressed raw
-streams, JFR data, and memory traces. The JSON **MUST** contain `case_id`,
-`contract`, all identity-field mappings from [JBSA-PERF-001](#jbsa-perf-001),
-comparator identities, prerequisite Conformance Case identifiers, environment
-fingerprint, round order, raw observations, derived metrics, gate identifiers
-and bounds, and outcome. The harness **MUST** reject missing, duplicate, or
-unknown required case identifiers.
+outcome; a concise Markdown case matrix; oracle, candidate, JVM,
+corpus, codec-profile, provider, and protocol digests; the current Performance
+Baseline digest when the qualification uses one; the resulting first-baseline
+digest when the qualification establishes one; and compressed raw streams, JFR
+data, and memory traces. The JSON **MUST** contain `case_id`, `contract`, all
+identity-field mappings from [JBSA-PERF-001](#jbsa-perf-001), comparator
+identities, prerequisite Conformance Case identifiers, environment fingerprint,
+round order, raw observations, derived metrics, gate identifiers and bounds, and
+outcome. The harness **MUST** reject missing, duplicate, or unknown required case
+identifiers.
 
 Accepted baseline bundles, raw attachments, and reports **MUST** be ancillary
 GitHub Release assets and verification evidence, not product artifacts, and

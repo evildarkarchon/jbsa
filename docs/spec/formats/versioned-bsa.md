@@ -197,11 +197,25 @@ _Source decisions: [accepted Reference Snapshot LZ4-frame profile](https://githu
 ## JBSA-BSA-011
 
 For `0x68` and `0x69`, archive flag `0x0100` **MUST** prefix each record payload
-with an `u8` byte length and that many full-name bytes without a NUL. The prefix
-precedes the decoded-size field when the entry is compressed. Versions `0x68`
-and `0x69` **MUST** decode and encode this framing when the flag is present.
-Version `0x67` **MUST NOT** infer that framing solely from flag `0x0100` until
-the contradiction in the evidence boundary is resolved.
+with an `u8` byte length and that many full-name bytes without a NUL. For
+canonical encode, the full-name bytes **MUST** be exactly the canonical folder
+bytes produced by [JBSA-BSA-005](#jbsa-bsa-005), followed by one `0x5c` byte,
+followed by the canonical basename bytes produced by that requirement. They use
+the selected Archive Name Encoding and its applicable byte-level lowercase
+mapping; canonical encode **MUST NOT** use source or display spelling or another
+joining separator. The prefix precedes the decoded-size field when the entry is
+compressed.
+
+Decode **MUST** retain the embedded full-name bytes as distinct payload-framing
+metadata. When both corresponding index components are present, decode **MUST**
+compare the embedded bytes byte-for-byte with the original folder wire-name
+bytes, one `0x5c` byte, and the original basename wire-name bytes. When either
+component is absent, decode **MUST NOT** use the embedded bytes to fabricate that
+component or a normalized name identity, as required by
+[JBSA-BSA-005](#jbsa-bsa-005). Versions `0x68` and `0x69` **MUST** decode and
+encode this framing when the flag is present. Version `0x67` **MUST NOT** infer
+that framing solely from flag `0x0100` until the contradiction in the evidence
+boundary is resolved.
 
 _Source decision: [accepted Reference Snapshot embedded-name behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245)._
 
@@ -234,7 +248,9 @@ scripts or sounds are present, and set `0x0004` when any entry is compressed.
 Non-`0x67` output **MUST** clear menu, shader, and font file categories;
 `0x69` output **MUST** also clear miscellaneous. Exact automatic
 embedded-name behavior affected by the contradictions below **MUST** remain
-unselected until differential fixture evidence resolves it.
+unselected until differential fixture evidence resolves it. This restriction
+applies only to automatic selection; an explicit `0x0100` override for `0x68` or
+`0x69` **MUST** use [JBSA-BSA-011](#jbsa-bsa-011).
 
 Zero-valued flag overrides and negative split values are request/CLI policy and
 **MUST NOT** be inferred from the wire format.
@@ -255,6 +271,10 @@ mismatch established for any present usable wire-name component under
 [JBSA-BSA-006](#jbsa-bsa-006) **MUST** be a diagnosed Tolerated Noncanonical
 Archive and **MUST NOT** be emitted. Synthetic display names from
 [JBSA-BSA-005](#jbsa-bsa-005) **MUST NOT** participate in either check.
+A bounded byte mismatch between an embedded full name and its complete present
+index name under [JBSA-BSA-011](#jbsa-bsa-011) **MUST** produce a stable warning
+and a Tolerated Noncanonical Archive when record and payload bounds remain
+unambiguous; the encoder **MUST NOT** emit that mismatch.
 
 Encode **MUST** reject an empty entry set, an entry without a folder component,
 unmappable names, unpopulated payloads, and values that cannot fit their wire

@@ -1,6 +1,6 @@
 schema_version: 1
 specification:
-  version: 0.6.0
+  version: 0.7.0
   status: normative
   authority: docs/spec/README.md
 requirements:

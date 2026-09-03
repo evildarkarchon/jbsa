@@ -191,11 +191,14 @@ The complete release-candidate artifact set **MUST** have a machine-readable
 manifest that names and SHA-256 hashes the ZIP, every library input owned by
 [JBSA-BUILD-007](modules-and-build.md#jbsa-build-007), and every checksum,
 license, notice, SBOM, provenance, and evidence asset owned by
-[JBSA-BUILD-009](modules-and-build.md#jbsa-build-009). A human-readable checksum
-file **MUST** use lowercase hexadecimal SHA-256, one relative asset name per
-line, and stable lexical asset-name order. Every listed hash **MUST** be verified
-from the final bytes, and every public candidate asset **MUST** appear exactly
-once in both inventories.
+[JBSA-BUILD-009](modules-and-build.md#jbsa-build-009), except for that manifest
+and the human-readable checksum file defined below. The checksum file **MUST**
+use lowercase hexadecimal SHA-256, one relative asset name per line, and stable
+lexical asset-name order. The manifest and checksum file **MUST** omit themselves
+and each other. The Packaging Gate **MUST** record and verify their final SHA-256
+digests as detached gate evidence outside the public candidate asset set. Every
+listed hash **MUST** be verified from the final bytes, and every other public
+candidate asset **MUST** appear exactly once in both inventories.
 
 _Source decisions: [accepted release metadata set](https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669), [accepted retained release metadata](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [artifact-set acceptance](https://github.com/evildarkarchon/jbsa/issues/53)._
 

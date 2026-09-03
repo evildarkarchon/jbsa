@@ -218,10 +218,11 @@ resource dimension, array size, and cubemap fields as in
 version `10705`, and leave otherwise unknown canonical Xbox extension fields
 zero.
 
-Explicit target metadata or policy **MUST** be the primary PC/Xbox selection.
-Inferring Xbox from `_xbox.` in the containing archive filename **MAY** occur
-only through the qualified Compatibility Profile when explicit target metadata
-is absent.
+Explicit target metadata or policy **MUST** take precedence in PC/Xbox
+selection. When explicit selection is absent, a qualified Compatibility Profile
+**MAY** infer Xbox from `_xbox.` in the containing archive filename. If neither
+explicit selection nor qualified inference selects Xbox, reconstruction
+**MUST** select PC.
 
 _Source decisions: [accepted Reference Snapshot Xbox reconstruction](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted filename-inference deviation](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
 

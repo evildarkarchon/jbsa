@@ -169,9 +169,14 @@ _Source decision: [accepted semantic progress model](https://github.com/evildark
 Progress Snapshots for one operation **MUST** be delivered serially, in monotonic
 semantic order, and outside library locks. A blocking observer **MAY** delay the
 operation. If the observer throws, JBSA **MUST** stop safely, perform normal
-cleanup, and report `OBSERVER` while retaining the throwable as the Primary
-Failure cause. Observer re-entry into the same operation **MUST** be unsupported;
-unrelated use of the stateless library **MUST** remain allowed.
+cleanup, and record an `OBSERVER` failure candidate in the phase of the snapshot
+being delivered, retaining the throwable as that candidate's cause. Selection
+as the Primary Failure and retention as a Secondary Failure **MUST** follow
+[JBSA-OPS-006](#jbsa-ops-006); only when the observer candidate is selected as
+the Primary Failure **MUST** the operation expose `OBSERVER` as its Failure Kind
+and the throwable as the Primary Failure cause. Observer re-entry into the same
+operation **MUST** be unsupported; unrelated use of the stateless library
+**MUST** remain allowed.
 
 Callback thread identity, cadence, batching, coalescing thresholds, and
 presentation **MUST NOT** be semantic guarantees. Progress-induced execution
