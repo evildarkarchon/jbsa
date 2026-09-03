@@ -16,6 +16,26 @@ _Avoid_: Game format, archive type
 A Bethesda Archive whose structure is noncanonical but remains bounded, unambiguous, and safely decodable. It produces a stable diagnostic and is never a valid encoder output.
 _Avoid_: Malformed-but-valid archive, lenient archive
 
+**Archive Disposition**:
+The format-intrinsic classification of a recognized Bethesda Archive as conforming, tolerated noncanonical, or rejected. It is independent of the requested operation, caller policy, available capabilities, environment, and destination.
+_Avoid_: Operation result, extraction status
+
+**Extraction Eligibility**:
+Whether a requested extraction can safely proceed for its destination, caller policy, and available capabilities. It is distinct from Archive Disposition; a structurally conforming archive can still be ineligible for extraction.
+_Avoid_: Archive validity
+
+**Validation Extent**:
+The declared boundary through which an archive has been examined: recognition, structure, or a specified set of payloads. A result never implies validity beyond its Validation Extent.
+_Avoid_: Validation level, fully valid
+
+**Detection Status**:
+The bounded-recognition outcome for an input: unrecognized, indeterminate from an incomplete recognizable prefix, a supported Archive Family, or a recognizable unsupported variant. Detection Status does not assert an Archive Disposition.
+_Avoid_: Archive validity, format guess
+
+**Archive Assessment**:
+An immutable Archive Disposition, Validation Extent, and ordered set of Conformance Diagnostics describing the evidence established by one operation. Later validation can produce a new assessment but never mutates an earlier one.
+_Avoid_: Mutable validation state
+
 **Reference Snapshot**:
 The exact revision pinned in the read-only `TES5Edit` submodule and used as the primary source of archive and CLI behavior.
 _Avoid_: Upstream, latest TES5Edit
@@ -57,8 +77,48 @@ The explicit Windows code page used to translate archive name bytes without losi
 _Avoid_: Platform default encoding, implicit ANSI
 
 **Conformance Diagnostic**:
-A machine-comparable identifier, severity, operation, location, and value set emitted for a warning or failure. Human-readable wording is not part of library conformance.
+A machine-comparable identifier, severity, operation, phase, structured location, and canonically represented value set emitted for a warning or failure. An optional human explanation is not part of library conformance.
 _Avoid_: Error string, exception text
+
+**Diagnostic Policy**:
+An immutable caller choice that accepts warnings or rejects selected Conformance Diagnostic identifiers. Rejecting a warning changes the operation outcome without changing the warning's original severity or identity.
+_Avoid_: Warning callback, mutable strict mode
+
+**Operation Report**:
+The structured completion record of a successful mutating archive operation, including its published artifacts and Conformance Diagnostics. Operational non-success is represented separately and never disguised as a successful report.
+_Avoid_: Console output, success message
+
+**Artifact State**:
+The post-operation state reported for an affected filesystem artifact: published, unchanged, restored, missing, or residual staging. It describes observable state rather than promising operation-wide atomic visibility.
+_Avoid_: Partial output flag
+
+**Publication Commit**:
+The point at which a staged artifact or atomic output set begins becoming externally visible. Cooperative Cancellation accepted before this point prevents publication; a later request does not retroactively cancel the commit.
+_Avoid_: Final write, save completed
+
+**Residual Artifact**:
+Owned staging or scratch data that remains after cleanup fails. Its exact path and Artifact State are reported, after which cleanup ownership passes to the caller.
+_Avoid_: Temp-file leak
+
+**Primary Failure**:
+The deterministic failure selected from an operation's observed failures by operation phase and logical plan order. Cleanup, rollback, progress-observer, and other secondary failures never displace an earlier Primary Failure.
+_Avoid_: First error, first exception
+
+**Secondary Failure**:
+An additional bounded failure retained after the Primary Failure has been selected. Its ordering is deterministic, and it provides context without changing the operation's primary outcome.
+_Avoid_: Suppressed noise
+
+**Failure Kind**:
+A stable, recovery-oriented category for an operational non-success: format, unsupported, capability, policy, source, destination, observer, internal, or cancelled. It is coarser than a Conformance Diagnostic identifier and is not derived from provider exception classes or messages.
+_Avoid_: Exception class, error code
+
+**Cooperative Cancellation**:
+An explicit request to stop an archive operation at a safe observation point. A request accepted before publication aborts the pending work, while a request arriving after publication commits does not retroactively turn completion into cancellation.
+_Avoid_: Thread interruption, forced termination
+
+**Progress Snapshot**:
+An advisory observation of an archive operation's stable phase and monotonic completed logical units, with a total when known. Delivery timing, cadence, and presentation are not semantic guarantees.
+_Avoid_: Progress tick, console percentage
 
 **Independent Validator**:
 A tool independent of the Reference Snapshot and Conformance Oracle that corroborates a Conformance Case without becoming its normative authority. A disagreement blocks release until investigated.
