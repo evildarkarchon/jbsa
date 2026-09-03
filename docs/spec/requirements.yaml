@@ -1,6 +1,6 @@
 schema_version: 1
 specification:
-  version: 0.3.0
+  version: 0.4.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -1241,6 +1241,36 @@ requirements:
     owner:
       document: docs/spec/compliance.md
       anchor: jbsa-lic-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence: []
+  - id: JBSA-LIC-015
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence: []
+  - id: JBSA-LIC-016
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-016
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence: []
+  - id: JBSA-LIC-017
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-017
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active

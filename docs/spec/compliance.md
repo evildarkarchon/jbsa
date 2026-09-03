@@ -113,10 +113,10 @@ _Source decision: [accepted policy-material set](https://github.com/evildarkarch
 ## JBSA-LIC-011
 
 CI and release gates **MUST** verify SPDX/REUSE metadata, dependency and native
-licensing, SBOM generation, fixture provenance, applicable external-contribution
-sign-off, and inspection of final release bytes. A clean metadata or Maven
-validation result **MUST NOT** be treated by itself as proof of license
-compliance.
+licensing, SBOM generation, fixture provenance, applicable
+[external-contribution gate](#jbsa-lic-017), and inspection of final release
+bytes. A clean metadata or Maven validation result **MUST NOT** be treated by
+itself as proof of license compliance.
 
 _Source decisions: [Maven-metadata limitation](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted compliance-gate policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
@@ -134,9 +134,6 @@ _Source decisions: [identified counsel-dependent risks](https://github.com/evild
 ## JBSA-LIC-013
 
 Project copyright **MUST** be attributed as `Copyright 2026 evildarkarchon`.
-The project **MUST NOT** require a contributor license agreement, and maintainer
-commits **MAY** omit DCO sign-off. Every accepted external contribution **MUST**
-carry DCO 1.1 sign-off plus source and fixture provenance declarations.
 
 _Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
@@ -149,6 +146,25 @@ Conformance Oracle banner; a short attribution in `--version` **MAY** be
 included.
 
 _Source decision: [accepted attribution and naming policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+
+## JBSA-LIC-015
+
+The project **MUST NOT** require a contributor license agreement.
+
+_Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+
+## JBSA-LIC-016
+
+Maintainer commits **MAY** omit DCO sign-off.
+
+_Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+
+## JBSA-LIC-017
+
+Every accepted external contribution **MUST** carry DCO 1.1 sign-off plus source
+and fixture provenance declarations.
+
+_Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## Deferred compliance inputs
 

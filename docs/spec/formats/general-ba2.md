@@ -105,17 +105,32 @@ _Source decision: [accepted Reference Snapshot BA2 layout](https://github.com/ev
 
 For canonical encode, split a normalized entry name at its last separator into
 directory and filename, then split the filename at its last dot into
-extension-free basename and extension. Hash the lowercase Archive Name Encoding
-bytes of the directory and basename independently after changing `/` to `\`.
+extension-free basename and extension. The encoder **MUST** encode the directory,
+extension-free basename, and extension using Archive Name Encoding. If any
+encoded component contains a byte greater than `0x7f`, canonical encode **MUST**
+reject the entry. A Compatibility Profile **MUST NOT** admit such a component
+unless it defines the byte-level lowercase mapping and cites qualifying fixtures
+for the resulting hash and extension bytes.
+
+For every admitted entry, the encoder **MUST** replace each directory byte
+`0x2f` with `0x5c`, then map every byte from `0x41` through `0x5a` in all three
+components to that byte plus `0x20`. Canonical encode **MUST** leave every other
+byte unchanged; a qualified Compatibility Profile **MUST** additionally apply
+its defined non-ASCII mapping. The encoder **MUST** hash the resulting directory
+and basename byte sequences independently.
 The hash **MUST** use the reflected CRC-32 polynomial `0xEDB88320`, initial
 value zero, no final XOR, and the recurrence
 `crc = (crc >>> 8) XOR table[(crc XOR byte) AND 0xff]`.
 
 The four extension bytes **MUST** be the first four lowercase extension bytes
 without the dot, NUL-padded when shorter. The extension **MUST NOT** participate
-in `baseNameHash`. Decode **MUST** preserve stored hashes and extension bytes;
-a mismatch with a usable name **MUST** be diagnosed as tolerated noncanonical
-rather than silently replaced.
+in `baseNameHash`. Decode **MUST** preserve stored hashes and extension bytes.
+When a usable name's directory, extension-free basename, and extension contain
+only Archive Name Encoding bytes at most `0x7f`, a mismatch **MUST** be diagnosed
+as tolerated noncanonical rather than silently replaced. Absent a qualified
+Compatibility Profile, decode **MUST NOT** make that canonicality judgment for a
+name containing a byte greater than `0x7f`; its stored hashes and extension bytes
+remain authoritative.
 
 _Source decisions: [accepted Reference Snapshot BA2 hashing](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted tolerated-noncanonical policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
 
@@ -164,10 +179,11 @@ effects.
 
 A safely ignored Starfield extra-header value other than one, nonzero mod index,
 non-16 chunk-header size, non-`0xBAADF00D` sentinel, usable-name hash/extension
-mismatch, or harmless trailing bytes **MUST** be a diagnosed Tolerated
-Noncanonical Archive when bounds and interpretation remain unambiguous. None of
-those values is valid encoder output. Unsafe absolute or traversal names remain
-inspectable but ineligible for extraction.
+mismatch qualified by [JBSA-GNRL-007](#jbsa-gnrl-007), or harmless trailing bytes
+**MUST** be a diagnosed Tolerated Noncanonical Archive when bounds and
+interpretation remain unambiguous. None of those values is valid encoder output.
+Unsafe absolute or traversal names remain inspectable but ineligible for
+extraction.
 
 _Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
 
@@ -202,9 +218,8 @@ before the current entry; a single oversized entry occupies its own part. Part
 one keeps the requested name, and later parts insert `2`, `3`, and so on before
 the extension. Every part **MUST** be an independent conforming archive.
 
-Exact grouping with non-ASCII names, sharing, or parallel work remains
-fixture-dependent and **MUST NOT** receive Binary Conformance without a
-qualified deterministic case.
+Exact grouping with sharing or parallel work remains fixture-dependent and
+**MUST NOT** receive Binary Conformance without a qualified deterministic case.
 
 _Source decisions: [accepted Reference Snapshot split behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted case-scoped Binary Conformance](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
 
@@ -220,10 +235,12 @@ The Reference Snapshot treats every Starfield version-3 method except `3` as
 zlib. The accepted safe contract supersedes that as a default: rejection is
 normative, and fallback remains profile-only pending a qualifying fixture.
 
-Exact compressed bytes vary by provider/version. Non-ASCII lowercasing and hash
-bytes, exact synthetic-name spelling, empty-archive decode disposition, and
-sharing/concurrent split boundaries require fixtures. The format requirements
-therefore claim semantic cross-decode and exact uncompressed bytes, not blanket
-byte identity.
+Exact compressed bytes vary by provider/version. Non-ASCII lowercasing, hash and
+extension bytes, and canonicality comparisons require fixtures, so canonical
+encode rejects non-ASCII Archive Name Encoding bytes and no current Compatibility
+Profile qualifies them for BA2 encode. Exact synthetic-name spelling,
+empty-archive decode disposition, and sharing/concurrent split boundaries also
+require fixtures. The format requirements therefore claim semantic cross-decode
+and exact uncompressed bytes, not blanket byte identity.
 
 _Research evidence: [General BA2 layout, compression, ordering, contradictions, and unknowns](https://github.com/evildarkarchon/jbsa/blob/316c1c1cce735afbd291bebd00c82f29a89a4be7/docs/research/reference-snapshot-archive-behavior.md), [`wbBSArchive.pas` BA2 reader](https://github.com/TES5Edit/TES5Edit/blob/fd1e36020b2b5b6217e553dc0038983146a2e2dd/Core/wbBSArchive.pas#L1420-L1498)._
