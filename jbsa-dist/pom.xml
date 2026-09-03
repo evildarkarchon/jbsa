@@ -31,4 +31,35 @@
   <properties>
     <maven.install.skip>true</maven.install.skip>
   </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <!-- The root verify phase runs before this last reactor module can assemble inputs. -->
+            <id>verify-assembled-release-inputs</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>pwsh</executable>
+              <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+              <arguments>
+                <argument>-NoLogo</argument>
+                <argument>-NoProfile</argument>
+                <argument>-NonInteractive</argument>
+                <argument>-File</argument>
+                <argument>${maven.multiModuleProjectDirectory}/build/verify-compliance.ps1</argument>
+                <argument>-RequireGeneratedArtifacts</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

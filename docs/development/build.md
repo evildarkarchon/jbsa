@@ -42,3 +42,40 @@ later release and distribution issues.
 Hosted jobs provide compile, unit, architecture, formatting, and foundational policy evidence.
 They do not run games, official tools, or local Release Qualification, and they do not claim that
 Automated Conformance is complete.
+
+## Compliance and release inputs
+
+Every `verify` build generates a reproducible CycloneDX 1.6 JSON SBOM at
+`target/compliance/jbsa.cdx.json`, regenerates the release copy of
+`THIRD-PARTY-NOTICES.md` and the mandatory Reference Snapshot attribution in `RELEASE-NOTES.md`,
+and runs the repository compliance audit. The audit checks the maintained
+dependency and native-payload inventories, product POM dependencies, notice synchronization,
+tracked fixture/native bytes, and SBOM coverage. Selected codec artifacts remain explicitly
+non-releaseable until their downstream qualification gates pass.
+
+Run the repository and inventory checks directly with:
+
+```powershell
+.\build\verify-compliance.ps1
+```
+
+To inspect a non-empty release-input directory, provide a versioned JSON manifest that accounts for
+every file by relative path, lowercase SHA-256, kind, and source:
+
+```powershell
+.\build\verify-compliance.ps1 `
+  -ReleaseInputRoot .\path\to\release-inputs `
+  -ReleaseInputManifest .\path\to\release-inputs.json
+```
+
+The audit rejects local/proprietary archive material before manifest processing, rejects native
+payloads whose exact digest is not release-approved, recursively inspects JAR/ZIP contents, and
+rejects every unmanifested, missing, or checksum-mismatched artifact. It also reconciles all
+external SBOM components back to approved inventory entries, including transitives. The hosted
+REUSE job separately runs the official REUSE 3.3 metadata lint over every project-owned file
+without checking out the separately licensed Reference Snapshot.
+
+The normal Maven gate automatically audits `jbsa-dist/target/release-inputs` whenever that staging
+directory exists and expects `jbsa-dist/target/release-inputs.json`. This keeps later packaging work
+on the same enforcement seam; an assembly cannot populate the conventional staging directory and
+silently bypass the audit.

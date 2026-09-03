@@ -1831,7 +1831,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-002
     owner:
       document: docs/spec/compliance.md
@@ -1842,7 +1843,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-003
     owner:
       document: docs/spec/compliance.md
@@ -1852,7 +1854,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-004
     owner:
       document: docs/spec/compliance.md
@@ -1895,7 +1898,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
   - id: JBSA-LIC-008
     owner:
       document: docs/spec/compliance.md
@@ -1906,7 +1910,11 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnapprovedNativePayloads"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsNativePayloadHiddenInJar"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#sbomAuditRejectsUninventoriedTransitiveDependencies"
   - id: JBSA-LIC-009
     owner:
       document: docs/spec/compliance.md
@@ -1927,7 +1935,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-011
     owner:
       document: docs/spec/compliance.md
@@ -1938,7 +1947,17 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#buildGeneratesSbomAndThirdPartyNotices"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#distributionModuleAuditsReleaseInputsAfterAssembly"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryArchiveMaterial"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnapprovedNativePayloads"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnaccountedArtifacts"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsNativePayloadHiddenInJar"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryMaterialHiddenInZip"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#sbomAuditRejectsUninventoriedTransitiveDependencies"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#externalContributionAuditRejectsUnsignedCommits"
   - id: JBSA-LIC-012
     owner:
       document: docs/spec/compliance.md
@@ -1949,7 +1968,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-013
     owner:
       document: docs/spec/compliance.md
@@ -1959,7 +1979,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-014
     owner:
       document: docs/spec/compliance.md
@@ -1969,7 +1990,9 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#flattenedLibraryPomIsSelfContainedAndComplete"
   - id: JBSA-LIC-015
     owner:
       document: docs/spec/compliance.md
@@ -1979,7 +2002,8 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-016
     owner:
       document: docs/spec/compliance.md
@@ -1989,7 +2013,9 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#externalContributionAuditAllowsMaintainerCommits"
   - id: JBSA-LIC-017
     owner:
       document: docs/spec/compliance.md
@@ -1999,7 +2025,9 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#externalContributionAuditRejectsUnsignedCommits"
   - id: JBSA-OPS-001
     owner:
       document: docs/spec/operation-semantics.md

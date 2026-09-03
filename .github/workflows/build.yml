@@ -11,6 +11,25 @@ permissions:
   contents: read
 
 jobs:
+  reuse-compliance:
+    name: REUSE 3.3 metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source without the separately licensed Reference Snapshot
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+
+      - name: Verify external DCO and provenance declarations
+        if: github.event_name == 'pull_request'
+        shell: pwsh
+        run: ./build/verify-external-contribution.ps1
+
+      - name: Verify per-file SPDX and REUSE metadata
+        uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5 # v6
+
   build-gate:
     name: ${{ matrix.gate }} (hosted evidence; not Release Qualification)
     runs-on: windows-2025

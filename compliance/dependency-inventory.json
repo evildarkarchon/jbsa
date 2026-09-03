@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "scope": "Pinned third-party artifacts selected for product runtime or qualification; build-only Maven plugins and test tools are not release inputs.",
+  "entries": [
+    {
+      "groupId": "com.fulcrumgenomics",
+      "artifactId": "jlibdeflate",
+      "version": "0.1.0",
+      "packaging": "jar",
+      "classifier": null,
+      "sha256": "c20407700e94307b80b8ed832be3fbc52370e6c3f826fe8b91b89d9db1910ef2",
+      "use": "qualification-only candidate zlib provider",
+      "containsNativeBytes": true,
+      "license": {
+        "spdx": "MIT",
+        "evidence": "https://github.com/fulcrumgenomics/jlibdeflate/blob/v0.1.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the jlibdeflate and bundled libdeflate MIT copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/fulcrumgenomics/jlibdeflate",
+        "revision": "3f2e75a2eaceea2253d39a57ca6c41b92ef78b62",
+        "buildProvenance": "Maven Central 0.1.0 JAR built from the v0.1.0 source release; it bundles libdeflate 1.25 at c8c56a20f8f621e6a966b716b31f1dedab6a41e3."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "The MIT terms permit redistribution, but JBSA provider promotion gates have not passed.",
+        "releaseArtifacts": []
+      },
+      "blockedBy": [
+        "Decode and Encode Conformance",
+        "performance and memory qualification",
+        "native-loading qualification",
+        "notice and final-byte audit"
+      ]
+    },
+    {
+      "groupId": "io.airlift",
+      "artifactId": "aircompressor-v3",
+      "version": "3.7",
+      "packaging": "jar",
+      "classifier": null,
+      "sha256": "2484f2edbbb6573310ae998b252278b90d769b9677dc288cce039931892bbeeb",
+      "use": "selected pure-Java XXH32/64 implementation",
+      "containsNativeBytes": false,
+      "license": {
+        "spdx": "Apache-2.0",
+        "evidence": "https://github.com/airlift/aircompressor/blob/3.7/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain Apache-2.0 and any upstream NOTICE content present in the audited release bytes."
+      ],
+      "source": {
+        "repository": "https://github.com/airlift/aircompressor",
+        "revision": "59f40715a9c7f12ef3267d5940f96742c756485e",
+        "buildProvenance": "Maven Central 3.7 JAR built from the 3.7 source release."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "Apache-2.0 permits redistribution, but the artifact has not yet passed its implementation and release-byte gates.",
+        "releaseArtifacts": []
+      },
+      "blockedBy": [
+        "hashing implementation issue",
+        "conformance and performance qualification",
+        "notice and final-byte audit"
+      ]
+    },
+    {
+      "groupId": "org.lwjgl",
+      "artifactId": "lwjgl",
+      "version": "3.4.3",
+      "packaging": "jar",
+      "classifier": null,
+      "sha256": "46eeca5471833c3cf5da3c1da015b41e3bb3eb16dd3da03f366886da10096751",
+      "use": "selected LWJGL core required by the LZ4 binding",
+      "containsNativeBytes": false,
+      "license": {
+        "spdx": "BSD-3-Clause",
+        "evidence": "https://github.com/LWJGL/lwjgl3/blob/3.4.3/LICENSE.md"
+      },
+      "requiredNotices": [
+        "Retain the LWJGL BSD-3-Clause copyright and license text."
+      ],
+      "source": {
+        "repository": "https://github.com/LWJGL/lwjgl3",
+        "revision": "30fac9b95f99cda97312232be25ba55297bf9951",
+        "buildProvenance": "Maven Central 3.4.3 core JAR from the LWJGL 3.4.3 release."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "BSD-3-Clause permits redistribution, but the LZ4 provider gates have not passed.",
+        "releaseArtifacts": []
+      },
+      "blockedBy": [
+        "Windows x64 LZ4 provider implementation",
+        "conformance and native-loading qualification",
+        "notice and final-byte audit"
+      ]
+    },
+    {
+      "groupId": "org.lwjgl",
+      "artifactId": "lwjgl-lz4",
+      "version": "3.4.3",
+      "packaging": "jar",
+      "classifier": null,
+      "sha256": "fd81606cbfdd7084cdbf576f6260087a2ae68bcfb53ca1ccbec0707ae603f876",
+      "use": "selected Java binding for raw LZ4 HC and LZ4 frame",
+      "containsNativeBytes": false,
+      "license": {
+        "spdx": "BSD-3-Clause",
+        "evidence": "https://github.com/LWJGL/lwjgl3/blob/3.4.3/LICENSE.md"
+      },
+      "requiredNotices": [
+        "Retain the LWJGL BSD-3-Clause and bundled LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/LWJGL/lwjgl3",
+        "revision": "30fac9b95f99cda97312232be25ba55297bf9951",
+        "buildProvenance": "Maven Central 3.4.3 LZ4 binding JAR generated from LWJGL 3.4.3 against LZ4 1.10.0."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "The applicable BSD terms permit redistribution, but the LZ4 provider gates have not passed.",
+        "releaseArtifacts": []
+      },
+      "blockedBy": [
+        "Windows x64 LZ4 provider implementation",
+        "conformance and native-loading qualification",
+        "notice and final-byte audit"
+      ]
+    },
+    {
+      "groupId": "org.lwjgl",
+      "artifactId": "lwjgl",
+      "version": "3.4.3",
+      "packaging": "jar",
+      "classifier": "natives-windows",
+      "sha256": "19949bca7b780f55e5d2db12ac061a7657a4c1b7c860c30607f5406e7017aa2b",
+      "use": "selected Windows x64 native support for LWJGL core",
+      "containsNativeBytes": true,
+      "license": {
+        "spdx": "BSD-3-Clause",
+        "evidence": "https://github.com/LWJGL/lwjgl3/blob/3.4.3/LICENSE.md"
+      },
+      "requiredNotices": [
+        "Retain the LWJGL BSD-3-Clause copyright and license text."
+      ],
+      "source": {
+        "repository": "https://github.com/LWJGL/lwjgl3",
+        "revision": "30fac9b95f99cda97312232be25ba55297bf9951",
+        "buildProvenance": "Maven Central 3.4.3 natives-windows classifier built by the LWJGL 3.4.3 release process."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "BSD-3-Clause permits redistribution, but the Windows native provider gates have not passed.",
+        "releaseArtifacts": []
+      },
+      "blockedBy": [
+        "Windows x64 LZ4 provider implementation",
+        "native-loading and packaging qualification",
+        "notice and final-byte audit"
+      ]
+    },
+    {
+      "groupId": "org.lwjgl",
+      "artifactId": "lwjgl-lz4",
+      "version": "3.4.3",
+      "packaging": "jar",
+      "classifier": "natives-windows",
+      "sha256": "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc",
+      "use": "selected Windows x64 LZ4 1.10.0 native payload",
+      "containsNativeBytes": true,
+      "license": {
+        "spdx": "BSD-3-Clause AND BSD-2-Clause",
+        "evidence": "https://github.com/LWJGL/lwjgl3/blob/3.4.3/LICENSE.md and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the LWJGL BSD-3-Clause and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/LWJGL/lwjgl3",
+        "revision": "30fac9b95f99cda97312232be25ba55297bf9951",
+        "buildProvenance": "Maven Central 3.4.3 natives-windows classifier built from LWJGL 3.4.3 with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "The applicable BSD terms permit redistribution, but the LZ4 native provider gates have not passed.",
+        "releaseArtifacts": []
+      },
+      "blockedBy": [
+        "Windows x64 LZ4 provider implementation",
+        "conformance and native-loading qualification",
+        "notice and final-byte audit"
+      ]
+    }
+  ]
+}

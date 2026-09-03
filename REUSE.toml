@@ -1,0 +1,43 @@
+version = 1
+
+[[annotations]]
+path = [
+  ".claude/**",
+  ".codex/**",
+  ".github/**",
+  ".mvn/**",
+  ".gitattributes",
+  ".gitignore",
+  ".gitmodules",
+  ".graphifyignore",
+  "AGENTS.md",
+  "AGENTS.md.graphify",
+  "CLAUDE.md",
+  "CONTRIBUTING.md",
+  "CONTEXT.md",
+  "NOTICE",
+  "README.md",
+  "RELEASE-NOTES.md",
+  "REUSE.toml",
+  "THIRD-PARTY-NOTICES.md",
+  "build/**",
+  "compliance/**",
+  "docs/**",
+  "jbsa*/**",
+  "pom.xml"
+]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["mvnw", "mvnw.cmd"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright The Apache Software Foundation"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = "tests/fixtures/synthetic/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
+SPDX-License-Identifier = "CC0-1.0"

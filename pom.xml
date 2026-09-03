@@ -55,6 +55,8 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <flatten-maven-plugin.version>1.8.0</flatten-maven-plugin.version>
+    <cyclonedx-maven-plugin.version>2.9.3</cyclonedx-maven-plugin.version>
+    <exec-maven-plugin.version>3.6.2</exec-maven-plugin.version>
     <junit.version>6.1.3</junit.version>
     <maven-artifact-plugin.version>3.6.1</maven-artifact-plugin.version>
     <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
@@ -189,6 +191,16 @@
           <version>${maven-wrapper-plugin.version}</version>
         </plugin>
         <plugin>
+          <groupId>org.cyclonedx</groupId>
+          <artifactId>cyclonedx-maven-plugin</artifactId>
+          <version>${cyclonedx-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>${exec-maven-plugin.version}</version>
+        </plugin>
+        <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>flatten-maven-plugin</artifactId>
           <version>${flatten-maven-plugin.version}</version>
@@ -277,6 +289,65 @@
             <goals>
               <goal>check</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.cyclonedx</groupId>
+        <artifactId>cyclonedx-maven-plugin</artifactId>
+        <inherited>false</inherited>
+        <configuration>
+          <schemaVersion>1.6</schemaVersion>
+          <!-- A random serial number would make identical release-input builds produce different SBOM bytes. -->
+          <includeBomSerialNumber>false</includeBomSerialNumber>
+          <includeCompileScope>true</includeCompileScope>
+          <includeProvidedScope>false</includeProvidedScope>
+          <includeRuntimeScope>true</includeRuntimeScope>
+          <includeSystemScope>false</includeSystemScope>
+          <includeTestScope>false</includeTestScope>
+          <!-- Build-only reactor projects are evidence producers, not components of either product. -->
+          <excludeArtifactId>jbsa-test-support,jbsa-conformance-tests,jbsa-benchmarks,jbsa-dist</excludeArtifactId>
+          <outputReactorProjects>false</outputReactorProjects>
+          <outputFormat>json</outputFormat>
+          <outputName>jbsa.cdx</outputName>
+          <outputDirectory>${maven.multiModuleProjectDirectory}/target/compliance</outputDirectory>
+          <skipAttach>true</skipAttach>
+          <!-- Deployment is intentionally disabled; the SBOM is still a required release input. -->
+          <skipNotDeployed>false</skipNotDeployed>
+        </configuration>
+        <executions>
+          <execution>
+            <id>generate-aggregate-sbom</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>makeAggregateBom</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <inherited>false</inherited>
+        <executions>
+          <execution>
+            <id>verify-compliance-evidence</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>pwsh</executable>
+              <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+              <arguments>
+                <argument>-NoLogo</argument>
+                <argument>-NoProfile</argument>
+                <argument>-NonInteractive</argument>
+                <argument>-File</argument>
+                <argument>${maven.multiModuleProjectDirectory}/build/verify-compliance.ps1</argument>
+                <argument>-RequireGeneratedArtifacts</argument>
+              </arguments>
+            </configuration>
           </execution>
         </executions>
       </plugin>
