@@ -12,6 +12,10 @@ _Avoid_: Package, bundle
 A distinct Bethesda Archive encoding identified by its game generation, container version, and payload kind, such as TES3, SSE BSA, Fallout 4 General BA2, or Starfield DDS BA2.
 _Avoid_: Game format, archive type
 
+**Versioned BSA**:
+The `BSA\0` format lineage spanning wire versions `0x67`, `0x68`, and `0x69` and their distinct Archive Families. It is colloquially called TES4 BSA; TES4 / Oblivion BSA denotes only the `0x67` Archive Family.
+_Avoid_: TES4 / Oblivion BSA when naming the whole lineage
+
 **Tolerated Noncanonical Archive**:
 A Bethesda Archive whose structure is noncanonical but remains bounded, unambiguous, and safely decodable. It produces a stable diagnostic and is never a valid encoder output.
 _Avoid_: Malformed-but-valid archive, lenient archive

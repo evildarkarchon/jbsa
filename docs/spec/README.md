@@ -177,15 +177,28 @@ _Supersession sources: [original module decision and partial supersession](https
 This foundation intentionally does not choose exact Maven plugin versions,
 audited dependency inventory entries, native payload identities, or the JDK 25
 vendor/build identity. Those release inputs remain deferred until the owning
-implementation or distribution requirement has evidence. Format behavior,
-library behavior, and CLI/qualification details are likewise owned by issues
-[#25](https://github.com/evildarkarchon/jbsa/issues/25),
-[#26](https://github.com/evildarkarchon/jbsa/issues/26), and
+implementation or distribution requirement has evidence. Archive Family and
+DDS payload behavior is owned by the format specifications below. Library
+behavior and CLI/qualification details remain owned by issues
+[#26](https://github.com/evildarkarchon/jbsa/issues/26) and
 [#27](https://github.com/evildarkarchon/jbsa/issues/27). No other contradiction
 was found among the decisions materialized by issue #24.
+
+The Reference Snapshot's archive-information error/zero-exit contradiction is a
+CLI-only evidence boundary for issue #27; no Archive Family requirement promotes
+it to format behavior. The research also contains no authoritative numeric
+performance baseline. Performance thresholds and evidence remain owned by the
+later performance specification rather than being inferred from format code.
 
 ## Specification index
 
 - [Scope](scope.md)
 - [Modules and build](modules-and-build.md)
 - [Compliance](compliance.md)
+- Archive formats:
+  - [Detection and shared wire conventions](formats/detection.md)
+  - [TES3 / Morrowind BSA](formats/tes3-bsa.md)
+  - [TES4 BSA (versioned BSA)](formats/versioned-bsa.md)
+  - [General BA2](formats/general-ba2.md)
+  - [DDS BA2](formats/dds-ba2.md)
+  - [DDS payload](formats/dds-payload.md)
