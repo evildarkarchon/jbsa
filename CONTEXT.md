@@ -100,6 +100,10 @@ _Avoid_: Final write, save completed
 Owned staging or scratch data that remains after cleanup fails. Its exact path and Artifact State are reported, after which cleanup ownership passes to the caller.
 _Avoid_: Temp-file leak
 
+**Logical Plan Order**:
+The stable order assigned during preflight to an archive operation's logical inputs and artifacts after source-overlay and Archive Family ordering rules are applied. It governs observable ordering independently of execution or completion timing.
+_Avoid_: Submission order, completion order, worker order
+
 **Primary Failure**:
 The deterministic failure selected from an operation's observed failures by operation phase and logical plan order. Cleanup, rollback, progress-observer, and other secondary failures never displace an earlier Primary Failure.
 _Avoid_: First error, first exception
