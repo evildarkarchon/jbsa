@@ -72,17 +72,19 @@ writes.
 | Depth | High if facade delegates | High operationally | High for unusual consumers | Format logic deep, I/O seam broad |
 | Compatibility risk | Growing options | Growing type algebra | Policy/metadata bags | Premature I/O guarantees |
 
-## Recommended decision
+## Resolved direction
 
-Adopt an A-centered hybrid:
+The live user reaction selected an A-centered hybrid:
 
-1. Use a concrete, Path-first `BethesdaArchives` module with an owned
-   `OpenArchive` for repeated reads.
+1. Use methods on the single concrete, stateless
+   `BethesdaArchives.standard()` module instance, with a Path-first interface
+   and an owned `OpenArchive` for repeated reads.
 2. Use immutable `ExtractRequest` and `PackRequest` values for advanced calls;
    ordered `PackSource` values express later-source-wins overlays.
 3. Move payloads through bounded `ReadableByteChannel` values with `long` sizes.
-4. Borrow B's callback-scoped, library-owned channel only for caller-generated
-   packing inputs, where a real second source adapter exists.
+4. Include both Path sources and caller-generated packing inputs in the first
+   public interface. Generated payload factories return repeatable channels
+   that become library-owned for each invocation.
 5. Keep C/D's generic storage ports, positional entry reads, policy maps, and
    destination transactions behind internal seams until later I/O and
    concurrency decisions prove they belong in the public interface.
@@ -91,13 +93,7 @@ This recommendation maximizes leverage and locality for the known callers—the
 CLI, conformance suite, benchmarks, and ordinary Java consumers—without making
 the first release promise storage abstractions it does not yet need.
 
-## Reaction needed
-
-Choose the recommended hybrid or one alternative, then identify any interface
-element that must change. In particular:
-
-- Should the routine operations be static, or methods on one concrete
-  `BethesdaArchives.standard()` instance?
-- Is callback-scoped generated content worth exposing in the first public
-  interface, or should the first release accept only `Path` sources?
-- Does any known consumer require non-`Path` archive input or output now?
+The first release does not expose general archive-storage or output ports. A
+later compatible addition requires a demonstrated second production adapter;
+internal in-memory, fault-injecting, codec, scheduler, and storage adapters do
+not by themselves justify expanding the public interface.

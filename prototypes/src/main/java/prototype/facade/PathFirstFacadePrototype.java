@@ -22,33 +22,40 @@ public final class PathFirstFacadePrototype {
 
     /** Conventional facade used directly by the thin CLI and embedded callers. */
     public static final class BethesdaArchives {
+        private static final BethesdaArchives STANDARD = new BethesdaArchives();
+
         private BethesdaArchives() {
         }
 
+        /** Returns the single concrete, stateless library module instance. */
+        public static BethesdaArchives standard() {
+            return STANDARD;
+        }
+
         /** Recognizes bytes without claiming full Decode Conformance. */
-        public static ArchiveDetection detect(Path archive) throws IOException {
+        public ArchiveDetection detect(Path archive) throws IOException {
             throw prototypeOnly();
         }
 
         /** Returns detached metadata and closes its internal archive lifetime. */
-        public static ArchiveInspection inspect(Path archive) throws IOException {
+        public ArchiveInspection inspect(Path archive) throws IOException {
             throw prototypeOnly();
         }
 
         /** Opens a caller-owned lifetime for repeated inspection and entry access. */
-        public static OpenArchive open(Path archive, OpenOptions options) throws IOException {
+        public OpenArchive open(Path archive, OpenOptions options) throws IOException {
             throw prototypeOnly();
         }
 
         /** Extracts selected entries after destination-containment preflight. */
-        public static ExtractionResult extract(
+        public ExtractionResult extract(
                 ExtractRequest request,
                 OperationControl control) throws IOException {
             throw prototypeOnly();
         }
 
         /** Packs ordered sources; a later normalized entry name wins. */
-        public static PackingResult pack(
+        public PackingResult pack(
                 PackRequest request,
                 OperationControl control) throws IOException {
             throw prototypeOnly();
@@ -410,10 +417,11 @@ public final class PathFirstFacadePrototype {
             OpenOptions openOptions,
             PackOptions packOptions,
             OperationControl control) throws IOException {
-        ArchiveInspection listing = BethesdaArchives.inspect(archivePath);
+        BethesdaArchives library = BethesdaArchives.standard();
+        ArchiveInspection listing = library.inspect(archivePath);
         long entryCount = listing.metadata().entryCount();
 
-        try (OpenArchive archive = BethesdaArchives.open(archivePath, openOptions)) {
+        try (OpenArchive archive = library.open(archivePath, openOptions)) {
             ArchiveEntry entry = archive.entry(ArchiveName.of("textures/hero.dds"))
                     .orElseThrow();
             try (ReadableByteChannel bytes = entry.openChannel()) {
@@ -437,7 +445,7 @@ public final class PathFirstFacadePrototype {
                         packOptions)
                 .addSource(PackSource.path(archivePath))
                 .addSource(PackSource.path(Path.of("Patch")));
-        PackingResult result = BethesdaArchives.pack(request, control);
+        PackingResult result = library.pack(request, control);
 
         if (entryCount != result.entryCount()) {
             // The example deliberately observes semantic results through the interface.
