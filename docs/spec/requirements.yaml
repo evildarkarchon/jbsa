@@ -822,6 +822,16 @@ requirements:
     verification_class: release-audit
     implementing_issue: 29
     test_evidence: []
+  - id: JBSA-LIC-014
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence: []
   - id: JBSA-SCOPE-001
     owner:
       document: docs/spec/scope.md

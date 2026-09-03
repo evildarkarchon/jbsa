@@ -31,11 +31,7 @@ _Source decisions: [research-derived adaptation boundary](https://github.com/evi
 The project, packages, Maven artifacts, and executable **MUST** use the `jbsa`
 identity. “BSArch-compatible” **MAY** be used only descriptively with an
 independent and unaffiliated statement. Project materials **MUST NOT** use
-TES5Edit or BSArch logos or imply endorsement. The pinned Reference Snapshot and
-revision **MUST** be credited in the project README, generated documentation,
-reference-use policy, POM description, and release notices. Normal CLI help and
-output **MUST NOT** reproduce the Conformance Oracle banner; a short attribution
-in `--version` **MAY** be included.
+TES5Edit or BSArch logos or imply endorsement.
 
 _Source decision: [accepted attribution and naming policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
@@ -143,6 +139,16 @@ commits **MAY** omit DCO sign-off. Every accepted external contribution **MUST**
 carry DCO 1.1 sign-off plus source and fixture provenance declarations.
 
 _Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+
+## JBSA-LIC-014
+
+The pinned Reference Snapshot and revision **MUST** be credited in the project
+README, generated documentation, reference-use policy, POM description, and
+release notices. Normal CLI help and output **MUST NOT** reproduce the
+Conformance Oracle banner; a short attribution in `--version` **MAY** be
+included.
+
+_Source decision: [accepted attribution and naming policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## Deferred compliance inputs
 
