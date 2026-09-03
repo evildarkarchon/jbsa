@@ -72,6 +72,10 @@ _Avoid_: Full conformance, CI certification
 The stable exit status, stream placement, semantic output, and filesystem artifacts used to judge command-line compatibility. Timing, progress repainting, and other nondeterministic presentation are excluded unless explicitly designated observable.
 _Avoid_: Raw transcript, console snapshot
 
+**BSArch-compatible CLI**:
+The supported thin command-line consumer that exposes BSArch-shaped operations and options exclusively through the public archive-library interface. Its safe default follows normative behavior; qualified reference deviations require an explicit Compatibility Profile.
+_Avoid_: Example CLI, BSArch clone
+
 **Archive Name Encoding**:
 The explicit Windows code page used to translate archive name bytes without losing their original wire representation. Windows-1252 is the deterministic default; the `bsarch-1.0` Compatibility Profile may select the active Windows ANSI code page.
 _Avoid_: Platform default encoding, implicit ANSI
