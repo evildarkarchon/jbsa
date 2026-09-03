@@ -150,11 +150,24 @@ _Source decisions: [accepted staged archive-writing model](https://github.com/ev
 
 ## JBSA-IO-009
 
-Extraction **MUST** pin the destination root; reject every entry without the
-Normalized Name Identity defined by
-[JBSA-LIB-012](library-interface.md#jbsa-lib-012), absolute paths, traversal,
-alternate-data-stream names, equal Normalized Name Identities, normalized
-Windows name or case collisions, and
+Extraction **MUST** pin the destination root. Before converting any selected
+entry name to a host `Path` or beginning any destination effect, it **MUST**
+reject every entry without the Normalized Name Identity defined by
+[JBSA-LIB-012](library-interface.md#jbsa-lib-012). On the qualified Windows
+platform it **MUST** also reject a name when any segment contains U+0001 through
+U+001F, U+0022 QUOTATION MARK, U+002A ASTERISK, U+003C LESS-THAN SIGN, U+003E
+GREATER-THAN SIGN, U+003F QUESTION MARK, or U+007C VERTICAL LINE; or when the
+portion of a segment before its first U+002E FULL STOP, or the whole segment
+when none is present, ASCII-case-insensitively equals `CON`, `PRN`, `AUX`, or
+`NUL`, or consists of `COM` or `LPT` followed by exactly one of U+0031 through
+U+0039, U+00B9, U+00B2, or U+00B3. The rejection **MUST** be `POLICY` and
+**MUST NOT** be deferred to path creation or publication. These host-path tests
+do not remove an otherwise present Normalized Name Identity or affect canonical
+pack eligibility.
+
+Extraction **MUST** reject absolute paths, traversal, alternate-data-stream
+names, equal Normalized Name Identities, normalized Windows name or case
+collisions, and
 descendant symbolic links, junctions, or other reparse points; deliberately
 create paths without following links below that root; and recheck containment
 immediately before publication. Unexpected destination mutation **MUST** stop
@@ -165,7 +178,7 @@ This contract treats the caller-supplied destination tree as non-hostile and
 **MUST NOT** claim resistance to a privileged concurrent attacker racing NTFS
 namespace operations.
 
-_Source decisions: [accepted extraction-path safety model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted extraction eligibility and partial-output semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+_Source decisions: [accepted extraction-path safety model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted extraction eligibility and partial-output semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-IO-010
 

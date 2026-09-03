@@ -166,7 +166,11 @@ Each pack-source component **MUST** become an ordered public `PackSource` for a
 directory, individual loose file, or existing Bethesda Archive. Archive sources
 **MUST** be decoded through the public library before repacking, and the CLI
 **MUST** preserve operand order so [JBSA-LIB-008](library-interface.md#jbsa-lib-008)
-owns overlay replacement and first-insertion position.
+owns filesystem archive-name mapping, deterministic directory expansion,
+overlay replacement, and first-insertion position. The CLI **MUST** preserve
+each filesystem operand as one source boundary; any safety discovery it performs
+**MUST** use that mapping and expansion order and **MUST NOT** reorder the
+expanded entries.
 
 In the safe default, every declared source **MUST** exist, be readable, and be
 recognizable before publication; a filter leaving no entries **MUST** fail.
@@ -187,7 +191,7 @@ safe no-follow or stable identity behavior **MUST** fail as `CAPABILITY` under
 [JBSA-OPS-004](operation-semantics.md#jbsa-ops-004). This CLI behavior
 **MUST NOT** expose NTFS or reparse-point terminology through the public library.
 
-_Source decisions: [accepted sources, overlays, and filesystem behavior](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted dynamic split-output clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533)._
+_Source decisions: [accepted sources, overlays, and filesystem behavior](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted dynamic split-output clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-CLI-008
 
@@ -215,15 +219,17 @@ containing the supplied archive path, Archive Family, applicable wire version,
 subtype and compression method, entry count, compressed-entry count and codec,
 applicable target, and applicable archive and file flags.
 
-`-list` **MUST** then emit each decoded display name once, one per line, in
-archive order. `-dump` **MUST** emit each display name followed by every
-applicable public typed metadata value: family-specific directory and name
+`-list` **MUST** then emit each entry display name retained under
+[JBSA-LIB-006](library-interface.md#jbsa-lib-006), including a required marked
+synthetic name, once per line in archive order. `-dump` **MUST** emit each
+display name followed by every applicable public typed metadata value:
+family-specific directory and name
 hashes, uncompressed and packed sizes, physical offsets, compression state, and
 DDS dimensions, DXGI format, cubemap state, mip ranges, and logical chunk facts.
 Record labels and order **MUST** be stable. Padding, exact whitespace, and
 explanatory prose **MUST NOT** be conformance fields.
 
-_Source decision: [accepted information, list, and dump records](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Source decisions: [accepted information, list, and dump records](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-CLI-010
 

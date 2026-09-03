@@ -4,10 +4,30 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.github.evildarkarchon.jbsa.verification.thirdparty.ThirdPartyClassAnnotations;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.classfile.AnnotationValue;
+import java.lang.classfile.Attribute;
+import java.lang.classfile.AttributedElement;
+import java.lang.classfile.ClassFile;
+import java.lang.classfile.ClassModel;
+import java.lang.classfile.FieldModel;
+import java.lang.classfile.MethodModel;
+import java.lang.classfile.TypeAnnotation;
+import java.lang.classfile.attribute.AnnotationDefaultAttribute;
+import java.lang.classfile.attribute.RecordAttribute;
+import java.lang.classfile.attribute.RuntimeInvisibleAnnotationsAttribute;
+import java.lang.classfile.attribute.RuntimeInvisibleParameterAnnotationsAttribute;
+import java.lang.classfile.attribute.RuntimeInvisibleTypeAnnotationsAttribute;
+import java.lang.classfile.attribute.RuntimeVisibleAnnotationsAttribute;
+import java.lang.classfile.attribute.RuntimeVisibleParameterAnnotationsAttribute;
+import java.lang.classfile.attribute.RuntimeVisibleTypeAnnotationsAttribute;
+import java.lang.constant.ClassDesc;
 import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleFinder;
 import java.lang.module.ModuleReference;
@@ -42,6 +62,96 @@ final class ModuleArchitectureIT {
   private static final String LIBRARY_ANCHOR = "io.github.evildarkarchon.jbsa.PackageAnchor";
   private static final String LIBRARY_MODULE = "io.github.evildarkarchon.jbsa";
   private static final Set<String> LIBRARY_EXPORTS = Set.of("io.github.evildarkarchon.jbsa");
+
+  /** Carries a class literal through an otherwise allowed annotation type. */
+  @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+  @java.lang.annotation.Target(java.lang.annotation.ElementType.TYPE)
+  @interface ClassValueCarrier {
+    /** Returns the carried class literal. */
+    Class<?> value();
+  }
+
+  /** Carries class literals in an array through an otherwise allowed annotation type. */
+  @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.CLASS)
+  @java.lang.annotation.Target(java.lang.annotation.ElementType.TYPE)
+  @interface ClassArrayValueCarrier {
+    /** Returns the carried class literals. */
+    Class<?>[] value();
+  }
+
+  /** Carries an enum constant through an otherwise allowed annotation type. */
+  @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.CLASS)
+  @java.lang.annotation.Target(java.lang.annotation.ElementType.TYPE)
+  @interface EnumValueCarrier {
+    /** Returns the carried enum constant. */
+    ThirdPartyClassAnnotations.LeakedEnum value();
+  }
+
+  /** Carries a nested annotation through an otherwise allowed annotation type. */
+  @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.CLASS)
+  @java.lang.annotation.Target(java.lang.annotation.ElementType.TYPE)
+  @interface NestedValueCarrier {
+    /** Returns the carried nested annotation. */
+    ThirdPartyClassAnnotations.NestedValue value();
+  }
+
+  /** Fixture whose default annotation value leaks a third-party class literal. */
+  @interface AnnotationDefaultFixture {
+    /** Returns a third-party class literal unless an annotation use overrides it. */
+    Class<?> value() default ThirdPartyClassAnnotations.class;
+  }
+
+  /** Fixture whose annotation value leaks a third-party class literal. */
+  @ClassValueCarrier(ThirdPartyClassAnnotations.class)
+  static final class ClassValueFixture {}
+
+  /** Fixture whose annotation array value leaks a third-party class literal. */
+  @ClassArrayValueCarrier({String.class, ThirdPartyClassAnnotations.class})
+  static final class ClassArrayValueFixture {}
+
+  /** Fixture whose annotation value leaks a third-party enum type. */
+  @EnumValueCarrier(ThirdPartyClassAnnotations.LeakedEnum.VALUE)
+  static final class EnumValueFixture {}
+
+  /** Fixture whose annotation value leaks a nested third-party annotation type. */
+  @NestedValueCarrier(@ThirdPartyClassAnnotations.NestedValue)
+  static final class NestedValueFixture {}
+
+  /** Fixture whose class declaration leaks a CLASS-retained third-party annotation. */
+  @ThirdPartyClassAnnotations.Declaration
+  static final class ClassRetentionDeclarationFixture {}
+
+  /** Fixture whose public parameter leaks a CLASS-retained third-party annotation. */
+  static final class ClassRetentionParameterFixture {
+    /** Accepts an annotated parameter solely to expose it as caller-visible API metadata. */
+    public void accept(@ThirdPartyClassAnnotations.Parameter String value) {}
+  }
+
+  /** Fixture whose public return type leaks a CLASS-retained third-party type-use annotation. */
+  static final class ClassRetentionTypeUseFixture {
+    /** Returns an annotated type solely to expose it as caller-visible API metadata. */
+    public @ThirdPartyClassAnnotations.TypeUse String value() {
+      return "fixture";
+    }
+  }
+
+  /** Fixture whose public parameter leaks a runtime-visible third-party annotation. */
+  static final class RuntimeParameterFixture {
+    /** Accepts an annotated parameter solely to expose it as caller-visible API metadata. */
+    public void accept(@ThirdPartyClassAnnotations.RuntimeParameter String value) {}
+  }
+
+  /** Fixture whose public return type leaks a runtime-visible third-party type-use annotation. */
+  static final class RuntimeTypeUseFixture {
+    /** Returns an annotated type solely to expose it as caller-visible API metadata. */
+    public @ThirdPartyClassAnnotations.RuntimeTypeUse String value() {
+      return "fixture";
+    }
+  }
+
+  /** Fixture whose record component leaks a CLASS-retained third-party annotation. */
+  record ClassRetentionRecordComponentFixture(
+      @ThirdPartyClassAnnotations.RecordComponentDeclaration String value) {}
 
   /** Verifies the JBSA-BUILD-004 and JBSA-BUILD-005 JPMS seams. */
   @Test
@@ -98,11 +208,129 @@ final class ModuleArchitectureIT {
           continue;
         }
         Class<?> type = Class.forName(className(entry), false, loader);
-        if (isCallerVisibleType(type)) {
-          assertPublicSignatureUsesAllowedTypes(type, exportedPackages);
-        }
+        assertExportedApiClassUsesAllowedTypes(type, exportedPackages);
       }
     }
+  }
+
+  /** Verifies that CLASS-retained annotations on exported declarations are rejected. */
+  @Test
+  void classFileScanRejectsClassRetentionDeclarationAnnotations() {
+    assertRejectedAnnotation(
+        ClassRetentionDeclarationFixture.class, ThirdPartyClassAnnotations.Declaration.class);
+  }
+
+  /** Verifies that annotations on caller-visible parameters are rejected. */
+  @Test
+  void classFileScanRejectsClassRetentionParameterAnnotations() {
+    assertRejectedAnnotation(
+        ClassRetentionParameterFixture.class, ThirdPartyClassAnnotations.Parameter.class);
+  }
+
+  /** Verifies that annotations on caller-visible signature type uses are rejected. */
+  @Test
+  void classFileScanRejectsClassRetentionTypeUseAnnotations() {
+    assertRejectedAnnotation(
+        ClassRetentionTypeUseFixture.class, ThirdPartyClassAnnotations.TypeUse.class);
+  }
+
+  /** Verifies that runtime-visible annotations on caller-visible parameters are rejected. */
+  @Test
+  void classFileScanRejectsRuntimeParameterAnnotations() {
+    assertRejectedAnnotation(
+        RuntimeParameterFixture.class, ThirdPartyClassAnnotations.RuntimeParameter.class);
+  }
+
+  /** Verifies that runtime-visible annotations on caller-visible type uses are rejected. */
+  @Test
+  void classFileScanRejectsRuntimeTypeUseAnnotations() {
+    assertRejectedAnnotation(
+        RuntimeTypeUseFixture.class, ThirdPartyClassAnnotations.RuntimeTypeUse.class);
+  }
+
+  /** Verifies that CLASS-retained annotations on caller-visible record components are rejected. */
+  @Test
+  void classFileScanRejectsClassRetentionRecordComponentAnnotations() {
+    assertRejectedAnnotation(
+        ClassRetentionRecordComponentFixture.class,
+        ThirdPartyClassAnnotations.RecordComponentDeclaration.class);
+  }
+
+  /** Verifies that class literals carried by otherwise allowed annotations are rejected. */
+  @Test
+  void classFileScanRejectsThirdPartyClassAnnotationValues() {
+    assertRejectedAnnotation(ClassValueFixture.class, ThirdPartyClassAnnotations.class);
+  }
+
+  /** Verifies that class literals nested in annotation arrays are rejected. */
+  @Test
+  void classFileScanRejectsThirdPartyTypesInAnnotationArrays() {
+    assertRejectedAnnotation(ClassArrayValueFixture.class, ThirdPartyClassAnnotations.class);
+  }
+
+  /** Verifies that enum types carried by otherwise allowed annotations are rejected. */
+  @Test
+  void classFileScanRejectsThirdPartyEnumAnnotationValues() {
+    assertRejectedAnnotation(EnumValueFixture.class, ThirdPartyClassAnnotations.LeakedEnum.class);
+  }
+
+  /** Verifies that nested third-party annotations carried as values are rejected. */
+  @Test
+  void classFileScanRejectsNestedThirdPartyAnnotationValues() {
+    assertRejectedAnnotation(
+        NestedValueFixture.class, ThirdPartyClassAnnotations.NestedValue.class);
+  }
+
+  /** Verifies that third-party types carried by annotation defaults are rejected. */
+  @Test
+  void classFileScanRejectsThirdPartyAnnotationDefaults() {
+    assertRejectedAnnotation(AnnotationDefaultFixture.class, ThirdPartyClassAnnotations.class);
+  }
+
+  /**
+   * Verifies that CLASS-retained third-party annotations on exported packages are rejected.
+   *
+   * @throws ClassNotFoundException if the package metadata fixture was not compiled
+   */
+  @Test
+  void classFileScanRejectsExportedPackageAnnotations() throws ClassNotFoundException {
+    Class<?> packageInfo =
+        Class.forName(
+            "io.github.evildarkarchon.jbsa.verification.fixturepackage.package-info",
+            false,
+            ModuleArchitectureIT.class.getClassLoader());
+    AssertionError failure =
+        assertThrows(
+            AssertionError.class,
+            () ->
+                assertExportedApiClassUsesAllowedTypes(
+                    packageInfo, Set.of(packageInfo.getPackageName())));
+    assertFailureNamesType(failure, ThirdPartyClassAnnotations.PackageDeclaration.class);
+  }
+
+  /**
+   * Asserts that inspecting one fixture reports the precise third-party type carried in its API
+   * metadata.
+   */
+  private static void assertRejectedAnnotation(Class<?> fixtureType, Class<?> leakedType) {
+    AssertionError failure =
+        assertThrows(
+            AssertionError.class,
+            () ->
+                assertPublicSignatureUsesAllowedTypes(
+                    fixtureType, Set.of(ModuleArchitectureIT.class.getPackageName())));
+    assertFailureNamesType(failure, leakedType);
+  }
+
+  /** Asserts that an architecture rejection names the exact leaked binary type. */
+  private static void assertFailureNamesType(AssertionError failure, Class<?> leakedType) {
+    assertTrue(
+        failure.getMessage().contains(leakedType.getName()),
+        () ->
+            "Expected rejection to name "
+                + leakedType.getName()
+                + ", but was: "
+                + failure.getMessage());
   }
 
   /**
@@ -139,6 +367,14 @@ final class ModuleArchitectureIT {
     return new URLClassLoader(urls, ClassLoader.getPlatformClassLoader());
   }
 
+  /** Checks a class when it contributes caller-visible type or package API metadata. */
+  private static void assertExportedApiClassUsesAllowedTypes(
+      Class<?> type, Set<String> exportedPackages) {
+    if (isCallerVisibleType(type) || type.getName().endsWith(".package-info")) {
+      assertPublicSignatureUsesAllowedTypes(type, exportedPackages);
+    }
+  }
+
   /** Checks every caller-visible part of an exported public or protected type's signature. */
   private static void assertPublicSignatureUsesAllowedTypes(
       Class<?> type, Set<String> exportedPackages) {
@@ -150,6 +386,7 @@ final class ModuleArchitectureIT {
     }
     assertTypeParameters(type.getTypeParameters(), boundary);
     assertAnnotations(type, boundary);
+    assertClassFileAnnotations(type, boundary);
 
     for (Constructor<?> constructor : type.getDeclaredConstructors()) {
       if (isCallerVisibleMember(constructor.getModifiers())) {
@@ -211,6 +448,132 @@ final class ModuleArchitectureIT {
     for (Annotation annotation : element.getAnnotations()) {
       assertAllowedType(annotation.annotationType(), boundary);
     }
+  }
+
+  /**
+   * Checks every declaration, parameter, and signature type annotation retained in a class file.
+   * Method and field attributes are limited to caller-visible members so implementation metadata
+   * remains outside the API boundary.
+   */
+  private static void assertClassFileAnnotations(Class<?> type, SignatureBoundary boundary) {
+    String resourceName = "/" + type.getName().replace('.', '/') + ".class";
+    try (InputStream input = type.getResourceAsStream(resourceName)) {
+      assertNotNull(input, () -> "Missing class resource " + resourceName);
+      ClassModel classModel = ClassFile.of().parse(input.readAllBytes());
+      assertAnnotationAttributes(classModel, boundary);
+      for (FieldModel field : classModel.fields()) {
+        if (isCallerVisibleMember(field.flags().flagsMask())) {
+          assertAnnotationAttributes(field, boundary);
+        }
+      }
+      for (MethodModel method : classModel.methods()) {
+        if (isCallerVisibleMember(method.flags().flagsMask())) {
+          assertAnnotationAttributes(method, boundary);
+        }
+      }
+      for (Attribute<?> attribute : classModel.attributes()) {
+        if (attribute instanceof RecordAttribute record) {
+          record.components().forEach(component -> assertAnnotationAttributes(component, boundary));
+        }
+      }
+    } catch (IOException exception) {
+      throw new AssertionError("Cannot inspect class resource " + resourceName, exception);
+    }
+  }
+
+  /** Checks every standard annotation attribute supported on an API class-file element. */
+  private static void assertAnnotationAttributes(
+      AttributedElement element, SignatureBoundary boundary) {
+    for (Attribute<?> attribute : element.attributes()) {
+      if (attribute instanceof RuntimeVisibleAnnotationsAttribute annotations) {
+        assertAnnotationTypes(annotations.annotations(), boundary);
+      } else if (attribute instanceof RuntimeInvisibleAnnotationsAttribute annotations) {
+        assertAnnotationTypes(annotations.annotations(), boundary);
+      } else if (attribute
+          instanceof RuntimeVisibleParameterAnnotationsAttribute parameterAnnotations) {
+        parameterAnnotations
+            .parameterAnnotations()
+            .forEach(annotations -> assertAnnotationTypes(annotations, boundary));
+      } else if (attribute
+          instanceof RuntimeInvisibleParameterAnnotationsAttribute parameterAnnotations) {
+        parameterAnnotations
+            .parameterAnnotations()
+            .forEach(annotations -> assertAnnotationTypes(annotations, boundary));
+      } else if (attribute instanceof RuntimeVisibleTypeAnnotationsAttribute typeAnnotations) {
+        assertTypeAnnotationTypes(typeAnnotations.annotations(), boundary);
+      } else if (attribute instanceof RuntimeInvisibleTypeAnnotationsAttribute typeAnnotations) {
+        assertTypeAnnotationTypes(typeAnnotations.annotations(), boundary);
+      } else if (attribute instanceof AnnotationDefaultAttribute annotationDefault) {
+        assertAllowedAnnotationValue(annotationDefault.defaultValue(), boundary);
+      }
+    }
+  }
+
+  /** Checks the type named by each declaration or parameter annotation. */
+  private static void assertAnnotationTypes(
+      Iterable<java.lang.classfile.Annotation> annotations, SignatureBoundary boundary) {
+    for (java.lang.classfile.Annotation annotation : annotations) {
+      assertAllowedAnnotationType(annotation, boundary);
+    }
+  }
+
+  /** Checks the annotation type named by each signature type-use annotation. */
+  private static void assertTypeAnnotationTypes(
+      Iterable<TypeAnnotation> annotations, SignatureBoundary boundary) {
+    for (TypeAnnotation annotation : annotations) {
+      assertAllowedAnnotationType(annotation.annotation(), boundary);
+    }
+  }
+
+  /** Rejects an annotation type whose package is outside Java modules and library exports. */
+  private static void assertAllowedAnnotationType(
+      java.lang.classfile.Annotation annotation, SignatureBoundary boundary) {
+    assertAllowedClassDescriptor(annotation.classSymbol(), boundary, "annotation type");
+    annotation
+        .elements()
+        .forEach(element -> assertAllowedAnnotationValue(element.value(), boundary));
+  }
+
+  /** Recursively checks every type reference carried by an annotation element value. */
+  private static void assertAllowedAnnotationValue(
+      AnnotationValue value, SignatureBoundary boundary) {
+    if (value instanceof AnnotationValue.OfClass classValue) {
+      assertAllowedClassDescriptor(classValue.classSymbol(), boundary, "annotation value type");
+    } else if (value instanceof AnnotationValue.OfEnum enumValue) {
+      assertAllowedClassDescriptor(enumValue.classSymbol(), boundary, "annotation value type");
+    } else if (value instanceof AnnotationValue.OfAnnotation annotationValue) {
+      assertAllowedAnnotationType(annotationValue.annotation(), boundary);
+    } else if (value instanceof AnnotationValue.OfArray arrayValue) {
+      arrayValue.values().forEach(element -> assertAllowedAnnotationValue(element, boundary));
+    }
+  }
+
+  /** Rejects one class descriptor whose package is outside Java modules and library exports. */
+  private static void assertAllowedClassDescriptor(
+      ClassDesc classDescriptor, SignatureBoundary boundary, String exposure) {
+    while (classDescriptor.isArray()) {
+      classDescriptor = classDescriptor.componentType();
+    }
+    if (classDescriptor.isPrimitive()) {
+      return;
+    }
+    ClassDesc exposedType = classDescriptor;
+    String packageName = exposedType.packageName();
+    boolean isJavaType =
+        ModuleFinder.ofSystem().findAll().stream()
+            .map(ModuleReference::descriptor)
+            .filter(descriptor -> descriptor.name().startsWith("java."))
+            .anyMatch(descriptor -> descriptor.packages().contains(packageName));
+    assertTrue(
+        isJavaType || boundary.exportedPackages().contains(packageName),
+        () ->
+            boundary.context()
+                + " leaks non-exported or third-party "
+                + exposure
+                + " "
+                + packageName
+                + "."
+                + exposedType.displayName());
   }
 
   /** Checks every bound declared by a generic type variable. */

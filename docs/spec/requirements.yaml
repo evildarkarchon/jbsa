@@ -1,6 +1,6 @@
 schema_version: 1
 specification:
-  version: 0.8.0
+  version: 0.9.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -370,6 +370,9 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 49
@@ -390,6 +393,8 @@ requirements:
       anchor: jbsa-cli-009
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 49
@@ -771,6 +776,11 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 50
@@ -806,6 +816,9 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 50
@@ -1078,6 +1091,8 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 23
@@ -1424,6 +1439,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 39
@@ -1580,6 +1597,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: automated-test
     implementing_issue: 35
@@ -1714,6 +1733,8 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: automated-test
     implementing_issue: 33
@@ -1740,6 +1761,9 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: automated-test
     implementing_issue: 33
@@ -1791,6 +1815,9 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 33
@@ -2000,6 +2027,8 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 36
@@ -2221,6 +2250,8 @@ requirements:
       anchor: jbsa-perf-013
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812800
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: performance-case
     implementing_issue: 32
@@ -2241,6 +2272,8 @@ requirements:
       anchor: jbsa-perf-015
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812800
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: performance-case
     implementing_issue: 55
@@ -2802,6 +2835,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 37

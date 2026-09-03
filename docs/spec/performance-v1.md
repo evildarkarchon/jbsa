@@ -268,18 +268,26 @@ Performance evidence **MUST** compute metrics as follows:
 | pack throughput | uncompressed source MiB divided by external process wall seconds |
 | unpack throughput | logical extracted MiB divided by external process wall seconds |
 | random metadata access | lookup operations per second and p50, p95, and p99 latency |
-| random payload access | read operations per second and p50, p95, and p99 latency, reported separately from metadata lookup |
+| random payload access | read operations per second, logical payload MiB per second, and p50, p95, and p99 latency, reported separately from metadata lookup |
 | peak memory | peak private committed bytes, peak working set, and Java heap high-water |
 | parallel scaling | speedup `T1 / Tn` and efficiency `(T1 / Tn) / n`, where `T1` and `Tn` are paired wall times |
 | output size | exact produced bytes, candidate/oracle ratio and difference, and candidate/baseline ratio and difference when a baseline exists |
 
-For split versioned-BSA output, produced bytes **MUST** be the sum of every
-published part. Each metric **MUST** retain raw samples, medians, relative
-dispersion, applicable confidence bounds, corpus and protocol digests, complete
-case configuration, all tool/JVM/provider identities, and the non-normative
+A random-payload read operation **MUST** count as completed only after the
+selected entry is consumed through normal EOF and its returned byte count equals
+its manifest-declared uncompressed byte length. For each random-payload
+throughput sample, logical payload MiB per second **MUST** equal the sum, over
+completed read operations, of the selected entries' manifest-declared
+uncompressed byte lengths, divided by `1,048,576` and by the measured sample
+duration in seconds. For a fixed-size payload class, the equivalent conversion
+is `read operations per second * uncompressed bytes per read / 1,048,576`. For
+split versioned-BSA output, produced bytes **MUST** be the sum of every published
+part. Each metric **MUST** retain raw samples, medians, relative dispersion,
+applicable confidence bounds, corpus and protocol digests, complete case
+configuration, all tool/JVM/provider identities, and the non-normative
 environment fingerprint.
 
-_Source decision: [accepted performance metrics and evidence fields](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706)._
+_Source decisions: [accepted performance metrics and evidence fields](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706), [matching-throughput-unit review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812800), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-PERF-014
 
@@ -303,14 +311,16 @@ first Performance Baseline **MUST** satisfy all of these internal gates:
   median;
 - compressed-entry p99 latency within one manifest-defined payload-size class
   is no more than `10x` its median; and
-- warm-cache random payload throughput is at least `0.50x` size-matched
-  sequential extraction throughput.
+- warm-cache random logical-payload throughput in MiB per second, as defined by
+  [JBSA-PERF-013](#jbsa-perf-013), is at least `0.50x` size-matched sequential
+  unpack throughput in MiB per second; the random operand **MUST NOT** use raw
+  read operations per second.
 
 Every ratio **MUST** compare like corpus, family/layout, codec/provider, and
 worker configurations except for the stated independent variable. A case that
 cannot establish the pairing **MUST** be `INVALID`.
 
-_Source decision: [accepted first-release random-access bootstrap gates](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706)._
+_Source decisions: [accepted first-release random-access bootstrap gates](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706), [matching-throughput-unit review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812800), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-PERF-016
 

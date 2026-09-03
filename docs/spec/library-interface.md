@@ -102,16 +102,19 @@ _Source decisions: [accepted large-value interface](https://github.com/evildarka
 ## JBSA-LIB-006
 
 `ArchiveFamily` **MUST** remain distinct from wire version and BA2 subtype.
-Entry metadata **MUST** preserve the decoded display name, Normalized Name
-Identity when present, and original wire-name bytes when present as distinct
-values. Identity and its absence are owned by
+Entry metadata **MUST** preserve one display name: decoded wire text when every
+required name component is present and decodable, otherwise the exact marked
+synthetic name required by [JBSA-LIB-012](#jbsa-lib-012) or the applicable
+Archive Family. It **MUST** preserve that display name, Normalized Name Identity
+when present, and original wire-name bytes when present as distinct values.
+Identity and its absence are owned by
 [JBSA-LIB-012](#jbsa-lib-012). Archive and entry
 metadata **MUST** use strongly typed sealed values for TES3 BSA, Versioned BSA,
 General BA2, and DDS BA2 facts without exposing parser, codec, or provider
 implementations. Exact fields and canonical encoder ordering remain owned by the
 [Archive Family specifications](README.md#specification-index).
 
-_Source decisions: [accepted public metadata model](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+_Source decisions: [accepted public metadata model](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-LIB-007
 
@@ -151,13 +154,42 @@ that identity **MUST** fail canonical pack preflight before overlay processing.
 
 The first-release sealed `PackSource` interface **MUST** support detected `Path`
 sources for directories, individual loose files, and existing Bethesda
-Archives; explicit named loose files; and caller-generated entries. A generated
-payload factory **MUST** be repeatable, **MUST** return a fresh
+Archives; explicit named loose files; and caller-generated entries. A directory
+source's root **MUST** be the supplied directory itself. Each recursively
+discovered regular file **MUST** receive the archive entry name formed from its
+nonempty root-relative `Path` name elements, preserving their characters and
+joining them with U+005C (`\`). The root's final element and every ancestor
+**MUST NOT** participate. An individual loose-file source **MUST** use only its
+final `Path` name element. An existing-archive source **MUST** contribute its
+entries in decoded archive order and use each entry's retained display name when
+its Normalized Name Identity is present; an entry without that identity remains
+subject to the identity preflight above. Explicit named loose files and
+caller-generated entries **MUST** use
+exactly their caller-supplied complete archive names. No mapping **MAY** infer a
+source root from the process working directory, an ancestor named `Data`, or a
+common ancestor of multiple sources. A derived name that is not a valid complete
+name for the target Archive Family **MUST** fail canonical pack preflight; the
+caller may instead use an explicit named loose file.
+
+A directory source **MUST** complete discovery before overlay processing. After
+name-identity preflight, its discovered files **MUST** be sorted first by
+Normalized Name Identity and then, only to break an equal-identity tie, by the
+derived archive entry name. Both comparisons **MUST** be lexicographic over
+Unicode scalar values: the lower scalar at the first difference sorts first,
+and a sequence that is an exact prefix sorts first. This is the directory
+source's expansion order for insertion into the left-to-right overlay;
+filesystem enumeration order, host collation, locale, worker selection, and
+worker completion order **MUST NOT** affect it. Archive Family encoder ordering
+**MUST** remain a later step. After overlay replacement and that ordering, the
+resulting entries **MUST** supply the Logical Plan Order established by
+[JBSA-IO-008](io-and-publication.md#jbsa-io-008).
+
+A generated payload factory **MUST** be repeatable, **MUST** return a fresh
 `ReadableByteChannel` for every invocation, and **MAY** be invoked more than once
 for stabilization, hashing, comparison, retry, or packing. Ownership of every
 returned channel **MUST** pass to JBSA.
 
-_Source decisions: [accepted source-overlay and generated-input interface](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted generated-input lifetime](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+_Source decisions: [accepted source-overlay and generated-input interface](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted generated-input lifetime](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-LIB-009
 
@@ -252,8 +284,18 @@ _Source decisions: [accepted deep interface and rejected storage ports](https://
 For every complete decoded or caller-supplied entry name, JBSA **MUST** derive
 an optional Normalized Name Identity before converting the name to a host
 `Path`. A wire name **MUST** first decode through the selected Archive Name
-Encoding without replacement; an unmappable caller name or undecodable wire
-name has no identity.
+Encoding without replacement. When every required wire-name component is
+present but any component is undecodable, decode **MUST** apply the disposition
+and diagnostic required by [JBSA-DET-006](formats/detection.md#jbsa-det-006),
+retain every original component's wire bytes, use
+`__jbsa_wire__\e{entryOrdinal:08x}` as the decoded display name, and leave
+Normalized Name Identity absent. `entryOrdinal` **MUST** be the entry's
+zero-based decoded archive-order ordinal rendered as exactly eight lowercase
+hexadecimal digits. This marked synthetic display name **MUST NOT** be treated
+as decoded wire text or as original wire-name bytes. A format-owned synthetic
+name for absent wire-name components remains governed by that Archive Family.
+An unmappable caller name retains its caller-supplied display name but has no
+identity.
 
 Starting with the decoded Unicode scalar sequence, JBSA **MUST** map U+002F
 (`/`) to U+005C (`\`). A name is structurally ineligible for an identity when it
@@ -273,5 +315,9 @@ A missing, synthetic, unmappable, or structurally ineligible name has no
 Normalized Name Identity. Decode **MUST** retain its display name and any
 original wire bytes and **MAY** inspect it, but canonical pack **MUST** reject it
 before overlay processing and extraction **MUST** treat it as ineligible.
+Host-path extraction restrictions, including the qualified-Windows segment
+rules in [JBSA-IO-009](io-and-publication.md#jbsa-io-009), do not by themselves
+remove an otherwise present Normalized Name Identity or make an archive name
+ineligible for canonical packing.
 
-_Source decisions: [accepted byte-defined ASCII normalization](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+_Source decisions: [accepted byte-defined ASCII normalization](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._

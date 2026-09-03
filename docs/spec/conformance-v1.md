@@ -195,10 +195,12 @@ manifest **MUST** assign targeted cases that collectively cover:
 
 - empty, single-entry, multi-entry, nested, and zero-length inputs;
 - path case, forward-slash and backslash forms, ASCII, Windows-1252, and
-  Windows-932 wire names, unmappable encode names, deterministic ASCII
-  lowercasing, non-ASCII lowercase rejection and qualified-profile behavior,
-  and Normalized Name Identity rejection for empty or repeated segments, `.` or
-  `..` segments, trailing space or dot, colon, and non-ASCII case pairs;
+  Windows-932 wire names, unmappable encode names, undecodable present wire-name
+  components with their exact diagnostic, ordinal synthetic display name,
+  retained bytes, and absent identity, deterministic ASCII lowercasing,
+  non-ASCII lowercase rejection and qualified-profile behavior, and Normalized
+  Name Identity rejection for empty or repeated segments, `.` or `..` segments,
+  trailing space or dot, colon, and non-ASCII case pairs;
 - every versioned-BSA directory/file-name presence-flag combination and its
   absent-component and synthetic-display-name metadata, plus explicit embedded-
   name framing for `0x68` and `0x69`, canonical prefix derivation, and bounded
@@ -216,11 +218,19 @@ manifest **MUST** assign targeted cases that collectively cover:
 - zero and out-of-range filename tables for General and DDS BA2, including the
   exact ordinal-disambiguated synthetic display names and absent original
   wire-name bytes and Normalized Name Identities;
-- later-source-wins overlay order, filtering, sharing on and off, and splitting
-  on and off including a BSA crossing the 2 GiB split target and a transformed-
-  size- or sharing-dependent later-part collision under `FAIL` before destination
-  staging, extension-bearing, extensionless, leading-dot, and trailing-dot
-  split names, with no destination effects and complete scratch cleanup;
+- directory-root-relative, individual-file-basename, existing-archive, explicit-
+  name, and generated-entry `PackSource` mappings; directory expansion that is
+  identical across opposite filesystem creation orders and repeated
+  materializations; later-source-wins overlay order; filtering; sharing on and
+  off; and splitting on and off, including a BSA crossing the 2 GiB split target
+  and a transformed-size- or sharing-dependent later-part collision under
+  `FAIL` before destination staging,
+  extension-bearing, extensionless, leading-dot, and trailing-dot split names,
+  with no destination effects and complete scratch cleanup;
+- qualified-Windows extraction rejection for invalid filename characters and
+  reserved device basenames with case, extension, and U+00B9/U+00B2/U+00B3
+  variants, plus accepted neighbors such as `COM0`, `COM10`, and `CONSOLE`, while
+  retaining any otherwise present Normalized Name Identity;
 - every `ResourceLimits.standard()` ceiling exactly at and one unit above its
   boundary, CLI use of the standard value, and direct-library overrides;
 - sequential repetition, worker-limit variation, and parallel semantic
@@ -238,7 +248,7 @@ The manifest **MUST** map each coverage item to at least one Conformance Case an
 each case to its applicable assertion identifiers. A case **MAY** cover multiple
 items; a full Cartesian product is not required.
 
-_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [automatic-flag clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544), [DDS target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [resource-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557)._
+_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [automatic-flag clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544), [DDS target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [resource-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-CONF-010
 
@@ -288,27 +298,30 @@ Noncanonical Archive, or rejected. The case matrix **MUST** exercise illegal
 family/version/subtype/method tuples, impossible counts, checked-arithmetic
 overflow, out-of-range and truncated spans, decompression or decoded-size
 mismatch, partial overlap, equal Normalized Name Identities, exact shared spans,
-unsafe absolute and traversal names, safely ignorable constants, missing or
-out-of-range name tables, bounded TES3 name-offset inconsistency, usable-name
-hash mismatch, and harmless trailing bytes wherever the owning format makes the
-class applicable.
+unsafe absolute and traversal names, qualified-Windows-invalid characters and
+reserved device basenames, undecodable present wire-name components, safely
+ignorable constants, missing or out-of-range name tables, bounded TES3 name-
+offset inconsistency, usable-name hash mismatch, and harmless trailing bytes
+wherever the owning format makes the class applicable.
 
 Expected disposition and diagnostics **MUST** be taken from
 [JBSA-OPS-002](operation-semantics.md#jbsa-ops-002),
 [JBSA-OPS-003](operation-semantics.md#jbsa-ops-003),
+[JBSA-DET-006](formats/detection.md#jbsa-det-006),
 [JBSA-TES3-004](formats/tes3-bsa.md#jbsa-tes3-004),
 [JBSA-BSA-014](formats/versioned-bsa.md#jbsa-bsa-014),
 [JBSA-GNRL-010](formats/general-ba2.md#jbsa-gnrl-010), and the corresponding
 [DDS BA2](formats/dds-ba2.md) and [DDS payload](formats/dds-payload.md)
 requirements. Extraction cases for unsafe names **MUST** assert the no-write
 preflight and containment behavior in
-[JBSA-IO-009](io-and-publication.md#jbsa-io-009). This requirement **MUST NOT**
-make tolerated input valid encoder output.
+[JBSA-IO-009](io-and-publication.md#jbsa-io-009), a checked `POLICY` outcome
+rather than an unchecked host-path exception, and no destination effects. This
+requirement **MUST NOT** make tolerated input valid encoder output.
 
 Every expected diagnostic in these cases **MUST** use the exact identifier
 assigned by its owning behavior requirement.
 
-_Source decisions: [accepted malformed-input outcomes and classes](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [diagnostic-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522)._
+_Source decisions: [accepted malformed-input outcomes and classes](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [diagnostic-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-CONF-013
 

@@ -78,7 +78,7 @@ extraction ineligible before destination effects.
 
 A bounded name-offset inconsistency or harmless trailing data **MUST** produce a
 stable warning and a Tolerated Noncanonical Archive when the sequential name
-block and every payload remain unambiguous and safely decodable. A stored-hash
+block boundaries and every payload remain unambiguous and bounded. A stored-hash
 mismatch computed from a name eligible for canonical byte mapping under
 [JBSA-TES3-003](#jbsa-tes3-003) **MUST** have the same disposition. Absent a
 qualified Compatibility Profile, decode **MUST NOT** make that canonicality
@@ -107,7 +107,7 @@ Stored and expected values relevant to each condition **MUST** remain
 canonically represented structured values under
 [JBSA-OPS-005](../operation-semantics.md#jbsa-ops-005).
 
-_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [diagnostic-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522)._
+_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [diagnostic-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-TES3-005
 

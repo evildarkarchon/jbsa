@@ -98,7 +98,19 @@ reject unmappable names rather than replace bytes silently. A Compatibility
 Profile may select the active Windows ANSI code page without changing console
 encoding or path-containment rules.
 
-_Source decisions: [accepted Reference Snapshot wire behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted Archive Name Encoding](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+Decode **MUST NOT** replace an invalid name-encoding sequence. When a required,
+present wire-name component cannot decode without replacement but the archive
+is otherwise bounded and structurally unambiguous, decode **MUST** retain the
+component bytes, use the marked synthetic display name and absent Normalized
+Name Identity required by
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012), and classify the archive as
+a diagnosed Tolerated Noncanonical Archive rather than reject it. It **MUST**
+emit one `WARNING` diagnostic with identifier
+`archive-name.undecodable-wire-bytes` for each affected entry and component;
+the structured location **MUST** identify the decoded archive-order entry
+ordinal and the affected component.
+
+_Source decisions: [accepted Reference Snapshot wire behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted Archive Name Encoding](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## Evidence boundaries
 

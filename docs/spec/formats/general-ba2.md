@@ -140,7 +140,10 @@ _Source decisions: [accepted Reference Snapshot BA2 hashing](https://github.com/
 Canonical BA2 output **MUST** place a filename table after payload data and set
 `fileNameTableOffset` to its absolute start. It **MUST** contain exactly one
 `u16 byteLength` followed by that many non-NUL name bytes per entry in record
-order. Wire names **MUST** use `/`; decoded display names **MUST** use `\`.
+order. Wire names **MUST** use `/`; successfully decoded wire display names
+**MUST** use `\`. An undecodable present name follows
+[JBSA-DET-006](detection.md#jbsa-det-006) and
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012) instead.
 Encode **MUST** preserve supplied display-name case, require a folder component,
 and reject an encoded name longer than 65,535 bytes or unmappable by the selected
 Archive Name Encoding.
@@ -161,7 +164,7 @@ Canonical encode **MUST** reject an unresolved synthetic name until the caller
 supplies an explicit complete name. Decode **MUST NOT** perform an unchecked
 seek.
 
-_Source decisions: [accepted Reference Snapshot name-table behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted noncanonical name-table policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540)._
+_Source decisions: [accepted Reference Snapshot name-table behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted noncanonical name-table policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-GNRL-009
 

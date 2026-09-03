@@ -63,12 +63,13 @@ Validation **MUST** stop at its declared Validation Extent:
 failure.
 
 The initial interface **MUST NOT** add a separate whole-archive `validate`
-operation. Unsafe absolute or traversal names **MUST** remain inspectable and
-**MUST NOT** alone alter an otherwise conforming Archive Disposition, but they
-**MUST** produce a stable diagnostic and make extraction fail as `POLICY` before
-output creation.
+operation. Absolute, traversal, and qualified-Windows-invalid host-path names
+under [JBSA-IO-009](io-and-publication.md#jbsa-io-009) **MUST** remain
+inspectable and **MUST NOT** alone alter an otherwise conforming Archive
+Disposition, but they **MUST** produce a stable diagnostic and make extraction
+fail as `POLICY` before output creation.
 
-_Source decisions: [accepted layered validation model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted split-preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+_Source decisions: [accepted layered validation model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted split-preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
 
 ## JBSA-OPS-004
 

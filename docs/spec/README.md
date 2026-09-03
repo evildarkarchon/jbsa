@@ -190,7 +190,11 @@ contradiction was found in that review batch. The
 [accepted `0.8.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059)
 subsequently resolve the profile digest, staged release identity, Normalized
 Name Identity, diagnostic, split-name, synthetic-name, automatic-flag, DDS
-target, and standard Resource Limits gaps found on pull request #61.
+target, and standard Resource Limits gaps found on pull request #61. The
+[accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)
+resolve matching performance units, undecodable wire-name display and
+disposition, qualified-Windows extraction eligibility, filesystem `PackSource`
+name mapping and directory order, and complete annotation-boundary verification.
 
 The Reference Snapshot's archive-information error/zero-exit contradiction is a
 CLI-only evidence boundary owned by the Compatibility Profile; no Archive
