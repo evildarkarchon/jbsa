@@ -177,10 +177,9 @@ _Supersession sources: [original module decision and partial supersession](https
 This foundation intentionally does not choose exact Maven plugin versions,
 audited dependency inventory entries, native payload identities, or the JDK 25
 vendor/build identity. Those release inputs remain deferred until the owning
-implementation or distribution requirement has evidence. Archive Family and
-DDS payload behavior is owned by the format specifications below. Library
-behavior and CLI/qualification details remain owned by issues
-[#26](https://github.com/evildarkarchon/jbsa/issues/26) and
+implementation or distribution requirement has evidence. Archive Family, DDS
+payload, and library behavior are owned by the specifications below. CLI and
+qualification details remain owned by issue
 [#27](https://github.com/evildarkarchon/jbsa/issues/27). No other contradiction
 was found among the decisions materialized by issue #24.
 
@@ -195,6 +194,12 @@ later performance specification rather than being inferred from format code.
 - [Scope](scope.md)
 - [Modules and build](modules-and-build.md)
 - [Compliance](compliance.md)
+- Library behavior:
+  - [Library interface](library-interface.md)
+  - [Operation semantics](operation-semantics.md)
+  - [I/O and publication](io-and-publication.md)
+  - [Codecs](codecs.md)
+  - [Execution model](execution-model.md)
 - Archive formats:
   - [Detection and shared wire conventions](formats/detection.md)
   - [TES3 / Morrowind BSA](formats/tes3-bsa.md)
