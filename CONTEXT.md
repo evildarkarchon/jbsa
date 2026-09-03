@@ -84,6 +84,18 @@ _Avoid_: Example CLI, BSArch clone
 The explicit Windows code page used to translate archive name bytes without losing their original wire representation. Windows-1252 is the deterministic default; the `bsarch-1.0` Compatibility Profile may select the active Windows ANSI code page.
 _Avoid_: Platform default encoding, implicit ANSI
 
+**Normalized Name Identity**:
+The optional locale-independent archive-entry key formed from a structurally safe complete name by canonical separator mapping and ASCII-only case folding. It is distinct from display spelling, original wire-name bytes, hashes, and host filesystem identity.
+_Avoid_: Normalized path, lowercase name
+
+**DDS Target**:
+The explicit PC or Xbox platform selection used to validate DDS input for packing or choose canonical DDS reconstruction. It is distinct from Archive Family, codec, and destination Target Policy.
+_Avoid_: Archive target, inferred platform
+
+**Resource Limits**:
+The immutable semantic ceilings a caller applies to archive entries, metadata, decoded content, scratch use, outputs, diagnostics, and Secondary Failures. They are distinct from implementation buffer and scheduling controls.
+_Avoid_: Memory settings, tuning parameters
+
 **Conformance Diagnostic**:
 A machine-comparable identifier, severity, operation, phase, structured location, and canonically represented value set emitted for a warning or failure. An optional human explanation is not part of library conformance.
 _Avoid_: Error string, exception text

@@ -1,7 +1,10 @@
 name: Hosted Windows build gates
 
 on:
+  # Feature branches are covered by pull_request; only main needs the push trigger.
   push:
+    branches:
+      - main
   pull_request:
 
 permissions:

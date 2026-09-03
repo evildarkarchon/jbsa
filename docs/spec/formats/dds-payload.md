@@ -46,14 +46,18 @@ DDS BA2 encode **MUST** require `DDS ` magic, all bytes of the inferred envelope
 A parseable legacy size deviation **MAY** be inspected as Tolerated Noncanonical
 with a stable diagnostic, but **MUST NOT** be emitted.
 
-A PC target **MUST** reject an `XBOX` FourCC and an Xbox target **MUST** reject
-non-Xbox input. Because the DX10 BA2 record cannot preserve general arrays,
+DDS BA2 encode **MUST** use only the `PackRequest` `DdsTarget` selected under
+[JBSA-LIB-007](../library-interface.md#jbsa-lib-007) and **MUST NOT** infer or
+override it from the DDS FourCC, source path, destination filename, Archive
+Family, codec, Compatibility Profile, or environment. `PC` **MUST** reject an
+`XBOX` FourCC, and `XBOX` **MUST** reject every non-`XBOX` input as
+`UNSUPPORTED` before destination effects. Because the DX10 BA2 record cannot preserve general arrays,
 volumes, or depth, canonical encode **MUST** accept only a two-dimensional
 resource with depth one and array size one, including the six faces represented
 by the cubemap flag. Broader shapes remain unsupported until a fixture-backed
 rule preserves their semantics.
 
-_Source decisions: [accepted Reference Snapshot DDS validation](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted Reference Snapshot DDS validation](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
 
 ## JBSA-DDS-003
 
@@ -218,13 +222,15 @@ resource dimension, array size, and cubemap fields as in
 version `10705`, and leave otherwise unknown canonical Xbox extension fields
 zero.
 
-Explicit target metadata or policy **MUST** take precedence in PC/Xbox
-selection. When explicit selection is absent, a qualified Compatibility Profile
-**MAY** infer Xbox from `_xbox.` in the containing archive filename. If neither
-explicit selection nor qualified inference selects Xbox, reconstruction
-**MUST** select PC.
+For reconstruction, an explicit `DdsTarget` in `OpenOptions` **MUST** take
+precedence in PC/Xbox selection. When explicit selection is absent, a qualified
+Compatibility Profile **MAY** infer `XBOX` from `_xbox.` in the containing
+archive filename. If neither explicit selection nor qualified inference selects
+`XBOX`, reconstruction **MUST** select `PC`. This reconstruction rule
+**MUST NOT** select or alter the encode target required by
+[JBSA-DDS-002](#jbsa-dds-002).
 
-_Source decisions: [accepted Reference Snapshot Xbox reconstruction](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted filename-inference deviation](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot Xbox reconstruction](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted filename-inference deviation](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [DDS encode-target separation](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
 
 ## JBSA-DDS-011
 

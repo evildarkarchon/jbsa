@@ -17,16 +17,25 @@ library-module instance for the JBSA release. Its synchronous instance interface
 | Operation | Successful result |
 | --- | --- |
 | `detect(Path)` | detached archive detection |
-| `inspect(Path)` | detached archive inspection |
+| `inspect(Path)` | detached archive inspection using `OpenOptions.standard()` |
+| `inspect(Path, OpenOptions)` | detached archive inspection under the supplied options |
 | `open(Path, OpenOptions)` | caller-owned `OpenArchive` |
 | `extract(ExtractRequest, OperationControl)` | Operation Report |
 | `pack(PackRequest, OperationControl)` | Operation Report |
+
+`inspect(path)` **MUST** be behaviorally identical to
+`inspect(path, OpenOptions.standard())`. `OpenOptions` **MUST** carry the
+selected Compatibility Profile or none, `ResourceLimits`, and an optional
+explicit `DdsTarget` used only for DDS reconstruction. `OpenOptions.standard()`
+**MUST** select no Compatibility Profile, `ResourceLimits.standard()`, and no
+explicit `DdsTarget`. The optionless inspection form **MUST NOT** infer any of
+those values from the environment.
 
 The thin CLI, conformance suite, benchmarks, and embedded consumers **MUST** use
 this same interface for archive behavior. `BethesdaArchives.standard()` itself
 **MUST NOT** own a closeable resource lifetime.
 
-_Source decisions: [accepted library interface](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted structured synchronous outcomes](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted library interface](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted structured synchronous outcomes](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [profile-aware inspection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179510)._
 
 ## JBSA-LIB-002
 
@@ -93,37 +102,52 @@ _Source decisions: [accepted large-value interface](https://github.com/evildarka
 ## JBSA-LIB-006
 
 `ArchiveFamily` **MUST** remain distinct from wire version and BA2 subtype.
-Entry metadata **MUST** preserve the decoded display name, normalized lookup
-identity, and original wire-name bytes as distinct values. Archive and entry
+Entry metadata **MUST** preserve the decoded display name, Normalized Name
+Identity when present, and original wire-name bytes when present as distinct
+values. Identity and its absence are owned by
+[JBSA-LIB-012](#jbsa-lib-012). Archive and entry
 metadata **MUST** use strongly typed sealed values for TES3 BSA, Versioned BSA,
 General BA2, and DDS BA2 facts without exposing parser, codec, or provider
 implementations. Exact fields and canonical encoder ordering remain owned by the
 [Archive Family specifications](README.md#specification-index).
 
-_Source decision: [accepted public metadata model](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103)._
+_Source decisions: [accepted public metadata model](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-LIB-007
 
 `ExtractRequest` **MUST** identify the source archive, destination, selected
-entries, target policy, Diagnostic Policy, `ResourceLimits`, worker selection,
-and applicable immutable open and extraction options. `PackRequest` **MUST**
-identify the destination, target Archive Family and encoding, ordered
+entries, selected Compatibility Profile or none, target policy, Diagnostic
+Policy, `ResourceLimits`, worker selection, and applicable immutable open and
+extraction options. `PackRequest` **MUST** identify the destination, target
+Archive Family and encoding, selected Compatibility Profile or none, ordered
 `PackSource` values, target policy, Diagnostic Policy, `ResourceLimits`, worker
 selection, and applicable filtering, compression, sharing, and splitting
-choices.
+choices. For Versioned BSA, the request **MUST** independently identify
+automatic or explicit archive-flag selection and automatic or explicit
+file-flag selection.
+
+The public `DdsTarget` value **MUST** have exactly `PC` and `XBOX` variants and
+**MUST** remain distinct from Archive Family, wire version, BA2 subtype, codec,
+and destination target policy. A `PackRequest` for FO4 DDS BA2 or Starfield DDS
+BA2 **MUST** carry exactly one encode `DdsTarget`; a request for every other
+Archive Family **MUST NOT** carry one. That encode field is independent of any
+`DdsTarget` later supplied through `OpenOptions` for reconstruction. Missing or
+inapplicable encode-target data is a programmer contract violation.
 
 Programmer contract violations in a request **MUST** be reported as unchecked
 failures; archive, source, policy, capability, and destination non-success after
 an operation is invoked **MUST** use [Operation semantics](operation-semantics.md).
 
-_Source decisions: [accepted immutable operation requests](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted programmer-error boundary](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted worker selection](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855)._
+_Source decisions: [accepted immutable operation requests](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted programmer-error boundary](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted worker selection](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
 
 ## JBSA-LIB-008
 
 The ordered `PackSource` list **MUST** be interpreted from left to right as an
-overlay. A later case-insensitive normalized-name match **MUST** replace the
-earlier logical entry while retaining its first insertion position until the
-target Archive Family's encoder ordering is applied.
+overlay. A later entry with the same Normalized Name Identity under
+[JBSA-LIB-012](#jbsa-lib-012) **MUST** replace the earlier entry's name,
+metadata, and payload while retaining only its first-insertion position until
+the target Archive Family's encoder ordering is applied. A source entry without
+that identity **MUST** fail canonical pack preflight before overlay processing.
 
 The first-release sealed `PackSource` interface **MUST** support detected `Path`
 sources for directories, individual loose files, and existing Bethesda
@@ -133,7 +157,7 @@ payload factory **MUST** be repeatable, **MUST** return a fresh
 for stabilization, hashing, comparison, retry, or packing. Ownership of every
 returned channel **MUST** pass to JBSA.
 
-_Source decisions: [accepted source-overlay and generated-input interface](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted generated-input lifetime](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067)._
+_Source decisions: [accepted source-overlay and generated-input interface](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted generated-input lifetime](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-LIB-009
 
@@ -144,12 +168,49 @@ retained diagnostics, and retained Secondary Failures. A limit breach **MUST**
 produce the `POLICY` outcome defined by
 [JBSA-OPS-004](operation-semantics.md#jbsa-ops-004).
 
+`ResourceLimits.standard()` **MUST** have exactly these values:
+
+| Member | Standard value |
+| --- | ---: |
+| `maxEntries` | `1_000_000` |
+| `maxMetadataBytes` | `1_073_741_824` (1 GiB) |
+| `maxDecodedBytes` | `1_099_511_627_776` (1 TiB) |
+| `maxScratchBytes` | `274_877_906_944` (256 GiB) |
+| `maxOutputs` | `1_000_000` |
+| `maxDiagnostics` | `4_096` |
+| `maxSecondaryFailures` | `256` |
+
+`maxEntries` **MUST** count every admitted entry candidate, including one later
+replaced by an overlay. `maxMetadataBytes` **MUST** count encoded header, table,
+record, and name bytes parsed or planned, not Java object size.
+`maxDecodedBytes` **MUST** count each selected final logical entry once,
+independent of compression, sharing, replay, or retry; for an `EntryContent`
+outside a mutation it applies separately to each channel. `maxScratchBytes`
+**MUST** limit the peak simultaneously retained scratch and spool extent.
+`maxOutputs` **MUST** count intended published leaf files or archive parts and
+exclude directories, staging, and backups. The diagnostic and Secondary Failure
+limits **MUST** count returned records and reserve one diagnostic position for
+the truncation diagnostic required by
+[JBSA-OPS-005](operation-semantics.md#jbsa-ops-005). Equality with a ceiling is
+permitted; admitting the next counted unit **MUST** breach it.
+
+Every public convenience or builder default that omits explicit limits **MUST**
+use `ResourceLimits.standard()`. The CLI **MUST** use that exact value for
+inspection, pack, and unpack and **MUST NOT** vary it by Compatibility Profile,
+JVM heap, processor count, available storage, environment, or provider. A direct
+library caller **MAY** supply different immutable limits.
+
+Every explicit ceiling **MUST** be nonnegative, and `maxDiagnostics` **MUST** be
+at least one so the reserved truncation diagnostic is representable. A value
+violating those programmer contracts **MUST** be rejected as an unchecked
+failure before an operation begins.
+
 Allocation sizes, buffer counts, pools, provider thresholds, spill layout, and
 resource-credit bookkeeping **MUST NOT** become public configuration. Bounded
 enforcement is owned by [I/O and publication](io-and-publication.md) and
 [Execution model](execution-model.md).
 
-_Source decisions: [accepted public `ResourceLimits`](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted diagnostic retention limits](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted internal resource credits](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855)._
+_Source decisions: [accepted public `ResourceLimits`](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted diagnostic retention limits](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted internal resource credits](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [standard-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557)._
 
 ## JBSA-LIB-010
 
@@ -185,3 +246,32 @@ in-memory, fault-injecting, codec, scheduling, and storage adapters do not meet
 that threshold.
 
 _Source decisions: [accepted deep interface and rejected storage ports](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted internal codec/provider boundary](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971), [accepted internal I/O model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted internal scheduler model](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855)._
+
+## JBSA-LIB-012
+
+For every complete decoded or caller-supplied entry name, JBSA **MUST** derive
+an optional Normalized Name Identity before converting the name to a host
+`Path`. A wire name **MUST** first decode through the selected Archive Name
+Encoding without replacement; an unmappable caller name or undecodable wire
+name has no identity.
+
+Starting with the decoded Unicode scalar sequence, JBSA **MUST** map U+002F
+(`/`) to U+005C (`\`). A name is structurally ineligible for an identity when it
+is empty; begins or ends with a separator; contains consecutive separators; has
+a segment equal to `.` or `..`; contains U+0000 or U+003A (`:`); or has a
+segment ending in U+0020 SPACE or U+002E FULL STOP.
+
+For an eligible name, JBSA **MUST** map only U+0041 through U+005A (`A` through
+`Z`) to U+0061 through U+007A and leave every other scalar unchanged. The
+resulting separator-joined scalar sequence is the Normalized Name Identity, and
+identity equality **MUST** be exact scalar-for-scalar equality. Normalization
+**MUST NOT** perform Unicode normalization, locale-sensitive or full-Unicode
+case folding, host-`Path` normalization, filesystem lookup, short-name
+expansion, or symbolic-link resolution.
+
+A missing, synthetic, unmappable, or structurally ineligible name has no
+Normalized Name Identity. Decode **MUST** retain its display name and any
+original wire bytes and **MAY** inspect it, but canonical pack **MUST** reject it
+before overlay processing and extraction **MUST** treat it as ineligible.
+
+_Source decisions: [accepted byte-defined ASCII normalization](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._

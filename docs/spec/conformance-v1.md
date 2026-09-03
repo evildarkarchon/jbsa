@@ -32,10 +32,11 @@ The manifest **MUST** map every token to a human-readable description and map
 the fixture and configuration tokens to immutable content digests. `global`
 **MUST** be used as the family token only for a command or scenario that has no
 Archive Family, and `none` **MUST** be used as the codec token only where no
-codec applies. An identity field or its digest mapping **MUST NOT** be changed
-in place; a change creates a new Conformance Case identifier.
+codec applies. Every DDS encode configuration description and digest **MUST**
+bind its exact `DdsTarget`. An identity field or its digest mapping **MUST NOT**
+be changed in place; a change creates a new Conformance Case identifier.
 
-_Source decisions: [accepted Conformance Case key](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 CV1 identity acceptance](https://github.com/evildarkarchon/jbsa/issues/27)._
+_Source decisions: [accepted Conformance Case key](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 CV1 identity acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
 
 ## JBSA-CONF-002
 
@@ -195,20 +196,33 @@ manifest **MUST** assign targeted cases that collectively cover:
 - empty, single-entry, multi-entry, nested, and zero-length inputs;
 - path case, forward-slash and backslash forms, ASCII, Windows-1252, and
   Windows-932 wire names, unmappable encode names, deterministic ASCII
-  lowercasing, and non-ASCII lowercase rejection and qualified-profile behavior;
+  lowercasing, non-ASCII lowercase rejection and qualified-profile behavior,
+  and Normalized Name Identity rejection for empty or repeated segments, `.` or
+  `..` segments, trailing space or dot, colon, and non-ASCII case pairs;
 - every versioned-BSA directory/file-name presence-flag combination and its
   absent-component and synthetic-display-name metadata, plus explicit embedded-
   name framing for `0x68` and `0x69`, canonical prefix derivation, and bounded
-  prefix/index mismatch;
+  prefix/index mismatch; `.dds` empty-stem encode rejection and decode
+  retention; and every automatic flag-classifier row, root-over-extension and
+  first-extension-match precedence, no-match handling, family mask, special
+  `0x67` XML rule, and archive-flag consequence;
 - compression size boundaries, mixed compression, complete codec consumption,
   and decoded-size mismatch;
 - DDS writable formats, materially distinct dimensions and mip counts, both the
   8-byte and 16-byte BC block classes at `1x1` and `5x7`, cubemaps, canonical
-  reconstruction, and chunk boundaries;
+  reconstruction, chunk boundaries, both `PC` and `XBOX` encode targets with
+  matching inputs, both mismatch rejections, CLI DDS-selector-to-`PC` mapping,
+  and explicit, default, and qualified-profile reconstruction selection;
+- zero and out-of-range filename tables for General and DDS BA2, including the
+  exact ordinal-disambiguated synthetic display names and absent original
+  wire-name bytes and Normalized Name Identities;
 - later-source-wins overlay order, filtering, sharing on and off, and splitting
   on and off including a BSA crossing the 2 GiB split target and a transformed-
   size- or sharing-dependent later-part collision under `FAIL` before destination
-  staging, with no destination effects and complete scratch cleanup;
+  staging, extension-bearing, extensionless, leading-dot, and trailing-dot
+  split names, with no destination effects and complete scratch cleanup;
+- every `ResourceLimits.standard()` ceiling exactly at and one unit above its
+  boundary, CLI use of the standard value, and direct-library overrides;
 - sequential repetition, worker-limit variation, and parallel semantic
   equivalence;
 - serialized, blocking, and failing progress observers while treating callback
@@ -224,14 +238,15 @@ The manifest **MUST** map each coverage item to at least one Conformance Case an
 each case to its applicable assertion identifiers. A case **MAY** cover multiple
 items; a full Cartesian product is not required.
 
-_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [automatic-flag clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544), [DDS target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [resource-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557)._
 
 ## JBSA-CONF-010
 
 A Decode Conformance assertion **MUST** compare the applicable semantic
 projection from this list: Archive Family and wire version; BA2 subtype and
-compression method; entry count and serialized order; decoded names and original
-wire-name bytes; wire hashes; logical, stored, and decoded sizes; compression
+compression method; entry count and serialized order; decoded names; original
+wire-name byte presence and values; Normalized Name Identity presence and
+values; wire hashes; logical, stored, and decoded sizes; compression
 state; flags; Conformance Diagnostics; and exact uncompressed payload bytes.
 Versioned-BSA projections **MUST** additionally include archive and file flags,
 family-specific folder and file hashes, folder/file ordering, and embedded-name
@@ -246,7 +261,7 @@ Physical offsets, padding, ignored constants, compressed bytes, and incidental
 layout **MUST NOT** participate in semantic equality unless a separately
 qualified Binary Conformance assertion expressly includes them.
 
-_Source decision: [accepted semantic Decode Conformance projection](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted semantic Decode Conformance projection](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540)._
 
 ## JBSA-CONF-011
 
@@ -259,7 +274,11 @@ metadata assertion from [JBSA-CONF-010](#jbsa-conf-010). A JBSA self-round-trip,
 successful creation, or comparison only with another JBSA component **MUST NOT**
 establish Encode Conformance.
 
-_Source decision: [accepted cross-direction Encode Conformance rule](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+Every DDS encode case **MUST** bind and use the same `DdsTarget` in both
+differential directions. Any containing archive filename needed for qualified
+`_xbox.` reconstruction **MUST** also be fixed and digest-bound by the case.
+
+_Source decisions: [accepted cross-direction Encode Conformance rule](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
 
 ## JBSA-CONF-012
 
@@ -268,7 +287,7 @@ the format and operation specifications: conforming, diagnosed Tolerated
 Noncanonical Archive, or rejected. The case matrix **MUST** exercise illegal
 family/version/subtype/method tuples, impossible counts, checked-arithmetic
 overflow, out-of-range and truncated spans, decompression or decoded-size
-mismatch, partial overlap, duplicate normalized names, exact shared spans,
+mismatch, partial overlap, equal Normalized Name Identities, exact shared spans,
 unsafe absolute and traversal names, safely ignorable constants, missing or
 out-of-range name tables, bounded TES3 name-offset inconsistency, usable-name
 hash mismatch, and harmless trailing bytes wherever the owning format makes the
@@ -286,7 +305,10 @@ preflight and containment behavior in
 [JBSA-IO-009](io-and-publication.md#jbsa-io-009). This requirement **MUST NOT**
 make tolerated input valid encoder output.
 
-_Source decisions: [accepted malformed-input outcomes and classes](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+Every expected diagnostic in these cases **MUST** use the exact identifier
+assigned by its owning behavior requirement.
+
+_Source decisions: [accepted malformed-input outcomes and classes](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [diagnostic-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522)._
 
 ## JBSA-CONF-013
 

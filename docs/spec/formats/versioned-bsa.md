@@ -85,9 +85,14 @@ record order, and absolute file-record `dataOffset` values remain present in
 every flag combination. Absence required by a clear presence flag is conforming
 and **MUST NOT** produce a missing-name-section diagnostic.
 
-For canonical encode, split the normalized entry name at its final separator
-into a nonempty folder and basename and encode both components using Archive
-Name Encoding. If either component contains a byte greater than `0x7f`,
+For canonical encode, split the complete entry name eligible under
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012) at its final separator into
+a nonempty folder and basename and encode both components using Archive Name
+Encoding. For the final-extension split in
+[JBSA-BSA-006](#jbsa-bsa-006), a basename with no `0x2e` byte uses its complete
+byte sequence as the stem. If the final `0x2e` is the first basename byte, the
+extension-free stem is empty and canonical encode **MUST** reject the entry. If
+either component contains a byte greater than `0x7f`,
 canonical encode **MUST** reject the entry. A Compatibility Profile **MUST NOT**
 admit such a component unless it defines the byte-level lowercase mapping and
 cites qualifying fixtures for the resulting stored name and BSA hash bytes.
@@ -108,22 +113,25 @@ name **MUST** be
 where `folderOrdinal` is the zero-based folder-record ordinal, `entryOrdinal` is
 the zero-based global file-record ordinal, and all hexadecimal digits are
 lowercase. That marked synthetic name **MUST NOT** be represented as original
-wire bytes or used as normalized name identity, duplicate or overlay equality,
-or canonical repack input; normalized name identity is absent, and the stored
+wire bytes or used as Normalized Name Identity, duplicate or overlay equality,
+or canonical repack input; Normalized Name Identity is absent, and the stored
 hash pair and ordinals remain authoritative record identity. Canonical encode
 **MUST** reject an unresolved synthetic name until the caller supplies an
 explicit complete name. Embedded full names under
 [JBSA-BSA-011](#jbsa-bsa-011) remain independent payload-framing metadata and
 **MUST NOT** change index-section parsing or fabricate absent index bytes.
 
-_Source decisions: [accepted Reference Snapshot name and layout behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted Archive Name Encoding](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted deterministic-name and presence clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+_Source decisions: [accepted Reference Snapshot name and layout behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted Archive Name Encoding](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted deterministic-name and presence clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [empty-stem rejection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502)._
 
 ## JBSA-BSA-006
 
 The BSA name hash **MUST** be computed from the normalized folder or basename
 bytes produced by [JBSA-BSA-005](#jbsa-bsa-005). For a basename, split off the
-final extension including its dot; folder hashes use no extension. Form the low
-word from the final stem byte, the
+final extension including its dot; folder hashes use no extension. The canonical
+basename-hash procedure applies only when that split leaves a nonempty stem.
+Decode **MUST** retain a present empty-stem basename and its stored hash as
+authoritative and **MUST NOT** perform or diagnose a canonical hash comparison
+for that component. Form the low word from the final stem byte, the
 penultimate stem byte when the stem has more than two bytes, the stem length
 modulo 256, and the first stem byte, in increasing byte significance. Apply
 these low-word masks: `.kf` `0x00000080`, `.nif` `0x00008000`, `.dds`
@@ -143,17 +151,18 @@ Encoding bytes at most `0x7f`. For a component containing a byte greater than
 `0x7f`, its original wire bytes and stored hash remain authoritative and decode
 **MUST NOT** diagnose a canonical hash mismatch.
 
-_Source decisions: [accepted Reference Snapshot hash behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted deterministic lowercase clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+_Source decisions: [accepted Reference Snapshot hash behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted deterministic lowercase clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [empty-stem rejection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502)._
 
 ## JBSA-BSA-007
 
 Canonical versioned-BSA metadata **MUST** sort entries by unsigned folder hash
 and then unsigned basename hash. Folder records, folder blocks, file records,
 and the global basename table **MUST** preserve that resulting order. Equal
-hashes **MUST NOT** establish name identity; normalized name bytes **MUST** be
-compared before treating entries as duplicates or overlays.
+hashes **MUST NOT** establish name identity; Normalized Name Identities under
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012) **MUST** be compared before
+treating entries as duplicates or overlays.
 
-_Source decisions: [accepted Reference Snapshot ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted collision-safe identity](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted collision-safe identity](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-BSA-008
 
@@ -211,7 +220,7 @@ metadata. When both corresponding index components are present, decode **MUST**
 compare the embedded bytes byte-for-byte with the original folder wire-name
 bytes, one `0x5c` byte, and the original basename wire-name bytes. When either
 component is absent, decode **MUST NOT** use the embedded bytes to fabricate that
-component or a normalized name identity, as required by
+component or a Normalized Name Identity, as required by
 [JBSA-BSA-005](#jbsa-bsa-005). Versions `0x68` and `0x69` **MUST** decode and
 encode this framing when the flag is present. Version `0x67` **MUST NOT** infer
 that framing solely from flag `0x0100` until the contradiction in the evidence
@@ -242,20 +251,76 @@ _Source decision: [accepted Reference Snapshot flag behavior](https://github.com
 
 ## JBSA-BSA-013
 
-Automatic flags **MUST** classify the encoded asset set by its normalized roots
-and extensions, set startup strings when meshes are present, retain names when
-scripts or sounds are present, and set `0x0004` when any entry is compressed.
-Non-`0x67` output **MUST** clear menu, shader, and font file categories;
-`0x69` output **MUST** also clear miscellaneous. Exact automatic
-embedded-name behavior affected by the contradictions below **MUST** remain
-unselected until differential fixture evidence resolves it. This restriction
-applies only to automatic selection; an explicit `0x0100` override for `0x68` or
-`0x69` **MUST** use [JBSA-BSA-011](#jbsa-bsa-011).
+Automatic file flags **MUST** use this ordered classifier. The class name is
+descriptive; the last column is the exact initial file-flag contribution.
+
+| Class | Normalized root | Fallback final extensions | Contribution |
+| --- | --- | --- | ---: |
+| Mesh | `meshes` | `.nif`, `.kf`, `.kfm`, `.egm`, `.egt`, `.tri`, `.psa`, `.hkt`, `.hkx`, `.ssf`, `.btr`, `.bto`, `.btt`, `.dtl` | `0x0001` |
+| Texture | `textures` | `.dds`, `.tga`, `.png` | `0x0002` |
+| Material | `materials` | `.bgsm`, `.bgem` | `0x0100` |
+| Geometry | `geometries` | `.mesh` | `0x0100` |
+| Voice | `sound\voice` | `.lip`, `.wav`, `.xwm`, `.mp3`, `.ogg`, `.fuz` | `0x0010` |
+| Sound | `sound` | `.wav`, `.xwm`, `.ogg` | `0x0008` |
+| Music | `music` | `.xwm`, `.mp3` | `0x0100` |
+| Script source | `scripts\source` | `.psc` | `0x0100` |
+| SSE script source | `source\scripts` | `.psc` | `0x0100` |
+| Script | `scripts` | `.pex`, `.psc` | `0x0100` |
+| Strings | `strings` | `.strings`, `.ilstrings`, `.dlstrings` | `0x0100` |
+| SpeedTree | `trees` | `.spt` | `0x0040` |
+| Video | `video` | `.bik`, `.bk2` | `0x0100` |
+| LOD settings | `lodsettings` | `.lodsettings`, `.dlodsettings`, `.lod` | `0x0001 \| 0x0100` |
+| Distant LOD | `distantlod` | `.cmp`, `.lod` | `0x0001 \| 0x0100` |
+| Interface | `interface` | `.swf`, `.png`, `.txt` | `0x0100` |
+| Program | `programs` | `.swf` | `0x0100` |
+| Menus | `menus` | `.xml`, `.htm`, `.txt`, `.scc`, `.bat` | `0x0020` |
+| Font | `fonts` | `.fnt`, `.tex` | `0x0080` |
+| Facegen | `facegen` | `.ctl` | `0x0100` |
+| LS data | `lsdata` | `.dat` | `0x0100` |
+| Shaders | `shaders` | `.sdp` | `0x0100` |
+| Shader effects | `shadersfx` | `.fxp` | `0x0100` |
+| Grass | `grass` | `.gid` | `0x0100` |
+| Pre-visibility | `vis` | `.uvd` | `0x0100` |
+| Sequence | `seq` | `.seq` | `0x0100` |
+| Dialogue views | `dialogueviews` | `.xml` | `0x0100` |
+| Book art | `bookart` | `.dds`, `.tga` | `0x0100` |
+| Icon | `icons` | `.dds`, `.tga` | `0x0100` |
+| Splash | `splash` | `.dds`, `.tga` | `0x0100` |
+| No match | not applicable | not applicable | `0x0100` |
+
+Classification **MUST** use the canonical lowercase, backslash-separated bytes
+from [JBSA-BSA-005](#jbsa-bsa-005). A root `R` matches only a complete `R`
+component or a name beginning `R\`. The encoder **MUST** first select the first
+matching root row in table order. Only when no root matches, it **MUST** select
+the first row in table order whose listed extension equals the basename's final
+extension. No match selects the final row. Contributions from all entries
+**MUST** be combined with bitwise OR. The apparently counterintuitive Menus
+`0x0020` and Shaders `0x0100` contributions are intentional reproductions of
+the pinned classifier, not corrected labels. For `0x67` only, every `.xml`
+basename **MUST** additionally contribute menu bit `0x0004`, regardless of its
+selected class.
+
+After classification, non-`0x67` output **MUST** clear menu, shader, and font
+bits `0x0004 | 0x0020 | 0x0080`; `0x69` output **MUST** additionally clear
+miscellaneous bit `0x0100`. Automatic archive flags **MUST** begin with `0x0603`
+for `0x67` and `0x0003` for `0x68` or `0x69`. They **MUST** add startup-strings
+bit `0x0080` when the final file flags contain mesh bit `0x0001`, retain-name
+bit `0x0010` when any entry classified as Script or Sound, and compression bit
+`0x0004` when any entry is compressed. Voice, Music, Script source, and SSE
+script source **MUST NOT** trigger retain-name by themselves. Every other
+automatic archive bit, including embedded-name bit `0x0100`, **MUST** remain
+clear.
+
+Automatic embedded-name behavior affected by the contradictions below **MUST**
+remain unselected until differential fixture evidence resolves it. This
+restriction applies only to automatic selection; an explicit `0x0100` override
+for `0x68` or `0x69` **MUST** use
+[JBSA-BSA-011](#jbsa-bsa-011).
 
 Zero-valued flag overrides and negative split values are request/CLI policy and
 **MUST NOT** be inferred from the wire format.
 
-_Source decisions: [accepted Reference Snapshot flag inference](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted contradiction policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot flag inference](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted contradiction policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [automatic-classification clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544)._
 
 ## JBSA-BSA-014
 
@@ -263,7 +328,8 @@ Decode **MUST** validate header counts and lengths, flag-conditioned name-sectio
 presence and lengths, folder-record and name-table relationships, absolute
 payload spans, record framing, codec consumption, and decoded sizes with checked
 arithmetic. It **MUST** reject overflow, truncation, out-of-file or partially
-overlapping spans, duplicate complete normalized wire names, impossible
+overlapping spans, duplicate complete names with equal Normalized Name
+Identities under [JBSA-LIB-012](../library-interface.md#jbsa-lib-012), impossible
 framing, unsupported codecs, and decoded-size mismatch. Exact shared payload
 spans remain valid. Absolute or traversal names remain inspectable but
 **MUST** make extraction ineligible before destination effects. A stored-hash
@@ -277,8 +343,9 @@ and a Tolerated Noncanonical Archive when record and payload bounds remain
 unambiguous; the encoder **MUST NOT** emit that mismatch.
 
 Encode **MUST** reject an empty entry set, an entry without a folder component,
-unmappable names, unpopulated payloads, and values that cannot fit their wire
-fields. An encoded folder name **MUST** be at most 254 bytes because its `u8`
+an empty extension-free basename stem, unmappable names, unpopulated payloads,
+and values that cannot fit their wire fields. An encoded folder name **MUST** be
+at most 254 bytes because its `u8`
 length includes the NUL; an embedded full name **MUST** be at most 255 bytes
 because its `u8` length excludes a terminator. Aggregate folder-name and
 basename tables **MUST** fit their `u32` header lengths. A file-record byte count,
@@ -289,7 +356,7 @@ Inspection **MUST** retain stable warnings for file offsets beyond signed 2 GiB,
 cubemap textures without embedded names, non-textures with embedded names, and
 uncompressed `0x69` entries with embedded names.
 
-_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [empty-stem rejection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-BSA-015
 
@@ -297,14 +364,15 @@ The default versioned-BSA split target **MUST** be `2,147,483,647` bytes; zero
 **MUST** disable splitting. The advisory estimate **MUST** include packed bytes,
 200 bytes per entry, encoded-name length, and a possible embedded-name length
 for `0x68` and `0x69`. A single oversized entry **MUST** occupy its own part,
-and later parts **MUST** insert `2`, `3`, and so on before the extension.
+and part paths **MUST** use the numbered split-sibling mapping in
+[JBSA-IO-008](../io-and-publication.md#jbsa-io-008).
 
 Shared payload offsets **MAY** be emitted only after size and byte equality are
 confirmed. Parallel completion order and sharing-dependent split grouping
 **MUST NOT** be used for Binary Conformance; deterministic cases use the
 qualified sequential plan.
 
-_Source decisions: [accepted Reference Snapshot split and sharing behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted case-scoped Binary Conformance](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot split and sharing behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted case-scoped Binary Conformance](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533)._
 
 ## TES4 / Oblivion BSA `0x67` evidence boundary
 
@@ -313,7 +381,9 @@ names (`0x0100`), XMem (`0x0200`), and unnamed bit 10 (`0x0400`), but its reader
 and writer neither consume nor emit an embedded-name prefix for `0x67`. This
 contradiction blocks canonical automatic `0x0100` behavior and Binary
 Conformance assertions involving it until a differential fixture establishes
-the intended bytes.
+the intended bytes. Safe automatic `0x67` output therefore leaves `0x0100`
+clear while retaining the uncontradicted `0x0200` and `0x0400` base bits;
+explicit `0x0100` remains available only for `0x68` and `0x69`.
 
 The signed-byte hash recurrence is deterministic for stored bytes, but canonical
 non-ASCII lowercasing depends on a selected Compatibility Profile. The ASCII

@@ -103,7 +103,8 @@ _Source decision: [accepted Reference Snapshot BA2 layout](https://github.com/ev
 
 ## JBSA-GNRL-007
 
-For canonical encode, split a normalized entry name at its last separator into
+For canonical encode, split the complete entry name eligible under
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012) at its last separator into
 directory and filename, then split the filename at its last dot into
 extension-free basename and extension. The encoder **MUST** encode the directory,
 extension-free basename, and extension using Archive Name Encoding. If any
@@ -132,7 +133,7 @@ Compatibility Profile, decode **MUST NOT** make that canonicality judgment for a
 name containing a byte greater than `0x7f`; its stored hashes and extension bytes
 remain authoritative.
 
-_Source decisions: [accepted Reference Snapshot BA2 hashing](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted tolerated-noncanonical policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot BA2 hashing](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted tolerated-noncanonical policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-GNRL-008
 
@@ -146,11 +147,21 @@ Archive Name Encoding.
 
 A zero or out-of-range filename-table offset **MUST** produce a diagnosed
 Tolerated Noncanonical Archive when all records and payloads remain bounded.
-Decode **MUST** expose a deterministic synthetic name derived from the stored
-directory hash, basename hash, and extension while retaining those fields as
-the authoritative metadata; it **MUST NOT** perform an unchecked seek.
+For each such entry, the decoded display name **MUST** be
+`__jbsa_hash__\d{directoryHash:08x}\e{entryOrdinal:08x}-{baseNameHash:08x}-x{extensionByte0:02x}{extensionByte1:02x}{extensionByte2:02x}{extensionByte3:02x}`.
+`entryOrdinal` is the zero-based physical BA2 record ordinal. Each hash is
+rendered from its unsigned `u32` value as exactly eight lowercase hexadecimal
+digits; each extension byte is rendered as exactly two lowercase hexadecimal
+digits in stored wire order, including NUL padding. The synthetic display name
+**MUST NOT** be represented as original wire-name bytes or used as a Normalized
+Name Identity, duplicate or overlay equality, or canonical repack input.
+Original wire-name bytes and Normalized Name Identity are absent, and the
+stored hashes, extension bytes, and record ordinal remain authoritative.
+Canonical encode **MUST** reject an unresolved synthetic name until the caller
+supplies an explicit complete name. Decode **MUST NOT** perform an unchecked
+seek.
 
-_Source decisions: [accepted Reference Snapshot name-table behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted noncanonical name-table policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot name-table behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted noncanonical name-table policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540)._
 
 ## JBSA-GNRL-009
 
@@ -158,21 +169,23 @@ Decode **MUST** expose BA2 entries in physical record order. General BA2 encode
 **MUST NOT** hash-sort entries: records, filename-table strings, and canonical
 payload sequencing **MUST** follow Logical Plan Order. Later-source-wins overlay
 replacement retains the first insertion ordinal until this format ordering is
-applied. A hash match **MUST** be confirmed by normalized-name equality.
+applied. A hash match **MUST** be confirmed by equal Normalized Name Identities
+under [JBSA-LIB-012](../library-interface.md#jbsa-lib-012).
 
 Worker completion order **MUST NOT** alter record order under a deterministic
 profile. Parallel reference output is a semantic-conformance surface, not a
 blanket Binary Conformance surface.
 
-_Source decisions: [accepted Reference Snapshot ordering and overlay behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted collision and Binary Conformance policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot ordering and overlay behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted collision and Binary Conformance policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-GNRL-010
 
 Decode **MUST** validate the envelope, complete General record table, filename
 table when present, and all section and payload spans with checked arithmetic.
 It **MUST** reject overflow, truncation, negative or out-of-file spans, partial
-overlap, duplicate normalized names, a `chunkCount` other than one, invalid
-compressed data, decoded-size mismatch, and unsupported version/method
+overlap, duplicate complete names with equal Normalized Name Identities under
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012), a `chunkCount` other than
+one, invalid compressed data, decoded-size mismatch, and unsupported version/method
 combinations. Exact shared spans remain valid. Absolute or traversal names
 remain inspectable but **MUST** make extraction ineligible before destination
 effects.
@@ -185,18 +198,19 @@ interpretation remain unambiguous. None of those values is valid encoder output.
 Unsafe absolute or traversal names remain inspectable but ineligible for
 extraction.
 
-_Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-GNRL-011
 
 General BA2 encode **MUST** reject an empty entry set, missing-folder, absolute,
-traversal, duplicate normalized, overlong, or unmappable names, values outside
+traversal, absent or duplicate Normalized Name Identities under
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012), overlong or unmappable names, values outside
 their wire ranges, unsupported codec/version combinations, and unpopulated
 payloads. It **MUST** reserve the exact header and `36 * entryCount` record area,
 write nonnegative payload spans outside metadata and names, recompute canonical
 names and hashes, and validate the complete staged archive before publication.
 
-_Source decisions: [accepted Reference Snapshot creation behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted safe conformance contract](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot creation behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted safe conformance contract](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-GNRL-012
 
@@ -215,13 +229,15 @@ enabled, whole entries **MUST** be assigned in Logical Plan Order using unique
 transformed payload bytes plus 200 bytes and display-name length per entry as an
 advisory estimate. Exceeding the target closes the preceding nonempty part
 before the current entry; a single oversized entry occupies its own part. Part
-one keeps the requested name, and later parts insert `2`, `3`, and so on before
-the extension. Every part **MUST** be an independent conforming archive.
+one keeps the requested name, and part paths **MUST** use the numbered
+split-sibling mapping in
+[JBSA-IO-008](../io-and-publication.md#jbsa-io-008). Every part **MUST** be an
+independent conforming archive.
 
 Exact grouping with sharing or parallel work remains fixture-dependent and
 **MUST NOT** receive Binary Conformance without a qualified deterministic case.
 
-_Source decisions: [accepted Reference Snapshot split behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted case-scoped Binary Conformance](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot split behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted case-scoped Binary Conformance](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533)._
 
 ## Contradictions and fixture-dependent unknowns
 
@@ -238,9 +254,9 @@ normative, and fallback remains profile-only pending a qualifying fixture.
 Exact compressed bytes vary by provider/version. Non-ASCII lowercasing, hash and
 extension bytes, and canonicality comparisons require fixtures, so canonical
 encode rejects non-ASCII Archive Name Encoding bytes and no current Compatibility
-Profile qualifies them for BA2 encode. Exact synthetic-name spelling,
-empty-archive decode disposition, and sharing/concurrent split boundaries also
-require fixtures. The format requirements therefore claim semantic cross-decode
-and exact uncompressed bytes, not blanket byte identity.
+Profile qualifies them for BA2 encode. Empty-archive decode disposition and
+sharing/concurrent split boundaries also require fixtures. The format
+requirements therefore claim semantic cross-decode and exact uncompressed bytes,
+not blanket byte identity.
 
 _Research evidence: [General BA2 layout, compression, ordering, contradictions, and unknowns](https://github.com/evildarkarchon/jbsa/blob/316c1c1cce735afbd291bebd00c82f29a89a4be7/docs/research/reference-snapshot-archive-behavior.md), [`wbBSArchive.pas` BA2 reader](https://github.com/TES5Edit/TES5Edit/blob/fd1e36020b2b5b6217e553dc0038983146a2e2dd/Core/wbBSArchive.pas#L1420-L1498)._

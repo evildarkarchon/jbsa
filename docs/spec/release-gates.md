@@ -10,15 +10,22 @@ is sufficient to advance a candidate.
 ## JBSA-REL-001
 
 Every gate evaluation **MUST** identify one immutable candidate by Git commit,
-specification-set version, product version, compatibility-profile identity,
-codec-profile identifier and digest, complete packaging-input identity, and the
-detached release-candidate artifact-manifest and human-readable-checksum digests.
+specification-set version, product version, and every compatibility-profile and
+codec-profile identifier and digest consumed by that evaluation. A Packaging
+Gate `PASS` record and every downstream gate evaluation **MUST** additionally
+identify the complete packaging-input identity required by
+[JBSA-DIST-001](distribution.md#jbsa-dist-001) and the detached
+release-candidate artifact-manifest and human-readable-checksum digests required
+by [JBSA-DIST-012](distribution.md#jbsa-dist-012). A pre-Packaging gate
+evaluation **MAY** omit those packaging-specific identities; their absence
+before the Packaging Gate establishes them **MUST NOT** be treated as a missing
+result under this requirement.
 A gate **MUST** record `PASS` or `OPEN` plus its evaluator, time, procedure
 version, inputs, and stable evidence locations. A failure, missing result, stale
 result, invalid run, expected failure, percentage threshold, or waiver **MUST**
 leave the gate `OPEN`; it **MUST NOT** be represented as a partial pass.
 
-_Source decisions: [accepted evidence-gated sequence](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [first-release approval acceptance](https://github.com/evildarkarchon/jbsa/issues/59)._
+_Source decisions: [accepted evidence-gated sequence](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [first-release approval acceptance](https://github.com/evildarkarchon/jbsa/issues/59), [pre-Packaging identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179497)._
 
 ## JBSA-REL-002
 
@@ -277,7 +284,7 @@ _Source decisions: [accepted affected-gate reset policy](https://github.com/evil
 
 This table is informative; the owning requirements above define the gates.
 Independent rows after Packaging may run in parallel, but all must bind to the
-same immutable candidate.
+same immutable packaged-candidate identity recorded by the Packaging Gate.
 
 | Stage | Gate or milestone | Prerequisites |
 | --- | --- | --- |

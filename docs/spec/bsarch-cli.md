@@ -9,10 +9,13 @@ Family specifications; compatibility deviations are owned by
 
 The `jbsa` CLI **MUST** be a thin consumer of
 `BethesdaArchives.standard()` through [JBSA-LIB-001](library-interface.md#jbsa-lib-001).
-Archive information, `-list`, and `-dump` **MUST** use one detached `inspect(Path)`
-result; `pack` **MUST** construct one immutable `PackRequest`; `unpack` **MUST**
-construct one immutable `ExtractRequest`; and both mutations **MUST** use
-`OperationControl` under [JBSA-LIB-010](library-interface.md#jbsa-lib-010).
+Archive information, `-list`, and `-dump` **MUST** use one detached
+`inspect(Path, OpenOptions)` result; `pack` **MUST** construct one immutable
+`PackRequest`; `unpack` **MUST** construct one immutable `ExtractRequest`; and
+both mutations **MUST** use `OperationControl` under
+[JBSA-LIB-010](library-interface.md#jbsa-lib-010). The CLI **MUST** propagate the
+selected Compatibility Profile or none and `ResourceLimits.standard()` through
+those options and requests.
 
 The CLI **MUST** own only argument parsing, path presentation, stream rendering,
 console signal handling, process status, and launch behavior. It **MUST NOT**
@@ -22,7 +25,7 @@ implementation metadata as prohibited by
 **MUST NOT** add JSON output, selected-extraction syntax, provider selection, resource
 tuning, or another command surface.
 
-_Source decision: [accepted public-library CLI seam](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Source decisions: [accepted public-library CLI seam](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [profile-aware inspection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179510), [standard-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557)._
 
 ## JBSA-CLI-002
 
@@ -79,16 +82,16 @@ _Source decisions: [accepted administrative option behavior](https://github.com/
 Every `pack` invocation **MUST** contain exactly one selector from this table and
 **MUST** map it to the listed target:
 
-| Selector | Target Archive Family |
-| --- | --- |
-| `-tes3` | TES3 / Morrowind BSA |
-| `-tes4` | TES4 / Oblivion BSA, version `0x67` |
-| `-fo3`, `-fnv`, or `-tes5` | FO3/FNV/Skyrim LE BSA, version `0x68` |
-| `-sse` | SSE/Skyrim AE BSA, version `0x69` |
-| `-fo4` | Fallout 4 General BA2, version `1` |
-| `-fo4dds` | Fallout 4 DDS BA2, version `1` |
-| `-sf1` | Starfield General BA2; version/method follows the codec |
-| `-sf1dds` | Starfield DDS BA2; version/method follows the codec |
+| Selector | Target Archive Family | `PackRequest` DDS target |
+| --- | --- | --- |
+| `-tes3` | TES3 / Morrowind BSA | not applicable |
+| `-tes4` | TES4 / Oblivion BSA, version `0x67` | not applicable |
+| `-fo3`, `-fnv`, or `-tes5` | FO3/FNV/Skyrim LE BSA, version `0x68` | not applicable |
+| `-sse` | SSE/Skyrim AE BSA, version `0x69` | not applicable |
+| `-fo4` | Fallout 4 General BA2, version `1` | not applicable |
+| `-fo4dds` | Fallout 4 DDS BA2, version `1` | `PC` |
+| `-sf1` | Starfield General BA2; version/method follows the codec | not applicable |
+| `-sf1dds` | Starfield DDS BA2; version/method follows the codec | `PC` |
 
 The three `0x68` aliases **MUST** preserve the accepted spelling for CLI
 observations without creating distinct encoded Archive Families. Unsupported
@@ -97,7 +100,13 @@ encode directions **MUST** fail according to
 [JBSA-GNRL-002](formats/general-ba2.md#jbsa-gnrl-002), and
 [JBSA-DX10-001](formats/dds-ba2.md#jbsa-dx10-001).
 
-_Source decision: [accepted pack family selectors](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+The v1 CLI **MUST NOT** provide a form that selects the `XBOX` DDS encode
+target. The `bsarch-1.0/v1` `_xbox.` filename behavior remains
+reconstruction-only under
+[JBSA-DDS-010](formats/dds-payload.md#jbsa-dds-010) and
+[JBSA-COMPAT-006](compatibility-profiles.md#jbsa-compat-006).
+
+_Source decisions: [accepted pack family selectors](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
 
 ## JBSA-CLI-005
 
@@ -137,15 +146,19 @@ defined by [JBSA-SCHED-001](execution-model.md#jbsa-sched-001).
 
 `-af` and `-ff` **MUST** accept an optional `0x` prefix followed by one or more
 unsigned hexadecimal digits in the `u32` range, only for versioned BSA targets.
+When `-af` or `-ff` is omitted, that flag group **MUST** independently use
+automatic selection under
+[JBSA-BSA-013](formats/versioned-bsa.md#jbsa-bsa-013).
 In the safe default, zero **MUST** be a literal override; mandatory and impossible
 flag combinations **MUST** be rejected under
 [JBSA-BSA-012](formats/versioned-bsa.md#jbsa-bsa-012) through
 [JBSA-BSA-014](formats/versioned-bsa.md#jbsa-bsa-014). `-f` **MUST** accept a
-nonempty comma-separated list of case-insensitive basename masks, where `*`
-matches zero or more characters and `?` matches one character; an empty mask
-**MUST** be rejected.
+nonempty comma-separated list of basename masks using the ASCII-only case fold
+in [JBSA-LIB-012](library-interface.md#jbsa-lib-012), where `*` matches zero or
+more Unicode scalars and `?` matches one scalar; an empty mask **MUST** be
+rejected.
 
-_Source decision: [accepted split, sharing, worker, flag, and filter switches](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Source decisions: [accepted split, sharing, worker, flag, and filter switches](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [automatic-classification clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544)._
 
 ## JBSA-CLI-007
 
@@ -158,8 +171,8 @@ owns overlay replacement and first-insertion position.
 In the safe default, every declared source **MUST** exist, be readable, and be
 recognizable before publication; a filter leaving no entries **MUST** fail.
 Source discovery **MUST** complete before stabilization or staging. The requested
-target, every existing sibling path whose basename matches a family-defined
-numbered split sibling of that target, and every designated library-owned
+target, every existing path that is a numbered split sibling of that target
+under [JBSA-IO-008](io-and-publication.md#jbsa-io-008), and every designated library-owned
 scratch or staging path **MUST** be excluded from recursive source traversal.
 After split membership is final, every actual archive part, target predecessor,
 and backup **MUST** remain excluded. Explicitly naming the requested target or a
@@ -174,7 +187,7 @@ safe no-follow or stable identity behavior **MUST** fail as `CAPABILITY` under
 [JBSA-OPS-004](operation-semantics.md#jbsa-ops-004). This CLI behavior
 **MUST NOT** expose NTFS or reparse-point terminology through the public library.
 
-_Source decisions: [accepted sources, overlays, and filesystem behavior](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted dynamic split-output clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+_Source decisions: [accepted sources, overlays, and filesystem behavior](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted dynamic split-output clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533)._
 
 ## JBSA-CLI-008
 

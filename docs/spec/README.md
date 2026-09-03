@@ -15,7 +15,9 @@ belongs to that set unless it explicitly says that it is informative. A change
 to any normative file changes the set as a whole; individual files do not carry
 independent versions.
 
-The initial set is version `0.1.0`. Versions use semantic versioning:
+The first materialized set was version `0.1.0`; it is historical, not the
+current specification identity. The sole current version is the value recorded
+in `requirements.yaml`. Versions use semantic versioning:
 
 - a patch records editorial changes that do not change an obligation;
 - a minor version adds or retires requirements, or otherwise changes normative
@@ -73,7 +75,8 @@ MUST NOT copy a title, summary, or requirement text.
 Retirement never deletes history. The owner becomes a non-normative tombstone,
 and the registry entry remains at its original position with
 `lifecycle_state: retired` plus a retirement issue and reason. Retired numbers
-remain unavailable forever. There are no retired identifiers in version `0.1.0`.
+remain unavailable forever. The historical `0.1.0` set had no retired
+identifiers; current lifecycle state is recorded in `requirements.yaml`.
 
 _Decision sources: [accepted identity and non-duplication policy](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [retirement acceptance criterion](https://github.com/evildarkarchon/jbsa/issues/24)._
 
@@ -183,7 +186,11 @@ release gates are owned by the specifications below. The
 [accepted review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)
 resolve the additional DDS-size, archive-name, split-preflight, and progress
 contradictions found during publication review. No other unresolved
-contradiction was found among the decisions materialized by issue #24.
+contradiction was found in that review batch. The
+[accepted `0.8.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059)
+subsequently resolve the profile digest, staged release identity, Normalized
+Name Identity, diagnostic, split-name, synthetic-name, automatic-flag, DDS
+target, and standard Resource Limits gaps found on pull request #61.
 
 The Reference Snapshot's archive-information error/zero-exit contradiction is a
 CLI-only evidence boundary owned by the Compatibility Profile; no Archive

@@ -30,18 +30,21 @@ a new profile revision; a published revision **MUST NOT** be mutated.
 The initial profile identifier **MUST** be `bsarch-1.0/v1`. Its canonical
 profile payload is the UTF-8, LF-normalized byte sequence strictly between the
 `profile-payload-start` and `profile-payload-end` marker lines below, excluding
-both marker lines and their terminating line feeds. Its digest **MUST** be
-`2530006E1AA46C3E6BD9C8DC55E62C0864C182BB42028AFF0A44502A2940A29F`,
+both marker lines and their terminating line feeds. The LF terminating the final
+payload line immediately before `profile-payload-end` is part of the payload.
+Its digest **MUST** be
+`9577D821C40982E7F988D311D5BA7CF55B0F098AF2C3F5FD5C5A531360DDE1C4`,
 represented as 64 uppercase hexadecimal digits.
 Release metadata and the CLI version record **MUST** expose both the profile
 identifier and this digest.
 
-_Source decisions: [accepted immutable digest-identified profiles](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted immutable initial bundle](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Source decisions: [accepted immutable digest-identified profiles](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted immutable initial bundle](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [payload-digest clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179486)._
 
 ## JBSA-COMPAT-003
 
-A direct library caller **MUST** select a Compatibility Profile through the
-applicable immutable request or open option. The CLI **MUST** select
+A direct library caller **MUST** select a Compatibility Profile through
+`OpenOptions` supplied to `inspect` or `open`, or through the applicable
+immutable `ExtractRequest` or `PackRequest`. The CLI **MUST** select
 `bsarch-1.0/v1` only through the exact global option
 `--compatibility-profile=bsarch-1.0/v1` before the command or archive operand,
 as refined by [JBSA-CLI-003](bsarch-cli.md#jbsa-cli-003).
@@ -50,7 +53,7 @@ Selection **MUST** activate the complete bundle as one unit. JBSA **MUST NOT**
 provide an environment variable, configuration file, executable alias, or
 per-deviation switch that activates the profile or any subset of it.
 
-_Source decisions: [accepted profile and deviation policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted all-or-nothing CLI activation](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Source decisions: [accepted profile and deviation policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted all-or-nothing CLI activation](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [profile-aware inspection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179510)._
 
 ## JBSA-COMPAT-004
 

@@ -129,18 +129,32 @@ a unique, private, operation-owned staging area adjacent to the destination.
 Every split part **MUST** be fully staged before any part reaches Publication
 Commit.
 
+For a split archive set, part one **MUST** use the requested destination. For
+every part number `n >= 2`, let `s` be the ASCII base-ten representation of `n`
+without leading zeroes and let `f` be the requested destination's final path
+element. If `f` contains U+002E FULL STOP (`.`), JBSA **MUST** insert `s`
+immediately before its final U+002E; otherwise it **MUST** append `s` to `f`.
+A leading or trailing U+002E participates in this rule. The parent path and
+every other character **MUST** remain unchanged. A path derived this way for
+`n >= 2` is a numbered split sibling. Thus `archive`, `archive.ba2`, `.archive`,
+`.archive.ba2`, and `archive.` have second-part names `archive2`,
+`archive2.ba2`, `2.archive`, `.archive2.ba2`, and `archive2.`, respectively.
+
 Each archive part **MUST** use one staged `FileChannel`. JBSA **MUST** validate
 table sizes, reserve header regions without proportional buffers, stream
 payloads in final order, record checked offsets and encoded sizes, and backpatch
 tables through bounded positional writes. Writable output **MUST NOT** be memory
 mapped.
 
-_Source decisions: [accepted staged archive-writing model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted two-gate split preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+_Source decisions: [accepted staged archive-writing model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted two-gate split preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533)._
 
 ## JBSA-IO-009
 
-Extraction **MUST** pin the destination root; reject absolute paths, traversal,
-alternate-data-stream names, normalized Windows name or case collisions, and
+Extraction **MUST** pin the destination root; reject every entry without the
+Normalized Name Identity defined by
+[JBSA-LIB-012](library-interface.md#jbsa-lib-012), absolute paths, traversal,
+alternate-data-stream names, equal Normalized Name Identities, normalized
+Windows name or case collisions, and
 descendant symbolic links, junctions, or other reparse points; deliberately
 create paths without following links below that root; and recheck containment
 immediately before publication. Unexpected destination mutation **MUST** stop
@@ -151,7 +165,7 @@ This contract treats the caller-supplied destination tree as non-hostile and
 **MUST NOT** claim resistance to a privileged concurrent attacker racing NTFS
 namespace operations.
 
-_Source decisions: [accepted extraction-path safety model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted extraction eligibility and partial-output semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted extraction-path safety model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted extraction eligibility and partial-output semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-IO-010
 

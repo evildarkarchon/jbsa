@@ -160,6 +160,22 @@ final class BuildPolicyIT {
   }
 
   /**
+   * Verifies pull-request branches do not also receive a duplicate push-triggered CI run.
+   *
+   * @throws IOException if the GitHub Actions workflow cannot be read
+   */
+  @Test
+  void githubActionsRunsPushBuildsOnlyForMain() throws IOException {
+    List<String> workflow =
+        Files.readAllLines(reactorRoot().resolve(".github/workflows/build.yml"));
+    int pushTrigger = workflow.indexOf("  push:");
+    assertTrue(pushTrigger >= 0, "The build workflow must retain a push trigger");
+    assertEquals("    branches:", workflow.get(pushTrigger + 1));
+    assertEquals("      - main", workflow.get(pushTrigger + 2));
+    assertTrue(workflow.contains("  pull_request:"));
+  }
+
+  /**
    * Verifies JBSA-BUILD-007 and JBSA-SCOPE-001 library artifact policy.
    *
    * @throws Exception if a POM or generated artifact cannot be inspected

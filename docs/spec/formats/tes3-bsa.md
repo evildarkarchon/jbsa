@@ -37,8 +37,9 @@ _Source decision: [accepted Reference Snapshot behavior](https://github.com/evil
 
 ## JBSA-TES3-003
 
-For canonical encode, the encoder **MUST** encode the normalized entry name
-using Archive Name Encoding. If the encoded name contains a byte greater than
+For canonical encode, the encoder **MUST** encode the complete entry name
+eligible under [JBSA-LIB-012](../library-interface.md#jbsa-lib-012) using Archive
+Name Encoding. If the encoded name contains a byte greater than
 `0x7f`, canonical encode **MUST** reject the entry. A Compatibility Profile
 **MUST NOT** admit such a name unless it defines the byte-level lowercase mapping
 and cites qualifying fixtures for the resulting stored name and TES3 hash bytes.
@@ -62,15 +63,16 @@ Canonical metadata records **MUST** be ordered by the unsigned low 32 bits of
 `nameHash`, then by the unsigned high 32 bits. Name records, name offsets, hash
 records, and file records **MUST** use that same entry order.
 
-_Source decisions: [accepted Reference Snapshot hashing and ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted deterministic lowercase clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+_Source decisions: [accepted Reference Snapshot hashing and ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted deterministic lowercase clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-TES3-004
 
 Decode **MUST** validate the TES3 counts, `hashOffset`, derived name and hash
 sections, data base, and every relative payload span with checked arithmetic.
 It **MUST** reject overflow, truncation, out-of-file or partially overlapping
-payload spans, and duplicate names when each compared wire name can be
-normalized under [JBSA-TES3-003](#jbsa-tes3-003). Exact shared payload spans
+payload spans, and duplicate names when each compared wire name has an equal
+Normalized Name Identity under
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012). Exact shared payload spans
 remain valid. Absolute or traversal names remain inspectable but **MUST** make
 extraction ineligible before destination effects.
 
@@ -86,20 +88,37 @@ tolerated conditions. Absolute or traversal names remain inspectable
 but do not become eligible extraction paths.
 Inspection **MUST** also retain stable warnings for asset roots unsupported by
 Morrowind and for payload offsets beginning beyond signed 2 GiB.
-Name or payload hash matches **MUST** be confirmed with normalized names or
-bytes before overlay or sharing identity is accepted.
+Name-hash matches **MUST** be confirmed with Normalized Name Identities, and
+payload-hash matches **MUST** be confirmed with exact bytes, before overlay or
+sharing identity is accepted.
 
-_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
+The TES3-specific Conformance Diagnostics in this requirement **MUST** use
+exactly these identifiers and `WARNING` severity:
+
+| Condition | Diagnostic identifier | Scope and structured location |
+| --- | --- | --- |
+| Bounded name-offset inconsistency | `tes3.name-offset-inconsistency` | Once per affected entry, at its `nameOffset` field |
+| Harmless trailing data | `tes3.trailing-data` | Once per archive, at the complete trailing byte span |
+| Usable-name stored-hash mismatch | `tes3.stored-hash-mismatch` | Once per affected entry, at its `nameHash` field |
+| Asset root unsupported by Morrowind | `tes3.unsupported-asset-root` | Once per affected entry, at its name |
+| Payload start beyond signed 2 GiB | `tes3.payload-offset-over-signed-2gib` | Once per affected entry, at its payload start |
+
+Stored and expected values relevant to each condition **MUST** remain
+canonically represented structured values under
+[JBSA-OPS-005](../operation-semantics.md#jbsa-ops-005).
+
+_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [diagnostic-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522)._
 
 ## JBSA-TES3-005
 
-TES3 encode **MUST** reject an empty entry set, duplicate normalized names,
+TES3 encode **MUST** reject an empty entry set, absent or duplicate Normalized
+Name Identities under [JBSA-LIB-012](../library-interface.md#jbsa-lib-012),
 unmappable names, values that do not fit their `u32` fields, and any plan whose
 sections or payload spans overflow the destination bounds. Stored hashes and
 name offsets **MUST** be recomputed from canonical names; source hash or offset
 bytes **MUST NOT** be copied into new output.
 
-_Source decisions: [accepted Reference Snapshot creation behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted safe conformance contract](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot creation behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted safe conformance contract](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
 
 ## JBSA-TES3-006
 
@@ -108,11 +127,12 @@ disable splitting. Sequential splitting **MUST** follow Logical Plan Order and
 use the Reference Snapshot's advisory estimate of packed payload bytes plus 200
 bytes and encoded-name length per entry. A part **MAY** exceed the target, and a
 single oversized entry **MUST** occupy its own part. Part one keeps the requested
-name; later parts insert `2`, `3`, and so on before the extension. Parallel or
-sharing-dependent grouping **MUST NOT** receive a Binary Conformance claim until
-fixture evidence fixes the exact boundary behavior.
+name; part paths **MUST** use the numbered split-sibling mapping in
+[JBSA-IO-008](../io-and-publication.md#jbsa-io-008). Parallel or sharing-dependent
+grouping **MUST NOT** receive a Binary Conformance claim until fixture evidence
+fixes the exact boundary behavior.
 
-_Source decisions: [accepted Reference Snapshot split behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted case-scoped Binary Conformance](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+_Source decisions: [accepted Reference Snapshot split behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted case-scoped Binary Conformance](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533)._
 
 ## Evidence boundaries
 

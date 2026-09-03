@@ -24,7 +24,12 @@ methods other than `3` **MUST** fail as unsupported before destination effects.
 The qualified Compatibility Profile may attempt the Reference Snapshot's
 version-3 zlib fallback, but cannot enable stored DDS encode.
 
-_Source decisions: [accepted format and codec matrix](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted codec strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
+The `PC` or `XBOX` DDS target is operation data, is not encoded by the
+family/version/subtype/method tuple, and **MUST NOT** alter this matrix or wire
+framing. Encode target selection is owned by
+[JBSA-DDS-002](dds-payload.md#jbsa-dds-002).
+
+_Source decisions: [accepted format and codec matrix](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted codec strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
 
 ## JBSA-DX10-002
 
@@ -108,8 +113,10 @@ _Source decisions: [accepted safe DDS disposition](https://github.com/evildarkar
 Decode **MUST** validate the envelope, variable texture-record table, filename
 table when present, chunk counts, mip ranges, decoded-size representability, and
 every absolute chunk span with checked arithmetic. It **MUST** reject overflow,
-truncation, negative or out-of-file spans, partial overlap, duplicate normalized
-names, zero or more than four chunks, an impossible or noncontiguous mip range,
+truncation, negative or out-of-file spans, partial overlap, duplicate complete
+names with equal Normalized Name Identities under
+[JBSA-LIB-012](../library-interface.md#jbsa-lib-012), zero or more than four
+chunks, an impossible or noncontiguous mip range,
 invalid compressed data, and decoded-size mismatch. Exact shared spans remain
 valid. Absolute or traversal names remain inspectable but **MUST** make
 extraction ineligible before destination effects.
@@ -118,8 +125,11 @@ A nonzero mod index, non-24 chunk-header size, non-`0xBAADF00D` sentinel,
 missing filename table, stored chunk, or harmless trailing bytes **MUST** be a
 diagnosed Tolerated Noncanonical Archive when every interpretation and span
 remains bounded and unambiguous. None is valid canonical output.
+For a zero or out-of-range filename-table offset, the exact synthetic-name and
+absent-identity rules in
+[JBSA-GNRL-008](general-ba2.md#jbsa-gnrl-008) **MUST** apply.
 
-_Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540)._
 
 ## JBSA-DX10-008
 
