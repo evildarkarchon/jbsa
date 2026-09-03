@@ -178,16 +178,16 @@ This foundation intentionally does not choose exact Maven plugin versions,
 audited dependency inventory entries, native payload identities, or the JDK 25
 vendor/build identity. Those release inputs remain deferred until the owning
 implementation or distribution requirement has evidence. Archive Family, DDS
-payload, and library behavior are owned by the specifications below. CLI and
-qualification details remain owned by issue
-[#27](https://github.com/evildarkarchon/jbsa/issues/27). No other contradiction
-was found among the decisions materialized by issue #24.
+payload, library behavior, CLI behavior, qualification, distribution, and
+release gates are owned by the specifications below. No other contradiction was
+found among the decisions materialized by issue #24.
 
 The Reference Snapshot's archive-information error/zero-exit contradiction is a
-CLI-only evidence boundary for issue #27; no Archive Family requirement promotes
-it to format behavior. The research also contains no authoritative numeric
-performance baseline. Performance thresholds and evidence remain owned by the
-later performance specification rather than being inferred from format code.
+CLI-only evidence boundary owned by the Compatibility Profile; no Archive
+Family requirement promotes it to format behavior. The research contains no
+authoritative numeric performance baseline. Performance thresholds and evidence
+are owned by the performance specification rather than inferred from format
+code.
 
 ## Specification index
 
@@ -200,6 +200,14 @@ later performance specification rather than being inferred from format code.
   - [I/O and publication](io-and-publication.md)
   - [Codecs](codecs.md)
   - [Execution model](execution-model.md)
+- Consumer behavior:
+  - [Compatibility profiles](compatibility-profiles.md)
+  - [BSArch-compatible CLI](bsarch-cli.md)
+- Qualification and release:
+  - [Conformance v1](conformance-v1.md)
+  - [Performance v1](performance-v1.md)
+  - [Distribution](distribution.md)
+  - [Release gates](release-gates.md)
 - Archive formats:
   - [Detection and shared wire conventions](formats/detection.md)
   - [TES3 / Morrowind BSA](formats/tes3-bsa.md)

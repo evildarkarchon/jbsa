@@ -1,10 +1,10 @@
 # Scope
 
 This specification fixes the product and qualification boundary inherited from
-the completed planning map. Archive Family details are owned by the
-[format specifications](README.md#specification-index); public API behavior and
-qualification case matrices are owned by later specifications. They may refine
-this boundary only as allowed by the framework.
+the completed planning map. Archive Family details, public API behavior, and
+qualification case matrices are owned by their respective
+[specifications](README.md#specification-index). They may refine this boundary
+only as allowed by the framework.
 
 ## JBSA-SCOPE-001
 

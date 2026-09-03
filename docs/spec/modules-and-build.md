@@ -3,7 +3,7 @@
 This specification owns the Maven reactor, Java/JPMS seams, dependency exposure,
 and build outputs. The Java and operating-system qualification baseline is owned
 by [JBSA-SCOPE-001](scope.md#jbsa-scope-001). Detailed launcher behavior and
-release qualification remain with the later distribution and release-gate
+release qualification are owned by the distribution and release-gate
 specifications.
 
 ## JBSA-BUILD-001
