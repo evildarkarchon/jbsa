@@ -175,17 +175,21 @@ _Source decisions: [accepted Reference Snapshot canonical reconstruction](https:
 ## JBSA-DDS-009
 
 Canonical PC pixel-format fields and top-level size flags **MUST** follow this
-table. `LINEAR` means `DDSD_LINEARSIZE`; `PITCH` means `DDSD_PITCH`.
+table. `LINEAR` means `DDSD_LINEARSIZE`; `PITCH` means `DDSD_PITCH`. For a
+block-compressed format, let `blocksWide = 1 + ((width - 1) / 4)` and
+`blocksHigh = 1 + ((height - 1) / 4)`, where `/` is unsigned integer division
+and width and height are the nonzero top-level dimensions required by
+[JBSA-DDS-004](#jbsa-dds-004).
 
 | DXGI format | Pixel-format encoding | Size flag and value |
 | --- | --- | --- |
-| `BC1_UNORM` | FourCC `DXT1` | LINEAR, `width * height / 2` |
-| `BC2_UNORM` | FourCC `DXT3` | LINEAR, `width * height` |
-| `BC3_UNORM` | FourCC `DXT5` | LINEAR, `width * height` |
-| `BC4_SNORM` / `BC4_UNORM` | FourCC `BC4S` / `BC4U` | LINEAR, `width * height / 2` |
-| `BC5_SNORM` / `BC5_UNORM` | FourCC `BC5S` / `BC5U` | LINEAR, `width * height` |
-| `BC1_UNORM_SRGB` | FourCC `DX10` | LINEAR, `width * height / 2` |
-| `BC2_UNORM_SRGB`, `BC3_UNORM_SRGB`, `BC6H_UF16`, `BC6H_SF16`, `BC7_UNORM`, `BC7_UNORM_SRGB` | FourCC `DX10` | LINEAR, `width * height` |
+| `BC1_UNORM` | FourCC `DXT1` | LINEAR, `blocksWide * blocksHigh * 8` |
+| `BC2_UNORM` | FourCC `DXT3` | LINEAR, `blocksWide * blocksHigh * 16` |
+| `BC3_UNORM` | FourCC `DXT5` | LINEAR, `blocksWide * blocksHigh * 16` |
+| `BC4_SNORM` / `BC4_UNORM` | FourCC `BC4S` / `BC4U` | LINEAR, `blocksWide * blocksHigh * 8` |
+| `BC5_SNORM` / `BC5_UNORM` | FourCC `BC5S` / `BC5U` | LINEAR, `blocksWide * blocksHigh * 16` |
+| `BC1_UNORM_SRGB` | FourCC `DX10` | LINEAR, `blocksWide * blocksHigh * 8` |
+| `BC2_UNORM_SRGB`, `BC3_UNORM_SRGB`, `BC6H_UF16`, `BC6H_SF16`, `BC7_UNORM`, `BC7_UNORM_SRGB` | FourCC `DX10` | LINEAR, `blocksWide * blocksHigh * 16` |
 | `R8G8B8A8_UNORM` | RGB+alpha, 32 bits, masks `000000FF/0000FF00/00FF0000/FF000000` | PITCH, `width * 4` |
 | `B8G8R8A8_UNORM` | RGB+alpha, 32 bits, masks `00FF0000/0000FF00/000000FF/FF000000` | PITCH, `width * 4` |
 | `B8G8R8X8_UNORM` | RGB, 32 bits, masks `00FF0000/0000FF00/000000FF/00000000` | PITCH, `width * 4` |
@@ -197,9 +201,13 @@ table. `LINEAR` means `DDSD_LINEARSIZE`; `PITCH` means `DDSD_PITCH`.
 | `R8G8B8A8_UNORM_SRGB`, `B8G8R8A8_UNORM_SRGB`, `B8G8R8X8_UNORM_SRGB` | FourCC `DX10` | PITCH, `width * 4` |
 
 Every writable format in [JBSA-DDS-012](#jbsa-dds-012) is covered by the table.
-All arithmetic **MUST** be checked before narrowing.
+For a block-compressed texture, `LINEAR` **MUST** be the byte count of exactly
+one top-level two-dimensional subresource; lower mips and additional cubemap
+faces **MUST NOT** be included. Every intermediate **MUST** use checked
+arithmetic, and reconstruction **MUST** fail rather than wrap or truncate when
+the selected value does not fit the `u32` header field.
 
-_Source decision: [accepted Reference Snapshot canonical DDS fields](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245)._
+_Source decisions: [accepted Reference Snapshot canonical DDS fields](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted block-rounded reconstruction clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-DDS-010
 
@@ -251,16 +259,17 @@ _Source decisions: [accepted Reference Snapshot DDS behavior and fixture boundar
 
 ## Fixture-dependent unknowns
 
-The first-mip formula does not explicitly round BC formats to minimum 4-by-4
-blocks and then divides subsequent isolated mips by four. Semantic equivalence
-for tiny, nonsquare, non-power-of-two, cubemap, missing-mip, and truncated cases
-remains fixture-dependent. Unusual DXGI values remain outside the writable
-allow-list, and arrays and volumes remain explicitly unsupported by
+The encode-partition first-mip formula does not explicitly round BC formats to
+minimum 4-by-4 blocks and then divides subsequent isolated mips by four.
+Semantic equivalence for tiny, nonsquare, non-power-of-two, cubemap,
+missing-mip, and truncated encode cases remains fixture-dependent. Unusual DXGI
+values remain outside the writable allow-list, and arrays and volumes remain
+explicitly unsupported by
 [JBSA-DDS-002](#jbsa-dds-002).
 
 Because extraction synthesizes rather than preserves headers, equivalence for
-alpha mode, typeless formats, arrays, pitch/linear-size edge cases, cubemap caps,
-and Xbox extension fields must be compared to reconstructed Conformance Oracle
+alpha mode, typeless formats, arrays, cubemap caps, and Xbox extension fields
+must be compared to reconstructed Conformance Oracle
 bytes, not original source DDS bytes. The 48-texture Reference Snapshot corpus
 has no assertions or archive goldens and does not close these gaps.
 

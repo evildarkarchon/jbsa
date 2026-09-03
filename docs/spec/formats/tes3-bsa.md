@@ -37,9 +37,21 @@ _Source decision: [accepted Reference Snapshot behavior](https://github.com/evil
 
 ## JBSA-TES3-003
 
-Canonical TES3 names **MUST** use backslash separators and lowercase Archive
-Name Encoding bytes. For hashing, split the normalized byte string after
-`floor(length / 2)` bytes. The low 32-bit accumulator starts at zero and XORs
+For canonical encode, the encoder **MUST** encode the normalized entry name
+using Archive Name Encoding. If the encoded name contains a byte greater than
+`0x7f`, canonical encode **MUST** reject the entry. A Compatibility Profile
+**MUST NOT** admit such a name unless it defines the byte-level lowercase mapping
+and cites qualifying fixtures for the resulting stored name and TES3 hash bytes.
+
+For every admitted entry, the encoder **MUST** replace each byte `0x2f` with
+`0x5c`, then map every byte from `0x41` through `0x5a` to that byte plus `0x20`.
+Canonical encode **MUST** leave every other byte unchanged; a qualified
+Compatibility Profile **MUST** additionally apply its defined non-ASCII mapping.
+The resulting byte string is the canonical TES3 name and **MUST** be stored and
+used as the `nameHash` input.
+
+For hashing, split the canonical byte string after `floor(length / 2)` bytes.
+The low 32-bit accumulator starts at zero and XORs
 each first-half byte shifted left by successive `0, 8, 16, 24` bit positions,
 wrapping the shift modulo 32. The high 32-bit accumulator applies the same XOR
 to each second-half byte, then rotates the accumulator right by the low five
@@ -50,28 +62,34 @@ Canonical metadata records **MUST** be ordered by the unsigned low 32 bits of
 `nameHash`, then by the unsigned high 32 bits. Name records, name offsets, hash
 records, and file records **MUST** use that same entry order.
 
-_Source decision: [accepted Reference Snapshot hashing and ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245)._
+_Source decisions: [accepted Reference Snapshot hashing and ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted deterministic lowercase clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-TES3-004
 
 Decode **MUST** validate the TES3 counts, `hashOffset`, derived name and hash
 sections, data base, and every relative payload span with checked arithmetic.
 It **MUST** reject overflow, truncation, out-of-file or partially overlapping
-payload spans, and duplicate normalized names. Exact shared payload spans remain
-valid. Absolute or traversal names remain inspectable but **MUST** make
+payload spans, and duplicate names when each compared wire name can be
+normalized under [JBSA-TES3-003](#jbsa-tes3-003). Exact shared payload spans
+remain valid. Absolute or traversal names remain inspectable but **MUST** make
 extraction ineligible before destination effects.
 
-A bounded name-offset inconsistency, stored-hash mismatch, or harmless trailing
-data **MUST** produce a stable warning and a Tolerated Noncanonical Archive when
-the sequential name block and every payload remain unambiguous and safely
-decodable. Those conditions **MUST NOT** be emitted by the encoder. Absolute or
-traversal names remain inspectable but do not become eligible extraction paths.
+A bounded name-offset inconsistency or harmless trailing data **MUST** produce a
+stable warning and a Tolerated Noncanonical Archive when the sequential name
+block and every payload remain unambiguous and safely decodable. A stored-hash
+mismatch computed from a name eligible for canonical byte mapping under
+[JBSA-TES3-003](#jbsa-tes3-003) **MUST** have the same disposition. Absent a
+qualified Compatibility Profile, decode **MUST NOT** make that canonicality
+judgment for a name containing a byte greater than `0x7f`; its original wire
+bytes and stored hash remain authoritative. The encoder **MUST NOT** emit those
+tolerated conditions. Absolute or traversal names remain inspectable
+but do not become eligible extraction paths.
 Inspection **MUST** also retain stable warnings for asset roots unsupported by
 Morrowind and for payload offsets beginning beyond signed 2 GiB.
 Name or payload hash matches **MUST** be confirmed with normalized names or
 bytes before overlay or sharing identity is accepted.
 
-_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-TES3-005
 
@@ -99,9 +117,8 @@ _Source decisions: [accepted Reference Snapshot split behavior](https://github.c
 ## Evidence boundaries
 
 The active Windows ANSI code page used by the Reference Snapshot is not encoded
-in a TES3 archive. Non-ASCII hashing and display behavior therefore remain
-fixture-dependent outside the deterministic Windows-1252 default and an
-explicit Compatibility Profile.
+in a TES3 archive. Canonical non-ASCII lowercasing and hash comparison therefore
+remain fixture-dependent outside an explicit, qualified Compatibility Profile.
 
 The Reference Snapshot does not systematically exercise corrupt counts,
 offsets, overlaps, duplicate names, or truncated strings. The safe rejection and

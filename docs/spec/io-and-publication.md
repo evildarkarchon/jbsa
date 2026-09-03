@@ -111,11 +111,23 @@ _Source decision: [accepted bounded scratch and spill staging](https://github.co
 
 ## JBSA-IO-008
 
-Before destination side effects, each mutating operation **MUST** preflight
-capabilities, containment, `ResourceLimits`, target collisions, and its complete
-output set. It **MUST** then use a unique, private, operation-owned staging area
-adjacent to the destination. Every split part **MUST** be fully staged before
-any part reaches Publication Commit.
+Before processing work is admitted, each mutating operation **MUST** preflight
+capabilities and destination-root containment, establish Logical Plan Order,
+and establish bounded admission under `ResourceLimits`. If its complete output
+set is knowable without transformed sizes or sharing resolution, it **MUST**
+also enforce the exact output-count limit and preflight every target's
+containment and collision at that time.
+
+When a split output set depends on transformed sizes or sharing resolution,
+JBSA **MAY** admit only the bounded stabilization work required by
+[JBSA-IO-007](#jbsa-io-007) to finalize split membership. That work **MUST** use
+operation-owned scratch, remain within `ResourceLimits`, and **MUST NOT** create
+destination-adjacent staging or any other destination side effect. Once
+membership is final, JBSA **MUST** enforce the exact output-count limit and
+preflight containment and collisions for its complete output set before creating
+a unique, private, operation-owned staging area adjacent to the destination.
+Every split part **MUST** be fully staged before any part reaches Publication
+Commit.
 
 Each archive part **MUST** use one staged `FileChannel`. JBSA **MUST** validate
 table sizes, reserve header regions without proportional buffers, stream
@@ -123,7 +135,7 @@ payloads in final order, record checked offsets and encoded sizes, and backpatch
 tables through bounded positional writes. Writable output **MUST NOT** be memory
 mapped.
 
-_Source decision: [accepted staged archive-writing model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067)._
+_Source decisions: [accepted staged archive-writing model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted two-gate split preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-IO-009
 
@@ -144,12 +156,13 @@ _Source decisions: [accepted extraction-path safety model](https://github.com/ev
 ## JBSA-IO-010
 
 Mutating requests **MUST** select `FAIL` or `REPLACE`, and `FAIL` **MUST** be the
-library default. `FAIL` **MUST** reject every pre-existing planned target during
-preflight. Under `REPLACE`, JBSA **MUST** move each predecessor into private
-staging before installing its replacement and **MUST NOT** rely on
+library default. `FAIL` **MUST** reject every pre-existing target in the complete
+output set during the applicable output-set preflight under
+[JBSA-IO-008](#jbsa-io-008). Under `REPLACE`, JBSA **MUST** move each predecessor
+into private staging before installing its replacement and **MUST NOT** rely on
 implementation-specific replacement behavior of an atomic move.
 
-_Source decision: [accepted target policy and replacement model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067)._
+_Source decisions: [accepted target policy and replacement model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted output-set preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-IO-011
 

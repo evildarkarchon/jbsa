@@ -157,11 +157,14 @@ owns overlay replacement and first-insertion position.
 
 In the safe default, every declared source **MUST** exist, be readable, and be
 recognizable before publication; a filter leaving no entries **MUST** fail.
-Source discovery **MUST** complete before staging. Every planned archive part,
-target predecessor or backup, and library-owned staging path **MUST** be excluded
-from recursive source traversal. Explicitly naming any output artifact as a
-source **MUST** fail, including an existing target beneath a source directory
-when `--replace` is selected.
+Source discovery **MUST** complete before stabilization or staging. The requested
+target, every existing sibling path whose basename matches a family-defined
+numbered split sibling of that target, and every designated library-owned
+scratch or staging path **MUST** be excluded from recursive source traversal.
+After split membership is final, every actual archive part, target predecessor,
+and backup **MUST** remain excluded. Explicitly naming the requested target or a
+potential numbered split sibling as a source **MUST** fail, including an existing
+target beneath a source directory when `--replace` is selected.
 
 Recursive discovery **MUST NOT** follow filesystem indirections. It **MUST** use
 portable Java NIO no-follow and identity facilities where sufficient and
@@ -171,7 +174,7 @@ safe no-follow or stable identity behavior **MUST** fail as `CAPABILITY` under
 [JBSA-OPS-004](operation-semantics.md#jbsa-ops-004). This CLI behavior
 **MUST NOT** expose NTFS or reparse-point terminology through the public library.
 
-_Source decision: [accepted sources, overlays, and filesystem behavior](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Source decisions: [accepted sources, overlays, and filesystem behavior](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted dynamic split-output clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-CLI-008
 

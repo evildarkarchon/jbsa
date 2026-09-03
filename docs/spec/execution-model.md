@@ -45,16 +45,23 @@ _Source decision: [accepted operation-owned worker lifetime](https://github.com/
 ## JBSA-SCHED-003
 
 The synchronous calling thread **MUST** be the coordinator and **MUST** perform
-phase transitions, bounded
-admission, serialized progress delivery, ordered writes, Publication Commit,
-deterministic failure selection, and cleanup. It **MUST NOT** perform any of
-those actions while holding a library lock.
+phase transitions, bounded admission, progress-delivery sequencing, ordered
+writes, Publication Commit, deterministic failure selection, and cleanup. The
+coordinator **MUST** await each observer invocation's return or throw before it
+delivers a later Progress Snapshot or resumes admission or ordered consumption;
+the invocation **MAY** execute on any implementation-selected thread, subject to
+[JBSA-OPS-008](operation-semantics.md#jbsa-ops-008). The coordinator **MUST NOT**
+perform any of its actions while holding a library lock.
 
-Preflight **MUST** finish and assign Logical Plan Order before processing work
-is admitted or destination side effects begin. Completion timing **MUST NOT**
-become observable ordering.
+Source and plan preflight **MUST** finish and assign Logical Plan Order before
+processing work is admitted. When [JBSA-IO-008](io-and-publication.md#jbsa-io-008)
+requires transformed-size- or sharing-dependent split stabilization, only the
+bounded work required by [JBSA-IO-007](io-and-publication.md#jbsa-io-007)
+**MAY** be admitted before complete output-set and collision preflight finishes.
+Destination side effects **MUST NOT** begin until that final preflight finishes.
+Completion timing **MUST NOT** become observable ordering.
 
-_Source decision: [accepted coordinator and preflight model](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855)._
+_Source decisions: [accepted coordinator and preflight model](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted split-preflight and progress-thread clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-SCHED-004
 

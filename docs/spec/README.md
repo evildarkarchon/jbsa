@@ -179,8 +179,11 @@ audited dependency inventory entries, native payload identities, or the JDK 25
 vendor/build identity. Those release inputs remain deferred until the owning
 implementation or distribution requirement has evidence. Archive Family, DDS
 payload, library behavior, CLI behavior, qualification, distribution, and
-release gates are owned by the specifications below. No other contradiction was
-found among the decisions materialized by issue #24.
+release gates are owned by the specifications below. The
+[accepted review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)
+resolve the additional DDS-size, archive-name, split-preflight, and progress
+contradictions found during publication review. No other unresolved
+contradiction was found among the decisions materialized by issue #24.
 
 The Reference Snapshot's archive-information error/zero-exit contradiction is a
 CLI-only evidence boundary owned by the Compatibility Profile; no Archive

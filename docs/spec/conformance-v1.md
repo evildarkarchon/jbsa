@@ -193,15 +193,23 @@ manifest **MUST** assign targeted cases that collectively cover:
 
 - empty, single-entry, multi-entry, nested, and zero-length inputs;
 - path case, forward-slash and backslash forms, ASCII, Windows-1252, and
-  Windows-932 wire names, and unmappable encode names;
+  Windows-932 wire names, unmappable encode names, deterministic ASCII
+  lowercasing, and non-ASCII lowercase rejection and qualified-profile behavior;
+- every versioned-BSA directory/file-name presence-flag combination and its
+  absent-component and synthetic-display-name metadata;
 - compression size boundaries, mixed compression, complete codec consumption,
   and decoded-size mismatch;
-- DDS writable formats, materially distinct dimensions and mip counts,
-  cubemaps, canonical reconstruction, and chunk boundaries;
+- DDS writable formats, materially distinct dimensions and mip counts, both the
+  8-byte and 16-byte BC block classes at `1x1` and `5x7`, cubemaps, canonical
+  reconstruction, and chunk boundaries;
 - later-source-wins overlay order, filtering, sharing on and off, and splitting
-  on and off including a BSA crossing the 2 GiB split target;
+  on and off including a BSA crossing the 2 GiB split target and a transformed-
+  size- or sharing-dependent later-part collision under `FAIL` before destination
+  staging, with no destination effects and complete scratch cleanup;
 - sequential repetition, worker-limit variation, and parallel semantic
   equivalence;
+- serialized, blocking, and failing progress observers while treating callback
+  thread identity as non-semantic;
 - every rejection and tolerated-noncanonical class owned by the format and
   operation specifications;
 - every registered Compatibility Deviation in both safe-default and activated
@@ -213,7 +221,7 @@ The manifest **MUST** map each coverage item to at least one Conformance Case an
 each case to its applicable assertion identifiers. A case **MAY** cover multiple
 items; a full Cartesian product is not required.
 
-_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27)._
+_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-CONF-010
 

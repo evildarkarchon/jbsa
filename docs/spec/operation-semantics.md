@@ -51,8 +51,11 @@ Validation **MUST** stop at its declared Validation Extent:
   decoded size;
 - `extract` completes containment, collision, capability, and resource preflight
   before destination effects and validates selected payloads while staging; and
-- `pack` completes configuration, capability, source-shape, and destination
-  preflight and detects source mutation or data failure while staging.
+- `pack` completes configuration, capability, source-shape, and initial
+  destination preflight before stabilization, completes the output-set preflight
+  required by [JBSA-IO-008](io-and-publication.md#jbsa-io-008) before destination
+  staging or effects, and detects source mutation or data failure during
+  stabilization or staging.
 
 `detect` **MUST** return every recognition or support outcome owned by
 [JBSA-DET-001](formats/detection.md#jbsa-det-001) rather than throw `FORMAT`,
@@ -65,7 +68,7 @@ operation. Unsafe absolute or traversal names **MUST** remain inspectable and
 **MUST** produce a stable diagnostic and make extraction fail as `POLICY` before
 output creation.
 
-_Source decision: [accepted layered validation model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted layered validation model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted split-preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-OPS-004
 

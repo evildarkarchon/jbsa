@@ -49,17 +49,20 @@ _Source decision: [accepted Reference Snapshot layout](https://github.com/evilda
 
 For versions `0x67` and `0x68`, each folder record **MUST** be
 `folderHash: u64`, `fileCount: u32`, `folderOffset: u32`. Each folder block
-**MUST** contain an `u8` byte length that includes the terminator, the folder
-name bytes and NUL, followed immediately by `fileCount` 16-byte file records.
-Each file record **MUST** be `nameHash: u64`, `sizeAndCompressionToggle: u32`,
-`dataOffset: u32`.
+**MUST**, when archive flag `0x0001` is set, begin with an `u8` byte length that
+includes the terminator, the folder name bytes and NUL, followed immediately by
+`fileCount` 16-byte file records. When the flag is clear, the block **MUST**
+begin directly with its file-record sequence and `folderNamesLength` **MUST** be
+zero. Each file record **MUST** be `nameHash: u64`,
+`sizeAndCompressionToggle: u32`, `dataOffset: u32`.
 
-`folderOffset` in canonical output **MUST** equal the folder block's physical
-offset plus the global file-name-table length. `folderNamesLength` **MUST**
-include folder bytes and NUL terminators but exclude the one-byte length
+In a conforming archive, `folderOffset` **MUST** equal the folder block's
+physical offset plus `fileNamesLength`, which is zero when the global file-name
+table is absent. When archive flag `0x0001` is set, `folderNamesLength` **MUST**
+include every folder byte and NUL terminator but exclude the one-byte length
 prefixes.
 
-_Source decision: [accepted Reference Snapshot BSA layout](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245)._
+_Source decisions: [accepted Reference Snapshot BSA layout](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted name-presence clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-BSA-004
 
@@ -73,23 +76,54 @@ _Source decision: [accepted Reference Snapshot BSA layout](https://github.com/ev
 
 ## JBSA-BSA-005
 
-After all folder blocks, a versioned BSA **MUST** contain exactly `fileCount`
-NUL-terminated basename strings in folder/file-record order. `fileNamesLength`
-**MUST** include every basename byte and terminator. Each encoded entry **MUST**
-have a nonempty folder component; the encoder **MUST** lowercase the full name,
-use backslash separators, and compute folder and basename hashes separately.
-File-record `dataOffset` values **MUST** be absolute archive offsets.
+When archive flag `0x0002` is set, a versioned BSA **MUST** contain exactly
+`fileCount` NUL-terminated basename strings after all folder blocks, in
+folder/file-record order, and `fileNamesLength` **MUST** equal their complete
+byte extent. When the flag is clear, the global basename table **MUST** be
+absent and `fileNamesLength` **MUST** be zero. Folder and file records, hashes,
+record order, and absolute file-record `dataOffset` values remain present in
+every flag combination. Absence required by a clear presence flag is conforming
+and **MUST NOT** produce a missing-name-section diagnostic.
 
-Decode **MUST** retain original wire-name bytes and associate folder, basename,
-hash, record, and payload by the serialized folder/file order.
+For canonical encode, split the normalized entry name at its final separator
+into a nonempty folder and basename and encode both components using Archive
+Name Encoding. If either component contains a byte greater than `0x7f`,
+canonical encode **MUST** reject the entry. A Compatibility Profile **MUST NOT**
+admit such a component unless it defines the byte-level lowercase mapping and
+cites qualifying fixtures for the resulting stored name and BSA hash bytes.
 
-_Source decisions: [accepted Reference Snapshot name and layout behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted Archive Name Encoding](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093)._
+For every admitted entry, the encoder **MUST** replace each folder byte `0x2f`
+with `0x5c`, then map every byte from `0x41` through `0x5a` in both components
+to that byte plus `0x20`. Canonical encode **MUST** leave every other byte
+unchanged; a qualified Compatibility Profile **MUST** additionally apply its
+defined non-ASCII mapping. The encoder **MUST** store the resulting folder and
+basename bytes and compute their hashes separately.
+
+Decode **MUST** retain each present folder and basename as original wire-name
+bytes and associate it, its hash, record, and payload by serialized order. A
+component whose section is absent **MUST** be represented as absent, not as an
+empty byte string. When either index component is absent, the decoded display
+name **MUST** be
+`__jbsa_hash__\f{folderOrdinal:08x}-{folderHash:016x}\e{entryOrdinal:08x}-{nameHash:016x}`,
+where `folderOrdinal` is the zero-based folder-record ordinal, `entryOrdinal` is
+the zero-based global file-record ordinal, and all hexadecimal digits are
+lowercase. That marked synthetic name **MUST NOT** be represented as original
+wire bytes or used as normalized name identity, duplicate or overlay equality,
+or canonical repack input; normalized name identity is absent, and the stored
+hash pair and ordinals remain authoritative record identity. Canonical encode
+**MUST** reject an unresolved synthetic name until the caller supplies an
+explicit complete name. Embedded full names under
+[JBSA-BSA-011](#jbsa-bsa-011) remain independent payload-framing metadata and
+**MUST NOT** change index-section parsing or fabricate absent index bytes.
+
+_Source decisions: [accepted Reference Snapshot name and layout behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted Archive Name Encoding](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted deterministic-name and presence clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-BSA-006
 
-The BSA name hash **MUST** be computed from lowercase Archive Name Encoding
-bytes. For a basename, split off the final extension including its dot; folder
-hashes use no extension. Form the low word from the final stem byte, the
+The BSA name hash **MUST** be computed from the normalized folder or basename
+bytes produced by [JBSA-BSA-005](#jbsa-bsa-005). For a basename, split off the
+final extension including its dot; folder hashes use no extension. Form the low
+word from the final stem byte, the
 penultimate stem byte when the stem has more than two bytes, the stem length
 modulo 256, and the first stem byte, in increasing byte significance. Apply
 these low-word masks: `.kf` `0x00000080`, `.nif` `0x00008000`, `.dds`
@@ -103,7 +137,13 @@ bytes above 127 as `byte - 256` in those recurrences; versions `0x68` and `0x69`
 **MUST** interpret them unsigned. The high word and low word together form the
 `u64` hash.
 
-_Source decision: [accepted Reference Snapshot hash behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245)._
+Absent a qualified Compatibility Profile, decode **MUST** perform a canonical
+hash comparison only for a present folder or basename containing Archive Name
+Encoding bytes at most `0x7f`. For a component containing a byte greater than
+`0x7f`, its original wire bytes and stored hash remain authoritative and decode
+**MUST NOT** diagnose a canonical hash mismatch.
+
+_Source decisions: [accepted Reference Snapshot hash behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted deterministic lowercase clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-BSA-007
 
@@ -203,15 +243,18 @@ _Source decisions: [accepted Reference Snapshot flag inference](https://github.c
 
 ## JBSA-BSA-014
 
-Decode **MUST** validate header counts and lengths, folder-record and name-table
-relationships, absolute payload spans, record framing, codec consumption, and
-decoded sizes with checked arithmetic. It **MUST** reject overflow, truncation,
-out-of-file or partially overlapping spans, duplicate normalized names,
-impossible framing, unsupported codecs, and decoded-size mismatch. Exact shared
-payload spans remain valid. Absolute or traversal names remain inspectable but
+Decode **MUST** validate header counts and lengths, flag-conditioned name-section
+presence and lengths, folder-record and name-table relationships, absolute
+payload spans, record framing, codec consumption, and decoded sizes with checked
+arithmetic. It **MUST** reject overflow, truncation, out-of-file or partially
+overlapping spans, duplicate complete normalized wire names, impossible
+framing, unsupported codecs, and decoded-size mismatch. Exact shared payload
+spans remain valid. Absolute or traversal names remain inspectable but
 **MUST** make extraction ineligible before destination effects. A stored-hash
-mismatch with usable names **MUST** be a diagnosed Tolerated Noncanonical
-Archive and **MUST NOT** be emitted.
+mismatch established for any present usable wire-name component under
+[JBSA-BSA-006](#jbsa-bsa-006) **MUST** be a diagnosed Tolerated Noncanonical
+Archive and **MUST NOT** be emitted. Synthetic display names from
+[JBSA-BSA-005](#jbsa-bsa-005) **MUST NOT** participate in either check.
 
 Encode **MUST** reject an empty entry set, an entry without a folder component,
 unmappable names, unpopulated payloads, and values that cannot fit their wire
@@ -226,7 +269,7 @@ Inspection **MUST** retain stable warnings for file offsets beyond signed 2 GiB,
 cubemap textures without embedded names, non-textures with embedded names, and
 uncompressed `0x69` entries with embedded names.
 
-_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)._
 
 ## JBSA-BSA-015
 
@@ -252,9 +295,10 @@ contradiction blocks canonical automatic `0x0100` behavior and Binary
 Conformance assertions involving it until a differential fixture establishes
 the intended bytes.
 
-The signed-byte hash recurrence depends on the selected Archive Name Encoding.
-ASCII and deterministic Windows-1252 cases are specified; active-code-page and
-Windows-932 results require their mandatory fixtures before broader claims.
+The signed-byte hash recurrence is deterministic for stored bytes, but canonical
+non-ASCII lowercasing depends on a selected Compatibility Profile. The ASCII
+mapping is specified; Windows-1252 non-ASCII, active-code-page, and Windows-932
+results require their mandatory fixtures before broader claims.
 
 ## Other contradictions and fixture-dependent unknowns
 
@@ -265,8 +309,8 @@ assignment; changing them requires an accepted differential Compatibility
 Deviation.
 
 Exact compressed bytes remain provider/version-dependent. Name length overflow,
-equal-hash ordering, malformed folder offsets and flag/table combinations,
-duplicate names, and permissive truncation behavior lack fixture authority.
+equal-hash ordering, malformed folder offsets, duplicate names, and permissive
+truncation behavior lack fixture authority.
 Parallel byte order and split boundaries are intentionally not a Binary
 Conformance surface. These gaps remain explicit rather than inheriting whatever
 the Reference Snapshot happens to do on one malformed or scheduled execution.
