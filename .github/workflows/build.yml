@@ -41,7 +41,8 @@ jobs:
             .mvn/wrapper/maven-wrapper.properties
           check-latest: false
           distribution: temurin
-          java-version: '25.0.4+7'
+          # Temurin's LTS catalog suffix is part of the exact SemVer build metadata.
+          java-version: '25.0.4+7.0.LTS'
 
       - name: Run ${{ matrix.gate }} gate
         shell: pwsh
