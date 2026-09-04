@@ -22,11 +22,6 @@ jobs:
           persist-credentials: false
           submodules: false
 
-      - name: Verify external DCO and provenance declarations
-        if: github.event_name == 'pull_request'
-        shell: pwsh
-        run: ./build/verify-external-contribution.ps1
-
       - name: Verify per-file SPDX and REUSE metadata
         uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5 # v6
 

@@ -23,5 +23,5 @@ be retained in every public release is recorded in [the release notices](RELEASE
 ## Building and contributing
 
 See [the build guide](docs/development/build.md) for the Java 25 Maven commands. External
-contributions follow [CONTRIBUTING.md](CONTRIBUTING.md), including DCO 1.1 sign-off and provenance
-declarations. No contributor license agreement is required.
+contributions follow [CONTRIBUTING.md](CONTRIBUTING.md) and are reviewed directly by the maintainer.
+No contributor license agreement or DCO sign-off is required.

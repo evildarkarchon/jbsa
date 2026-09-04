@@ -8,7 +8,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -28,8 +31,6 @@ final class CompliancePolicyIT {
           "RELEASE-NOTES.md",
           "THIRD-PARTY-NOTICES.md",
           "CONTRIBUTING.md",
-          ".github/pull_request_template.md",
-          "build/verify-external-contribution.ps1",
           "README.md",
           "REUSE.toml",
           "docs/reference-use.md",
@@ -53,10 +54,7 @@ final class CompliancePolicyIT {
     assertFileContains("LICENSE", "Apache License");
     assertFileContains("LICENSE", "Version 2.0, January 2004");
     assertFileContains("LICENSES/CC0-1.0.txt", "CC0 1.0 Universal");
-    assertFileContains("CONTRIBUTING.md", "Signed-off-by:");
-    assertFileContains("CONTRIBUTING.md", "source and fixture provenance");
     assertFileContains("CONTRIBUTING.md", "No contributor license agreement");
-    assertFileContains("CONTRIBUTING.md", "Maintainer commits may omit sign-off");
     assertFileContains("docs/reference-use.md", "copy, mechanically translate, or preserve");
     assertFileContains("README.md", "fd1e36020b2b5b6217e553dc0038983146a2e2dd");
     assertFileContains("RELEASE-NOTES.md", "fd1e36020b2b5b6217e553dc0038983146a2e2dd");
@@ -66,10 +64,6 @@ final class CompliancePolicyIT {
     assertFileContains(
         ".github/workflows/build.yml",
         "fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5");
-    assertFileContains(".github/workflows/build.yml", "./build/verify-external-contribution.ps1");
-    assertFileContains(
-        ".github/pull_request_template.md",
-        "[ ] I declare the source provenance used for this change.");
   }
 
   /**
@@ -167,6 +161,30 @@ final class CompliancePolicyIT {
   }
 
   /**
+   * Verifies PE content remains subject to native approval after its filename extension is changed.
+   *
+   * @throws Exception if the verifier process or owned temporary files cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsRenamedNativePayloads() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-renamed-native-input-");
+    Path manifest = Files.createTempFile("jbsa-renamed-native-manifest-", ".json");
+    try {
+      Path payload = releaseInputs.resolve("unknown.bin");
+      Files.write(payload, syntheticPePayload());
+      writeReleaseInputManifest(
+          manifest, "unknown.bin", sha256(payload), "documentation", "README.md");
+
+      AuditResult result = runComplianceAudit(releaseInputs, manifest);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("Unapproved native payload"), result.output());
+    } finally {
+      Files.deleteIfExists(manifest);
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
    * Verifies every otherwise permissible release input still requires a checksummed manifest.
    *
    * @throws Exception if the verifier process or owned temporary directory cannot be managed
@@ -206,6 +224,54 @@ final class CompliancePolicyIT {
   }
 
   /**
+   * Verifies an archive cannot hide PE content by assigning its entry a non-native extension.
+   *
+   * @throws Exception if the verifier process or owned temporary files cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsRenamedNativePayloadHiddenInJar() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-renamed-archived-native-input-");
+    Path manifest = Files.createTempFile("jbsa-renamed-archived-native-manifest-", ".json");
+    try {
+      Path archive = releaseInputs.resolve("candidate.jar");
+      writeZip(archive, "native/windows-x86_64/unknown.bin", syntheticPePayload());
+      writeReleaseInputManifest(
+          manifest, "candidate.jar", sha256(archive), "documentation", "README.md");
+
+      AuditResult result = runComplianceAudit(releaseInputs, manifest);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("Unapproved native payload"), result.output());
+    } finally {
+      Files.deleteIfExists(manifest);
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
+   * Verifies a prefixed ZIP cannot hide renamed native content from recursive inspection.
+   *
+   * @throws Exception if the verifier process or owned temporary files cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsNativePayloadHiddenInPrefixedRenamedZip() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-prefixed-zip-native-input-");
+    Path manifest = Files.createTempFile("jbsa-prefixed-zip-native-manifest-", ".json");
+    try {
+      Path archive = releaseInputs.resolve("candidate.bin");
+      writePrefixedZip(archive, "native/windows-x86_64/unknown.bin", syntheticPePayload());
+      writeReleaseInputManifest(
+          manifest, "candidate.bin", sha256(archive), "documentation", "README.md");
+
+      AuditResult result = runComplianceAudit(releaseInputs, manifest);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("Unapproved native payload"), result.output());
+    } finally {
+      Files.deleteIfExists(manifest);
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
    * Verifies a ZIP cannot hide proprietary fixture material from the release-input audit.
    *
    * @throws Exception if the verifier process or owned temporary archive cannot be managed
@@ -221,6 +287,171 @@ final class CompliancePolicyIT {
           result.output().contains("Proprietary or local fixture material"), result.output());
     } finally {
       deleteTree(releaseInputs);
+    }
+  }
+
+  /**
+   * Verifies unsafe archive paths are rejected even when the ZIP entry represents a directory.
+   *
+   * @throws Exception if the verifier process or owned temporary archive cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsUnsafeDirectoryEntriesInZip() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-unsafe-directory-input-");
+    try {
+      writeZip(releaseInputs.resolve("candidate.zip"), "../", new byte[0]);
+
+      AuditResult result = runComplianceAudit(releaseInputs);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("unsafe entry path"), result.output());
+    } finally {
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
+   * Verifies a directory and file cannot alias under case-insensitive extraction semantics.
+   *
+   * @throws Exception if the verifier process or owned temporary archive cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsDirectoryFileAliasesInZip() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-directory-alias-input-");
+    try {
+      writeDirectoryFileAliasZip(releaseInputs.resolve("candidate.zip"));
+
+      AuditResult result = runComplianceAudit(releaseInputs);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("duplicate case-insensitive entry"), result.output());
+    } finally {
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
+   * Verifies dot-segment archive names cannot alias a separately named extraction path.
+   *
+   * @throws Exception if the verifier process or owned temporary archive cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsDotSegmentAliasesInZip() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-dot-segment-alias-input-");
+    try {
+      writeDotSegmentAliasZip(releaseInputs.resolve("candidate.zip"));
+
+      AuditResult result = runComplianceAudit(releaseInputs);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("unsafe entry path"), result.output());
+    } finally {
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
+   * Verifies Unix symbolic-link metadata is rejected before an archive entry is treated as a file.
+   *
+   * @throws Exception if the verifier process or owned temporary archive cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsSymbolicLinkEntriesInZip() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-symbolic-link-input-");
+    try {
+      writeUnixSymbolicLinkZip(releaseInputs.resolve("candidate.zip"), "link", "target");
+
+      AuditResult result = runComplianceAudit(releaseInputs);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("symbolic-link entry"), result.output());
+    } finally {
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
+   * Verifies declared oversized entries are rejected before the verifier inflates their payload.
+   *
+   * @throws Exception if the verifier process or owned temporary archive cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsOversizedEntriesBeforeInspection() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-oversized-entry-input-");
+    try {
+      writeZipWithDeclaredEntrySize(releaseInputs.resolve("candidate.zip"), 268_435_457);
+
+      AuditResult result = runComplianceAudit(releaseInputs);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("inspection size limit"), result.output());
+    } finally {
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
+   * Verifies a self-declared project coordinate cannot bless bytes unlike the reactor output.
+   *
+   * @throws Exception if the verifier process or owned temporary files cannot be managed
+   */
+  @Test
+  void releaseInputAuditRejectsProjectArtifactThatDiffersFromReactorOutput() throws Exception {
+    Path releaseInputs = Files.createTempDirectory("jbsa-forged-project-artifact-input-");
+    Path manifest = Files.createTempFile("jbsa-forged-project-artifact-manifest-", ".json");
+    try {
+      String stagedName = "jbsa-" + System.getProperty("jbsa.version") + ".jar";
+      Path artifact = releaseInputs.resolve(stagedName);
+      writeZip(artifact, "forged.txt", "not the reactor artifact");
+      writeReleaseInputManifest(
+          manifest,
+          stagedName,
+          sha256(artifact),
+          "project-artifact",
+          "io.github.evildarkarchon:jbsa:" + System.getProperty("jbsa.version"));
+
+      AuditResult result = runComplianceAudit(releaseInputs, manifest);
+      assertFalse(result.exitCode() == 0, result.output());
+      assertTrue(result.output().contains("does not match the reactor output"), result.output());
+    } finally {
+      Files.deleteIfExists(manifest);
+      deleteTree(releaseInputs);
+    }
+  }
+
+  /**
+   * Verifies the exact current reactor JAR remains a valid project-artifact release input.
+   *
+   * @throws Exception if the verifier process or owned temporary files cannot be managed
+   */
+  @Test
+  void releaseInputAuditAcceptsExactReactorProjectArtifact() throws Exception {
+    String version = System.getProperty("jbsa.version");
+    List<ProjectArtifactFixture> fixtures =
+        List.of(
+            new ProjectArtifactFixture("jbsa-" + version + ".jar", "jbsa.library.jar", "jbsa"),
+            new ProjectArtifactFixture(
+                "jbsa-" + version + ".pom", "jbsa.library.consumerPom", "jbsa"),
+            new ProjectArtifactFixture(
+                "jbsa-" + version + "-sources.jar", "jbsa.library.sourcesJar", "jbsa"),
+            new ProjectArtifactFixture(
+                "jbsa-" + version + "-javadoc.jar", "jbsa.library.javadocJar", "jbsa"),
+            new ProjectArtifactFixture("jbsa-cli-" + version + ".jar", "jbsa.cli.jar", "jbsa-cli"));
+
+    for (ProjectArtifactFixture fixture : fixtures) {
+      Path releaseInputs = Files.createTempDirectory("jbsa-reactor-project-artifact-input-");
+      Path manifest = Files.createTempFile("jbsa-reactor-project-artifact-manifest-", ".json");
+      try {
+        Path artifact = releaseInputs.resolve(fixture.stagedName());
+        Files.copy(Path.of(System.getProperty(fixture.systemProperty())), artifact);
+        writeReleaseInputManifest(
+            manifest,
+            fixture.stagedName(),
+            sha256(artifact),
+            "project-artifact",
+            "io.github.evildarkarchon:" + fixture.artifactId() + ":" + version);
+
+        AuditResult result = runComplianceAudit(releaseInputs, manifest);
+        assertEquals(0, result.exitCode(), () -> fixture.stagedName() + ":\n" + result.output());
+      } finally {
+        Files.deleteIfExists(manifest);
+        deleteTree(releaseInputs);
+      }
     }
   }
 
@@ -258,31 +489,6 @@ final class CompliancePolicyIT {
   }
 
   /**
-   * Verifies an external pull request cannot pass with an unsigned contribution commit.
-   *
-   * @throws Exception if the contribution verifier or its event fixture cannot be managed
-   */
-  @Test
-  void externalContributionAuditRejectsUnsignedCommits() throws Exception {
-    AuditResult result =
-        runExternalContributionAudit("External Contributor", "external@example.com");
-    assertFalse(result.exitCode() == 0, result.output());
-    assertTrue(result.output().contains("lacks a DCO Signed-off-by trailer"), result.output());
-  }
-
-  /**
-   * Verifies the explicit JBSA-LIC-016 maintainer sign-off exemption remains available.
-   *
-   * @throws Exception if the contribution verifier or its event fixture cannot be managed
-   */
-  @Test
-  void externalContributionAuditAllowsMaintainerCommits() throws Exception {
-    AuditResult result = runExternalContributionAudit("evildarkarchon", "evildarkarchon@gmail.com");
-    assertEquals(0, result.exitCode(), result.output());
-    assertTrue(result.output().contains("maintainer commits may omit"), result.output());
-  }
-
-  /**
    * Runs the repository compliance verifier and captures its process-level result.
    *
    * @param releaseInputRoot optional release-input directory to audit, or {@code null} for the
@@ -291,6 +497,20 @@ final class CompliancePolicyIT {
    * @throws Exception if the verifier process cannot start or does not finish within its deadline
    */
   private static AuditResult runComplianceAudit(Path releaseInputRoot) throws Exception {
+    return runComplianceAudit(releaseInputRoot, null);
+  }
+
+  /**
+   * Runs the repository compliance verifier with an optional release-input manifest.
+   *
+   * @param releaseInputRoot optional release-input directory to audit, or {@code null} for the
+   *     repository-only audit
+   * @param releaseInputManifest optional manifest accounting for every release input
+   * @return the verifier exit status and merged standard output/error text
+   * @throws Exception if the verifier process cannot start or does not finish within its deadline
+   */
+  private static AuditResult runComplianceAudit(Path releaseInputRoot, Path releaseInputManifest)
+      throws Exception {
     List<String> command =
         new java.util.ArrayList<>(
             List.of(
@@ -299,10 +519,16 @@ final class CompliancePolicyIT {
                 "-NoProfile",
                 "-NonInteractive",
                 "-File",
-                reactorRoot().resolve("build/verify-compliance.ps1").toString()));
+                reactorRoot().resolve("build/verify-compliance.ps1").toString(),
+                "-ReactorVersion",
+                System.getProperty("jbsa.version")));
     if (releaseInputRoot != null) {
       command.add("-ReleaseInputRoot");
       command.add(releaseInputRoot.toString());
+    }
+    if (releaseInputManifest != null) {
+      command.add("-ReleaseInputManifest");
+      command.add(releaseInputManifest.toString());
     }
 
     return runAuditProcess(command, reactorRoot(), Map.of(), "Compliance verifier");
@@ -324,102 +550,12 @@ final class CompliancePolicyIT {
             "-NonInteractive",
             "-File",
             reactorRoot().resolve("build/verify-compliance.ps1").toString(),
+            "-ReactorVersion",
+            System.getProperty("jbsa.version"),
             "-RequireGeneratedArtifacts",
             "-GeneratedSbomPath",
             sbom.toString());
     return runAuditProcess(command, reactorRoot(), Map.of(), "Compliance verifier");
-  }
-
-  /**
-   * Runs the PR contribution gate against an unsigned commit in an isolated repository.
-   *
-   * @param commitAuthorName author name for the unsigned contribution commit
-   * @param commitAuthorEmail author email for the unsigned contribution commit
-   * @return the contribution verifier exit status and merged output
-   * @throws Exception if the isolated repository, event fixture, or verifier process cannot be
-   *     managed
-   */
-  private static AuditResult runExternalContributionAudit(
-      String commitAuthorName, String commitAuthorEmail) throws Exception {
-    Path repository = Files.createTempDirectory("jbsa-contribution-repository-");
-    try {
-      runCommand(List.of("git", "init", "--quiet"), repository);
-      Path contribution = repository.resolve("contribution.txt");
-      Files.writeString(contribution, "base");
-      runCommand(List.of("git", "add", "contribution.txt"), repository);
-      runCommand(
-          List.of(
-              "git",
-              "-c",
-              "user.name=" + commitAuthorName,
-              "-c",
-              "user.email=" + commitAuthorEmail,
-              "commit",
-              "--quiet",
-              "-m",
-              "Base"),
-          repository);
-      String baseCommit = runCommand(List.of("git", "rev-parse", "HEAD"), repository);
-
-      Files.writeString(contribution, "contribution");
-      runCommand(List.of("git", "add", "contribution.txt"), repository);
-      runCommand(
-          List.of(
-              "git",
-              "-c",
-              "user.name=" + commitAuthorName,
-              "-c",
-              "user.email=" + commitAuthorEmail,
-              "commit",
-              "--quiet",
-              "-m",
-              "Unsigned contribution"),
-          repository);
-      String headCommit = runCommand(List.of("git", "rev-parse", "HEAD"), repository);
-      String eventJson =
-          """
-          {
-            "pull_request": {
-              "user": { "login": "external-opener" },
-              "base": { "sha": "%s" },
-              "head": { "sha": "%s" },
-              "body": "- [x] I declare the source provenance used for this change.\\n- [x] I declare the fixture provenance or confirm that no fixtures are added."
-            }
-          }
-          """
-              .formatted(baseCommit, headCommit);
-      Path eventPath = repository.resolve("event.json");
-      Files.writeString(eventPath, eventJson);
-      List<String> command =
-          List.of(
-              "pwsh",
-              "-NoLogo",
-              "-NoProfile",
-              "-NonInteractive",
-              "-File",
-              reactorRoot().resolve("build/verify-external-contribution.ps1").toString());
-      return runAuditProcess(
-          command,
-          repository,
-          Map.of("GITHUB_EVENT_PATH", eventPath.toString()),
-          "Contribution verifier");
-    } finally {
-      deleteTree(repository);
-    }
-  }
-
-  /**
-   * Runs a short local command in an explicit working directory.
-   *
-   * @param command executable and arguments to run
-   * @param workingDirectory exact directory in which to start the process
-   * @return trimmed merged standard output/error text from a successful command
-   * @throws Exception if the command fails, cannot start, or exceeds its deadline
-   */
-  private static String runCommand(List<String> command, Path workingDirectory) throws Exception {
-    AuditResult result = runAuditProcess(command, workingDirectory, Map.of(), command.toString());
-    assertEquals(0, result.exitCode(), result.output());
-    return result.output().trim();
   }
 
   /**
@@ -492,10 +628,250 @@ final class CompliancePolicyIT {
    * @throws IOException if the owned archive cannot be written
    */
   private static void writeZip(Path archive, String entryName, String content) throws IOException {
+    writeZip(archive, entryName, content.getBytes(StandardCharsets.UTF_8));
+  }
+
+  /**
+   * Writes one small ZIP-compatible archive entry with exact caller-supplied bytes.
+   *
+   * @param archive exact JAR or ZIP path to create
+   * @param entryName relative archive-entry name
+   * @param content exact entry content
+   * @throws IOException if the owned archive cannot be written
+   */
+  private static void writeZip(Path archive, String entryName, byte[] content) throws IOException {
     try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(archive))) {
       output.putNextEntry(new ZipEntry(entryName));
-      output.write(content.getBytes(StandardCharsets.UTF_8));
+      output.write(content);
       output.closeEntry();
+    }
+  }
+
+  /**
+   * Writes a ZIP whose single entry carries the Unix symbolic-link file type in external metadata.
+   *
+   * @param archive exact ZIP path to create
+   * @param entryName relative symbolic-link entry name
+   * @param target literal link-target text stored as the entry payload
+   * @throws IOException if the owned archive cannot be written or lacks a central-directory header
+   */
+  private static void writeUnixSymbolicLinkZip(Path archive, String entryName, String target)
+      throws IOException {
+    writeZip(archive, entryName, target);
+    byte[] bytes = Files.readAllBytes(archive);
+    int centralHeader = findCentralDirectoryHeader(bytes);
+    if (centralHeader < 0) {
+      throw new IOException("Synthetic ZIP has no central-directory header: " + archive);
+    }
+
+    // ZIP stores the Unix st_mode bits in the upper half of this central-directory field.
+    bytes[centralHeader + 5] = 3;
+    int externalAttributes = Integer.parseInt("120777", 8) << 16;
+    for (int index = 0; index < Integer.BYTES; index++) {
+      bytes[centralHeader + 38 + index] = (byte) (externalAttributes >>> (Byte.SIZE * index));
+    }
+    Files.write(archive, bytes);
+  }
+
+  /**
+   * Writes a valid ZIP with a non-native preamble before its local file data.
+   *
+   * @param archive exact ZIP-compatible path to create
+   * @param entryName relative archive-entry name
+   * @param content exact entry content
+   * @throws IOException if the owned archive cannot be written or patched
+   */
+  private static void writePrefixedZip(Path archive, String entryName, byte[] content)
+      throws IOException {
+    writeZip(archive, entryName, content);
+    byte[] zipBytes = Files.readAllBytes(archive);
+    int centralHeader = findZipHeader(zipBytes, 0x02014b50);
+    int endHeader = findZipHeader(zipBytes, 0x06054b50);
+    if (centralHeader < 0 || endHeader < 0) {
+      throw new IOException("Synthetic ZIP is missing required headers: " + archive);
+    }
+
+    int prefixLength = 16;
+    // Prefixed ZIPs must shift the central local-header pointer and the EOCD directory pointer.
+    addLittleEndianInt(zipBytes, centralHeader + 42, prefixLength);
+    addLittleEndianInt(zipBytes, endHeader + 16, prefixLength);
+    byte[] prefixedBytes = new byte[prefixLength + zipBytes.length];
+    System.arraycopy(zipBytes, 0, prefixedBytes, prefixLength, zipBytes.length);
+    Files.write(archive, prefixedBytes);
+  }
+
+  /**
+   * Writes a ZIP with a directory and file name that alias under Windows comparison.
+   *
+   * @param archive exact ZIP path to create
+   * @throws IOException if the owned archive cannot be written
+   */
+  private static void writeDirectoryFileAliasZip(Path archive) throws IOException {
+    try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(archive))) {
+      output.putNextEntry(new ZipEntry("payload/"));
+      output.closeEntry();
+      output.putNextEntry(new ZipEntry("PAYLOAD"));
+      output.write("file".getBytes(StandardCharsets.UTF_8));
+      output.closeEntry();
+    }
+  }
+
+  /**
+   * Writes a ZIP containing extraction-equivalent ordinary and dot-segment entry names.
+   *
+   * @param archive exact ZIP path to create
+   * @throws IOException if the owned archive cannot be written
+   */
+  private static void writeDotSegmentAliasZip(Path archive) throws IOException {
+    try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(archive))) {
+      output.putNextEntry(new ZipEntry("a/b"));
+      output.write("first".getBytes(StandardCharsets.UTF_8));
+      output.closeEntry();
+      output.putNextEntry(new ZipEntry("a/./b"));
+      output.write("second".getBytes(StandardCharsets.UTF_8));
+      output.closeEntry();
+    }
+  }
+
+  /**
+   * Writes a tiny ZIP whose metadata declares an entry larger than the inspection limit.
+   *
+   * @param archive exact ZIP path to create
+   * @param declaredSize synthetic uncompressed entry size stored in ZIP metadata
+   * @throws IOException if the owned archive cannot be written or patched
+   */
+  private static void writeZipWithDeclaredEntrySize(Path archive, int declaredSize)
+      throws IOException {
+    writeZip(archive, "oversized.bin", "tiny");
+    byte[] bytes = Files.readAllBytes(archive);
+    int localHeader = findZipHeader(bytes, 0x04034b50);
+    int centralHeader = findCentralDirectoryHeader(bytes);
+    if (localHeader < 0 || centralHeader < 0) {
+      throw new IOException("Synthetic ZIP is missing required headers: " + archive);
+    }
+
+    // Both headers carry the uncompressed size; ZipArchive trusts the central-directory value.
+    writeLittleEndianInt(bytes, localHeader + 22, declaredSize);
+    writeLittleEndianInt(bytes, centralHeader + 24, declaredSize);
+    Files.write(archive, bytes);
+  }
+
+  /**
+   * Finds the first ZIP central-directory header in a single-entry synthetic archive.
+   *
+   * @param bytes complete ZIP bytes
+   * @return header offset, or {@code -1} when the signature is absent
+   */
+  private static int findCentralDirectoryHeader(byte[] bytes) {
+    return findZipHeader(bytes, 0x02014b50);
+  }
+
+  /**
+   * Finds the first little-endian ZIP header signature in a synthetic archive.
+   *
+   * @param bytes complete ZIP bytes
+   * @param signature ZIP header signature in host integer order
+   * @return header offset, or {@code -1} when the signature is absent
+   */
+  private static int findZipHeader(byte[] bytes, int signature) {
+    for (int index = 0; index <= bytes.length - 4; index++) {
+      if ((bytes[index] & 0xff) == (signature & 0xff)
+          && (bytes[index + 1] & 0xff) == ((signature >>> 8) & 0xff)
+          && (bytes[index + 2] & 0xff) == ((signature >>> 16) & 0xff)
+          && (bytes[index + 3] & 0xff) == ((signature >>> 24) & 0xff)) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Adds a delta to one little-endian 32-bit ZIP field.
+   *
+   * @param bytes complete mutable ZIP bytes
+   * @param offset first byte of the field
+   * @param delta value to add
+   */
+  private static void addLittleEndianInt(byte[] bytes, int offset, int delta) {
+    int value =
+        (bytes[offset] & 0xff)
+            | ((bytes[offset + 1] & 0xff) << 8)
+            | ((bytes[offset + 2] & 0xff) << 16)
+            | ((bytes[offset + 3] & 0xff) << 24);
+    writeLittleEndianInt(bytes, offset, value + delta);
+  }
+
+  /**
+   * Writes one little-endian 32-bit ZIP field.
+   *
+   * @param bytes complete mutable ZIP bytes
+   * @param offset first byte of the field
+   * @param value exact field value
+   */
+  private static void writeLittleEndianInt(byte[] bytes, int offset, int value) {
+    for (int index = 0; index < Integer.BYTES; index++) {
+      bytes[offset + index] = (byte) (value >>> (Byte.SIZE * index));
+    }
+  }
+
+  /**
+   * Writes one schema-version-1 release-input manifest entry.
+   *
+   * @param manifest exact manifest path to create
+   * @param path release-input-relative path
+   * @param sha256 independently calculated lowercase artifact digest
+   * @param kind declared release-input kind
+   * @param source declared source identity or repository-relative evidence path
+   * @throws IOException if the manifest cannot be written
+   */
+  private static void writeReleaseInputManifest(
+      Path manifest, String path, String sha256, String kind, String source) throws IOException {
+    Files.writeString(
+        manifest,
+        """
+        {
+          "schemaVersion": 1,
+          "entries": [
+            {
+              "path": "%s",
+              "sha256": "%s",
+              "kind": "%s",
+              "source": "%s"
+            }
+          ]
+        }
+        """
+            .formatted(path, sha256, kind, source));
+  }
+
+  /**
+   * Returns a small PE-shaped byte sequence with a DOS and PE signature.
+   *
+   * @return independently constructed native test payload
+   */
+  private static byte[] syntheticPePayload() {
+    byte[] payload = new byte[128];
+    payload[0] = 0x4d;
+    payload[1] = 0x5a;
+    payload[0x3c] = 0x40;
+    payload[0x40] = 0x50;
+    payload[0x41] = 0x45;
+    return payload;
+  }
+
+  /**
+   * Returns the lowercase SHA-256 digest of one test-owned file.
+   *
+   * @param path exact file to hash
+   * @return lowercase 64-character hexadecimal digest
+   * @throws IOException if the file cannot be read
+   */
+  private static String sha256(Path path) throws IOException {
+    try {
+      return HexFormat.of()
+          .formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)));
+    } catch (NoSuchAlgorithmException impossible) {
+      throw new IllegalStateException("The Java runtime does not provide SHA-256", impossible);
     }
   }
 
@@ -528,4 +904,8 @@ final class CompliancePolicyIT {
 
   /** Captures the observable exit status and merged output from the compliance command. */
   private record AuditResult(int exitCode, String output) {}
+
+  /** Identifies one reactor output and its canonical staged project-artifact name. */
+  private record ProjectArtifactFixture(
+      String stagedName, String systemProperty, String artifactId) {}
 }

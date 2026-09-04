@@ -345,6 +345,8 @@
                 <argument>-NonInteractive</argument>
                 <argument>-File</argument>
                 <argument>${maven.multiModuleProjectDirectory}/build/verify-compliance.ps1</argument>
+                <argument>-ReactorVersion</argument>
+                <argument>${project.version}</argument>
                 <argument>-RequireGeneratedArtifacts</argument>
               </arguments>
             </configuration>

@@ -1,6 +1,6 @@
 schema_version: 1
 specification:
-  version: 0.10.0
+  version: 0.11.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -1953,6 +1953,7 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+      - https://github.com/evildarkarchon/jbsa/issues/62
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 29
@@ -1966,7 +1967,6 @@ requirements:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsNativePayloadHiddenInJar"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryMaterialHiddenInZip"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#sbomAuditRejectsUninventoriedTransitiveDependencies"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#externalContributionAuditRejectsUnsignedCommits"
   - id: JBSA-LIC-012
     owner:
       document: docs/spec/compliance.md
@@ -2019,24 +2019,28 @@ requirements:
       anchor: jbsa-lic-016
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+      - https://github.com/evildarkarchon/jbsa/issues/62
+    lifecycle_state: retired
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#externalContributionAuditAllowsMaintainerCommits"
+    test_evidence: []
+    retirement:
+      issue: 62
+      reason: DCO sign-off is no longer required, so a maintainer-specific exemption is unnecessary.
   - id: JBSA-LIC-017
     owner:
       document: docs/spec/compliance.md
       anchor: jbsa-lic-017
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+      - https://github.com/evildarkarchon/jbsa/issues/62
+    lifecycle_state: retired
     verification_class: release-audit
     implementing_issue: 29
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#externalContributionAuditRejectsUnsignedCommits"
+    test_evidence: []
+    retirement:
+      issue: 62
+      reason: External pull requests are now assessed directly without an automated DCO or declaration gate.
   - id: JBSA-OPS-001
     owner:
       document: docs/spec/operation-semantics.md

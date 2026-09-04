@@ -19,6 +19,10 @@ that only need repository or candidate-input validation can omit it.
 Optional exact CycloneDX JSON path used with RequireGeneratedArtifacts. Tests may supply an owned
 fixture; normal builds use target/compliance/jbsa.cdx.json.
 
+.PARAMETER ReactorVersion
+Optional effective Maven reactor version. Maven supplies this explicitly so command-line revision
+overrides resolve the matching build outputs; standalone callers use the root POM revision.
+
 .NOTES
 This engineering gate does not make a legal determination. Unclear rights or provenance remain a
 stop condition even when the mechanical checks pass.
@@ -28,7 +32,8 @@ param(
     [string] $ReleaseInputRoot,
     [string] $ReleaseInputManifest,
     [switch] $RequireGeneratedArtifacts,
-    [string] $GeneratedSbomPath
+    [string] $GeneratedSbomPath,
+    [string] $ReactorVersion
 )
 
 Set-StrictMode -Version Latest
@@ -46,8 +51,10 @@ $sha256Pattern = '^[0-9a-f]{64}$'
 $proprietaryArchiveExtensions = @('.bsa', '.ba2', '.esm', '.esp', '.esl', '.dds')
 $nativeLibraryExtensions = @('.dll', '.so', '.dylib')
 $nestedArchiveExtensions = @('.jar', '.zip')
-# This cap blocks decompression-bomb inputs while covering ordinary dependency and application JARs.
-$maximumNestedArchiveBytes = 268435456
+# This cap bounds inflation before hashing while covering ordinary dependency and application JARs.
+$maximumArchiveEntryBytes = 268435456
+# EOCD plus its maximum ZIP comment is sufficient to detect archives with an executable preamble.
+$maximumZipTrailerBytes = 65557
 # Four nested layers cover expected packaging while bounding adversarial archive recursion.
 $maximumArchiveDepth = 4
 $defaultReleaseInputRoot = Join-Path $reactorRoot 'jbsa-dist/target/release-inputs'
@@ -90,6 +97,35 @@ function Read-ComplianceInventory {
         throw "Compliance inventory has no entries array: $Path"
     }
     return $inventory
+}
+
+<#
+.SYNOPSIS
+Returns the default reactor version declared by the root Maven POM.
+
+.PARAMETER Path
+Exact root POM path to parse.
+
+.OUTPUTS
+The non-empty revision property value.
+
+.NOTES
+Throws a terminating error when the POM is malformed or omits its revision property.
+#>
+function Get-DeclaredReactorVersion {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    $rootPom = [xml](Get-Content -Raw -LiteralPath $Path)
+    $namespaces = [System.Xml.XmlNamespaceManager]::new($rootPom.NameTable)
+    $namespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
+    $revisionNode = $rootPom.SelectSingleNode('/m:project/m:properties/m:revision', $namespaces)
+    if ($null -eq $revisionNode -or [string]::IsNullOrWhiteSpace($revisionNode.InnerText)) {
+        throw 'The root POM does not declare the reactor revision.'
+    }
+    return $revisionNode.InnerText.Trim()
 }
 
 <#
@@ -557,30 +593,129 @@ function Get-LowercaseSha256 {
 
 <#
 .SYNOPSIS
-Returns the lowercase SHA-256 digest of the remaining bytes in one stream.
+Hashes and classifies the remaining payload bytes in one stream.
 
 .PARAMETER Stream
-Readable stream positioned at the first byte to hash. The function leaves ownership to the caller.
+Readable stream positioned at the first payload byte. The function leaves ownership to the caller.
+
+.PARAMETER MaximumBytes
+Maximum bytes permitted before inspection aborts. Defaults to the largest stream length.
 
 .OUTPUTS
-A lowercase 64-character hexadecimal digest.
+An object containing the lowercase SHA-256 digest plus native-binary and ZIP signature flags.
 
 .NOTES
-Consumes the stream from its current position to the end and leaves disposal to the caller. Hashing
-errors are propagated as terminating errors.
+Consumes the stream exactly once so non-seekable ZIP entry streams receive the same content-based
+checks as regular files. PE/DOS, ELF, and unambiguous Mach-O signatures are treated as native.
 #>
-function Get-LowercaseStreamSha256 {
+function Get-StreamPayloadInspection {
     param(
         [Parameter(Mandatory = $true)]
-        [System.IO.Stream] $Stream
+        [System.IO.Stream] $Stream,
+        [long] $MaximumBytes = [long]::MaxValue
     )
 
-    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $header = [byte[]]::new(8)
+    $headerLength = 0
+    $buffer = [byte[]]::new(81920)
+    $zipTrailer = [byte[]]::new($maximumZipTrailerBytes)
+    $zipTrailerLength = 0
+    $totalBytes = [long] 0
+    $sha256 = [System.Security.Cryptography.IncrementalHash]::CreateHash(
+        [System.Security.Cryptography.HashAlgorithmName]::SHA256
+    )
     try {
-        return [Convert]::ToHexString($sha256.ComputeHash($Stream)).ToLowerInvariant()
+        while (($bytesRead = $Stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            $totalBytes += $bytesRead
+            if ($totalBytes -gt $MaximumBytes) {
+                throw "Payload exceeds the inspection size limit of $MaximumBytes bytes."
+            }
+            if ($headerLength -lt $header.Length) {
+                $headerBytes = [Math]::Min($bytesRead, $header.Length - $headerLength)
+                [Array]::Copy($buffer, 0, $header, $headerLength, $headerBytes)
+                $headerLength += $headerBytes
+            }
+            if ($bytesRead -ge $zipTrailer.Length) {
+                [Array]::Copy(
+                    $buffer,
+                    $bytesRead - $zipTrailer.Length,
+                    $zipTrailer,
+                    0,
+                    $zipTrailer.Length
+                )
+                $zipTrailerLength = $zipTrailer.Length
+            } else {
+                $overflow = [Math]::Max(
+                    0,
+                    $zipTrailerLength + $bytesRead - $zipTrailer.Length
+                )
+                if ($overflow -gt 0) {
+                    [Array]::Copy(
+                        $zipTrailer,
+                        $overflow,
+                        $zipTrailer,
+                        0,
+                        $zipTrailerLength - $overflow
+                    )
+                    $zipTrailerLength -= $overflow
+                }
+                [Array]::Copy($buffer, 0, $zipTrailer, $zipTrailerLength, $bytesRead)
+                $zipTrailerLength += $bytesRead
+            }
+            $sha256.AppendData($buffer, 0, $bytesRead)
+        }
+        $hash = [Convert]::ToHexString($sha256.GetHashAndReset()).ToLowerInvariant()
     }
     finally {
         $sha256.Dispose()
+    }
+
+    $magic = [Convert]::ToHexString($header)
+    $magic32 = $magic.Substring(0, 8)
+    $isFatMachO = $false
+    if ($headerLength -ge 8 -and $magic32 -ceq 'CAFEBABE') {
+        # Java class files share this magic, but their minor/major pair cannot be a small arch count.
+        $architectureCount =
+            ([uint32] $header[4] -shl 24) -bor
+            ([uint32] $header[5] -shl 16) -bor
+            ([uint32] $header[6] -shl 8) -bor
+            [uint32] $header[7]
+        $isFatMachO = $architectureCount -ge 1 -and $architectureCount -le 32
+    }
+    $isNativePayload =
+        ($headerLength -ge 2 -and $magic.StartsWith('4D5A', [System.StringComparison]::Ordinal)) -or
+        ($headerLength -ge 4 -and $magic32 -ceq '7F454C46') -or
+        ($headerLength -ge 4 -and $magic32 -cin @(
+                'FEEDFACE',
+                'CEFAEDFE',
+                'FEEDFACF',
+                'CFFAEDFE',
+                'BEBAFECA',
+                'CAFEBABF',
+                'BFBAFECA'
+            )) -or
+        $isFatMachO
+    $hasZipEndRecord = $false
+    # A valid trailing EOCD detects ZIPs with a preamble; the comment length avoids incidental PK bytes.
+    for ($index = 0; $index -le $zipTrailerLength - 22; $index++) {
+        if ($zipTrailer[$index] -eq 0x50 -and $zipTrailer[$index + 1] -eq 0x4b -and
+            $zipTrailer[$index + 2] -eq 0x05 -and $zipTrailer[$index + 3] -eq 0x06) {
+            $commentLength = $zipTrailer[$index + 20] -bor ($zipTrailer[$index + 21] -shl 8)
+            if ($index + 22 + $commentLength -eq $zipTrailerLength) {
+                $hasZipEndRecord = $true
+                break
+            }
+        }
+    }
+    $isZipArchive = $hasZipEndRecord -or ($headerLength -ge 4 -and $magic32 -cin @(
+        '504B0304',
+        '504B0506',
+        '504B0708'
+    ))
+    return [pscustomobject]@{
+        sha256 = $hash
+        isNativePayload = $isNativePayload
+        isZipArchive = $isZipArchive
     }
 }
 
@@ -597,15 +732,24 @@ Stable archive-qualified path included in a failure.
 .PARAMETER Context
 Phrase describing where the unapproved payload was discovered.
 
+.PARAMETER Extension
+Lowercase supplied filename extension, retained as a fail-closed native signal.
+
+.PARAMETER NativeByHash
+All inventoried native entries, including payloads whose redistribution is blocked.
+
 .PARAMETER ApprovedNativeByHash
 Release-approved native entries keyed by exact payload SHA-256.
 
+.PARAMETER MaximumBytes
+Maximum bytes permitted before stream inspection aborts.
+
 .OUTPUTS
-None.
+The payload inspection result, for callers that also need content-based archive detection.
 
 .NOTES
-Consumes the stream from its current position to the end and leaves disposal to the caller. Throws
-a terminating error when the digest is not approved.
+Consumes the stream from its current position to the end and leaves disposal to the caller. Native
+identity comes from the supplied extension, binary signature, or an exact full-inventory hash.
 #>
 function Assert-ApprovedNativeStream {
     param(
@@ -616,13 +760,24 @@ function Assert-ApprovedNativeStream {
         [Parameter(Mandatory = $true)]
         [string] $Context,
         [Parameter(Mandatory = $true)]
-        [hashtable] $ApprovedNativeByHash
+        [AllowEmptyString()]
+        [string] $Extension,
+        [Parameter(Mandatory = $true)]
+        [hashtable] $NativeByHash,
+        [Parameter(Mandatory = $true)]
+        [hashtable] $ApprovedNativeByHash,
+        [long] $MaximumBytes = [long]::MaxValue
     )
 
-    $hash = Get-LowercaseStreamSha256 $Stream
-    if (-not $ApprovedNativeByHash.ContainsKey($hash)) {
-        throw "Unapproved native payload $Context`: $DisplayPath ($hash)"
+    $inspection = Get-StreamPayloadInspection $Stream $MaximumBytes
+    $isNativePayload =
+        $Extension -cin $nativeLibraryExtensions -or
+        $inspection.isNativePayload -or
+        $NativeByHash.ContainsKey($inspection.sha256)
+    if ($isNativePayload -and -not $ApprovedNativeByHash.ContainsKey($inspection.sha256)) {
+        throw "Unapproved native payload $Context`: $DisplayPath ($($inspection.sha256))"
     }
+    return $inspection
 }
 
 <#
@@ -638,11 +793,17 @@ Stable repository- or release-relative path included in a failure.
 .PARAMETER Context
 Phrase describing where the unapproved payload was discovered.
 
+.PARAMETER Extension
+Lowercase supplied filename extension, retained as a fail-closed native signal.
+
+.PARAMETER NativeByHash
+All inventoried native entries, including payloads whose redistribution is blocked.
+
 .PARAMETER ApprovedNativeByHash
 Release-approved native entries keyed by exact payload SHA-256.
 
 .OUTPUTS
-None.
+The payload inspection result, for callers that also need content-based archive detection.
 
 .NOTES
 Opens and disposes its own file stream. Throws a terminating I/O or approval error.
@@ -656,16 +817,96 @@ function Assert-ApprovedNativePayload {
         [Parameter(Mandatory = $true)]
         [string] $Context,
         [Parameter(Mandatory = $true)]
+        [AllowEmptyString()]
+        [string] $Extension,
+        [Parameter(Mandatory = $true)]
+        [hashtable] $NativeByHash,
+        [Parameter(Mandatory = $true)]
         [hashtable] $ApprovedNativeByHash
     )
 
     $stream = [System.IO.File]::OpenRead($Path)
     try {
-        Assert-ApprovedNativeStream $stream $DisplayPath $Context $ApprovedNativeByHash
+        return Assert-ApprovedNativeStream `
+            $stream $DisplayPath $Context $Extension $NativeByHash $ApprovedNativeByHash
     }
     finally {
         $stream.Dispose()
     }
+}
+
+<#
+.SYNOPSIS
+Resolves one production project-artifact identity to its exact current reactor output.
+
+.PARAMETER Source
+Three-part Maven coordinate declared by a project-artifact manifest entry.
+
+.PARAMETER ReleasePath
+Canonical release-input path whose filename identifies packaging and classifier.
+
+.PARAMETER ReactorVersion
+Effective Maven version of the current reactor build.
+
+.OUTPUTS
+The exact existing reactor artifact path for the coordinate and canonical release filename.
+
+.NOTES
+Only required production artifacts are valid project-artifact identities. Throws when the source
+is malformed, the release filename is noncanonical, or no current reactor output exists.
+#>
+function Resolve-ReactorProjectArtifact {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Source,
+        [Parameter(Mandatory = $true)]
+        [string] $ReleasePath,
+        [Parameter(Mandatory = $true)]
+        [string] $ReactorVersion
+    )
+
+    $coordinate = [regex]::Match(
+        $Source,
+        '^io\.github\.evildarkarchon:(jbsa|jbsa-cli):([^:]+)$',
+        [System.Text.RegularExpressions.RegexOptions]::CultureInvariant
+    )
+    if (-not $coordinate.Success) {
+        throw "Release input project artifact has an invalid source identity: $Source"
+    }
+    $artifactId = $coordinate.Groups[1].Value
+    $version = $coordinate.Groups[2].Value
+    if ($version -cne $ReactorVersion) {
+        throw "Release input project artifact does not identify the current reactor version: $Source"
+    }
+    $releaseName = [System.IO.Path]::GetFileName($ReleasePath)
+    $artifactMap = [System.Collections.Generic.Dictionary[string, string]]::new(
+        [System.StringComparer]::Ordinal
+    )
+    if ($artifactId -ceq 'jbsa') {
+        $artifactMap.Add("jbsa-$ReactorVersion.jar", "jbsa/target/jbsa-$ReactorVersion.jar")
+        $artifactMap.Add("jbsa-$ReactorVersion.pom", 'jbsa/.flattened-pom.xml')
+        $artifactMap.Add(
+            "jbsa-$ReactorVersion-sources.jar",
+            "jbsa/target/jbsa-$ReactorVersion-sources.jar"
+        )
+        $artifactMap.Add(
+            "jbsa-$ReactorVersion-javadoc.jar",
+            "jbsa/target/jbsa-$ReactorVersion-javadoc.jar"
+        )
+    } else {
+        $artifactMap.Add(
+            "jbsa-cli-$ReactorVersion.jar",
+            "jbsa-cli/target/jbsa-cli-$ReactorVersion.jar"
+        )
+    }
+    if (-not $artifactMap.ContainsKey($releaseName)) {
+        throw "Release input project artifact has a noncanonical path for its source: $ReleasePath"
+    }
+    $artifactPath = Join-Path $reactorRoot $artifactMap[$releaseName]
+    if (-not (Test-Path -LiteralPath $artifactPath -PathType Leaf)) {
+        throw "Release input project artifact has no current reactor output: $Source"
+    }
+    return [System.IO.Path]::GetFullPath($artifactPath)
 }
 
 <#
@@ -677,6 +918,9 @@ Seekable ZIP/JAR stream positioned at its first byte. The function leaves owners
 
 .PARAMETER DisplayPath
 Stable outer or archive-qualified path included in failures.
+
+.PARAMETER NativeByHash
+All inventoried native entries, including payloads whose redistribution is blocked.
 
 .PARAMETER ApprovedNativeByHash
 Release-approved native entries keyed by exact payload SHA-256.
@@ -699,6 +943,8 @@ function Test-ZipArchiveContents {
         [Parameter(Mandatory = $true)]
         [string] $DisplayPath,
         [Parameter(Mandatory = $true)]
+        [hashtable] $NativeByHash,
+        [Parameter(Mandatory = $true)]
         [hashtable] $ApprovedNativeByHash,
         [int] $Depth = 0
     )
@@ -717,16 +963,29 @@ function Test-ZipArchiveContents {
         )
         foreach ($entry in $archive.Entries) {
             $entryPath = $entry.FullName.Replace('\', '/')
-            if ([string]::IsNullOrWhiteSpace($entryPath) -or $entryPath.EndsWith('/')) {
-                continue
-            }
-            if (-not $entryNames.Add($entryPath)) {
-                throw "Archive contains a duplicate case-insensitive entry: $DisplayPath!/$entryPath"
-            }
-            if ([System.IO.Path]::IsPathRooted($entryPath) -or $entryPath.StartsWith('/') -or
-                $entryPath -match '^[A-Za-z]:' -or $entryPath.Split('/') -contains '..' -or
+            $entryIdentity = $entryPath.TrimEnd([char[]] @('/'))
+            $entrySegments = $entryIdentity.Split('/')
+            if ([string]::IsNullOrWhiteSpace($entryPath) -or
+                [System.IO.Path]::IsPathRooted($entryPath) -or $entryPath.StartsWith('/') -or
+                $entryPath -match '^[A-Za-z]:' -or $entryPath.Contains('//') -or
+                $entrySegments -contains '.' -or $entrySegments -contains '..' -or
+                $entrySegments -contains '' -or
                 $entryPath.Contains(':')) {
                 throw "Archive contains an unsafe entry path: $DisplayPath!/$entryPath"
+            }
+            if (-not $entryNames.Add($entryIdentity)) {
+                throw "Archive contains a duplicate case-insensitive entry: $DisplayPath!/$entryPath"
+            }
+            if ($entry.Length -gt $maximumArchiveEntryBytes) {
+                throw "Archive entry exceeds the inspection size limit: $DisplayPath!/$entryPath"
+            }
+            # Unix ZIP creators store st_mode in the upper half; S_IFMT 0xa000 identifies a link.
+            $unixMode = ($entry.ExternalAttributes -shr 16) -band 0xffff
+            if (($unixMode -band 0xf000) -eq 0xa000) {
+                throw "Archive contains a symbolic-link entry: $DisplayPath!/$entryPath"
+            }
+            if ($entryPath.EndsWith('/')) {
+                continue
             }
 
             $qualifiedPath = "$DisplayPath!/$entryPath"
@@ -735,20 +994,16 @@ function Test-ZipArchiveContents {
                 $entryPath -match '(^|/)(TES5Edit|fixtures/local|game-assets)(/|$)') {
                 throw "Proprietary or local fixture material is forbidden in release inputs: $qualifiedPath"
             }
-            if ($extension -in $nativeLibraryExtensions) {
-                $entryStream = $entry.Open()
-                try {
-                    Assert-ApprovedNativeStream `
-                        $entryStream $qualifiedPath 'in archived release inputs' $ApprovedNativeByHash
-                }
-                finally {
-                    $entryStream.Dispose()
-                }
+            $entryStream = $entry.Open()
+            try {
+                $inspection = Assert-ApprovedNativeStream `
+                    $entryStream $qualifiedPath 'in archived release inputs' `
+                    $extension $NativeByHash $ApprovedNativeByHash $maximumArchiveEntryBytes
             }
-            if ($extension -in $nestedArchiveExtensions) {
-                if ($entry.Length -gt $maximumNestedArchiveBytes) {
-                    throw "Opaque nested archive exceeds the inspection size limit: $qualifiedPath"
-                }
+            finally {
+                $entryStream.Dispose()
+            }
+            if ($extension -in $nestedArchiveExtensions -or $inspection.isZipArchive) {
                 $nestedStream = [System.IO.MemoryStream]::new([int] $entry.Length)
                 try {
                     $entryStream = $entry.Open()
@@ -760,7 +1015,7 @@ function Test-ZipArchiveContents {
                     }
                     $nestedStream.Position = 0
                     Test-ZipArchiveContents `
-                        $nestedStream $qualifiedPath $ApprovedNativeByHash ($Depth + 1)
+                        $nestedStream $qualifiedPath $NativeByHash $ApprovedNativeByHash ($Depth + 1)
                 }
                 finally {
                     $nestedStream.Dispose()
@@ -777,6 +1032,9 @@ function Test-ZipArchiveContents {
 .SYNOPSIS
 Rejects tracked local/proprietary archives and unapproved committed native binaries.
 
+.PARAMETER NativeByHash
+All inventoried native entries, including payloads whose redistribution is blocked.
+
 .PARAMETER ApprovedNativeByHash
 Release-approved native entries keyed by exact payload SHA-256.
 
@@ -788,6 +1046,8 @@ Throws a terminating error when Git enumeration fails or a tracked byte violates
 #>
 function Test-TrackedRepositoryBytes {
     param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $NativeByHash,
         [Parameter(Mandatory = $true)]
         [hashtable] $ApprovedNativeByHash
     )
@@ -805,15 +1065,19 @@ function Test-TrackedRepositoryBytes {
             $normalizedPath -ne 'tests/fixtures/local/.gitkeep') {
             throw "Proprietary or local fixture material is tracked: $normalizedPath"
         }
+        $trackedPath = Join-Path $reactorRoot $relativePath
+        if (-not (Test-Path -LiteralPath $trackedPath -PathType Leaf)) {
+            # Index entries deleted in the working tree have no candidate bytes left to inspect.
+            continue
+        }
         $extension = [System.IO.Path]::GetExtension($normalizedPath).ToLowerInvariant()
         if ($extension -in $proprietaryArchiveExtensions -and
             -not $normalizedPath.StartsWith('tests/fixtures/synthetic/')) {
             throw "Proprietary or local fixture material is tracked outside the synthetic corpus: $normalizedPath"
         }
-        if ($extension -in $nativeLibraryExtensions) {
-            Assert-ApprovedNativePayload `
-                (Join-Path $reactorRoot $relativePath) $normalizedPath 'is tracked' $ApprovedNativeByHash
-        }
+        [void](Assert-ApprovedNativePayload `
+                $trackedPath $normalizedPath 'is tracked' `
+                $extension $NativeByHash $ApprovedNativeByHash)
     }
 }
 
@@ -827,11 +1091,17 @@ Exact directory containing candidate release inputs.
 .PARAMETER ManifestPath
 Optional exact schema-version-1 JSON manifest for every regular file below Root.
 
+.PARAMETER NativeByHash
+All inventoried native entries, including payloads whose redistribution is blocked.
+
 .PARAMETER ApprovedNativeByHash
 Release-approved native entries keyed by exact payload SHA-256.
 
 .PARAMETER ApprovedDependencyByHash
 Release-approved dependency entries keyed by exact artifact SHA-256.
+
+.PARAMETER ReactorVersion
+Effective Maven version used to resolve the current reactor artifact paths.
 
 .OUTPUTS
 None.
@@ -846,9 +1116,13 @@ function Test-ReleaseInputs {
         [string] $Root,
         [string] $ManifestPath,
         [Parameter(Mandatory = $true)]
+        [hashtable] $NativeByHash,
+        [Parameter(Mandatory = $true)]
         [hashtable] $ApprovedNativeByHash,
         [Parameter(Mandatory = $true)]
-        [hashtable] $ApprovedDependencyByHash
+        [hashtable] $ApprovedDependencyByHash,
+        [Parameter(Mandatory = $true)]
+        [string] $ReactorVersion
     )
 
     $resolvedRoot = [System.IO.Path]::GetFullPath($Root)
@@ -856,21 +1130,31 @@ function Test-ReleaseInputs {
         throw "Release input root does not exist: $resolvedRoot"
     }
     $files = @(Get-ChildItem -LiteralPath $resolvedRoot -File -Recurse)
+    $releaseInputNames = [System.Collections.Generic.HashSet[string]]::new(
+        [System.StringComparer]::OrdinalIgnoreCase
+    )
+    $fileHashes = [System.Collections.Generic.Dictionary[string, string]]::new(
+        [System.StringComparer]::Ordinal
+    )
     foreach ($file in $files) {
         $relativePath = [System.IO.Path]::GetRelativePath($resolvedRoot, $file.FullName).Replace('\', '/')
+        if (-not $releaseInputNames.Add($relativePath)) {
+            throw "Release inputs contain a duplicate case-insensitive path: $relativePath"
+        }
         $extension = $file.Extension.ToLowerInvariant()
         if ($extension -in $proprietaryArchiveExtensions -or
             $relativePath -match '(^|/)(TES5Edit|fixtures/local|game-assets)(/|$)') {
             throw "Proprietary or local fixture material is forbidden in release inputs: $relativePath"
         }
-        if ($extension -in $nativeLibraryExtensions) {
-            Assert-ApprovedNativePayload `
-                $file.FullName $relativePath 'in release inputs' $ApprovedNativeByHash
-        }
-        if ($extension -in $nestedArchiveExtensions) {
+        $inspection = Assert-ApprovedNativePayload `
+            $file.FullName $relativePath 'in release inputs' `
+            $extension $NativeByHash $ApprovedNativeByHash
+        $fileHashes[$relativePath] = $inspection.sha256
+        if ($extension -in $nestedArchiveExtensions -or $inspection.isZipArchive) {
             $archiveStream = [System.IO.File]::OpenRead($file.FullName)
             try {
-                Test-ZipArchiveContents $archiveStream $relativePath $ApprovedNativeByHash
+                Test-ZipArchiveContents `
+                    $archiveStream $relativePath $NativeByHash $ApprovedNativeByHash
             }
             finally {
                 $archiveStream.Dispose()
@@ -932,8 +1216,11 @@ function Test-ReleaseInputs {
                 throw "Release input native payload is not reconciled with its approved inventory: $normalizedPath"
             }
         } elseif ($entry.kind -ceq 'project-artifact') {
-            if ($entry.source -cnotmatch '^io\.github\.evildarkarchon:jbsa(?:-cli)?:[^:]+$') {
-                throw "Release input project artifact has an invalid source identity: $normalizedPath"
+            $reactorArtifact = Resolve-ReactorProjectArtifact `
+                $entry.source $normalizedPath $ReactorVersion
+            $reactorArtifactHash = Get-LowercaseSha256 $reactorArtifact
+            if ($entry.sha256 -cne $reactorArtifactHash) {
+                throw "Release input project artifact does not match the reactor output: $normalizedPath"
             }
         } else {
             $sourcePath = [System.IO.Path]::GetFullPath((Join-Path $reactorRoot $entry.source))
@@ -955,7 +1242,7 @@ function Test-ReleaseInputs {
         if (-not $manifestFiles.ContainsKey($relativePath)) {
             throw "Unaccounted release input: $relativePath"
         }
-        $actualHash = Get-LowercaseSha256 $file.FullName
+        $actualHash = $fileHashes[$relativePath]
         if ($actualHash -cne $manifestFiles[$relativePath].sha256) {
             throw "Release input checksum mismatch: $relativePath"
         }
@@ -1075,9 +1362,12 @@ foreach ($entry in @($dependencyInventory.entries | Where-Object {
         })) {
     $approvedDependencyByHash[$entry.sha256] = $entry
 }
+if ([string]::IsNullOrWhiteSpace($ReactorVersion)) {
+    $ReactorVersion = Get-DeclaredReactorVersion (Join-Path $reactorRoot 'pom.xml')
+}
 
 Test-ProductDependencies $dependencyLookup
-Test-TrackedRepositoryBytes $approvedNativeByHash
+Test-TrackedRepositoryBytes $nativeByHash $approvedNativeByHash
 
 $notices = New-ThirdPartyNoticesText $dependencyInventory $nativeInventory
 $committedNotices = (Get-Content -Raw -LiteralPath $committedNoticesPath).Replace("`r`n", "`n")
@@ -1099,7 +1389,8 @@ if ($releaseNotes -cnotmatch 'fd1e36020b2b5b6217e553dc0038983146a2e2dd' -or
 
 if (-not [string]::IsNullOrWhiteSpace($ReleaseInputRoot)) {
     Test-ReleaseInputs `
-        $ReleaseInputRoot $ReleaseInputManifest $approvedNativeByHash $approvedDependencyByHash
+        $ReleaseInputRoot $ReleaseInputManifest $nativeByHash $approvedNativeByHash `
+        $approvedDependencyByHash $ReactorVersion
 } elseif (-not [string]::IsNullOrWhiteSpace($ReleaseInputManifest)) {
     throw '-ReleaseInputManifest requires -ReleaseInputRoot.'
 }

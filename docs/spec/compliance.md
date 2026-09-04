@@ -113,12 +113,11 @@ _Source decision: [accepted policy-material set](https://github.com/evildarkarch
 ## JBSA-LIC-011
 
 CI and release gates **MUST** verify SPDX/REUSE metadata, dependency and native
-licensing, SBOM generation, fixture provenance, applicable
-[external-contribution gate](#jbsa-lic-017), and inspection of final release
+licensing, SBOM generation, fixture provenance, and inspection of final release
 bytes. A clean metadata or Maven validation result **MUST NOT** be treated by
 itself as proof of license compliance.
 
-_Source decisions: [Maven-metadata limitation](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted compliance-gate policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Source decisions: [Maven-metadata limitation](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted compliance-gate policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724), [external-contribution gate retirement](https://github.com/evildarkarchon/jbsa/issues/62)._
 
 ## JBSA-LIC-012
 
@@ -155,16 +154,15 @@ _Source decision: [accepted solo-maintainer and contributor policy](https://gith
 
 ## JBSA-LIC-016
 
-Maintainer commits **MAY** omit DCO sign-off.
-
-_Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Retired in specification 0.11.0 by [issue #62](https://github.com/evildarkarchon/jbsa/issues/62).
+The maintainer-specific sign-off exemption became unnecessary when JBSA stopped requiring DCO
+sign-off._
 
 ## JBSA-LIC-017
 
-Every accepted external contribution **MUST** carry DCO 1.1 sign-off plus source
-and fixture provenance declarations.
-
-_Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Retired in specification 0.11.0 by [issue #62](https://github.com/evildarkarchon/jbsa/issues/62).
+External pull requests are now assessed directly by the maintainer without mandatory DCO sign-off
+or provenance declarations._
 
 ## Deferred compliance inputs
 
