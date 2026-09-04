@@ -96,7 +96,18 @@ Generated inputs **MUST** obey [JBSA-LIB-008](library-interface.md#jbsa-lib-008)
 An observed identity, metadata, declared-length, or regenerated-byte
 inconsistency **MUST** fail as `SOURCE` before the affected output is published.
 
-_Source decision: [accepted pack-input consistency model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067)._
+Filesystem-source classification, directory discovery, and final source
+revalidation under [JBSA-LIB-008](library-interface.md#jbsa-lib-008) **MUST** use
+portable Java NIO no-follow attribute and identity facilities where sufficient
+and **MAY** use an internal provider-specific check only when those facilities
+cannot establish the required fact. If the provider cannot establish no-follow
+classification or stable identity, packing **MUST** fail as `CAPABILITY` during
+preflight, before stabilization or destination staging. A planned regular file
+found to have become an indirection during revalidation **MUST** fail as
+`SOURCE` and **MUST NOT** be opened through that indirection. Provider-specific
+terminology and mechanisms **MUST NOT** become public API.
+
+_Source decisions: [accepted pack-input consistency model](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-IO-007
 

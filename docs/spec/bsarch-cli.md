@@ -43,8 +43,13 @@ case-insensitive; path operands **MUST** retain their supplied characters. There
 specifying `-list` with `-dump` in either order **MUST** emit each entry record
 once. Required operands **MUST** precede operation switches.
 
-The single pack-source operand **MUST** split at each literal `+`. The v1 CLI
-**MUST NOT** provide quoting or escaping for a literal `+` within one source
+The single pack-source operand **MUST** split at each literal `+`, and every
+resulting component **MUST** be nonempty. If any component is empty, the parser
+**MUST** reject the command as an invalid invocation before converting any
+component to a host `Path`, performing source discovery, or constructing a
+public `PackSource`. An empty component **MUST NOT** be treated as an unusable
+source under [JBSA-COMPAT-005](compatibility-profiles.md#jbsa-compat-005). The v1
+CLI **MUST NOT** provide quoting or escaping for a literal `+` within one source
 path; this restriction **MUST NOT** apply to the public library interface.
 
 In the safe default, the parser **MUST** reject unknown switches, extra operands,
@@ -56,7 +61,7 @@ combinations. Operation switches **MUST** use `-`; another legacy prefix
 deviations are owned by
 [JBSA-COMPAT-005](compatibility-profiles.md#jbsa-compat-005).
 
-_Source decision: [accepted invocation grammar and strict parser](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Source decisions: [accepted invocation grammar and strict parser](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-CLI-003
 
@@ -153,12 +158,18 @@ In the safe default, zero **MUST** be a literal override; mandatory and impossib
 flag combinations **MUST** be rejected under
 [JBSA-BSA-012](formats/versioned-bsa.md#jbsa-bsa-012) through
 [JBSA-BSA-014](formats/versioned-bsa.md#jbsa-bsa-014). `-f` **MUST** accept a
-nonempty comma-separated list of basename masks using the ASCII-only case fold
-in [JBSA-LIB-012](library-interface.md#jbsa-lib-012), where `*` matches zero or
-more Unicode scalars and `?` matches one scalar; an empty mask **MUST** be
-rejected.
+nonempty comma-separated list of nonempty basename masks. A basename is the
+final name segment, including its extension, of the mapped archive entry name
+after treating U+002F (`/`) and U+005C (`\`) as separators. Each mask **MUST**
+match the complete basename using the ASCII-only case fold in
+[JBSA-LIB-012](library-interface.md#jbsa-lib-012), where `*` matches zero or more
+Unicode scalars and `?` matches exactly one scalar. The masks are inclusion
+masks: an entry **MUST** be retained if and only if at least one mask matches,
+so multiple masks form a union. An entry matching no mask **MUST** be omitted.
+When `-f` is absent, this filter **MUST NOT** omit an entry. An empty mask
+**MUST** be rejected.
 
-_Source decisions: [accepted split, sharing, worker, flag, and filter switches](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [automatic-classification clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544)._
+_Source decisions: [accepted split, sharing, worker, flag, and filter switches](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [automatic-classification clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-CLI-007
 
@@ -183,15 +194,15 @@ and backup **MUST** remain excluded. Explicitly naming the requested target or a
 potential numbered split sibling as a source **MUST** fail, including an existing
 target beneath a source directory when `--replace` is selected.
 
-Recursive discovery **MUST NOT** follow filesystem indirections. It **MUST** use
-portable Java NIO no-follow and identity facilities where sufficient and
-**MAY** use an internal provider-specific check only when those facilities
-cannot establish the required fact. An operation whose provider cannot prove
-safe no-follow or stable identity behavior **MUST** fail as `CAPABILITY` under
-[JBSA-OPS-004](operation-semantics.md#jbsa-ops-004). This CLI behavior
-**MUST NOT** expose NTFS or reparse-point terminology through the public library.
+Recursive discovery **MUST** preserve the directory-source no-follow, omission,
+and source-shape behavior owned by
+[JBSA-LIB-008](library-interface.md#jbsa-lib-008) and the classification and
+revalidation outcomes owned by
+[JBSA-IO-006](io-and-publication.md#jbsa-io-006). The CLI **MUST NOT** convert an
+omitted indirection into a separate loose-file `PackSource` or expose
+provider-specific indirection terminology through the public library.
 
-_Source decisions: [accepted sources, overlays, and filesystem behavior](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted dynamic split-output clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
+_Source decisions: [accepted sources, overlays, and filesystem behavior](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted dynamic split-output clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [extensionless split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-CLI-008
 

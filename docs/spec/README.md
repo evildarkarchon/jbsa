@@ -195,6 +195,11 @@ target, and standard Resource Limits gaps found on pull request #61. The
 resolve matching performance units, undecodable wire-name display and
 disposition, qualified-Windows extraction eligibility, filesystem `PackSource`
 name mapping and directory order, and complete annotation-boundary verification.
+The
+[accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)
+resolve CLI filter and source-list selection, directory-source indirections,
+unsafe-name diagnostic identities, failure null ordering, versioned-BSA hash
+collisions, stored Starfield-v3 coverage, and mandatory progress observations.
 
 The Reference Snapshot's archive-information error/zero-exit contradiction is a
 CLI-only evidence boundary owned by the Compatibility Profile; no Archive

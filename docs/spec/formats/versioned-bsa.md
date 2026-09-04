@@ -155,14 +155,26 @@ _Source decisions: [accepted Reference Snapshot hash behavior](https://github.co
 
 ## JBSA-BSA-007
 
-Canonical versioned-BSA metadata **MUST** sort entries by unsigned folder hash
-and then unsigned basename hash. Folder records, folder blocks, file records,
-and the global basename table **MUST** preserve that resulting order. Equal
-hashes **MUST NOT** establish name identity; Normalized Name Identities under
-[JBSA-LIB-012](../library-interface.md#jbsa-lib-012) **MUST** be compared before
-treating entries as duplicates or overlays.
+Canonical versioned-BSA encode **MUST** first partition post-overlay entries by
+the canonical folder byte sequence produced by [JBSA-BSA-005](#jbsa-bsa-005).
+Folder groups **MUST** be ordered by unsigned folder hash and then, when hashes
+are equal, by canonical folder bytes in unsigned-octet lexicographic order: the
+lower octet at the first difference sorts first, and an exact prefix sorts
+first. Entries within each folder group **MUST** be ordered by unsigned basename
+hash and then, when hashes are equal, by canonical basename bytes using the same
+ordering.
 
-_Source decisions: [accepted Reference Snapshot ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted collision-safe identity](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+Exactly one folder record and folder block **MUST** be emitted for each folder
+group. Folder records and blocks **MUST** follow folder-group order; file records
+within each block **MUST** follow that group's entry order; and the global
+basename table **MUST** concatenate those same per-group entry orders. Equal
+hashes **MUST NOT** establish folder or entry identity; Normalized Name
+Identities under [JBSA-LIB-012](../library-interface.md#jbsa-lib-012) **MUST** be
+compared before treating entries as duplicates or overlays. Canonical pack
+preflight **MUST** reject two surviving entries that encode to the same canonical
+folder-and-basename byte pair.
+
+_Source decisions: [accepted Reference Snapshot ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted collision-safe identity](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-BSA-008
 
@@ -399,8 +411,10 @@ assignment; changing them requires an accepted differential Compatibility
 Deviation.
 
 Exact compressed bytes remain provider/version-dependent. Name length overflow,
-equal-hash ordering, malformed folder offsets, duplicate names, and permissive
-truncation behavior lack fixture authority.
+malformed folder offsets, duplicate names, and permissive truncation behavior
+lack fixture authority. Canonical equal-hash ordering is specified by
+[JBSA-BSA-007](#jbsa-bsa-007), but collision cases remain excluded from Binary
+Conformance until qualifying differential fixtures exist.
 Parallel byte order and split boundaries are intentionally not a Binary
 Conformance surface. These gaps remain explicit rather than inheriting whatever
 the Reference Snapshot happens to do on one malformed or scheduled execution.

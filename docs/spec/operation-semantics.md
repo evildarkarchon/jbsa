@@ -69,7 +69,20 @@ inspectable and **MUST NOT** alone alter an otherwise conforming Archive
 Disposition, but they **MUST** produce a stable diagnostic and make extraction
 fail as `POLICY` before output creation.
 
-_Source decisions: [accepted layered validation model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted split-preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
+The unsafe-name Conformance Diagnostics in this requirement **MUST** use exactly
+these identifiers and `WARNING` severity:
+
+| Condition | Diagnostic identifier | Scope and structured location |
+| --- | --- | --- |
+| Absolute archive entry name | `archive-name.absolute-path` | Once per affected entry, identifying its decoded archive-order ordinal and complete name |
+| `.` or `..` traversal segment | `archive-name.traversal-segment` | Once per affected entry, identifying its decoded archive-order ordinal, complete name, and offending segment |
+| Qualified-Windows-invalid character or reserved device basename | `archive-name.windows-invalid-segment` | Once per affected entry, identifying its decoded archive-order ordinal, complete name, and offending segment |
+
+Each applicable row **MUST** emit its diagnostic for an affected entry. When one
+row applies to more than one segment of that entry, its diagnostic **MUST**
+identify the lowest zero-based offending segment ordinal.
+
+_Source decisions: [accepted layered validation model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted split-preflight clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-OPS-004
 
@@ -82,7 +95,7 @@ Kinds, classified by caller recovery rather than provider exception type:
 | `UNSUPPORTED` | recognized family, version, subtype, direction, or other semantics outside JBSA support |
 | `CAPABILITY` | supported semantics unavailable because of platform, native-access, or required-provider capability |
 | `POLICY` | Resource Limit, extraction safety, destination-collision policy, or Diagnostic Policy rejection |
-| `SOURCE` | pack-source I/O, mutation, or inconsistent regenerated content |
+| `SOURCE` | pack-source shape, I/O, mutation, or inconsistent regenerated content |
 | `DESTINATION` | destination creation, write, publication, rollback, or cleanup failure |
 | `OBSERVER` | a Progress Snapshot observer threw |
 | `INTERNAL` | a JBSA invariant failed or a provider failed unexpectedly |
@@ -93,7 +106,7 @@ remain causes rather than public semantic data. `RESOURCE_LIMIT` **MUST NOT** be
 introduced as an additional Failure Kind; a limit breach is `POLICY` with a
 stable resource-limit diagnostic.
 
-_Source decisions: [accepted Failure Kind taxonomy](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted resource-bound execution](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855)._
+_Source decisions: [accepted Failure Kind taxonomy](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted resource-bound execution](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-OPS-005
 
@@ -136,8 +149,9 @@ in order:
 3. diagnostic identifier; and
 4. structured location.
 
-The public failure representation **MUST** define a canonical ordering for an
-absent ordinal, identifier, or location so the comparison remains total.
+For each of keys 2 through 4 independently, every present value **MUST** sort
+before an absent value. Two absent values compare equal at that key, and
+comparison **MUST** continue with the next key.
 Already-running earlier ordinals **MAY** settle before selection; no new work
 **MAY** be admitted after an outcome is accepted. Remaining observed failures
 **MUST** be retained up to `maxSecondaryFailures` in the same deterministic
@@ -145,25 +159,71 @@ order. Cleanup, rollback, observer, and later-phase failures **MUST NOT**
 displace an earlier Primary Failure. Cancellation **MUST** use the atomic
 acceptance rule in [JBSA-OPS-009](#jbsa-ops-009).
 
-_Source decisions: [accepted deterministic failure selection](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted concurrent failure settlement](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855)._
+_Source decisions: [accepted deterministic failure selection](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted concurrent failure settlement](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-OPS-007
 
 Only `extract` and `pack` **MUST** support Progress Snapshots. Stable progress
 phases **MUST** occur in the order `PREFLIGHT`, `PROCESSING`, `PUBLISHING`, and
-`CLEANUP` for the phases an operation enters. Each
-snapshot **MUST** report exactly one of `ENTRIES`, `BYTES`, or `ARTIFACTS`, a
-monotonic completed `long` for that phase and metric, and an optional total that
-**MUST NOT** change once present.
+`CLEANUP` for the phases an operation enters. While an invocation's observer is
+present and has not thrown, v1 **MUST** emit snapshots for exactly the applicable
+phase-and-metric pairs in this table and no others:
 
-When an observer is present, every entered phase-and-metric pair **MUST** emit an
-initial snapshot. A successfully completed pair **MUST** emit an exact terminal
-snapshot; one snapshot **MAY** serve as both when the values are identical.
-Failure and cancellation **MUST NOT** synthesize completion. Method return or
-exception, not a progress event, **MUST** remain the authoritative terminal
-signal.
+| Operation surface | `PREFLIGHT` | `PROCESSING` | `PUBLISHING` | `CLEANUP` |
+| --- | --- | --- | --- | --- |
+| `pack` | `ENTRIES` | `ENTRIES`, `BYTES` | `ARTIFACTS` | `ARTIFACTS` |
+| atomic-set or new-root `extract` | `ENTRIES` | `ENTRIES`, `BYTES` | `ARTIFACTS` | `ARTIFACTS` |
+| existing-tree `extract` | `ENTRIES` | `ENTRIES`, `BYTES`, `ARTIFACTS` | not entered | `ARTIFACTS` |
 
-_Source decision: [accepted semantic progress model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+After unchecked request validation and the initial pre-cancellation observation,
+an operation that proceeds **MUST** enter `PREFLIGHT` before its first
+operational validation or discovery. A pre-cancelled operation and an unchecked
+contract failure **MUST NOT** enter a progress phase. `PROCESSING` **MUST** be
+entered after successful complete preflight and before ordinary payload
+processing, or at the corresponding zero-unit processing decision when no
+payload work exists. Pack stabilization required to complete output-set
+preflight under [JBSA-IO-008](io-and-publication.md#jbsa-io-008) remains
+`PREFLIGHT`.
+
+`PUBLISHING` **MUST** be entered for `pack` or an atomic-set or new-root
+`extract` after successful processing and immediately before its first
+Publication Commit, or at the corresponding zero-unit publication decision when
+its artifact count is zero. Existing-tree extraction **MUST NOT** enter
+`PUBLISHING`; its per-file Publication Commits **MUST** be reported through
+`PROCESSING`/`ARTIFACTS`, while an actual publication failure remains a
+`PUBLISHING` failure candidate. `CLEANUP` **MUST** be entered exactly once after
+every operation that entered `PREFLIGHT`, including failure, cancellation, and
+zero-cleanup cases. Every successful operation therefore enters every phase
+applicable to its publication surface even when an applicable metric has zero
+units.
+
+`PREFLIGHT`/`ENTRIES` **MUST** count each selected extraction entry or each
+expanded pack-source entry considered by filtering and overlay, including an
+entry later filtered or replaced. `PROCESSING`/`ENTRIES` and
+`PROCESSING`/`BYTES` **MUST** count each final selected logical entry and its
+uncompressed logical payload bytes exactly once; replay, retry, sharing, codec
+framing, and compression **MUST NOT** add units. `PUBLISHING`/`ARTIFACTS` and
+existing-tree `PROCESSING`/`ARTIFACTS` **MUST** count intended published leaf
+files or archive parts as their Publication Commits settle.
+`CLEANUP`/`ARTIFACTS` **MUST** count affected artifacts whose final Artifact
+State and cleanup ownership have settled.
+
+Each snapshot **MUST** report exactly one metric, a monotonic completed `long`
+for that phase and metric, and an optional total that **MUST NOT** change once
+present. Every entered pair for which the observer remains available **MUST**
+emit an initial snapshot with completed zero. A successfully completed pair
+**MUST** emit an exact terminal snapshot whose total is present and equals
+completed; one zero-total snapshot **MAY** serve as both initial and terminal.
+Failure and cancellation **MUST NOT** synthesize completion for an interrupted
+pair, but successfully completed `CLEANUP` **MUST** still emit its terminal
+snapshot after an earlier non-observer failure or cancellation while the
+observer remains available.
+Cancellation that cannot change a successful result under
+[JBSA-OPS-009](#jbsa-ops-009) **MUST** retain the normal successful snapshot
+sequence. Method return or exception, not a progress event, **MUST** remain the
+authoritative terminal signal.
+
+_Source decisions: [accepted semantic progress model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-OPS-008
 
@@ -179,12 +239,16 @@ and the throwable as the Primary Failure cause. Observer re-entry into the same
 operation **MUST** be unsupported; unrelated use of the stateless library
 **MUST** remain allowed.
 
+After an observer throws, progress delivery **MUST** terminate, JBSA **MUST NOT**
+invoke that observer again, and no later snapshot-delivery obligation in
+[JBSA-OPS-007](#jbsa-ops-007) applies.
+
 Callback thread identity, cadence, batching, coalescing thresholds, and
 presentation **MUST NOT** be semantic guarantees. Progress-induced execution
 backpressure is refined by
 [JBSA-SCHED-009](execution-model.md#jbsa-sched-009).
 
-_Source decisions: [accepted observer behavior](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted serialized progress delivery](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855)._
+_Source decisions: [accepted observer behavior](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted serialized progress delivery](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-OPS-009
 

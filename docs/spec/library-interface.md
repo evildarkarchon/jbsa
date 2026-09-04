@@ -171,6 +171,23 @@ common ancestor of multiple sources. A derived name that is not a valid complete
 name for the target Archive Family **MUST** fail canonical pack preflight; the
 caller may instead use an explicit named loose file.
 
+Directory-source discovery **MUST** inspect the supplied root and every
+descendant without following a filesystem indirection. A symbolic link and, on
+the qualified Windows platform, a junction or other reparse point **MUST** be
+treated as an indirection for this rule. The supplied root **MUST** be a
+directory under that no-follow classification; an indirection to a directory
+**MUST** fail source-shape preflight as `SOURCE`.
+
+Only a descendant classified as a regular file without following an
+indirection **MAY** contribute an entry. A descendant indirection **MUST** be
+omitted regardless of whether its target is a file or directory: JBSA
+**MUST NOT** create an entry for it, read content through it, or traverse any
+descendant reachable only through it. Other no-follow non-regular descendants
+**MUST** likewise be omitted. An ordinary hard-linked regular file remains a
+regular file and **MUST** contribute separately under each discovered name.
+Classification, stable-identity, and final-revalidation mechanics are owned by
+[JBSA-IO-006](io-and-publication.md#jbsa-io-006).
+
 A directory source **MUST** complete discovery before overlay processing. After
 name-identity preflight, its discovered files **MUST** be sorted first by
 Normalized Name Identity and then, only to break an equal-identity tie, by the
@@ -189,7 +206,7 @@ A generated payload factory **MUST** be repeatable, **MUST** return a fresh
 for stabilization, hashing, comparison, retry, or packing. Ownership of every
 returned channel **MUST** pass to JBSA.
 
-_Source decisions: [accepted source-overlay and generated-input interface](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted generated-input lifetime](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
+_Source decisions: [accepted source-overlay and generated-input interface](https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103), [accepted generated-input lifetime](https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-LIB-009
 

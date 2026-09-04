@@ -171,9 +171,14 @@ case.
 | `fo4-dx10-v7` | FO4 DDS BA2 version 7 | decode only | `zlib` |
 | `fo4-dx10-v8` | FO4 DDS BA2 version 8 | decode only | `zlib` |
 | `sf-gnrl-v2` | Starfield General BA2 version 2 | decode and encode | `stored`, `zlib` |
-| `sf-gnrl-v3-m3` | Starfield General BA2 version 3, method 3 | decode and encode | `raw-lz4` |
+| `sf-gnrl-v3-m3` | Starfield General BA2 version 3, method 3 | decode and encode | `raw-lz4`, `mixed` |
 | `sf-dx10-v2` | Starfield DDS BA2 version 2 | decode and encode | `zlib` |
 | `sf-dx10-v3-m3` | Starfield DDS BA2 version 3, method 3 | decode and encode | `raw-lz4` |
+
+For `sf-gnrl-v3-m3`, `mixed` **MUST** select raw LZ4 and each direction's
+fixture **MUST** contain at least one stored entry with `packedSize == 0` and at
+least one raw-LZ4-compressed entry with `packedSize > 0` in the same
+version-3/method-3 archive.
 
 Version-7 and version-8 fixtures **MUST** record their observed codec, and the
 mandatory fixture set **MUST** cover every codec token listed above. All
@@ -186,7 +191,7 @@ codec permissions owned by
 [JBSA-GNRL-002](formats/general-ba2.md#jbsa-gnrl-002), and
 [JBSA-DX10-001](formats/dds-ba2.md#jbsa-dx10-001).
 
-_Source decisions: [accepted mandatory format and codec matrix](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27)._
+_Source decisions: [accepted mandatory format and codec matrix](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-CONF-009
 
@@ -207,7 +212,11 @@ manifest **MUST** assign targeted cases that collectively cover:
   prefix/index mismatch; `.dds` empty-stem encode rejection and decode
   retention; and every automatic flag-classifier row, root-over-extension and
   first-extension-match precedence, no-match handling, family mask, special
-  `0x67` XML rule, and archive-flag consequence;
+  `0x67` XML rule, and archive-flag consequence; plus two distinct colliding
+  folders with multiple entries whose basename hashes interleave and distinct
+  basenames with equal hashes within one folder, asserting canonical folder-byte
+  and basename-byte tie-breaks, separate contiguous folder blocks, and stable
+  order across reversed source and worker configurations;
 - compression size boundaries, mixed compression, complete codec consumption,
   and decoded-size mismatch;
 - DDS writable formats, materially distinct dimensions and mip counts, both the
@@ -221,9 +230,12 @@ manifest **MUST** assign targeted cases that collectively cover:
 - directory-root-relative, individual-file-basename, existing-archive, explicit-
   name, and generated-entry `PackSource` mappings; directory expansion that is
   identical across opposite filesystem creation orders and repeated
-  materializations; later-source-wins overlay order; filtering; sharing on and
-  off; and splitting on and off, including a BSA crossing the 2 GiB split target
-  and a transformed-size- or sharing-dependent later-part collision under
+  materializations; direct-library and CLI omission of descendant file and
+  directory indirections without target access, linked-root `SOURCE` rejection,
+  unprovable-classification `CAPABILITY` rejection, and regular-file-to-link
+  mutation rejection; later-source-wins overlay order; filtering; sharing on
+  and off; and splitting on and off, including a BSA crossing the 2 GiB split
+  target and a transformed-size- or sharing-dependent later-part collision under
   `FAIL` before destination staging,
   extension-bearing, extensionless, leading-dot, and trailing-dot split names,
   with no destination effects and complete scratch cleanup;
@@ -235,20 +247,28 @@ manifest **MUST** assign targeted cases that collectively cover:
   boundary, CLI use of the standard value, and direct-library overrides;
 - sequential repetition, worker-limit variation, and parallel semantic
   equivalence;
-- serialized, blocking, and failing progress observers while treating callback
-  thread identity as non-semantic;
+- Primary Failure ordering for every present/absent combination of logical
+  ordinal, diagnostic identifier, and structured location;
+- exact progress phase-and-metric sets for `pack`, atomic-set or new-root
+  `extract`, and existing-tree `extract`, including zero-unit success,
+  pre-cancellation, interruption in each phase, cleanup after non-success, late
+  cancellation, and observer failure with no later callback, while treating
+  callback thread identity and cadence as non-semantic;
 - every rejection and tolerated-noncanonical class owned by the format and
   operation specifications;
 - every registered Compatibility Deviation in both safe-default and activated
   profile modes; and
 - every CLI operation, valid switch, invalid switch, exit result, stream rule,
-  and filesystem result owned by the CLI specification.
+  and filesystem result owned by the CLI specification, including `-f`
+  whole-basename inclusion, union, ASCII-fold, wildcard, empty-mask, no-mask,
+  and no-match behavior and leading, trailing, and repeated `+` rejection before
+  path conversion or source discovery.
 
 The manifest **MUST** map each coverage item to at least one Conformance Case and
 each case to its applicable assertion identifiers. A case **MAY** cover multiple
 items; a full Cartesian product is not required.
 
-_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [automatic-flag clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544), [DDS target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [resource-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
+_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [automatic-flag clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544), [DDS target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [resource-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-CONF-010
 
@@ -312,8 +332,9 @@ Expected disposition and diagnostics **MUST** be taken from
 [JBSA-BSA-014](formats/versioned-bsa.md#jbsa-bsa-014),
 [JBSA-GNRL-010](formats/general-ba2.md#jbsa-gnrl-010), and the corresponding
 [DDS BA2](formats/dds-ba2.md) and [DDS payload](formats/dds-payload.md)
-requirements. Extraction cases for unsafe names **MUST** assert the no-write
-preflight and containment behavior in
+requirements. Extraction cases for every unsafe-name diagnostic identifier
+assigned by [JBSA-OPS-003](operation-semantics.md#jbsa-ops-003) **MUST** assert
+the no-write preflight and containment behavior in
 [JBSA-IO-009](io-and-publication.md#jbsa-io-009), a checked `POLICY` outcome
 rather than an unchecked host-path exception, and no destination effects. This
 requirement **MUST NOT** make tolerated input valid encoder output.
@@ -321,7 +342,7 @@ requirement **MUST NOT** make tolerated input valid encoder output.
 Every expected diagnostic in these cases **MUST** use the exact identifier
 assigned by its owning behavior requirement.
 
-_Source decisions: [accepted malformed-input outcomes and classes](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [diagnostic-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
+_Source decisions: [accepted malformed-input outcomes and classes](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [diagnostic-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
 
 ## JBSA-CONF-013
 
