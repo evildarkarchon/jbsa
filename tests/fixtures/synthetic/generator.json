@@ -7,138 +7,238 @@
     {
       "id": "selector-tes3",
       "kind": "structural-template",
-      "coverage": ["structural"],
+      "coverage": [
+        "structural"
+      ],
       "input": "selector|tes3|00010000",
       "output_path": "artifacts/structural/tes3-selector.bin",
-      "parameters": {"selector": "00010000"}
+      "parameters": {
+        "selector": "00010000"
+      }
     },
     {
       "id": "selector-bsa-067",
       "kind": "structural-template",
-      "coverage": ["structural"],
+      "coverage": [
+        "structural"
+      ],
       "input": "selector|bsa|version=0x67",
       "output_path": "artifacts/structural/bsa-067-selector.bin",
-      "parameters": {"version": "0x67"}
+      "parameters": {
+        "version": "0x67"
+      }
     },
     {
       "id": "selector-ba2-gnrl-v1",
       "kind": "structural-template",
-      "coverage": ["structural"],
+      "coverage": [
+        "structural"
+      ],
       "input": "selector|ba2|version=1|subtype=GNRL",
       "output_path": "artifacts/structural/ba2-gnrl-v1-selector.bin",
-      "parameters": {"subtype": "GNRL", "version": "1"}
+      "parameters": {
+        "subtype": "GNRL",
+        "version": "1"
+      }
     },
     {
       "id": "fo4-gnrl-v7-stored",
       "kind": "generated-archive",
-      "coverage": ["structural", "fo4-gnrl-v7", "compression"],
+      "coverage": [
+        "structural",
+        "fo4-gnrl-v7",
+        "compression"
+      ],
       "input": "general-ba2|version=7|method=absent|entries=data/readme.txt:stored:jbsa-v7-stored",
       "output_path": "artifacts/archives/fo4-gnrl-v7-stored.ba2",
-      "parameters": {"archive_family": "fo4-gnrl-v7", "codec": "stored"}
+      "parameters": {
+        "archive_family": "fo4-gnrl-v7",
+        "codec": "stored"
+      }
     },
     {
       "id": "fo4-gnrl-v7-zlib",
       "kind": "generated-archive",
-      "coverage": ["structural", "fo4-gnrl-v7", "compression", "boundary"],
+      "coverage": [
+        "structural",
+        "fo4-gnrl-v7",
+        "compression",
+        "boundary"
+      ],
       "input": "general-ba2|version=7|method=absent|entries=data/compressed.txt:zlib:32x41",
       "output_path": "artifacts/archives/fo4-gnrl-v7-zlib.ba2",
-      "parameters": {"archive_family": "fo4-gnrl-v7", "codec": "zlib"}
+      "parameters": {
+        "archive_family": "fo4-gnrl-v7",
+        "codec": "zlib"
+      }
     },
     {
       "id": "sf-gnrl-v3-m3-raw-lz4",
       "kind": "generated-archive",
-      "coverage": ["structural", "sf-gnrl-v3-m3", "compression"],
+      "coverage": [
+        "structural",
+        "sf-gnrl-v3-m3",
+        "compression"
+      ],
       "input": "general-ba2|version=3|method=3|entries=data/raw.txt:raw-lz4:jbsa-starfield",
       "output_path": "artifacts/archives/sf-gnrl-v3-m3-raw-lz4.ba2",
-      "parameters": {"archive_family": "sf-gnrl-v3-m3", "codec": "raw-lz4", "method": "3"}
+      "parameters": {
+        "archive_family": "sf-gnrl-v3-m3",
+        "codec": "raw-lz4",
+        "method": "3"
+      }
     },
     {
       "id": "sf-gnrl-v3-m3-mixed",
       "kind": "generated-archive",
-      "coverage": ["structural", "sf-gnrl-v3-m3", "compression", "ordering"],
+      "coverage": [
+        "structural",
+        "sf-gnrl-v3-m3",
+        "compression",
+        "ordering"
+      ],
       "input": "general-ba2|version=3|method=3|entries=data/stored.txt:stored:plain,data/compressed.txt:raw-lz4:compressed",
       "output_path": "artifacts/archives/sf-gnrl-v3-m3-mixed.ba2",
-      "parameters": {"archive_family": "sf-gnrl-v3-m3", "codec": "mixed", "method": "3"}
+      "parameters": {
+        "archive_family": "sf-gnrl-v3-m3",
+        "codec": "mixed",
+        "method": "3"
+      }
     },
     {
       "id": "malformed-truncated-ba2-header",
       "kind": "malformed-archive",
-      "coverage": ["malformed", "boundary"],
+      "coverage": [
+        "malformed",
+        "boundary"
+      ],
       "input": "malformed|BTDX|version=3|subtype=GNRL|length=12",
       "output_path": "artifacts/malformed/truncated-ba2-header.ba2",
-      "parameters": {"expected_disposition": "rejected", "fault": "truncated-header"}
+      "parameters": {
+        "expected_disposition": "rejected",
+        "fault": "truncated-header"
+      }
     },
     {
       "id": "malformed-unsupported-v3-method",
       "kind": "malformed-archive",
-      "coverage": ["malformed", "compression"],
+      "coverage": [
+        "malformed",
+        "compression"
+      ],
       "input": "malformed|BTDX|version=3|subtype=GNRL|count=0|unknown=1|method=2",
       "output_path": "artifacts/malformed/unsupported-v3-method.ba2",
-      "parameters": {"expected_disposition": "rejected", "method": "2"}
+      "parameters": {
+        "expected_disposition": "rejected",
+        "method": "2"
+      }
     },
     {
       "id": "compression-boundaries",
       "kind": "scenario",
-      "coverage": ["boundary", "compression"],
+      "coverage": [
+        "boundary",
+        "compression"
+      ],
       "input": "scenario|compression|sizes=0,1,14,15,16,65535,65536",
       "output_path": "artifacts/scenarios/compression-boundaries.json",
-      "parameters": {"unit": "bytes"}
+      "parameters": {
+        "unit": "bytes"
+      }
     },
     {
       "id": "name-encoding",
       "kind": "scenario",
-      "coverage": ["name-encoding", "malformed"],
+      "coverage": [
+        "name-encoding",
+        "malformed"
+      ],
       "input": "scenario|names|ascii=Data/Test.txt|cp1252=636166e9|cp932=836583588367|invalid=81",
       "output_path": "artifacts/scenarios/name-encoding.json",
-      "parameters": {"default_encoding": "windows-1252", "profile_encoding": "windows-932"}
+      "parameters": {
+        "default_encoding": "windows-1252",
+        "profile_encoding": "windows-932"
+      }
     },
     {
       "id": "stable-ordering",
       "kind": "scenario",
-      "coverage": ["ordering"],
+      "coverage": [
+        "ordering"
+      ],
       "input": "scenario|ordering|forward=zeta,Alpha,nested/beta|reverse=nested/beta,Alpha,zeta",
       "output_path": "artifacts/scenarios/ordering.json",
-      "parameters": {"comparison": "unicode-scalar"}
+      "parameters": {
+        "comparison": "unicode-scalar"
+      }
     },
     {
       "id": "later-source-wins-overlay",
       "kind": "scenario",
-      "coverage": ["overlay", "ordering"],
+      "coverage": [
+        "overlay",
+        "ordering"
+      ],
       "input": "scenario|overlay|base=shared:base,only-base|later=shared:later,only-later",
       "output_path": "artifacts/scenarios/overlay.json",
-      "parameters": {"policy": "later-source-wins"}
+      "parameters": {
+        "policy": "later-source-wins"
+      }
     },
     {
       "id": "split-boundaries",
       "kind": "scenario",
-      "coverage": ["split", "boundary", "resource-limit"],
+      "coverage": [
+        "split",
+        "boundary",
+        "resource-limit"
+      ],
       "input": "scenario|split|target=2147483647|algorithm=repeat-sha256-counter|sizes=2147483400,64,2147483648",
       "output_path": "artifacts/scenarios/split-boundaries.json",
-      "parameters": {"large_payload_policy": "virtual-recipe-only"}
+      "parameters": {
+        "large_payload_policy": "virtual-recipe-only"
+      }
     },
     {
       "id": "resource-limit-boundaries",
       "kind": "scenario",
-      "coverage": ["resource-limit", "boundary"],
+      "coverage": [
+        "resource-limit",
+        "boundary"
+      ],
       "input": "scenario|resource-limits|maxEntries=1000000|maxMetadataBytes=1073741824|maxDecodedBytes=1099511627776|maxScratchBytes=274877906944|maxOutputs=1000000|maxDiagnostics=4096|maxSecondaryFailures=256",
       "output_path": "artifacts/scenarios/resource-limit-boundaries.json",
-      "parameters": {"boundary_policy": "equal-allowed-next-rejected"}
+      "parameters": {
+        "boundary_policy": "equal-allowed-next-rejected"
+      }
     },
     {
       "id": "golden-fo4-gnrl-v7-stored-observation",
       "kind": "golden-observation",
-      "coverage": ["structural", "fo4-gnrl-v7"],
+      "coverage": [
+        "structural",
+        "fo4-gnrl-v7"
+      ],
       "input": "golden|fo4-gnrl-v7-stored|entries=1|name=data\\readme.txt|codec=stored|payload=jbsa-v7-stored",
       "output_path": "goldens/sha256/67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8.json",
-      "parameters": {"source_fixture": "fo4-gnrl-v7-stored"}
+      "parameters": {
+        "source_fixture": "fo4-gnrl-v7-stored"
+      }
     },
     {
       "id": "golden-sf-gnrl-v3-m3-mixed-observation",
       "kind": "golden-observation",
-      "coverage": ["structural", "sf-gnrl-v3-m3", "compression", "ordering"],
+      "coverage": [
+        "structural",
+        "sf-gnrl-v3-m3",
+        "compression",
+        "ordering"
+      ],
       "input": "golden|sf-gnrl-v3-m3-mixed|entries=stored,compressed|method=3",
       "output_path": "goldens/sha256/f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0.json",
-      "parameters": {"source_fixture": "sf-gnrl-v3-m3-mixed"}
+      "parameters": {
+        "source_fixture": "sf-gnrl-v3-m3-mixed"
+      }
     }
   ]
 }

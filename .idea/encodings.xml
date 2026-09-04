@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise">
+    <file url="file://$PROJECT_DIR$/jbsa-benchmarks/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-benchmarks/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-cli/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-cli/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-conformance-tests/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-conformance-tests/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-dist/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-dist/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-test-support/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa-test-support/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/jbsa/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+  </component>
+</project>

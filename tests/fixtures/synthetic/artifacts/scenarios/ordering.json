@@ -1,1 +1,17 @@
-{"forward":["zeta.txt","Alpha.txt","nested/beta.txt"],"reverse":["nested/beta.txt","Alpha.txt","zeta.txt"],"expected_logical_order":["Alpha.txt","nested/beta.txt","zeta.txt"]}
+{
+  "forward": [
+    "zeta.txt",
+    "Alpha.txt",
+    "nested/beta.txt"
+  ],
+  "reverse": [
+    "nested/beta.txt",
+    "Alpha.txt",
+    "zeta.txt"
+  ],
+  "expected_logical_order": [
+    "Alpha.txt",
+    "nested/beta.txt",
+    "zeta.txt"
+  ]
+}

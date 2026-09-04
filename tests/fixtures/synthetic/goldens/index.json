@@ -1,7 +1,15 @@
 {
   "schema_version": 1,
   "objects": [
-    {"id": "golden-fo4-gnrl-v7-stored-observation","sha256": "67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8","path": "goldens/sha256/67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8.json"},
-    {"id": "golden-sf-gnrl-v3-m3-mixed-observation","sha256": "f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0","path": "goldens/sha256/f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0.json"}
+    {
+      "id": "golden-fo4-gnrl-v7-stored-observation",
+      "sha256": "67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8",
+      "path": "goldens/sha256/67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8.json"
+    },
+    {
+      "id": "golden-sf-gnrl-v3-m3-mixed-observation",
+      "sha256": "f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0",
+      "path": "goldens/sha256/f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0.json"
+    }
   ]
 }

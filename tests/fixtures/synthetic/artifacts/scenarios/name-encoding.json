@@ -1,1 +1,12 @@
-{"ascii":"Data/Test.txt","windows_1252_hex":"636166e92e747874","windows_932_hex":"8365835883672e747874","undecodable_windows_932_hex":"81","unmappable":"emoji-😀.txt","unsafe":["../escape.txt","CON.txt","folder/name:.txt"]}
+{
+  "ascii": "Data/Test.txt",
+  "windows_1252_hex": "636166e92e747874",
+  "windows_932_hex": "8365835883672e747874",
+  "undecodable_windows_932_hex": "81",
+  "unmappable": "emoji-😀.txt",
+  "unsafe": [
+    "../escape.txt",
+    "CON.txt",
+    "folder/name:.txt"
+  ]
+}

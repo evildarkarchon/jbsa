@@ -5,5 +5,5 @@
  * module.
  */
 module io.github.evildarkarchon.jbsa {
-  exports io.github.evildarkarchon.jbsa;
+    exports io.github.evildarkarchon.jbsa;
 }
