@@ -1874,7 +1874,9 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 30
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#generatorReproducesCommittedFixtureObjects"
   - id: JBSA-LIC-005
     owner:
       document: docs/spec/compliance.md
@@ -1885,7 +1887,11 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 30
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#localCorpusIsDiscoverableAndExcludedFromVersionControl"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryArchiveMaterial"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryMaterialHiddenInZip"
   - id: JBSA-LIC-006
     owner:
       document: docs/spec/compliance.md
@@ -1895,7 +1901,9 @@ requirements:
     lifecycle_state: active
     verification_class: release-audit
     implementing_issue: 30
-    test_evidence: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#fixtureAuditRejectsGoldenDriftWithoutChangingCommittedObjects"
   - id: JBSA-LIC-007
     owner:
       document: docs/spec/compliance.md

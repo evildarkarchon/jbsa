@@ -1,0 +1,387 @@
+{
+  "schema_version": 1,
+  "corpus_id": "jbsa-synthetic-fixtures-v1",
+  "generated_on": "2026-09-03",
+  "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+  "generator": {
+    "id": "jbsa-synthetic-fixture-generator",
+    "version": "1",
+    "implementation": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/FixtureCorpusGenerator.java",
+    "implementation_spdx_license": "Apache-2.0",
+    "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+    "options": {"output": "<empty-directory>"}
+  },
+  "fixtures": [
+    {
+      "id": "selector-tes3",
+      "kind": "structural-template",
+      "coverage": ["structural"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe selector-tes3",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Write the four-byte TES3 selector from JBSA-DET-002.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"selector": "00010000"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "ec35aa5f7e64ba1e0376c08e1d0cd5f78c055f2f1d3f3a7b39105addcba071f3",
+      "output": {
+        "path": "artifacts/structural/tes3-selector.bin",
+        "sha256": "bf5e8ffa51a9e748985800c1d3d7f1a2a6ae7435136593ca8d9637e3f87c699c"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "selector-bsa-067",
+      "kind": "structural-template",
+      "coverage": ["structural"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe selector-bsa-067",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Write the BSA selector and little-endian 0x67 version from JBSA-DET-002.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"version": "0x67"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "5c0b6d09daa095742aba41fc2e0342e56f1540f5a0c02ec6074147389b7f497e",
+      "output": {
+        "path": "artifacts/structural/bsa-067-selector.bin",
+        "sha256": "5e642abf58bbee7fd37e090e3dae2d0b60d491cb660dd52e3812a43f2f4f1e46"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "selector-ba2-gnrl-v1",
+      "kind": "structural-template",
+      "coverage": ["structural"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe selector-ba2-gnrl-v1",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Write the BTDX, version, and GNRL selector tuple from JBSA-DET-002.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"subtype": "GNRL", "version": "1"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "045b39079dae642a56811c2ff4e35724126c50b87d91aeda062929427666d69a",
+      "output": {
+        "path": "artifacts/structural/ba2-gnrl-v1-selector.bin",
+        "sha256": "0e28f31ac9c0dff4f2f60d08f3e4b20f3571699ca363b757073759d972bbe1e8"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "fo4-gnrl-v7-stored",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-gnrl-v7", "compression"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe fo4-gnrl-v7-stored",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Build a version-7 General BA2 with one stored project-authored payload.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"archive_family": "fo4-gnrl-v7", "codec": "stored"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "b8ac8cfbeb02ecf66834f3981e7a7d2dbd9b448544c28830840bcbfdc74ff38c",
+      "output": {
+        "path": "artifacts/archives/fo4-gnrl-v7-stored.ba2",
+        "sha256": "dd9136724bbb62723df2d2ab271f154e6ea035195ba1b53e23485673ac8b1b04"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "fo4-gnrl-v7-zlib",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-gnrl-v7", "compression", "boundary"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe fo4-gnrl-v7-zlib",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Build a version-7 General BA2 with one complete deterministic zlib stream.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"archive_family": "fo4-gnrl-v7", "codec": "zlib"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "9d949a2288ca76aae9557adcb099f187bef23c79b169d40aea6865ccf0fce68f",
+      "output": {
+        "path": "artifacts/archives/fo4-gnrl-v7-zlib.ba2",
+        "sha256": "2dd431fbf6c5595d005b39798c2a3a9a6fe0f22d8b184d62cae663d30477c729"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "sf-gnrl-v3-m3-raw-lz4",
+      "kind": "generated-archive",
+      "coverage": ["structural", "sf-gnrl-v3-m3", "compression"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe sf-gnrl-v3-m3-raw-lz4",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Build a version-3 method-3 General BA2 with one complete raw-LZ4 literal block.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"archive_family": "sf-gnrl-v3-m3", "codec": "raw-lz4", "method": "3"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "ea5e809e8b7fefa4906caf1c409f6e26cbbeee54f32d044aa2ded6550ca8bb04",
+      "output": {
+        "path": "artifacts/archives/sf-gnrl-v3-m3-raw-lz4.ba2",
+        "sha256": "1dc8e7619873d827ea3675356313869e80048fe67bddf9b03369fb75780c34c4"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "sf-gnrl-v3-m3-mixed",
+      "kind": "generated-archive",
+      "coverage": ["structural", "sf-gnrl-v3-m3", "compression", "ordering"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe sf-gnrl-v3-m3-mixed",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Build a version-3 method-3 General BA2 with one stored and one raw-LZ4 entry.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"archive_family": "sf-gnrl-v3-m3", "codec": "mixed", "method": "3"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "d5386cf48a60a109dd28e1c3a926af3138da3c64ad8b193b1d46ec84e7f635bd",
+      "output": {
+        "path": "artifacts/archives/sf-gnrl-v3-m3-mixed.ba2",
+        "sha256": "54a3a04988e447191b3d1ca3f88e5b9cca675f89d24c3c81278061e14f3b7fea"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "malformed-truncated-ba2-header",
+      "kind": "malformed-archive",
+      "coverage": ["malformed", "boundary"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe malformed-truncated-ba2-header",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Truncate a recognized version-3 GNRL selector before the remaining header fields.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"expected_disposition": "rejected", "fault": "truncated-header"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "ff1be65a79802c7c4b2a2f37c7610359e3b55e41f41893bb8ccf2b6103523bec",
+      "output": {
+        "path": "artifacts/malformed/truncated-ba2-header.ba2",
+        "sha256": "4cc8ba2a423efb5b9ad2457f9538a902ea36954a35b92922892930bfe6a99633"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "malformed-unsupported-v3-method",
+      "kind": "malformed-archive",
+      "coverage": ["malformed", "compression"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe malformed-unsupported-v3-method",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Write a complete empty version-3 GNRL header with unsupported compression method 2.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"expected_disposition": "rejected", "method": "2"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "89149d3f366892300273edbda7c97c35f2bc59c6e3aaa83bff848b2c249edc28",
+      "output": {
+        "path": "artifacts/malformed/unsupported-v3-method.ba2",
+        "sha256": "e53d0bf336fb396d59feb69b2d81631688ea92f6bdbbb410ccab720d8de7d481"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "compression-boundaries",
+      "kind": "scenario",
+      "coverage": ["boundary", "compression"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe compression-boundaries",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Declare compact sizes around raw-LZ4 literal and DEFLATE stored-block boundaries.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"unit": "bytes"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "4f0e8bf1f2532b07ec23a6eb3bb0a35d0fc93c9f3d84f90c97fe604ea86e47f2",
+      "output": {
+        "path": "artifacts/scenarios/compression-boundaries.json",
+        "sha256": "00b43cbd2f9f3a9de62f21d9168681fa33849594bec66dc829f92117ef72e911"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "name-encoding",
+      "kind": "scenario",
+      "coverage": ["name-encoding", "malformed"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe name-encoding",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Declare ASCII, Windows-1252, Windows-932, unmappable, and unsafe name bytes.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"default_encoding": "windows-1252", "profile_encoding": "windows-932"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "0090eca857f51a0e3e457571282354077389a3f8f1e1d05cf97be9356a7f1ae4",
+      "output": {
+        "path": "artifacts/scenarios/name-encoding.json",
+        "sha256": "0c389c8ec13e2f13c8cff94ee08d13ab87844d6a93739c892a328663a1fd1dfc"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "stable-ordering",
+      "kind": "scenario",
+      "coverage": ["ordering"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe stable-ordering",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Declare opposite discovery orders with one common normalized logical order.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"comparison": "unicode-scalar"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "57fbdab3359150f11aaac15532d2acf3331fc27308844eaf45cc6c043fa46efe",
+      "output": {
+        "path": "artifacts/scenarios/ordering.json",
+        "sha256": "c634093464766ebc9c9a435fe2a96a0d06e474efccc0cecfd63fcbbca7bc21e7"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "later-source-wins-overlay",
+      "kind": "scenario",
+      "coverage": ["overlay", "ordering"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe later-source-wins-overlay",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Declare two source layers whose later duplicate retains the first insertion ordinal.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"policy": "later-source-wins"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "14693e3344a4c977c9e5c7d1d88174e3f49b0948abb63feffe6bbe32c34b99b1",
+      "output": {
+        "path": "artifacts/scenarios/overlay.json",
+        "sha256": "35e89c31f8aa195c304fb6873e6fd9826a540a98139c5c3629daa1334f09832f"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "split-boundaries",
+      "kind": "scenario",
+      "coverage": ["split", "boundary", "resource-limit"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe split-boundaries",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Describe virtual entries around the 2 GiB BSA target without committing giant payloads.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"large_payload_policy": "virtual-recipe-only"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "679bfcd92f1bed0959a2b551b943db93f39e97d5a277cf5d95673cdf176f9f71",
+      "output": {
+        "path": "artifacts/scenarios/split-boundaries.json",
+        "sha256": "adc51d3bd0f91ce8deef3b34cafea454b5e9c286041608d2fe83bbb991880328"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "resource-limit-boundaries",
+      "kind": "scenario",
+      "coverage": ["resource-limit", "boundary"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe resource-limit-boundaries",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Declare each ResourceLimits.standard ceiling at and one unit above the boundary.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"boundary_policy": "equal-allowed-next-rejected"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "db7b9316002e9542767e80f7bc262333652daffb6314712627a4d5aa82c33038",
+      "output": {
+        "path": "artifacts/scenarios/resource-limit-boundaries.json",
+        "sha256": "fce59d06c12f3fa15a73c1b0ff857aebb4616dff4f4e4f09748c795a22f6ca00"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "golden-fo4-gnrl-v7-stored-observation",
+      "kind": "golden-observation",
+      "coverage": ["structural", "fo4-gnrl-v7"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe golden-fo4-gnrl-v7-stored-observation",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Record the independently expected semantic projection for the v7 stored archive.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"source_fixture": "fo4-gnrl-v7-stored"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "2c9e26501ac30ac1385ca05f7f9091ed058b43714a18eb66149fc85b32ccbd54",
+      "output": {
+        "path": "goldens/sha256/67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8.json",
+        "sha256": "67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "golden-sf-gnrl-v3-m3-mixed-observation",
+      "kind": "golden-observation",
+      "coverage": ["structural", "sf-gnrl-v3-m3", "compression", "ordering"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe golden-sf-gnrl-v3-m3-mixed-observation",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Record the independently expected semantic projection for the v3 method-3 mixed archive.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"source_fixture": "sf-gnrl-v3-m3-mixed"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "e78a8d9fcb642b58abc5374d653d3ba89f0079acf6e35330f322d6f35b8d9e5e",
+      "output": {
+        "path": "goldens/sha256/f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0.json",
+        "sha256": "f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    }
+  ],
+  "goldens": [
+    {
+      "id": "golden-fo4-gnrl-v7-stored-observation",
+      "sha256": "67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8",
+      "path": "goldens/sha256/67c4a0360a01638bd122cba9e22f2839139813684b8d7e07e24cc190a72c82e8.json",
+      "source_fixture_ids": ["fo4-gnrl-v7-stored"]
+    },
+    {
+      "id": "golden-sf-gnrl-v3-m3-mixed-observation",
+      "sha256": "f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0",
+      "path": "goldens/sha256/f1d0f0caeea523aabdeb169b155f5775b351018ce541c38ce076d89b08829cd0.json",
+      "source_fixture_ids": ["sf-gnrl-v3-m3-mixed"]
+    }
+  ]
+}

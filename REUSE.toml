@@ -25,7 +25,8 @@ path = [
   "docs/**",
   "jbsa*/**",
   "pom.xml",
-  "tests/fixtures/local/.gitkeep"
+  "tests/fixtures/local/.gitkeep",
+  "tests/fixtures/local/README.md"
 ]
 precedence = "override"
 SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"

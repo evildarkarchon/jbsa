@@ -1062,7 +1062,10 @@ function Test-TrackedRepositoryBytes {
             continue
         }
         if ($normalizedPath.StartsWith('tests/fixtures/local/') -and
-            $normalizedPath -ne 'tests/fixtures/local/.gitkeep') {
+            $normalizedPath -notin @(
+                'tests/fixtures/local/.gitkeep',
+                'tests/fixtures/local/README.md'
+            )) {
             throw "Proprietary or local fixture material is tracked: $normalizedPath"
         }
         $trackedPath = Join-Path $reactorRoot $relativePath

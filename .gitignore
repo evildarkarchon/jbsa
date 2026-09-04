@@ -27,5 +27,6 @@ replay_pid*
 graphify-out/
 /tests/fixtures/local/**
 !/tests/fixtures/local/.gitkeep
+!/tests/fixtures/local/README.md
 .claude/settings.json
 /codex/hooks.json

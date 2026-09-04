@@ -1,0 +1,1 @@
+{"maxEntries":[1000000,1000001],"maxMetadataBytes":[1073741824,1073741825],"maxDecodedBytes":[1099511627776,1099511627777],"maxScratchBytes":[274877906944,274877906945],"maxOutputs":[1000000,1000001],"maxDiagnostics":[4096,4097],"maxSecondaryFailures":[256,257]}

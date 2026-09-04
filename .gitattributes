@@ -8,3 +8,7 @@
 *.yml text eol=lf
 mvnw text eol=lf
 mvnw.cmd text eol=crlf
+
+tests/fixtures/synthetic/**/*.json text eol=lf
+tests/fixtures/synthetic/**/*.ba2 -text
+tests/fixtures/synthetic/**/*.bin -text
