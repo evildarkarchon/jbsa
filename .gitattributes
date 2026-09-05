@@ -1,0 +1,21 @@
+* text=auto
+
+*.java text eol=lf
+*.md text eol=lf
+*.ps1 text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+mvnw text eol=lf
+mvnw.cmd text eol=crlf
+
+tests/fixtures/synthetic/**/*.json text eol=lf
+tests/fixtures/synthetic/**/*.ba2 -text
+tests/fixtures/synthetic/**/*.bin -text
+
+tests/conformance/**/*.json text eol=lf
+
+build/performance/**/*.py text eol=lf
+build/performance-memory.cs text eol=lf
+tests/performance/**/*.json text eol=lf
+tests/performance/**/*.gz -text

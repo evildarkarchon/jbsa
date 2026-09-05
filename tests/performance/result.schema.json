@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/evildarkarchon/jbsa/tests/performance/result.schema.json",
+  "title": "performance-v1 local qualification results",
+  "type": "object",
+  "required": ["schema_version", "contract", "mode", "catalog_sha256", "protocol_sha256", "configuration_sha256", "cases", "outcome"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "contract": {"const": "performance-v1"},
+    "mode": {"enum": ["full", "targeted"]},
+    "catalog_sha256": {"$ref": "#/$defs/digest"},
+    "protocol_sha256": {"$ref": "#/$defs/digest"},
+    "configuration_sha256": {"anyOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+    "outcome": {"$ref": "#/$defs/outcome"},
+    "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/case"}}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "outcome": {"enum": ["PASS", "FAIL", "INVALID"]},
+    "token": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "case": {
+      "type": "object",
+      "required": ["case_id", "contract", "surface", "workload", "archive_family_or_layout", "codec_provider", "workers", "identity_mappings", "configuration", "comparators", "prerequisite_conformance_cases", "environment", "rounds", "derived_metrics", "outcome", "evidence_directory"],
+      "properties": {
+        "case_id": {"type": "string", "pattern": "^PV1-[a-z0-9-]+\\.[a-z0-9-]+\\.[a-z0-9-]+\\.[a-z0-9-]+\\.[a-z0-9-]+$"},
+        "contract": {"const": "performance-v1"},
+        "surface": {"enum": ["pack-throughput", "unpack-throughput", "random-metadata", "random-payload", "pack-memory", "unpack-memory", "pack-output", "pack-scaling", "unpack-scaling"]},
+        "workload": {"$ref": "#/$defs/token"},
+        "archive_family_or_layout": {"$ref": "#/$defs/token"},
+        "codec_provider": {"$ref": "#/$defs/token"},
+        "workers": {"enum": ["w1", "w2", "w4", "w8", "w16", "automatic", "none"]},
+        "identity_mappings": {"type": "object", "required": ["wire_selectors", "codec", "provider", "codec_profile_sha256", "provider_configuration"]},
+        "configuration": {"type": "object"},
+        "comparators": {"type": "object"},
+        "prerequisite_conformance_cases": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^CV1-"}},
+        "environment": {"type": "object"},
+        "rounds": {"type": "array", "items": {"type": "object"}},
+        "derived_metrics": {"type": "object"},
+        "outcome": {"$ref": "#/$defs/outcome"},
+        "reason": {"type": "string"},
+        "evidence_directory": {"type": "string", "pattern": "^case-[0-9a-f]{16}$"}
+      },
+      "allOf": [{"if": {"properties": {"outcome": {"const": "PASS"}}}, "then": {
+        "properties": {"rounds": {"minItems": 1}, "prerequisite_conformance_cases": {"minItems": 1}, "derived_metrics": {"minProperties": 1}}
+      }}]
+    }
+  }
+}

@@ -1,5 +1,8 @@
 # Compiled class file
 *.class
+__pycache__/
+**/target/
+.flattened-pom.xml
 
 # Log file
 *.log
@@ -23,7 +26,8 @@
 hs_err_pid*
 replay_pid*
 graphify-out/
-tests/fixtures/local
-!test/fixtures/local/.gitkeep
+/tests/fixtures/local/**
+!/tests/fixtures/local/.gitkeep
+!/tests/fixtures/local/README.md
 .claude/settings.json
 /codex/hooks.json

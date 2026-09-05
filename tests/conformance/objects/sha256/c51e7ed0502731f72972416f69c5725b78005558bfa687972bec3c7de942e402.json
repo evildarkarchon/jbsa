@@ -1,0 +1,17 @@
+{
+  "kind": "fixture-or-scenario-descriptor",
+  "token": "base-fo4-gnrl-v1-raw-lz4",
+  "description": "Fallout 4 General BA2 version 1; raw-lz4 input.  Unsupported combinations require explicit rejection.",
+  "binding": {
+    "state": "missing",
+    "files": [],
+    "generator": null,
+    "provenance": null,
+    "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+  },
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0",
+    "source": "Project-authored conformance-v1 scenario assignment; this descriptor is not archive bytes or successful evidence."
+  }
+}

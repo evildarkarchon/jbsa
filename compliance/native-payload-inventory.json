@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "scope": "Native files discovered inside pinned candidate artifacts; no entry is release-approved until its qualification gates pass.",
+  "entries": [
+    {
+      "name": "jlibdeflate.dll",
+      "container": {
+        "groupId": "com.fulcrumgenomics",
+        "artifactId": "jlibdeflate",
+        "version": "0.1.0",
+        "classifier": null,
+        "sha256": "c20407700e94307b80b8ed832be3fbc52370e6c3f826fe8b91b89d9db1910ef2"
+      },
+      "pathInContainer": "native/windows-x86_64/jlibdeflate.dll",
+      "sha256": "bc83f2a1907daca09bef3d2a446612e9ada77167e939dc9ddad81bf03de141e4",
+      "platform": "windows-x86_64",
+      "componentVersion": "jlibdeflate 0.1.0 / libdeflate 1.25",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "evidence": "https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971"
+      },
+      "license": {
+        "spdx": "MIT",
+        "evidence": "https://github.com/fulcrumgenomics/jlibdeflate/blob/v0.1.0/LICENSE and https://github.com/ebiggers/libdeflate/blob/v1.25/COPYING"
+      },
+      "requiredNotices": [
+        "Retain the jlibdeflate and libdeflate MIT copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/fulcrumgenomics/jlibdeflate",
+        "revision": "3f2e75a2eaceea2253d39a57ca6c41b92ef78b62",
+        "buildProvenance": "Bundled in Maven Central com.fulcrumgenomics:jlibdeflate:0.1.0 from libdeflate 1.25 at c8c56a20f8f621e6a966b716b31f1dedab6a41e3."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "MIT permits redistribution, but native zlib promotion has not passed qualification.",
+        "releaseArtifacts": []
+      }
+    },
+    {
+      "name": "lwjgl.dll",
+      "container": {
+        "groupId": "org.lwjgl",
+        "artifactId": "lwjgl",
+        "version": "3.4.3",
+        "classifier": "natives-windows",
+        "sha256": "19949bca7b780f55e5d2db12ac061a7657a4c1b7c860c30607f5406e7017aa2b"
+      },
+      "pathInContainer": "windows/x64/org/lwjgl/lwjgl.dll",
+      "sha256": "15b82b77f3a584b8df9e95899a908fb825cfac80a3ebd78ace0eb473a1069121",
+      "platform": "windows-x86_64",
+      "componentVersion": "LWJGL 3.4.3",
+      "eligibility": {
+        "pureJavaInsufficient": true,
+        "evidence": "https://github.com/evildarkarchon/jbsa/issues/4#issuecomment-5509001000"
+      },
+      "license": {
+        "spdx": "BSD-3-Clause",
+        "evidence": "https://github.com/LWJGL/lwjgl3/blob/3.4.3/LICENSE.md"
+      },
+      "requiredNotices": [
+        "Retain the LWJGL BSD-3-Clause copyright and license text."
+      ],
+      "source": {
+        "repository": "https://github.com/LWJGL/lwjgl3",
+        "revision": "30fac9b95f99cda97312232be25ba55297bf9951",
+        "buildProvenance": "Bundled in the Maven Central org.lwjgl:lwjgl:3.4.3:natives-windows classifier built by the LWJGL release process."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "BSD-3-Clause permits redistribution, but the Windows native provider gates have not passed.",
+        "releaseArtifacts": []
+      }
+    },
+    {
+      "name": "lwjgl_lz4.dll",
+      "container": {
+        "groupId": "org.lwjgl",
+        "artifactId": "lwjgl-lz4",
+        "version": "3.4.3",
+        "classifier": "natives-windows",
+        "sha256": "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc"
+      },
+      "pathInContainer": "windows/x64/org/lwjgl/lz4/lwjgl_lz4.dll",
+      "sha256": "ee26ad2397136a43b1308819cd0a3d36383d682718b0228019f739ed88c31e9c",
+      "platform": "windows-x86_64",
+      "componentVersion": "LWJGL 3.4.3 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": true,
+        "evidence": "https://github.com/evildarkarchon/jbsa/issues/4#issuecomment-5509001000"
+      },
+      "license": {
+        "spdx": "BSD-3-Clause AND BSD-2-Clause",
+        "evidence": "https://github.com/LWJGL/lwjgl3/blob/3.4.3/LICENSE.md and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the LWJGL BSD-3-Clause and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/LWJGL/lwjgl3",
+        "revision": "30fac9b95f99cda97312232be25ba55297bf9951",
+        "buildProvenance": "Bundled in the Maven Central org.lwjgl:lwjgl-lz4:3.4.3:natives-windows classifier from LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": false,
+        "evidence": "The BSD terms permit redistribution, but the LZ4 provider gates have not passed.",
+        "releaseArtifacts": []
+      }
+    }
+  ]
+}

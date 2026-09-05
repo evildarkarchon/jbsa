@@ -1,0 +1,53 @@
+{
+  "kind": "fixture-or-scenario-descriptor",
+  "token": "base-fo4-gnrl-v7-stored",
+  "description": "Fallout 4 General BA2 version 7 (decode only); stored input.  Unsupported combinations require explicit rejection.",
+  "binding": {
+    "state": "available",
+    "files": [
+      {
+        "path": "tests/fixtures/synthetic/artifacts/archives/fo4-gnrl-v7-stored.ba2",
+        "sha256": "dd9136724bbb62723df2d2ab271f154e6ea035195ba1b53e23485673ac8b1b04"
+      }
+    ],
+    "generator": {
+      "id": "jbsa-synthetic-fixture-generator",
+      "version": "1",
+      "configuration": {
+        "procedure": "Build a version-7 General BA2 with one stored project-authored payload.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {
+          "archive_family": "fo4-gnrl-v7",
+          "codec": "stored"
+        }
+      },
+      "recipe_sha256": "b8ac8cfbeb02ecf66834f3981e7a7d2dbd9b448544c28830840bcbfdc74ff38c",
+      "descriptor": {
+        "path": "tests/fixtures/synthetic/generator.json",
+        "sha256": "efca538ab2357f4253c93d0004382b2e1d676569a1ab79c79eb633083eec3a22"
+      },
+      "implementation": {
+        "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/FixtureCorpusGenerator.java",
+        "sha256": "ee33c5b01f32cb46321a138ab71498f400df33a1f6154e986be1f8f88be01cac"
+      }
+    },
+    "provenance": {
+      "fixture_id": "fo4-gnrl-v7-stored",
+      "manifest": {
+        "path": "tests/fixtures/synthetic/manifest.json",
+        "sha256": "f674df5c134b9e26782c860c875b4eb37644f59ad7c1f852fb9d6db751ce0216"
+      },
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "source": "project-authored generator recipe fo4-gnrl-v7-stored",
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null
+    },
+    "missing_reason": null
+  },
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0",
+    "source": "Project-authored conformance-v1 scenario assignment; this descriptor is not archive bytes or successful evidence."
+  }
+}

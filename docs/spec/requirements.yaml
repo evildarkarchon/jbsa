@@ -1,0 +1,2950 @@
+schema_version: 1
+specification:
+  version: 0.12.0
+  status: normative
+  authority: docs/spec/README.md
+requirements:
+  - id: JBSA-BSA-001
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 44
+    test_evidence: []
+  - id: JBSA-BSA-002
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-BSA-003
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-BSA-004
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 44
+    test_evidence: []
+  - id: JBSA-BSA-005
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-BSA-006
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-BSA-007
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-BSA-008
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-BSA-009
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-BSA-010
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 44
+    test_evidence: []
+  - id: JBSA-BSA-011
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 42
+    test_evidence: []
+  - id: JBSA-BSA-012
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-BSA-013
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 44
+    test_evidence: []
+  - id: JBSA-BSA-014
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 44
+    test_evidence: []
+  - id: JBSA-BSA-015
+    owner:
+      document: docs/spec/formats/versioned-bsa.md
+      anchor: jbsa-bsa-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 44
+    test_evidence: []
+  - id: JBSA-BUILD-001
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#reactorContainsExactlyTheSpecifiedProjectsAtOneVersion"
+  - id: JBSA-BUILD-002
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#reactorContainsExactlyTheSpecifiedProjectsAtOneVersion"
+  - id: JBSA-BUILD-003
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#productionPomsKeepBuildSupportOutsideTheProductGraph"
+  - id: JBSA-BUILD-004
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsExposeOnlyTheSpecifiedModules"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsRemainUsableOnTheClassPath"
+  - id: JBSA-BUILD-005
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#productionPomsKeepBuildSupportOutsideTheProductGraph"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsExposeOnlyTheSpecifiedModules"
+  - id: JBSA-BUILD-006
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#exportedLibrarySignaturesContainNoThirdPartyOrInternalTypes"
+  - id: JBSA-BUILD-007
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#flattenedLibraryPomIsSelfContainedAndComplete"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#libraryArtifactsAreJava25AndReproduciblyTimestamped"
+  - id: JBSA-BUILD-008
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5521260730
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-BUILD-009
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 60
+    test_evidence: []
+  - id: JBSA-BUILD-010
+    owner:
+      document: docs/spec/modules-and-build.md
+      anchor: jbsa-build-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - ".github/workflows/build.yml"
+      - "build/run-ci-gate.ps1"
+      - "build/verify-reproducible-build.ps1"
+  - id: JBSA-CLI-001
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179510
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-002
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-003
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-004
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-005
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-006
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-007
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-008
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-009
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-010
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-011
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-012
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-013
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-014
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-CLI-015
+    owner:
+      document: docs/spec/bsarch-cli.md
+      anchor: jbsa-cli-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-CODEC-001
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-CODEC-002
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-CODEC-003
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-CODEC-004
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-CODEC-005
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-CODEC-006
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 38
+    test_evidence: []
+  - id: JBSA-CODEC-007
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 52
+    test_evidence: []
+  - id: JBSA-CODEC-008
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 43
+    test_evidence: []
+  - id: JBSA-CODEC-009
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 43
+    test_evidence: []
+  - id: JBSA-CODEC-010
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 43
+    test_evidence: []
+  - id: JBSA-CODEC-011
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 43
+    test_evidence: []
+  - id: JBSA-CODEC-012
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 43
+    test_evidence: []
+  - id: JBSA-CODEC-013
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 52
+    test_evidence: []
+  - id: JBSA-COMPAT-001
+    owner:
+      document: docs/spec/compatibility-profiles.md
+      anchor: jbsa-compat-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-COMPAT-002
+    owner:
+      document: docs/spec/compatibility-profiles.md
+      anchor: jbsa-compat-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179486
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 54
+    test_evidence: []
+  - id: JBSA-COMPAT-003
+    owner:
+      document: docs/spec/compatibility-profiles.md
+      anchor: jbsa-compat-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179510
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-COMPAT-004
+    owner:
+      document: docs/spec/compatibility-profiles.md
+      anchor: jbsa-compat-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-COMPAT-005
+    owner:
+      document: docs/spec/compatibility-profiles.md
+      anchor: jbsa-compat-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-COMPAT-006
+    owner:
+      document: docs/spec/compatibility-profiles.md
+      anchor: jbsa-compat-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-COMPAT-007
+    owner:
+      document: docs/spec/compatibility-profiles.md
+      anchor: jbsa-compat-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-001
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/27
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 31
+    test_evidence: []
+  - id: JBSA-CONF-002
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/27
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 31
+    test_evidence: []
+  - id: JBSA-CONF-003
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: document-review
+    implementing_issue: 31
+    test_evidence: []
+  - id: JBSA-CONF-004
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-005
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 31
+    test_evidence: []
+  - id: JBSA-CONF-006
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 31
+    test_evidence: []
+  - id: JBSA-CONF-007
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 31
+    test_evidence: []
+  - id: JBSA-CONF-008
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/27
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-009
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/27
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-010
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-011
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-012
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-013
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-014
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-015
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/27
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 56
+    test_evidence: []
+  - id: JBSA-CONF-016
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-016
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-017
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-017
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/27
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 31
+    test_evidence: []
+  - id: JBSA-CONF-018
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-018
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-CONF-019
+    owner:
+      document: docs/spec/conformance-v1.md
+      anchor: jbsa-conf-019
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 58
+    test_evidence: []
+  - id: JBSA-DDS-001
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-002
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-003
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-004
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-005
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-006
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-007
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: retired
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+    retirement:
+      issue: 24
+      reason: Replaced by JBSA-DDS-013 because the original mip-size shortcut excluded mandatory small and odd-dimension BC encode cases.
+  - id: JBSA-DDS-008
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-009
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-010
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-011
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-012
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DDS-013
+    owner:
+      document: docs/spec/formats/dds-payload.md
+      anchor: jbsa-dds-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3930412040
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DET-001
+    owner:
+      document: docs/spec/formats/detection.md
+      anchor: jbsa-det-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-DET-002
+    owner:
+      document: docs/spec/formats/detection.md
+      anchor: jbsa-det-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-DET-003
+    owner:
+      document: docs/spec/formats/detection.md
+      anchor: jbsa-det-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 23
+    test_evidence: []
+  - id: JBSA-DET-004
+    owner:
+      document: docs/spec/formats/detection.md
+      anchor: jbsa-det-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 23
+    test_evidence: []
+  - id: JBSA-DET-005
+    owner:
+      document: docs/spec/formats/detection.md
+      anchor: jbsa-det-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-DET-006
+    owner:
+      document: docs/spec/formats/detection.md
+      anchor: jbsa-det-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 23
+    test_evidence: []
+  - id: JBSA-DIST-001
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-002
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-003
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-004
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-005
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-006
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-007
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-008
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5521260730
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-009
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-010
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-011
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5521260730
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-012
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-013
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+      - https://github.com/evildarkarchon/jbsa/issues/57
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 57
+    test_evidence: []
+  - id: JBSA-DIST-014
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-DIST-015
+    owner:
+      document: docs/spec/distribution.md
+      anchor: jbsa-dist-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/57
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 57
+    test_evidence: []
+  - id: JBSA-DX10-001
+    owner:
+      document: docs/spec/formats/dds-ba2.md
+      anchor: jbsa-dx10-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 47
+    test_evidence: []
+  - id: JBSA-DX10-002
+    owner:
+      document: docs/spec/formats/dds-ba2.md
+      anchor: jbsa-dx10-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DX10-003
+    owner:
+      document: docs/spec/formats/dds-ba2.md
+      anchor: jbsa-dx10-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DX10-004
+    owner:
+      document: docs/spec/formats/dds-ba2.md
+      anchor: jbsa-dx10-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 46
+    test_evidence: []
+  - id: JBSA-DX10-005
+    owner:
+      document: docs/spec/formats/dds-ba2.md
+      anchor: jbsa-dx10-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DX10-006
+    owner:
+      document: docs/spec/formats/dds-ba2.md
+      anchor: jbsa-dx10-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-DX10-007
+    owner:
+      document: docs/spec/formats/dds-ba2.md
+      anchor: jbsa-dx10-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 47
+    test_evidence: []
+  - id: JBSA-DX10-008
+    owner:
+      document: docs/spec/formats/dds-ba2.md
+      anchor: jbsa-dx10-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 40
+    test_evidence: []
+  - id: JBSA-GNRL-001
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-002
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 47
+    test_evidence: []
+  - id: JBSA-GNRL-003
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 45
+    test_evidence: []
+  - id: JBSA-GNRL-004
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-005
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 45
+    test_evidence: []
+  - id: JBSA-GNRL-006
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-007
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-008
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-009
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-010
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-011
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-012
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-GNRL-013
+    owner:
+      document: docs/spec/formats/general-ba2.md
+      anchor: jbsa-gnrl-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 39
+    test_evidence: []
+  - id: JBSA-IO-001
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 34
+    test_evidence: []
+  - id: JBSA-IO-002
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 34
+    test_evidence: []
+  - id: JBSA-IO-003
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 34
+    test_evidence: []
+  - id: JBSA-IO-004
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 34
+    test_evidence: []
+  - id: JBSA-IO-005
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 34
+    test_evidence: []
+  - id: JBSA-IO-006
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 34
+    test_evidence: []
+  - id: JBSA-IO-007
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-IO-008
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-IO-009
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-IO-010
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-IO-011
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-IO-012
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-IO-013
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-IO-014
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-IO-015
+    owner:
+      document: docs/spec/io-and-publication.md
+      anchor: jbsa-io-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-LIB-001
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179510
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-002
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-003
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 34
+    test_evidence: []
+  - id: JBSA-LIB-004
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 34
+    test_evidence: []
+  - id: JBSA-LIB-005
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-006
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-007
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-008
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-009
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-010
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-011
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/9#issuecomment-5519230103
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIB-012
+    owner:
+      document: docs/spec/library-interface.md
+      anchor: jbsa-lib-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-LIC-001
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+  - id: JBSA-LIC-002
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+  - id: JBSA-LIC-003
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+  - id: JBSA-LIC-004
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 30
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#generatorReproducesCommittedFixtureObjects"
+  - id: JBSA-LIC-005
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/6#issuecomment-5517505754
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 30
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#localCorpusIsDiscoverableAndExcludedFromVersionControl"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryArchiveMaterial"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryMaterialHiddenInZip"
+  - id: JBSA-LIC-006
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 30
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#fixtureAuditRejectsGoldenDriftWithoutChangingCommittedObjects"
+  - id: JBSA-LIC-007
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/4#issuecomment-5509001000
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
+  - id: JBSA-LIC-008
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnapprovedNativePayloads"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsNativePayloadHiddenInJar"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#sbomAuditRejectsUninventoriedTransitiveDependencies"
+  - id: JBSA-LIC-009
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 57
+    test_evidence: []
+  - id: JBSA-LIC-010
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+  - id: JBSA-LIC-011
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+      - https://github.com/evildarkarchon/jbsa/issues/62
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#buildGeneratesSbomAndThirdPartyNotices"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#distributionModuleAuditsReleaseInputsAfterAssembly"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryArchiveMaterial"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnapprovedNativePayloads"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnaccountedArtifacts"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsNativePayloadHiddenInJar"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryMaterialHiddenInZip"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#sbomAuditRejectsUninventoriedTransitiveDependencies"
+  - id: JBSA-LIC-012
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+  - id: JBSA-LIC-013
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+  - id: JBSA-LIC-014
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#flattenedLibraryPomIsSelfContainedAndComplete"
+  - id: JBSA-LIC-015
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+  - id: JBSA-LIC-016
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-016
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+      - https://github.com/evildarkarchon/jbsa/issues/62
+    lifecycle_state: retired
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence: []
+    retirement:
+      issue: 62
+      reason: DCO sign-off is no longer required, so a maintainer-specific exemption is unnecessary.
+  - id: JBSA-LIC-017
+    owner:
+      document: docs/spec/compliance.md
+      anchor: jbsa-lic-017
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+      - https://github.com/evildarkarchon/jbsa/issues/62
+    lifecycle_state: retired
+    verification_class: release-audit
+    implementing_issue: 29
+    test_evidence: []
+    retirement:
+      issue: 62
+      reason: External pull requests are now assessed directly without an automated DCO or declaration gate.
+  - id: JBSA-OPS-001
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-002
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-003
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-004
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-005
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-006
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-007
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-008
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-009
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-010
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 36
+    test_evidence: []
+  - id: JBSA-OPS-011
+    owner:
+      document: docs/spec/operation-semantics.md
+      anchor: jbsa-ops-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 35
+    test_evidence: []
+  - id: JBSA-PERF-001
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/issues/27
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-002
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/issues/27
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-003
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/issues/27
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-004
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-PERF-005
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-006
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-007
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-008
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/issues/27
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-009
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-010
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-011
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-012
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-013
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812800
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 32
+    test_evidence: []
+  - id: JBSA-PERF-014
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-PERF-015
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812800
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-PERF-016
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-016
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-PERF-017
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-017
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-PERF-018
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-018
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-PERF-019
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-019
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-PERF-020
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-020
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 52
+    test_evidence: []
+  - id: JBSA-PERF-021
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-021
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-PERF-022
+    owner:
+      document: docs/spec/performance-v1.md
+      anchor: jbsa-perf-022
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-REL-001
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/59
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179497
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 59
+    test_evidence: []
+  - id: JBSA-REL-002
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/27
+    lifecycle_state: active
+    verification_class: document-review
+    implementing_issue: 27
+    test_evidence: []
+  - id: JBSA-REL-003
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 33
+    test_evidence: []
+  - id: JBSA-REL-004
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 41
+    test_evidence: []
+  - id: JBSA-REL-005
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/50
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 50
+    test_evidence: []
+  - id: JBSA-REL-006
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/51
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 51
+    test_evidence: []
+  - id: JBSA-REL-007
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/51
+    lifecycle_state: active
+    verification_class: document-review
+    implementing_issue: 51
+    test_evidence: []
+  - id: JBSA-REL-008
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/52
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 52
+    test_evidence: []
+  - id: JBSA-REL-009
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/53
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 53
+    test_evidence: []
+  - id: JBSA-REL-010
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/54
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 54
+    test_evidence: []
+  - id: JBSA-REL-011
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/55
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 55
+    test_evidence: []
+  - id: JBSA-REL-012
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/56
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 56
+    test_evidence: []
+  - id: JBSA-REL-013
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/57
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 57
+    test_evidence: []
+  - id: JBSA-REL-014
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/58
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 58
+    test_evidence: []
+  - id: JBSA-REL-015
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 59
+    test_evidence: []
+  - id: JBSA-REL-016
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-016
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/59
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 59
+    test_evidence: []
+  - id: JBSA-REL-017
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-017
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/60
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 60
+    test_evidence: []
+  - id: JBSA-REL-018
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-018
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/60
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 60
+    test_evidence: []
+  - id: JBSA-REL-019
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-019
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/56
+      - https://github.com/evildarkarchon/jbsa/issues/59
+      - https://github.com/evildarkarchon/jbsa/issues/60
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 59
+    test_evidence: []
+  - id: JBSA-REL-020
+    owner:
+      document: docs/spec/release-gates.md
+      anchor: jbsa-rel-020
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - https://github.com/evildarkarchon/jbsa/issues/53
+      - https://github.com/evildarkarchon/jbsa/issues/57
+      - https://github.com/evildarkarchon/jbsa/issues/59
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 59
+    test_evidence: []
+  - id: JBSA-SCHED-001
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-002
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-003
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-004
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-005
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-006
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-007
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-008
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-009
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-009
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-010
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-011
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-011
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-012
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-012
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: automated-test
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCHED-013
+    owner:
+      document: docs/spec/execution-model.md
+      anchor: jbsa-sched-013
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
+    lifecycle_state: active
+    verification_class: performance-case
+    implementing_issue: 48
+    test_evidence: []
+  - id: JBSA-SCOPE-001
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 28
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#libraryArtifactsAreJava25AndReproduciblyTimestamped"
+  - id: JBSA-SCOPE-002
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 23
+    test_evidence: []
+  - id: JBSA-SCOPE-003
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 49
+    test_evidence: []
+  - id: JBSA-SCOPE-004
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
+    lifecycle_state: active
+    verification_class: document-review
+    implementing_issue: 29
+    test_evidence: []
+  - id: JBSA-SCOPE-005
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 31
+    test_evidence: []
+  - id: JBSA-SCOPE-006
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementing_issue: 58
+    test_evidence: []
+  - id: JBSA-SCOPE-007
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-007
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: build-verification
+    implementing_issue: 28
+    test_evidence:
+      - ".github/workflows/build.yml"
+  - id: JBSA-SCOPE-008
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-008
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+    lifecycle_state: active
+    verification_class: release-audit
+    implementing_issue: 60
+    test_evidence: []
+  - id: JBSA-TES3-001
+    owner:
+      document: docs/spec/formats/tes3-bsa.md
+      anchor: jbsa-tes3-001
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 37
+    test_evidence: []
+  - id: JBSA-TES3-002
+    owner:
+      document: docs/spec/formats/tes3-bsa.md
+      anchor: jbsa-tes3-002
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 37
+    test_evidence: []
+  - id: JBSA-TES3-003
+    owner:
+      document: docs/spec/formats/tes3-bsa.md
+      anchor: jbsa-tes3-003
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 37
+    test_evidence: []
+  - id: JBSA-TES3-004
+    owner:
+      document: docs/spec/formats/tes3-bsa.md
+      anchor: jbsa-tes3-004
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179522
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807
+      - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 37
+    test_evidence: []
+  - id: JBSA-TES3-005
+    owner:
+      document: docs/spec/formats/tes3-bsa.md
+      anchor: jbsa-tes3-005
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 37
+    test_evidence: []
+  - id: JBSA-TES3-006
+    owner:
+      document: docs/spec/formats/tes3-bsa.md
+      anchor: jbsa-tes3-006
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
+      - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementing_issue: 37
+    test_evidence: []

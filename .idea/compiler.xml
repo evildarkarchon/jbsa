@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="jbsa-benchmarks" />
+        <module name="jbsa-cli" />
+        <module name="jbsa-test-support" />
+        <module name="jbsa-conformance-tests" />
+        <module name="jbsa" />
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="jbsa" options="-parameters -parameters -Xlint:all" />
+      <module name="jbsa-benchmarks" options="-parameters -parameters -Xlint:all" />
+      <module name="jbsa-cli" options="-parameters -parameters -Xlint:all" />
+      <module name="jbsa-conformance-tests" options="-parameters -parameters -Xlint:all" />
+      <module name="jbsa-dist" options="-parameters -parameters -Xlint:all" />
+      <module name="jbsa-parent" options="-parameters -parameters -Xlint:all" />
+      <module name="jbsa-test-support" options="-parameters -parameters -Xlint:all" />
+    </option>
+  </component>
+</project>

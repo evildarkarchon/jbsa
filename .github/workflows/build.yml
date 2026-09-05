@@ -1,0 +1,99 @@
+name: Hosted Windows build gates
+
+on:
+  # Feature branches are covered by pull_request; only main needs the push trigger.
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  reuse-compliance:
+    name: REUSE 3.3 metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source without the separately licensed Reference Snapshot
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+
+      - name: Verify per-file SPDX and REUSE metadata
+        uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5 # v6
+
+  build-gate:
+    name: ${{ matrix.gate }} (hosted evidence; not Release Qualification)
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        gate:
+          - compile
+          - unit
+          - architecture
+          - formatting
+          - policy
+          - conformance
+
+    steps:
+      - name: Check out source without the Reference Snapshot submodule
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+
+      - name: Set up the pinned Java 25 build
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        with:
+          architecture: x64
+          cache: maven
+          cache-dependency-path: |
+            **/pom.xml
+            .mvn/wrapper/maven-wrapper.properties
+          check-latest: false
+          distribution: temurin
+          # Temurin's LTS catalog suffix is part of the exact SemVer build metadata.
+          java-version: '25.0.4+7.0.LTS'
+
+      - name: Verify immutable case history and deliberate golden rebaselines
+        if: matrix.gate == 'conformance'
+        shell: pwsh
+        env:
+          JBSA_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if ($env:JBSA_BASE_REVISION -cnotmatch '^[0-9a-f]{40}$' -or $env:JBSA_BASE_REVISION -eq ('0' * 40)) {
+            throw 'An exact historical revision is required for the rebaseline audit.'
+          }
+          git cat-file -e "$env:JBSA_BASE_REVISION^{commit}"
+          if ($LASTEXITCODE -ne 0) { throw 'Historical commit is unavailable.' }
+          $entry = git ls-tree $env:JBSA_BASE_REVISION -- tests/conformance/catalog.json
+          if ($LASTEXITCODE -ne 0) { throw 'Historical catalog lookup failed.' }
+          New-Item -ItemType Directory -Path target -Force | Out-Null
+          $baseline = if ($entry) {
+            git show "${env:JBSA_BASE_REVISION}:tests/conformance/catalog.json"
+          } else {
+            '{"schema_version":1,"contract":"conformance-v1","cases":[]}'
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Historical catalog could not be read.' }
+          $baseline | Set-Content -LiteralPath target/conformance-baseline.json -Encoding utf8
+          .\build\verify-conformance-rebaseline.ps1 -BaselineCatalog target/conformance-baseline.json
+
+      - name: Run ${{ matrix.gate }} gate
+        shell: pwsh
+        run: .\build\run-ci-gate.ps1 -Gate '${{ matrix.gate }}'
+
+      - name: Retain per-case conformance evidence
+        if: always() && matrix.gate == 'conformance'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: conformance-v1-hosted-evidence
+          path: |
+            target/conformance/**
+            target/conformance-check-*.log
+            jbsa-conformance-tests/target/failsafe-reports/**
+          if-no-files-found: error

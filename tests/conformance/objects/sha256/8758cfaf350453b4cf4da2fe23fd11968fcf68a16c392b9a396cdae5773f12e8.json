@@ -1,0 +1,53 @@
+{
+  "kind": "fixture-or-scenario-descriptor",
+  "token": "truncated-ba2-header",
+  "description": "Reject truncated BA2 header.",
+  "binding": {
+    "state": "available",
+    "files": [
+      {
+        "path": "tests/fixtures/synthetic/artifacts/malformed/truncated-ba2-header.ba2",
+        "sha256": "4cc8ba2a423efb5b9ad2457f9538a902ea36954a35b92922892930bfe6a99633"
+      }
+    ],
+    "generator": {
+      "id": "jbsa-synthetic-fixture-generator",
+      "version": "1",
+      "configuration": {
+        "procedure": "Truncate a recognized version-3 GNRL selector before the remaining header fields.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {
+          "expected_disposition": "rejected",
+          "fault": "truncated-header"
+        }
+      },
+      "recipe_sha256": "ff1be65a79802c7c4b2a2f37c7610359e3b55e41f41893bb8ccf2b6103523bec",
+      "descriptor": {
+        "path": "tests/fixtures/synthetic/generator.json",
+        "sha256": "efca538ab2357f4253c93d0004382b2e1d676569a1ab79c79eb633083eec3a22"
+      },
+      "implementation": {
+        "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/FixtureCorpusGenerator.java",
+        "sha256": "ee33c5b01f32cb46321a138ab71498f400df33a1f6154e986be1f8f88be01cac"
+      }
+    },
+    "provenance": {
+      "fixture_id": "malformed-truncated-ba2-header",
+      "manifest": {
+        "path": "tests/fixtures/synthetic/manifest.json",
+        "sha256": "f674df5c134b9e26782c860c875b4eb37644f59ad7c1f852fb9d6db751ce0216"
+      },
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "source": "project-authored generator recipe malformed-truncated-ba2-header",
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null
+    },
+    "missing_reason": null
+  },
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0",
+    "source": "Project-authored conformance-v1 scenario assignment; this descriptor is not archive bytes or successful evidence."
+  }
+}
