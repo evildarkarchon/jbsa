@@ -200,6 +200,12 @@ The
 resolve CLI filter and source-list selection, directory-source indirections,
 unsafe-name diagnostic identities, failure null ordering, versioned-BSA hash
 collisions, stored Starfield-v3 coverage, and mandatory progress observations.
+The
+[accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)
+complete the required diagnostic identities, replace the DDS partition rule
+with block-rounded mip boundaries, and specify a TES3 full-hash collision
+tie-breaker. The DDS replacement retires `JBSA-DDS-007` in favor of
+`JBSA-DDS-013`; the remaining clarifications retain their owning identifiers.
 
 The Reference Snapshot's archive-information error/zero-exit contradiction is a
 CLI-only evidence boundary owned by the Compatibility Profile; no Archive

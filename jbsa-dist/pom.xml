@@ -39,6 +39,24 @@
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
           <execution>
+            <id>stage-release-inputs</id>
+            <phase>verify</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <executable>pwsh</executable>
+              <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+              <arguments>
+                <argument>-NoLogo</argument>
+                <argument>-NoProfile</argument>
+                <argument>-NonInteractive</argument>
+                <argument>-File</argument>
+                <argument>${maven.multiModuleProjectDirectory}/build/stage-release-inputs.ps1</argument>
+                <argument>-ReactorVersion</argument>
+                <argument>${project.version}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
             <!-- The root verify phase runs before this last reactor module can assemble inputs. -->
             <id>verify-assembled-release-inputs</id>
             <phase>verify</phase>
@@ -56,6 +74,10 @@
                 <argument>${maven.multiModuleProjectDirectory}/build/verify-compliance.ps1</argument>
                 <argument>-ReactorVersion</argument>
                 <argument>${project.version}</argument>
+                <argument>-ReleaseInputRoot</argument>
+                <argument>${project.build.directory}/release-inputs</argument>
+                <argument>-ReleaseInputManifest</argument>
+                <argument>${project.build.directory}/release-inputs.json</argument>
                 <argument>-RequireGeneratedArtifacts</argument>
               </arguments>
             </configuration>

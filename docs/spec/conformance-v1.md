@@ -219,8 +219,14 @@ manifest **MUST** assign targeted cases that collectively cover:
   order across reversed source and worker configurations;
 - compression size boundaries, mixed compression, complete codec consumption,
   and decoded-size mismatch;
+- distinct TES3 names with the same full hash, asserting the canonical-name
+  byte tie-breaker in [JBSA-TES3-003](formats/tes3-bsa.md#jbsa-tes3-003) for
+  records and payload sequencing across reversed source and worker orders;
 - DDS writable formats, materially distinct dimensions and mip counts, both the
-  8-byte and 16-byte BC block classes at `1x1` and `5x7`, cubemaps, canonical
+  8-byte and 16-byte BC block classes at `1x1` and `5x7`, an odd-dimension
+  multichunk mip chain, nonsquare mips with one dimension reaching one first,
+  cubemaps, exact partition sizes and missing/extra-payload rejection under
+  [JBSA-DDS-013](formats/dds-payload.md#jbsa-dds-013), canonical
   reconstruction, chunk boundaries, both `PC` and `XBOX` encode targets with
   matching inputs, both mismatch rejections, CLI DDS-selector-to-`PC` mapping,
   and explicit, default, and qualified-profile reconstruction selection;
@@ -268,7 +274,7 @@ The manifest **MUST** map each coverage item to at least one Conformance Case an
 each case to its applicable assertion identifiers. A case **MAY** cover multiple
 items; a full Cartesian product is not required.
 
-_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [automatic-flag clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544), [DDS target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [resource-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
+_Source decisions: [accepted targeted interaction coverage](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [issue 27 complete-matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [accepted review-driven coverage clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [split-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [automatic-flag clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179544), [DDS target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [resource-limit clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179557), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [Windows-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819), [filesystem-source-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812829), [directory-order review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812837), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-CONF-010
 

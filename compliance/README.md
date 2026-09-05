@@ -56,13 +56,15 @@ manifest with `schemaVersion: 1` and an `entries` array. Each entry contains `pa
 to project artifacts, inventoried dependencies/native containers or payloads, and named evidence
 classes (license, notice, release notes, SBOM, provenance, checksum, or documentation). Dependency
 and native sources must reconcile to their approved inventory identity; evidence sources must name
-an existing repository file.
+an existing repository file with exactly the same bytes.
 
 The verifier requires an exact two-way match: every file is manifested, every manifest entry
 exists, and every digest matches. It recursively opens JAR/ZIP inputs through a bounded depth and
 size, rejects unsafe or duplicate entry names, and applies the proprietary/native checks to nested
 bytes before general manifest accounting. The generated SBOM is reconciled in both directions so
 an uninventoried transitive runtime component fails even when every direct dependency is approved.
-When `jbsa-dist/target/release-inputs` exists, the normal Maven verification automatically audits it
-against `jbsa-dist/target/release-inputs.json`; callers can supply the same pair explicitly for any
-other staging location.
+The final `jbsa-dist` verification stages current reactor outputs and compliance evidence, then
+requires `jbsa-dist/target/release-inputs` and `jbsa-dist/target/release-inputs.json` explicitly.
+Missing assembly inputs fail rather than skipping this audit. Standalone callers supply both
+paths explicitly for any staging location; the root repository audit does not consume stale
+staging from an earlier build.

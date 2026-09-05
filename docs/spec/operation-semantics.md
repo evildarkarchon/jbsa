@@ -105,8 +105,13 @@ Provider types, messages, native codes, and implementation details **MUST**
 remain causes rather than public semantic data. `RESOURCE_LIMIT` **MUST NOT** be
 introduced as an additional Failure Kind; a limit breach is `POLICY` with a
 stable resource-limit diagnostic.
+That diagnostic **MUST** use identifier `operation.resource-limit` and `ERROR`
+severity, located at the affected logical input or artifact when one exists
+and otherwise at the operation. Its structured values **MUST** include the
+Resource Limit field name, configured ceiling, and observed value using
+unsigned decimal integers for the numeric values.
 
-_Source decisions: [accepted Failure Kind taxonomy](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted resource-bound execution](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
+_Source decisions: [accepted Failure Kind taxonomy](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted resource-bound execution](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-OPS-005
 
@@ -132,12 +137,21 @@ deterministic truncation diagnostic containing the observed omitted count and
 whether additional unseen records may exist; exact capacity bookkeeping remains
 internal.
 
+The truncation diagnostic **MUST** use identifier `operation.records-truncated`
+and `WARNING` severity, once per operation, located at the operation. Its
+structured values **MUST** separately retain `omittedDiagnostics` and
+`omittedSecondaryFailures` as unsigned decimal counts, and
+`additionalDiagnosticsMayExist` and `additionalSecondaryFailuresMayExist` as
+the lowercase strings `true` or `false`. A class with no omitted or potentially
+unseen records **MUST** use `0` and `false`. This single reserved summary record
+**MUST NOT** itself be dropped or recursively counted as an omitted diagnostic.
+
 For an atomic-set operation, a Diagnostic Policy rejection **MUST** prevent
 Publication Commit. For existing-tree extraction, a rejection discovered after
 earlier per-file commits **MAY** retain those files and **MUST** report their
 Artifact States.
 
-_Source decision: [accepted diagnostic and warning-policy contract](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Source decisions: [accepted diagnostic and warning-policy contract](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-OPS-006
 

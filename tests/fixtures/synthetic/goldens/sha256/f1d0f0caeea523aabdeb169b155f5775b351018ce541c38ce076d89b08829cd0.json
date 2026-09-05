@@ -1,18 +1,1 @@
-{
-  "archive_family": "sf-gnrl-v3-m3",
-  "wire_version": 3,
-  "compression_method": 3,
-  "subtype": "GNRL",
-  "entries": [
-    {
-      "name": "data\\stored.txt",
-      "compression": "stored",
-      "payload_utf8": "plain\n"
-    },
-    {
-      "name": "data\\compressed.txt",
-      "compression": "raw-lz4",
-      "payload_utf8": "compressed\n"
-    }
-  ]
-}
+{"archive_family":"sf-gnrl-v3-m3","wire_version":3,"compression_method":3,"subtype":"GNRL","entries":[{"name":"data\\stored.txt","compression":"stored","payload_utf8":"plain\n"},{"name":"data\\compressed.txt","compression":"raw-lz4","payload_utf8":"compressed\n"}]}
