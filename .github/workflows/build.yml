@@ -37,11 +37,13 @@ jobs:
           - architecture
           - formatting
           - policy
+          - conformance
 
     steps:
       - name: Check out source without the Reference Snapshot submodule
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          fetch-depth: 0
           persist-credentials: false
           submodules: false
 
@@ -58,6 +60,40 @@ jobs:
           # Temurin's LTS catalog suffix is part of the exact SemVer build metadata.
           java-version: '25.0.4+7.0.LTS'
 
+      - name: Verify immutable case history and deliberate golden rebaselines
+        if: matrix.gate == 'conformance'
+        shell: pwsh
+        env:
+          JBSA_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if ($env:JBSA_BASE_REVISION -cnotmatch '^[0-9a-f]{40}$' -or $env:JBSA_BASE_REVISION -eq ('0' * 40)) {
+            throw 'An exact historical revision is required for the rebaseline audit.'
+          }
+          git cat-file -e "$env:JBSA_BASE_REVISION^{commit}"
+          if ($LASTEXITCODE -ne 0) { throw 'Historical commit is unavailable.' }
+          $entry = git ls-tree $env:JBSA_BASE_REVISION -- tests/conformance/catalog.json
+          if ($LASTEXITCODE -ne 0) { throw 'Historical catalog lookup failed.' }
+          New-Item -ItemType Directory -Path target -Force | Out-Null
+          $baseline = if ($entry) {
+            git show "${env:JBSA_BASE_REVISION}:tests/conformance/catalog.json"
+          } else {
+            '{"schema_version":1,"contract":"conformance-v1","cases":[]}'
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Historical catalog could not be read.' }
+          $baseline | Set-Content -LiteralPath target/conformance-baseline.json -Encoding utf8
+          .\build\verify-conformance-rebaseline.ps1 -BaselineCatalog target/conformance-baseline.json
+
       - name: Run ${{ matrix.gate }} gate
         shell: pwsh
         run: .\build\run-ci-gate.ps1 -Gate '${{ matrix.gate }}'
+
+      - name: Retain per-case conformance evidence
+        if: always() && matrix.gate == 'conformance'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: conformance-v1-hosted-evidence
+          path: |
+            target/conformance/**
+            target/conformance-check-*.log
+            jbsa-conformance-tests/target/failsafe-reports/**
+          if-no-files-found: error

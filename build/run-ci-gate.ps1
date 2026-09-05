@@ -3,7 +3,7 @@
 Runs one deterministic JBSA build gate with the checked-in Maven wrapper.
 
 .PARAMETER Gate
-The compile, unit, architecture, formatting, or policy gate to run.
+The compile, unit, architecture, formatting, policy, or conformance harness gate to run.
 
 .NOTES
 These gates produce hosted build evidence only. They do not perform or claim Release Qualification.
@@ -11,7 +11,7 @@ These gates produce hosted build evidence only. They do not perform or claim Rel
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('compile', 'unit', 'architecture', 'formatting', 'policy')]
+    [ValidateSet('compile', 'unit', 'architecture', 'formatting', 'policy', 'conformance')]
     [string] $Gate
 )
 
@@ -27,6 +27,7 @@ $mavenArguments = switch ($Gate) {
     'architecture' { @('-B', '-ntp', '-C', '-Dgroups=architecture', 'verify') }
     'formatting' { @('-B', '-ntp', '-C', 'spotless:check') }
     'policy' { @('-B', '-ntp', '-C', '-Dgroups=build-policy', 'verify') }
+    'conformance' { @('-B', '-ntp', '-C', '-Dgroups=conformance-harness', 'verify') }
 }
 
 Push-Location $reactorRoot
@@ -34,6 +35,13 @@ try {
     & $mavenWrapper @mavenArguments
     if ($LASTEXITCODE -ne 0) {
         throw "The $Gate Maven gate failed with exit code $LASTEXITCODE."
+    }
+
+    if ($Gate -eq 'conformance') {
+        & pwsh -NoLogo -NoProfile -NonInteractive -File (Join-Path $PSScriptRoot 'run-conformance.ps1') -RepositoryRoot $reactorRoot -OutputDirectory 'target/conformance'
+        # Issue #31 verifies the harness; #50 enables the product claim gate after the archive slices.
+        # Exit 1 still publishes every blocked case, and never becomes an Automated Conformance claim.
+        if ($LASTEXITCODE -notin @(0, 1)) { throw 'Conformance inventory or evidence reporting is invalid.' }
     }
 
     if ($Gate -eq 'policy') {

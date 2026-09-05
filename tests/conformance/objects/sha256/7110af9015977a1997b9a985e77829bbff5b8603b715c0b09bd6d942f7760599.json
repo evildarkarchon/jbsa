@@ -1,0 +1,54 @@
+{
+  "kind": "fixture-or-scenario-descriptor",
+  "token": "source-splitting",
+  "description": "Splitting on and off, crossing the 2 GiB BSA target",
+  "binding": {
+    "state": "available",
+    "files": [
+      {
+        "path": "tests/fixtures/synthetic/artifacts/scenarios/split-boundaries.json",
+        "sha256": "a4227e62a3e43f5c1c35042996da168d80273d83d9f64dd10423780de7b12c29"
+      }
+    ],
+    "generator": {
+      "id": "jbsa-synthetic-fixture-generator",
+      "version": "1",
+      "configuration": {
+        "procedure": "Describe virtual entries around the 2 GiB BSA target using SHA-256(UTF-8(seed) || uint64-le(counter)) blocks starting at counter zero; concatenate and truncate to entry size.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {
+          "algorithm": "repeat-sha256-counter-v1",
+          "large_payload_policy": "virtual-recipe-only",
+          "seed_prefix": "jbsa-split-boundaries-v1/"
+        }
+      },
+      "recipe_sha256": "627ea18291874dd4675238b95ba09ccc2a70b7582d9dd11079b5c4fdf2d7acfe",
+      "descriptor": {
+        "path": "tests/fixtures/synthetic/generator.json",
+        "sha256": "efca538ab2357f4253c93d0004382b2e1d676569a1ab79c79eb633083eec3a22"
+      },
+      "implementation": {
+        "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/FixtureCorpusGenerator.java",
+        "sha256": "ee33c5b01f32cb46321a138ab71498f400df33a1f6154e986be1f8f88be01cac"
+      }
+    },
+    "provenance": {
+      "fixture_id": "split-boundaries",
+      "manifest": {
+        "path": "tests/fixtures/synthetic/manifest.json",
+        "sha256": "f674df5c134b9e26782c860c875b4eb37644f59ad7c1f852fb9d6db751ce0216"
+      },
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "source": "project-authored generator recipe split-boundaries",
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null
+    },
+    "missing_reason": null
+  },
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0",
+    "source": "Project-authored conformance-v1 scenario assignment; this descriptor is not archive bytes or successful evidence."
+  }
+}
