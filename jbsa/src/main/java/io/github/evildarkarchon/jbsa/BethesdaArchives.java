@@ -1,9 +1,8 @@
 package io.github.evildarkarchon.jbsa;
 
+import io.github.evildarkarchon.jbsa.internal.io.ArchiveInput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -34,17 +33,18 @@ public final class BethesdaArchives {
    *
    * @param path source file, opened and closed within this call
    * @return detached recognition, without an Archive Disposition or an encode-support claim
-   * @throws ArchiveException on source I/O failure
+   * @throws ArchiveException on source I/O failure or unavailable input-sharing capability
    */
   public ArchiveDetection detect(Path path) throws ArchiveException {
     Objects.requireNonNull(path, "path");
     // The largest identifying selector is the Starfield v3 method at offset 32. Never read
     // payloads.
-    ByteBuffer prefix = ByteBuffer.allocate(36);
-    try (SeekableByteChannel source = Files.newByteChannel(path)) {
-      while (prefix.hasRemaining() && source.read(prefix) != -1) {
-        // Filesystem channels advance the bounded prefix until full or EOF.
-      }
+    ByteBuffer prefix;
+    try (ArchiveInput source = ArchiveInput.open(path, Operation.DETECT)) {
+      prefix = ByteBuffer.allocate((int) Math.min(36L, source.size()));
+      source.readExact(0, prefix);
+    } catch (ArchiveException cause) {
+      throw cause;
     } catch (IOException cause) {
       throw failure(Operation.DETECT, FailureKind.SOURCE, "operation.source-io", path, cause);
     }

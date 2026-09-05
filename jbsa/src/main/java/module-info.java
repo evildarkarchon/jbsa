@@ -5,5 +5,7 @@
  * module.
  */
 module io.github.evildarkarchon.jbsa {
+  requires jdk.unsupported;
+
   exports io.github.evildarkarchon.jbsa;
 }

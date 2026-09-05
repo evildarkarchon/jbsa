@@ -179,7 +179,9 @@ final class BuildPolicyIT {
   void productionPomsKeepBuildSupportOutsideTheProductGraph() throws Exception {
     Element library = parse(reactorRoot().resolve("jbsa/pom.xml")).getDocumentElement();
     assertTrue(
-        dependencies(library).isEmpty(), "The library skeleton must not have runtime dependencies");
+        dependencies(library).stream()
+            .allMatch(dependency -> "test".equals(directText(dependency, "scope"))),
+        "Library-local tests must not introduce product runtime dependencies");
 
     Element cli = parse(reactorRoot().resolve("jbsa-cli/pom.xml")).getDocumentElement();
     List<Element> cliDependencies = dependencies(cli);

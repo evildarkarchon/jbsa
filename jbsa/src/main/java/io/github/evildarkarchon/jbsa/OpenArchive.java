@@ -9,7 +9,8 @@ import java.io.IOException;
  * <p>The parent must outlive every child. Closing is idempotent and linearizable: it prevents new
  * content channels, invalidates and closes existing children, and closes the shared backing handle.
  * Detached metadata remains usable afterward. This is a returned capability, not a storage adapter;
- * no public operation accepts caller implementations. The backing implementation follows in #34.
+ * no public operation accepts caller implementations. Archive Family parsers populate the internal
+ * bounded index and share its parent-owned backing implementation.
  */
 public interface OpenArchive extends AutoCloseable {
   /** Returns the immutable structural inspection, also usable after this archive closes. */

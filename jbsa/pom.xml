@@ -16,6 +16,14 @@
   <description>Independently authored Java support for Bethesda Archives, informed by the pinned TES5Edit Reference Snapshot at fd1e36020b2b5b6217e553dc0038983146a2e2dd.</description>
   <url>https://github.com/evildarkarchon/jbsa</url>
 
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>

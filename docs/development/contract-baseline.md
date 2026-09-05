@@ -31,6 +31,11 @@ closes its input, reads at most 36 bytes, retains observed selectors, and distin
 incomplete, supported-family, and unsupported-variant recognition. Extensions are irrelevant.
 Source I/O errors use checked `ArchiveException` with `SOURCE` and the original cause.
 
+Issue #34 supplies the [bounded positional I/O substrate](positional-io.md), including
+Windows deny-write/delete detection handles and internal owned stored-content lifetimes.
+Unavailable sharing capability fails explicitly; the later Archive Family slices integrate
+their parsers with the eager index and lazy content implementation.
+
 `inspect(Path)`, `inspect(Path, OpenOptions)`, `open(Path, OpenOptions)`,
 `extract(ExtractRequest, OperationControl)`, and `pack(PackRequest, OperationControl)` are callable
 baseline entry points. Until family execution is implemented, they report `CAPABILITY` with
