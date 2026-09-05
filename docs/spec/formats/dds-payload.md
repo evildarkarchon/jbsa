@@ -45,6 +45,8 @@ DDS BA2 encode **MUST** require `DDS ` magic, all bytes of the inferred envelope
 [JBSA-DDS-012](#jbsa-dds-012), and payload bounds computable with checked arithmetic.
 A parseable legacy size deviation **MAY** be inspected as Tolerated Noncanonical
 with a stable diagnostic, but **MUST NOT** be emitted.
+Each deviating legacy size field **MUST** use `dds.legacy-header-size` with
+`WARNING` severity, its field location, and stored and expected size values.
 
 DDS BA2 encode **MUST** use only the `PackRequest` `DdsTarget` selected under
 [JBSA-LIB-007](../library-interface.md#jbsa-lib-007) and **MUST NOT** infer or
@@ -57,7 +59,7 @@ resource with depth one and array size one, including the six faces represented
 by the cubemap flag. Broader shapes remain unsupported until a fixture-backed
 rule preserves their semantics.
 
-_Source decisions: [accepted Reference Snapshot DDS validation](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
+_Source decisions: [accepted Reference Snapshot DDS validation](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted validation semantics](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-DDS-003
 
@@ -140,20 +142,10 @@ _Source decision: [accepted Reference Snapshot DDS chunking](https://github.com/
 
 ## JBSA-DDS-007
 
-Starting after the inferred input header, canonical partitioning **MUST** compute
-the first isolated mip byte count as `width * height * bitsPerPixel / 8` with
-checked arithmetic. Every nonfinal chunk **MUST** contain one mip; its successor
-size is the preceding isolated size divided by four using integer division. The
-final chunk **MUST** consume the exact remaining payload and cover every
-remaining mip. Each resulting chunk is compressed independently under
-[JBSA-DX10-004](dds-ba2.md#jbsa-dx10-004).
-
-If this reference formula disagrees with a validated DDS subresource layout,
-including block minimums or odd dimensions, encode **MUST NOT** read outside the
-source or invent a boundary. That input remains unsupported until a fixture
-qualifies a canonical rule.
-
-_Source decisions: [accepted Reference Snapshot DDS partitioning](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted safe validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777)._
+_Retired in specification 0.12.0 by [issue #24](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183).
+The bits-per-pixel and divide-by-four partition rule excluded required small and
+odd-dimension BC encode cases. [JBSA-DDS-013](#jbsa-dds-013) replaces it with
+dimensions-derived mip boundaries._
 
 ## JBSA-DDS-008
 
@@ -264,12 +256,47 @@ allow-list. A bits-per-pixel value alone **MUST NOT** imply DDS support.
 
 _Source decisions: [accepted Reference Snapshot DDS behavior and fixture boundary](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted DDS-envelope strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
 
+## JBSA-DDS-013
+
+Starting after the inferred input header and any normalization under
+[JBSA-DDS-005](#jbsa-dds-005), canonical partitioning **MUST** compute each mip's
+byte count independently from its dimensions. For mip zero, `w = width` and
+`h = height`; for each following mip, `w = max(1, w / 2)` and
+`h = max(1, h / 2)`, using unsigned integer division. The byte count **MUST** be:
+
+- for `BC1_*` and `BC4_*` formats admitted by
+  [JBSA-DDS-012](#jbsa-dds-012), `(1 + (w - 1) / 4) * (1 + (h - 1) / 4) * 8`;
+- for every other admitted BC format, the same block count multiplied by 16;
+  and
+- for an admitted uncompressed format, `w * h * bitsPerPixel / 8`, using
+  [JBSA-DDS-004](#jbsa-dds-004).
+
+All arithmetic **MUST** be checked. Each dimension is clamped independently;
+an encoder **MUST NOT** derive a mip's size by dividing the preceding byte
+count by four. Thus one `1x1` BC1 mip occupies 8 bytes and one `5x7` BC1 mip
+occupies 32 bytes; the corresponding 16-byte-block formats occupy 16 and 64
+bytes.
+
+The chunk count **MUST** follow [JBSA-DDS-006](#jbsa-dds-006). For a non-cubemap,
+every nonfinal chunk **MUST** contain exactly one successive mip and the final
+chunk **MUST** contain all remaining mips. Their cumulative byte counts
+**MUST** define contiguous source spans. A cubemap's single chunk **MUST**
+contain the six complete face mip chains in source order, each with the same
+dimensions-derived chain byte count. The payload length **MUST** equal the sum
+of all required mip byte counts, multiplied by six for a cubemap; missing,
+truncated, or extra payload bytes **MUST** fail validation before destination
+effects. A source span **MUST NOT** extend outside the validated payload.
+Each resulting chunk **MUST** be compressed independently under
+[JBSA-DX10-004](dds-ba2.md#jbsa-dx10-004).
+
+_Source decisions: [accepted safe validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [DDS partition review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3930412040), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
+
 ## Fixture-dependent unknowns
 
-The encode-partition first-mip formula does not explicitly round BC formats to
-minimum 4-by-4 blocks and then divides subsequent isolated mips by four.
-Semantic equivalence for tiny, nonsquare, non-power-of-two, cubemap,
-missing-mip, and truncated encode cases remains fixture-dependent. Unusual DXGI
+Canonical small and odd-dimension mip boundaries are defined by
+[JBSA-DDS-013](#jbsa-dds-013). Their differential game/tool acceptance remains
+subject to the required conformance fixtures; the Reference Snapshot's
+bits-per-pixel shortcut does not override those boundaries. Unusual DXGI
 values remain outside the writable allow-list, and arrays and volumes remain
 explicitly unsupported by
 [JBSA-DDS-002](#jbsa-dds-002).

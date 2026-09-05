@@ -42,8 +42,13 @@ Every version `7`/`8` encode request **MUST** fail as unsupported before
 destination effects. Version `3` with a method other than `3` **MUST** be
 unsupported by default and **MUST NOT** be emitted. A qualified Compatibility
 Profile may attempt the Reference Snapshot's zlib fallback with a diagnostic.
+Whenever that qualified fallback is attempted for General or DDS BA2, it
+**MUST** emit `ba2.sf3-zlib-fallback` with `WARNING` severity once per archive,
+located at `compressionMethod` and retaining its stored value. This assigns the
+diagnostic for the existing Compatibility Deviation without changing its
+activation or validation rules.
 
-_Source decisions: [accepted format and codec matrix](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted codec strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
+_Source decisions: [accepted format and codec matrix](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted codec strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-GNRL-003
 
@@ -133,7 +138,14 @@ Compatibility Profile, decode **MUST NOT** make that canonicality judgment for a
 name containing a byte greater than `0x7f`; its stored hashes and extension bytes
 remain authoritative.
 
-_Source decisions: [accepted Reference Snapshot BA2 hashing](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted tolerated-noncanonical policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+For General and DDS BA2, each mismatching field **MUST** emit one `WARNING`
+diagnostic at that entry's field: `ba2.directory-hash-mismatch` for
+`directoryHash`, `ba2.basename-hash-mismatch` for `baseNameHash`, and
+`ba2.extension-mismatch` for the four extension bytes. Stored and expected
+values **MUST** follow
+[JBSA-OPS-005](../operation-semantics.md#jbsa-ops-005).
+
+_Source decisions: [accepted Reference Snapshot BA2 hashing](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted tolerated-noncanonical policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-GNRL-008
 
@@ -164,7 +176,12 @@ Canonical encode **MUST** reject an unresolved synthetic name until the caller
 supplies an explicit complete name. Decode **MUST NOT** perform an unchecked
 seek.
 
-_Source decisions: [accepted Reference Snapshot name-table behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted noncanonical name-table policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947)._
+For General and DDS BA2, this absent-table condition **MUST** emit exactly one
+`ba2.missing-name-table` diagnostic per archive, with `WARNING` severity,
+located at `fileNameTableOffset` and retaining its stored value. The synthetic
+entries **MUST NOT** each duplicate that archive-level diagnostic.
+
+_Source decisions: [accepted Reference Snapshot name-table behavior](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted noncanonical name-table policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [undecodable-wire-name review](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812807), [accepted `0.9.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-GNRL-009
 
@@ -201,7 +218,21 @@ interpretation remain unambiguous. None of those values is valid encoder output.
 Unsafe absolute or traversal names remain inspectable but ineligible for
 extraction.
 
-_Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+The remaining noncanonical conditions in this section **MUST** use `WARNING`
+severity and the following identifiers. Stored and expected values **MUST**
+follow [JBSA-OPS-005](../operation-semantics.md#jbsa-ops-005). The extra-header
+and trailing-data rows also apply to DDS BA2; the record-specific rows apply
+only to General BA2.
+
+| Condition | Diagnostic identifier | Scope and structured location |
+| --- | --- | --- |
+| Safely ignored Starfield extra-header value other than one | `ba2.extra-header-value` | Once per archive, at `unknownValueAt24` |
+| Nonzero mod index | `gnrl.nonzero-mod-index` | Once per affected entry, at its mod-index field |
+| Non-16 chunk-header size | `gnrl.chunk-header-size` | Once per affected entry, at its chunk-header-size field |
+| Non-`0xBAADF00D` sentinel | `gnrl.sentinel-mismatch` | Once per affected entry, at its sentinel field |
+| Harmless trailing data | `ba2.trailing-data` | Once per archive, at the complete trailing byte span |
+
+_Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-GNRL-011
 

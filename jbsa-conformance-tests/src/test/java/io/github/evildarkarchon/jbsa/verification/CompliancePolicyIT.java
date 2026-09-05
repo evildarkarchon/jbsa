@@ -107,6 +107,29 @@ final class CompliancePolicyIT {
   }
 
   /**
+   * Exercises promotion, byte provenance, tracked-file enumeration, and reference pinning against
+   * owned temporary repositories without checking out or writing the reference submodule.
+   *
+   * @throws Exception if the regression script cannot run or any policy decision is incorrect
+   */
+  @Test
+  void complianceDecisionsRejectForgedEvidenceAndAcceptApprovedInputs() throws Exception {
+    AuditResult result =
+        runAuditProcess(
+            List.of(
+                "pwsh",
+                "-NoLogo",
+                "-NoProfile",
+                "-NonInteractive",
+                "-File",
+                reactorRoot().resolve("build/test-compliance.ps1").toString()),
+            reactorRoot(),
+            Map.of(),
+            "Compliance policy regressions");
+    assertEquals(0, result.exitCode(), result.output());
+  }
+
+  /**
    * Runs a process with bounded execution and captures merged output without risking pipe blockage.
    *
    * @param command executable and arguments to run

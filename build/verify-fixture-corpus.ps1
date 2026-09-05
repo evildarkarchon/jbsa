@@ -895,41 +895,31 @@ function Test-FixtureSchemaContract {
 
 <#
 .SYNOPSIS
-Rejects unaccounted regular files or reparse points in fixture-object storage.
+Rejects unaccounted regular files or reparse points anywhere in the synthetic corpus.
 
 .PARAMETER Root
 Canonical corpus root.
 
-.PARAMETER RelativeDirectory
-Manifest-relative object-store directory to enumerate.
-
 .PARAMETER AccountedPaths
-Case-insensitive set of paths accounted for by fixture and golden records.
+Case-insensitive set of paths accounted for by fixture and golden records or exact supporting files.
 
 .OUTPUTS
 None.
 
 .NOTES
-Only object-store directories are closed inventories; metadata and documentation elsewhere in the
-corpus intentionally remain outside this check.
+The complete tree is a closed inventory so the CC0 directory policy cannot cover unknown payloads.
 #>
-function Test-AccountedObjectDirectory {
+function Test-AccountedCorpus {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Root,
         [Parameter(Mandatory = $true)]
-        [string] $RelativeDirectory,
-        [Parameter(Mandatory = $true)]
         [System.Collections.Generic.HashSet[string]] $AccountedPaths
     )
 
-    $directory = Resolve-CorpusPath $Root $RelativeDirectory "$RelativeDirectory object store"
-    if (-not (Test-Path -LiteralPath $directory -PathType Container)) {
-        throw "Missing fixture object store: $RelativeDirectory"
-    }
-    foreach ($item in @(Get-ChildItem -LiteralPath $directory -Recurse -Force)) {
+    foreach ($item in @(Get-ChildItem -LiteralPath $Root -Recurse -Force)) {
         if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
-            throw "Fixture object stores must not contain reparse points: $($item.FullName)"
+            throw "Fixture corpus must not contain reparse points: $($item.FullName)"
         }
         if (-not $item.PSIsContainer) {
             $relativePath = [System.IO.Path]::GetRelativePath($Root, $item.FullName).Replace('\', '/')
@@ -1254,8 +1244,21 @@ foreach ($fixtureId in $requiredIndependentFixtureIds) {
     }
 }
 
-Test-AccountedObjectDirectory $corpusFullPath 'artifacts' $accountedPaths
-Test-AccountedObjectDirectory $corpusFullPath 'goldens/sha256' $accountedPaths
+# Only these exact support paths are exempt from per-object provenance; filenames in other
+# directories must still be accounted for, including nested README or schema lookalikes.
+foreach ($supportPath in @(
+    'README.md',
+    'fixture-manifest.schema.json',
+    'generator.schema.json',
+    'rebaseline-record.schema.json',
+    'manifest.json',
+    'generator.json',
+    'goldens/README.md',
+    'goldens/index.json'
+)) {
+    [void] $accountedPaths.Add($supportPath)
+}
+Test-AccountedCorpus $corpusFullPath $accountedPaths
 
 $reactorRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $committedCorpusRoot = [System.IO.Path]::GetFullPath(

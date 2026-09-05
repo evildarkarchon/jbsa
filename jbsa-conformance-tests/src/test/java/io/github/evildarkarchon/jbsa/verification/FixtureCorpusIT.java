@@ -11,7 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -147,6 +149,19 @@ final class FixtureCorpusIT {
       Path committed = reactorRoot().resolve("tests/fixtures/synthetic");
       List<Path> generatedFiles = relativeFiles(generated);
       assertTrue(generatedFiles.size() > 10, "Expected a nontrivial generated fixture corpus");
+      Set<Path> supportingFiles =
+          Set.of(
+              Path.of("README.md"),
+              Path.of("goldens/README.md"),
+              Path.of("fixture-manifest.schema.json"),
+              Path.of("generator.schema.json"),
+              Path.of("rebaseline-record.schema.json"));
+      assertEquals(
+          generatedFiles,
+          relativeFiles(committed).stream()
+              .filter(path -> !supportingFiles.contains(path))
+              .toList(),
+          "Committed corpus contains objects absent from the generator");
       for (Path relativePath : generatedFiles) {
         assertEquals(
             -1L,
@@ -158,6 +173,89 @@ final class FixtureCorpusIT {
     } finally {
       deleteTree(temporaryRoot);
     }
+  }
+
+  /**
+   * Rejects unmanifested payloads anywhere in the corpus, including hidden files and metadata
+   * folders.
+   *
+   * @throws Exception if staging or audit execution fails
+   */
+  @Test
+  void fixtureAuditRejectsObjectsOutsideObjectStores() throws Exception {
+    Path temporaryRoot = Files.createTempDirectory("jbsa-fixture-unaccounted-");
+    try {
+      Path staged = temporaryRoot.resolve("synthetic");
+      FixtureCorpusGenerator.materialize(staged);
+      Path committed = reactorRoot().resolve("tests/fixtures/synthetic");
+      for (String schema :
+          List.of(
+              "fixture-manifest.schema.json",
+              "generator.schema.json",
+              "rebaseline-record.schema.json")) {
+        Files.copy(committed.resolve(schema), staged.resolve(schema));
+      }
+      AuditResult clean = runFixtureAudit(staged);
+      assertEquals(0, clean.exitCode(), clean.output());
+      for (String relative :
+          List.of(
+              "rogue.bin",
+              "other/rogue.bin",
+              "goldens/rogue.bin",
+              "schemas/README.md",
+              ".hidden-vector.bin")) {
+        Path rogue = staged.resolve(relative);
+        Files.createDirectories(rogue.getParent());
+        Files.writeString(rogue, "unmanifested third-party vector", StandardCharsets.UTF_8);
+        if (relative.startsWith(".")
+            && Files.getFileStore(rogue).supportsFileAttributeView("dos")) {
+          Files.setAttribute(rogue, "dos:hidden", true);
+        }
+        AuditResult result = runFixtureAudit(staged);
+        assertNotEquals(0, result.exitCode(), result.output());
+        assertTrue(
+            result.output().contains("Unaccounted fixture object: " + relative), result.output());
+        Files.delete(rogue);
+      }
+    } finally {
+      deleteTree(temporaryRoot);
+    }
+  }
+
+  /**
+   * Verifies published payload vectors, block boundaries, and offsets beyond signed 32-bit size.
+   */
+  @Test
+  void virtualSplitPayloadSlicesMatchIndependentSha256Vectors() {
+    String seed = "jbsa-split-boundaries-v1/data/near.bin";
+    assertEquals(
+        "fc321a5ccb27f2e0d1d2c103ea9fdb30080ab9a4385ad0a887752fa0289ab351"
+            + "7f3a445918f26a87eaa80fe6f7c913eb284f6c31c0a75940fd2716b872f7c666",
+        HexFormat.of().formatHex(FixtureCorpusGenerator.virtualPayloadSlice(seed, 0, 64)));
+    assertEquals(
+        "9ab3517f3a445918",
+        HexFormat.of().formatHex(FixtureCorpusGenerator.virtualPayloadSlice(seed, 29, 8)));
+    assertEquals(
+        "c68d9451bfc52330d2e9",
+        HexFormat.of()
+            .formatHex(FixtureCorpusGenerator.virtualPayloadSlice(seed, 2147483645L, 10)));
+    assertEquals(
+        "ca9f583321757a7ca9001dd9b85613b9c5fafb3ccb1e009a2b61a3db9e9d857f",
+        HexFormat.of()
+            .formatHex(
+                FixtureCorpusGenerator.virtualPayloadSlice(
+                    "jbsa-split-boundaries-v1/data/crossing.bin", 0, 32)));
+    assertArrayEquals(
+        new byte[0], FixtureCorpusGenerator.virtualPayloadSlice(seed, Long.MAX_VALUE, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> FixtureCorpusGenerator.virtualPayloadSlice(seed, -1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> FixtureCorpusGenerator.virtualPayloadSlice(seed, 0, -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> FixtureCorpusGenerator.virtualPayloadSlice(seed, Long.MAX_VALUE, 1));
   }
 
   /**

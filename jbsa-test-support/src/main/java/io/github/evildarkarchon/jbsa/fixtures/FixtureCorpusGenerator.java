@@ -69,6 +69,50 @@ public final class FixtureCorpusGenerator {
   }
 
   /**
+   * Materializes a bounded slice of {@code repeat-sha256-counter-v1}. Block {@code n} is
+   * SHA-256(UTF-8(seed) || uint64-little-endian(n)); concatenate blocks starting at zero and
+   * truncate at the scenario entry's declared size. No separator or terminator is added to the
+   * seed. Calls are independent, and memory use is proportional to the requested slice only.
+   *
+   * @param seed exact seed string recorded for the scenario entry
+   * @param offset zero-based payload byte offset, independent of the requested slice length
+   * @param length number of bytes to return; callers must stay within the entry's declared size
+   * @return newly allocated slice, including an empty array for a zero-length request
+   * @throws NullPointerException if the seed is null
+   * @throws IllegalArgumentException if the range is negative or its exclusive end exceeds
+   *     Long.MAX_VALUE
+   */
+  public static byte[] virtualPayloadSlice(String seed, long offset, int length) {
+    Objects.requireNonNull(seed, "seed");
+    if (offset < 0 || length < 0 || offset > Long.MAX_VALUE - length) {
+      throw new IllegalArgumentException("Virtual payload range must fit in a nonnegative long");
+    }
+    byte[] output = new byte[length];
+    byte[] seedBytes = seed.getBytes(StandardCharsets.UTF_8);
+    ByteBuffer counterBytes = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+    MessageDigest digest;
+    try {
+      digest = MessageDigest.getInstance("SHA-256");
+    } catch (NoSuchAlgorithmException exception) {
+      throw new IllegalStateException("The Java runtime must support SHA-256", exception);
+    }
+    long counter = offset / 32;
+    int blockOffset = (int) (offset % 32);
+    int written = 0;
+    while (written < length) {
+      counterBytes.putLong(0, counter++);
+      digest.update(seedBytes);
+      byte[] block = digest.digest(counterBytes.array());
+      int count = Math.min(block.length - blockOffset, length - written);
+      System.arraycopy(block, blockOffset, output, written, count);
+      written += count;
+      // Only the first block may start partway through a digest; subsequent blocks are whole.
+      blockOffset = 0;
+    }
+    return output;
+  }
+
+  /**
    * Ensures normal materialization never replaces an existing fixture or golden object.
    *
    * @param outputRoot absent path or existing directory to validate
@@ -238,13 +282,19 @@ public final class FixtureCorpusGenerator {
         textFixture(
             "split-boundaries",
             List.of("split", "boundary", "resource-limit"),
-            "Describe virtual entries around the 2 GiB BSA target without committing giant payloads.",
-            "scenario|split|target=2147483647|algorithm=repeat-sha256-counter|sizes=2147483400,64,2147483648",
+            "Describe virtual entries around the 2 GiB BSA target using SHA-256(UTF-8(seed) || uint64-le(counter)) blocks starting at counter zero; concatenate and truncate to entry size.",
+            "scenario|split|target=2147483647|algorithm=repeat-sha256-counter-v1|seed-prefix=jbsa-split-boundaries-v1/|entries=data/near.bin:2147483400,data/crossing.bin:64,data/oversized.bin:2147483648",
             "artifacts/scenarios/split-boundaries.json",
             """
-                                {"materialization":"virtual","algorithm":"repeat-sha256-counter-v1","split_target":2147483647,"entries":[{"name":"data/near.bin","size":2147483400},{"name":"data/crossing.bin","size":64},{"name":"data/oversized.bin","size":2147483648}],"commit_materialized_payloads":false}
+                                {"materialization":"virtual","algorithm":"repeat-sha256-counter-v1","split_target":2147483647,"entries":[{"name":"data/near.bin","seed":"jbsa-split-boundaries-v1/data/near.bin","size":2147483400},{"name":"data/crossing.bin","seed":"jbsa-split-boundaries-v1/data/crossing.bin","size":64},{"name":"data/oversized.bin","seed":"jbsa-split-boundaries-v1/data/oversized.bin","size":2147483648}],"commit_materialized_payloads":false}
                                 """,
-            Map.of("large_payload_policy", "virtual-recipe-only")));
+            Map.of(
+                "large_payload_policy",
+                "virtual-recipe-only",
+                "algorithm",
+                "repeat-sha256-counter-v1",
+                "seed_prefix",
+                "jbsa-split-boundaries-v1/")));
     fixtures.add(
         textFixture(
             "resource-limit-boundaries",

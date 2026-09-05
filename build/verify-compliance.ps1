@@ -57,15 +57,6 @@ $maximumArchiveEntryBytes = 268435456
 $maximumZipTrailerBytes = 65557
 # Four nested layers cover expected packaging while bounding adversarial archive recursion.
 $maximumArchiveDepth = 4
-$defaultReleaseInputRoot = Join-Path $reactorRoot 'jbsa-dist/target/release-inputs'
-if ([string]::IsNullOrWhiteSpace($ReleaseInputRoot) -and
-    (Test-Path -LiteralPath $defaultReleaseInputRoot -PathType Container)) {
-    # Auto-discovery prevents the normal Maven gate from silently skipping staged distribution inputs.
-    $ReleaseInputRoot = $defaultReleaseInputRoot
-    if ([string]::IsNullOrWhiteSpace($ReleaseInputManifest)) {
-        $ReleaseInputManifest = Join-Path $reactorRoot 'jbsa-dist/target/release-inputs.json'
-    }
-}
 
 <#
 .SYNOPSIS
@@ -271,11 +262,20 @@ function Assert-ProvenanceRecord {
         throw "$Context must declare a boolean redistribution.approved value."
     }
     Assert-StringProperty $Entry.redistribution 'evidence' "$Context redistribution"
-    if ($null -eq $Entry.redistribution.releaseArtifacts) {
-        throw "$Context must declare redistribution.releaseArtifacts."
+    if ($Entry.redistribution.releaseArtifacts -isnot [array]) {
+        throw "$Context must declare redistribution.releaseArtifacts as an array."
     }
 
     $releaseArtifacts = @($Entry.redistribution.releaseArtifacts)
+    $artifactNames = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($artifact in $releaseArtifacts) {
+        # Thin Maven artifacts do not embed dependency bytes; only the application ZIP may contain them.
+        if ($artifact -isnot [string] -or
+            $artifact -cnotmatch '^jbsa-cli-[0-9A-Za-z.+-]+-windows-x64\.zip$' -or
+            -not $artifactNames.Add($artifact)) {
+            throw "$Context has an invalid or duplicate releaseArtifacts containing artifact."
+        }
+    }
     if ($Entry.redistribution.approved -and $releaseArtifacts.Count -eq 0) {
         throw "$Context is redistribution-approved but names no containing release artifact."
     }
@@ -315,8 +315,15 @@ function Get-ValidatedDependencyLookup {
         if ($entry.PSObject.Properties['containsNativeBytes'].Value -isnot [bool]) {
             throw 'Dependency inventory entry must declare containsNativeBytes as a boolean.'
         }
-        Assert-StringListProperty $entry 'blockedBy' (Get-DependencyKey $entry)
         Assert-ProvenanceRecord $entry (Get-DependencyKey $entry)
+        if ($entry.redistribution.approved) {
+            if ($entry.PSObject.Properties['blockedBy'].Value -isnot [array] -or
+                @($entry.blockedBy).Count -ne 0) {
+                throw "$(Get-DependencyKey $entry) is approved and must have an empty blockedBy array."
+            }
+        } else {
+            Assert-StringListProperty $entry 'blockedBy' (Get-DependencyKey $entry)
+        }
 
         $key = Get-DependencyKey $entry
         if ($lookup.ContainsKey($key)) {
@@ -478,17 +485,27 @@ function Test-ProductDependencies {
         $pomNamespaces = New-Object System.Xml.XmlNamespaceManager($pom.NameTable)
         $pomNamespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
         foreach ($dependency in @($pom.SelectNodes('/m:project/m:dependencies/m:dependency', $pomNamespaces))) {
-            if ($dependency.groupId -eq 'io.github.evildarkarchon') {
+            $scopeNode = $dependency.SelectSingleNode('m:scope', $pomNamespaces)
+            if ($null -ne $scopeNode -and $scopeNode.InnerText.Trim() -cin @('test', 'provided')) {
                 continue
             }
-            $version = Resolve-PomVersion $dependency.version $rootPom $namespaces
-            $classifier = if ([string]::IsNullOrWhiteSpace($dependency.classifier)) {
-                ''
-            } else {
-                $dependency.classifier.Trim()
+            $versionText = $dependency.version.Trim()
+            $version = if ($versionText -cin @('${project.version}', '${revision}')) {
+                $ReactorVersion
+            } else { Resolve-PomVersion $versionText $rootPom $namespaces }
+            $classifierNode = $dependency.SelectSingleNode('m:classifier', $pomNamespaces)
+            $classifier = if ($null -eq $classifierNode) { '' } else { $classifierNode.InnerText.Trim() }
+            $typeNode = $dependency.SelectSingleNode('m:type', $pomNamespaces)
+            $packaging = if ($null -eq $typeNode) { 'jar' } else { $typeNode.InnerText.Trim() }
+            # Only the CLI's exact current library output is a production reactor dependency.
+            if ($relativePom -ceq 'jbsa-cli/pom.xml' -and
+                $dependency.groupId -ceq 'io.github.evildarkarchon' -and
+                $dependency.artifactId -ceq 'jbsa' -and $version -ceq $ReactorVersion -and
+                $packaging -ceq 'jar' -and $classifier -ceq '') {
+                continue
             }
-            $key = '{0}:{1}:jar:{2}:{3}' -f
-                $dependency.groupId.Trim(), $dependency.artifactId.Trim(), $classifier, $version
+            $key = '{0}:{1}:{2}:{3}:{4}' -f
+                $dependency.groupId.Trim(), $dependency.artifactId.Trim(), $packaging, $classifier, $version
             if (-not $DependencyLookup.ContainsKey($key)) {
                 throw "External product dependency is absent from the approved inventory: $key"
             }
@@ -602,11 +619,12 @@ Readable stream positioned at the first payload byte. The function leaves owners
 Maximum bytes permitted before inspection aborts. Defaults to the largest stream length.
 
 .OUTPUTS
-An object containing the lowercase SHA-256 digest plus native-binary and ZIP signature flags.
+An object containing the lowercase SHA-256 digest plus native, proprietary-format, and ZIP flags.
 
 .NOTES
 Consumes the stream exactly once so non-seekable ZIP entry streams receive the same content-based
-checks as regular files. PE/DOS, ELF, and unambiguous Mach-O signatures are treated as native.
+checks as regular files. PE/DOS, ELF, and unambiguous Mach-O signatures are treated as native;
+BSA, BA2, DDS, and TES3/TES4 plugin signatures identify prohibited game-format material.
 #>
 function Get-StreamPayloadInspection {
     param(
@@ -716,6 +734,9 @@ function Get-StreamPayloadInspection {
         sha256 = $hash
         isNativePayload = $isNativePayload
         isZipArchive = $isZipArchive
+        isProprietaryPayload = $headerLength -ge 4 -and $magic32 -cin @(
+            '00010000', '42534100', '42544458', '44445320', '54455333', '54455334'
+        )
     }
 }
 
@@ -1003,6 +1024,9 @@ function Test-ZipArchiveContents {
             finally {
                 $entryStream.Dispose()
             }
+            if ($inspection.isProprietaryPayload) {
+                throw "Proprietary or local fixture material is forbidden in release inputs: $qualifiedPath"
+            }
             if ($extension -in $nestedArchiveExtensions -or $inspection.isZipArchive) {
                 $nestedStream = [System.IO.MemoryStream]::new([int] $entry.Length)
                 try {
@@ -1052,9 +1076,46 @@ function Test-TrackedRepositoryBytes {
         [hashtable] $ApprovedNativeByHash
     )
 
-    $trackedFiles = @(& git -C $reactorRoot ls-files)
+    # Git's normal output quotes non-ASCII filenames and splits embedded newlines. Capture raw UTF-8
+    # NUL-delimited records so every index path resolves to the same filesystem name.
+    $git = [System.Diagnostics.ProcessStartInfo]::new('git')
+    foreach ($argument in @('-C', $reactorRoot, 'ls-files', '--stage', '-z')) {
+        $git.ArgumentList.Add($argument)
+    }
+    $git.RedirectStandardOutput = $true
+    $git.StandardOutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $git.UseShellExecute = $false
+    $process = [System.Diagnostics.Process]::Start($git)
+    try {
+        $indexRecords = $process.StandardOutput.ReadToEnd().Split([char]0, [StringSplitOptions]::RemoveEmptyEntries)
+        $process.WaitForExit()
+        if ($process.ExitCode -ne 0) {
+            throw 'Unable to enumerate tracked repository files for the compliance audit.'
+        }
+    } finally { $process.Dispose() }
+    $trackedFiles = @()
+    $referenceEntries = @()
+    foreach ($record in $indexRecords) {
+        $separator = $record.IndexOf("`t")
+        if ($separator -lt 0) { throw 'Malformed Git index record in compliance audit.' }
+        $path = $record.Substring($separator + 1)
+        $trackedFiles += $path
+        if ($path -ceq 'TES5Edit' -or $path.StartsWith('TES5Edit/', [StringComparison]::OrdinalIgnoreCase)) {
+            $referenceEntries += $record
+        }
+    }
+    if ($referenceEntries.Count -ne 1 -or
+        $referenceEntries[0] -cne "160000 fd1e36020b2b5b6217e553dc0038983146a2e2dd 0`tTES5Edit") {
+        throw 'TES5Edit must remain the pinned read-only reference gitlink.'
+    }
+    $modulePath = @(& git config --file (Join-Path $reactorRoot '.gitmodules') --get-all submodule.TES5Edit.path)
     if ($LASTEXITCODE -ne 0) {
-        throw 'Unable to enumerate tracked repository files for the compliance audit.'
+        throw 'TES5Edit reference path is missing from .gitmodules.'
+    }
+    $moduleUrl = @(& git config --file (Join-Path $reactorRoot '.gitmodules') --get-all submodule.TES5Edit.url)
+    if ($LASTEXITCODE -ne 0 -or $modulePath.Count -ne 1 -or $modulePath[0] -cne 'TES5Edit' -or
+        $moduleUrl.Count -ne 1 -or $moduleUrl[0] -cne 'https://github.com/TES5Edit/TES5Edit.git') {
+        throw 'TES5Edit reference path or URL differs from the approved pinned reference.'
     }
     foreach ($relativePath in $trackedFiles) {
         $normalizedPath = $relativePath.Replace('\', '/')
@@ -1078,9 +1139,18 @@ function Test-TrackedRepositoryBytes {
             -not $normalizedPath.StartsWith('tests/fixtures/synthetic/')) {
             throw "Proprietary or local fixture material is tracked outside the synthetic corpus: $normalizedPath"
         }
-        [void](Assert-ApprovedNativePayload `
+        $inspection = Assert-ApprovedNativePayload `
                 $trackedPath $normalizedPath 'is tracked' `
-                $extension $NativeByHash $ApprovedNativeByHash)
+                $extension $NativeByHash $ApprovedNativeByHash
+        if ($inspection.isProprietaryPayload -and -not $normalizedPath.StartsWith('tests/fixtures/synthetic/')) {
+            throw "Proprietary or local fixture material is tracked outside the synthetic corpus: $normalizedPath"
+        }
+        if ($extension -in $nestedArchiveExtensions -or $inspection.isZipArchive) {
+            $archiveStream = [System.IO.File]::OpenRead($trackedPath)
+            try {
+                Test-ZipArchiveContents $archiveStream $normalizedPath $NativeByHash $ApprovedNativeByHash
+            } finally { $archiveStream.Dispose() }
+        }
     }
 }
 
@@ -1132,7 +1202,7 @@ function Test-ReleaseInputs {
     if (-not (Test-Path -LiteralPath $resolvedRoot -PathType Container)) {
         throw "Release input root does not exist: $resolvedRoot"
     }
-    $files = @(Get-ChildItem -LiteralPath $resolvedRoot -File -Recurse)
+    $files = @(Get-ChildItem -LiteralPath $resolvedRoot -File -Recurse -Force)
     $releaseInputNames = [System.Collections.Generic.HashSet[string]]::new(
         [System.StringComparer]::OrdinalIgnoreCase
     )
@@ -1152,6 +1222,9 @@ function Test-ReleaseInputs {
         $inspection = Assert-ApprovedNativePayload `
             $file.FullName $relativePath 'in release inputs' `
             $extension $NativeByHash $ApprovedNativeByHash
+        if ($inspection.isProprietaryPayload) {
+            throw "Proprietary or local fixture material is forbidden in release inputs: $relativePath"
+        }
         $fileHashes[$relativePath] = $inspection.sha256
         if ($extension -in $nestedArchiveExtensions -or $inspection.isZipArchive) {
             $archiveStream = [System.IO.File]::OpenRead($file.FullName)
@@ -1165,7 +1238,8 @@ function Test-ReleaseInputs {
         }
     }
 
-    if ($files.Count -eq 0) {
+    # An explicit manifest remains authoritative even after every staged file has been removed.
+    if ($files.Count -eq 0 -and [string]::IsNullOrWhiteSpace($ManifestPath)) {
         return
     }
     if ([string]::IsNullOrWhiteSpace($ManifestPath)) {
@@ -1232,6 +1306,9 @@ function Test-ReleaseInputs {
                     [System.StringComparison]::OrdinalIgnoreCase
                 ) -or -not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
                 throw "Release input evidence source must be an existing repository file: $normalizedPath"
+            }
+            if ($entry.sha256 -cne (Get-LowercaseSha256 $sourcePath)) {
+                throw "Release input evidence does not match its declared source bytes: $normalizedPath"
             }
         }
         if ($manifestFiles.ContainsKey($normalizedPath)) {
@@ -1336,10 +1413,23 @@ function Test-GeneratedSbom {
         if ($matchingComponents.Count -eq 0) {
             throw "Aggregate SBOM is missing approved release dependency: $(Get-DependencyKey $entry)"
         }
+        foreach ($component in $matchingComponents) {
+            $hashProperty = $component.PSObject.Properties['hashes']
+            $hashes = if ($null -eq $hashProperty) { @() } else { @($hashProperty.Value | Where-Object { $_.alg -ceq 'SHA-256' }) }
+            if ($hashes.Count -ne 1 -or $hashes[0].content -cne $entry.sha256) {
+                throw "Aggregate SBOM dependency SHA-256 disagrees with the approved inventory: $(Get-DependencyKey $entry)"
+            }
+        }
     }
-    foreach ($component in @($components | Where-Object {
-                $_.group -cne 'io.github.evildarkarchon'
-            })) {
+    foreach ($component in $components) {
+        $reactorType = if ($component.name -ceq 'jbsa-parent') { 'pom' } else { 'jar' }
+        $reactorPurl = "pkg:maven/io.github.evildarkarchon/$($component.name)@${ReactorVersion}?type=$reactorType"
+        if ($component.group -ceq 'io.github.evildarkarchon' -and
+            $component.name -cin @('jbsa-parent', 'jbsa', 'jbsa-cli') -and
+            $component.version -ceq $ReactorVersion -and
+            $component.purl -ceq $reactorPurl) {
+            continue
+        }
         $matchingEntries = @($approvedEntries | Where-Object {
                 Test-SbomComponentMatchesDependency $component $_
             })

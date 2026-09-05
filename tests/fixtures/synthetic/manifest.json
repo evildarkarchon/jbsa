@@ -293,16 +293,16 @@
       "source": "project-authored generator recipe split-boundaries",
       "spdx_license": "CC0-1.0",
       "generation": {
-        "procedure": "Describe virtual entries around the 2 GiB BSA target without committing giant payloads.",
+        "procedure": "Describe virtual entries around the 2 GiB BSA target using SHA-256(UTF-8(seed) || uint64-le(counter)) blocks starting at counter zero; concatenate and truncate to entry size.",
         "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
-        "options": {"large_payload_policy": "virtual-recipe-only"}
+        "options": {"algorithm": "repeat-sha256-counter-v1", "large_payload_policy": "virtual-recipe-only", "seed_prefix": "jbsa-split-boundaries-v1/"}
       },
       "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
       "oracle_sha256": null,
-      "input_sha256": "679bfcd92f1bed0959a2b551b943db93f39e97d5a277cf5d95673cdf176f9f71",
+      "input_sha256": "627ea18291874dd4675238b95ba09ccc2a70b7582d9dd11079b5c4fdf2d7acfe",
       "output": {
         "path": "artifacts/scenarios/split-boundaries.json",
-        "sha256": "adc51d3bd0f91ce8deef3b34cafea454b5e9c286041608d2fe83bbb991880328"
+        "sha256": "a4227e62a3e43f5c1c35042996da168d80273d83d9f64dd10423780de7b12c29"
       },
       "redistribution_class": "project-authored-redistributable"
     },

@@ -35,6 +35,9 @@ Check the reproducibility of the library inputs and CLI JAR with two clean build
 .\build\verify-reproducible-build.ps1
 ```
 
+For a candidate built with `-Drevision=2.3.4`, compare that same version with
+`.\build\verify-reproducible-build.ps1 -ReactorVersion 2.3.4`.
+
 The library build emits its binary JAR, flattened self-contained consumer POM, sources JAR, and
 Javadoc JAR. Maven deployment is disabled; publication and the Windows application image belong to
 later release and distribution issues.
@@ -75,7 +78,9 @@ external SBOM components back to approved inventory entries, including transitiv
 REUSE job separately runs the official REUSE 3.3 metadata lint over every project-owned file
 without checking out the separately licensed Reference Snapshot.
 
-The normal Maven gate automatically audits `jbsa-dist/target/release-inputs` whenever that staging
-directory exists and expects `jbsa-dist/target/release-inputs.json`. This keeps later packaging work
-on the same enforcement seam; an assembly cannot populate the conventional staging directory and
-silently bypass the audit.
+The final `jbsa-dist` verification stages the current library JAR, consumer POM, sources and Javadoc
+JARs, thin CLI JAR, and required license/notice/SBOM evidence in `jbsa-dist/target/release-inputs`.
+It writes `jbsa-dist/target/release-inputs.json` from those exact bytes, then audits both paths
+explicitly. Missing staging or evidence fails the gate. The root verification checks repository
+and SBOM evidence before this step; it does not inspect a previous build's staging directory.
+These inputs prepare later Windows image packaging and do not constitute Release Qualification.

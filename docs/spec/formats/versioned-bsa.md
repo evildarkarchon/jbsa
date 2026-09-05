@@ -368,7 +368,21 @@ Inspection **MUST** retain stable warnings for file offsets beyond signed 2 GiB,
 cubemap textures without embedded names, non-textures with embedded names, and
 uncompressed `0x69` entries with embedded names.
 
-_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [empty-stem rejection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+The diagnostics required by this section **MUST** use `WARNING` severity and
+exactly the identifiers and scopes below. Stored and expected values **MUST**
+follow [JBSA-OPS-005](../operation-semantics.md#jbsa-ops-005).
+
+| Condition | Diagnostic identifier | Scope and structured location |
+| --- | --- | --- |
+| Usable folder-name stored-hash mismatch | `bsa.folder-hash-mismatch` | Once per affected folder, at its `folderHash` field |
+| Usable basename stored-hash mismatch | `bsa.file-hash-mismatch` | Once per affected entry, at its file hash field |
+| Embedded-name/index-name mismatch | `bsa.embedded-name-mismatch` | Once per affected entry, at its embedded-name byte span |
+| Payload start beyond signed 2 GiB | `bsa.payload-offset-over-signed-2gib` | Once per affected entry, at its payload start |
+| Cubemap texture without embedded names | `bsa.cubemap-without-embedded-name` | Once per affected entry, at its payload |
+| Non-texture with embedded names | `bsa.nontexture-with-embedded-name` | Once per affected entry, at its embedded-name byte span |
+| Uncompressed `0x69` entry with embedded names | `bsa.uncompressed-sse-embedded-name` | Once per affected entry, at its embedded-name byte span |
+
+_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [empty-stem rejection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-BSA-015
 

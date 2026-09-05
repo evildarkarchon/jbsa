@@ -63,10 +63,10 @@ Canonical metadata records **MUST** be ordered by the unsigned low 32 bits of
 `nameHash`, then by the unsigned high 32 bits, and then, when the full `nameHash`
 is equal, by canonical TES3 name bytes in unsigned-octet lexicographic order:
 the lower octet at the first difference sorts first, and an exact prefix sorts
-first. Name records, name offsets, hash records, and file records **MUST** use
-that same entry order.
+first. Name records, name offsets, hash records, file records, and canonical
+payload sequencing **MUST** use that same entry order.
 
-_Source decisions: [accepted Reference Snapshot hashing and ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted deterministic lowercase clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517)._
+_Source decisions: [accepted Reference Snapshot hashing and ordering](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245), [accepted deterministic lowercase clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-TES3-004
 

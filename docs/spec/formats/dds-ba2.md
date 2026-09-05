@@ -23,13 +23,15 @@ encode, stored DDS encode, codecs outside the listed cell, and version `3`
 methods other than `3` **MUST** fail as unsupported before destination effects.
 The qualified Compatibility Profile may attempt the Reference Snapshot's
 version-3 zlib fallback, but cannot enable stored DDS encode.
+Its diagnostic identity is assigned by
+[JBSA-GNRL-002](general-ba2.md#jbsa-gnrl-002).
 
 The `PC` or `XBOX` DDS target is operation data, is not encoded by the
 family/version/subtype/method tuple, and **MUST NOT** alter this matrix or wire
 framing. Encode target selection is owned by
 [JBSA-DDS-002](dds-payload.md#jbsa-dds-002).
 
-_Source decisions: [accepted format and codec matrix](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted codec strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549)._
+_Source decisions: [accepted format and codec matrix](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted codec strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971), [DDS encode-target clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-DX10-002
 
@@ -105,8 +107,10 @@ codec. It **MUST** reject an uncompressed DDS request in every Compatibility
 Profile. Decode **MAY** read a bounded stored chunk, but the archive **MUST** be
 Tolerated Noncanonical and carry a stable warning; stored chunks are never
 canonical encoder output.
+The warning **MUST** use `dx10.stored-chunk` with `WARNING` severity, once per
+stored chunk at its size fields, with its stored and unpacked sizes retained.
 
-_Source decisions: [accepted safe DDS disposition](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted CLI safe default](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Source decisions: [accepted safe DDS disposition](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted CLI safe default](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-DX10-007
 
@@ -129,7 +133,23 @@ For a zero or out-of-range filename-table offset, the exact synthetic-name and
 absent-identity rules in
 [JBSA-GNRL-008](general-ba2.md#jbsa-gnrl-008) **MUST** apply.
 
-_Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540)._
+The texture-specific diagnostics required here **MUST** use `WARNING` severity
+and the following identifiers. Stored and expected values **MUST** follow
+[JBSA-OPS-005](../operation-semantics.md#jbsa-ops-005).
+
+| Condition | Diagnostic identifier | Scope and structured location |
+| --- | --- | --- |
+| Nonzero mod index | `dx10.nonzero-mod-index` | Once per affected entry, at its mod-index field |
+| Non-24 chunk-header size | `dx10.chunk-header-size` | Once per affected entry, at its chunk-header-size field |
+| Non-`0xBAADF00D` sentinel | `dx10.sentinel-mismatch` | Once per affected chunk, at its sentinel field |
+
+Stored chunks **MUST** use [JBSA-DX10-006](#jbsa-dx10-006), missing name tables
+**MUST** use [JBSA-GNRL-008](general-ba2.md#jbsa-gnrl-008), and harmless trailing
+data **MUST** use [JBSA-GNRL-010](general-ba2.md#jbsa-gnrl-010) for their
+diagnostic identities and scopes; this section **MUST NOT** duplicate those
+diagnostics for the same condition.
+
+_Source decisions: [accepted noncanonical and malformed-input policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [synthetic-name clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
 
 ## JBSA-DX10-008
 

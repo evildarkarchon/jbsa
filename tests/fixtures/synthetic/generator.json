@@ -112,9 +112,9 @@
       "id": "split-boundaries",
       "kind": "scenario",
       "coverage": ["split", "boundary", "resource-limit"],
-      "input": "scenario|split|target=2147483647|algorithm=repeat-sha256-counter|sizes=2147483400,64,2147483648",
+      "input": "scenario|split|target=2147483647|algorithm=repeat-sha256-counter-v1|seed-prefix=jbsa-split-boundaries-v1/|entries=data/near.bin:2147483400,data/crossing.bin:64,data/oversized.bin:2147483648",
       "output_path": "artifacts/scenarios/split-boundaries.json",
-      "parameters": {"large_payload_policy": "virtual-recipe-only"}
+      "parameters": {"algorithm": "repeat-sha256-counter-v1", "large_payload_policy": "virtual-recipe-only", "seed_prefix": "jbsa-split-boundaries-v1/"}
     },
     {
       "id": "resource-limit-boundaries",

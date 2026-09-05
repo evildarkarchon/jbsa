@@ -2,26 +2,31 @@
 .SYNOPSIS
 Builds the public reactor artifacts twice and requires identical SHA-256 hashes.
 
+.PARAMETER ReactorVersion
+Effective Maven revision to rebuild and compare. Defaults to the root POM revision.
+
 .NOTES
 Only the library inputs and thin CLI JAR are compared. Test reports and other environmental output
 are intentionally outside this reproducibility check.
 #>
 [CmdletBinding()]
-param()
+param([string] $ReactorVersion)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $reactorRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $mavenWrapper = Join-Path $reactorRoot 'mvnw.cmd'
-$rootPom = [xml](Get-Content -Raw -LiteralPath (Join-Path $reactorRoot 'pom.xml'))
-$pomNamespaces = New-Object System.Xml.XmlNamespaceManager($rootPom.NameTable)
-$pomNamespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
-$revisionNode = $rootPom.SelectSingleNode('/m:project/m:properties/m:revision', $pomNamespaces)
-if ($null -eq $revisionNode -or [string]::IsNullOrWhiteSpace($revisionNode.InnerText)) {
-    throw 'The root POM does not declare the reactor revision.'
+if ([string]::IsNullOrWhiteSpace($ReactorVersion)) {
+    $rootPom = [xml](Get-Content -Raw -LiteralPath (Join-Path $reactorRoot 'pom.xml'))
+    $pomNamespaces = New-Object System.Xml.XmlNamespaceManager($rootPom.NameTable)
+    $pomNamespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
+    $revisionNode = $rootPom.SelectSingleNode('/m:project/m:properties/m:revision', $pomNamespaces)
+    if ($null -eq $revisionNode -or [string]::IsNullOrWhiteSpace($revisionNode.InnerText)) {
+        throw 'The root POM does not declare the reactor revision.'
+    }
+    $ReactorVersion = $revisionNode.InnerText.Trim()
 }
-$reactorVersion = $revisionNode.InnerText.Trim()
 $scratchRoot = [System.IO.Path]::Combine(
     [System.IO.Path]::GetTempPath(),
     "jbsa-reproducibility-$([System.Guid]::NewGuid().ToString('N'))"
@@ -39,7 +44,8 @@ try {
     Push-Location $reactorRoot
     try {
         foreach ($pass in 1..2) {
-            & $mavenWrapper -B -ntp -C -DskipTests clean package
+            # Both builds must produce the same candidate version that the caller is qualifying.
+            & $mavenWrapper -B -ntp -C -DskipTests "-Drevision=$ReactorVersion" clean package
             if ($LASTEXITCODE -ne 0) {
                 throw "Reproducibility build $pass failed with exit code $LASTEXITCODE."
             }
