@@ -5,6 +5,7 @@ path = [
   ".claude/**",
   ".codex/**",
   ".github/**",
+  ".idea/**",
   ".mvn/**",
   ".gitattributes",
   ".gitignore",
