@@ -25,3 +25,9 @@ be retained in every public release is recorded in [the release notices](RELEASE
 See [the build guide](docs/development/build.md) for the Java 25 Maven commands. External
 contributions follow [CONTRIBUTING.md](CONTRIBUTING.md) and are reviewed directly by the maintainer.
 No contributor license agreement or DCO sign-off is required.
+
+## Public interface milestone
+
+The library is at the **pre-1.0 Contract Baseline**. See
+[the interface guide](docs/development/contract-baseline.md) for public JPMS usage, immutable
+contracts, available bounded detection, and the subsequent archive execution gates.
