@@ -1,0 +1,91 @@
+{
+  "contract": "performance-v1",
+  "implementing_issue": 32,
+  "note": "Harness evidence only. The authoritative lifecycle and ownership remain in docs/spec/requirements.yaml; this supplemental map does not mutate the byte-pinned CV1 specification set.",
+  "requirements": [
+    {
+      "requirement_id": "JBSA-PERF-001",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-001",
+      "harness_test_evidence": [
+        "build/performance/test_catalog.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-002",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-002",
+      "harness_test_evidence": [
+        "build/performance/test_runner.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-003",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-003",
+      "harness_test_evidence": [
+        "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PerformanceHarnessIT.java#harnessCommands"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-005",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-005",
+      "harness_test_evidence": [
+        "build/performance/test_jmh.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-006",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-006",
+      "harness_test_evidence": [
+        "build/performance/test_corpus.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-007",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-007",
+      "harness_test_evidence": [
+        "build/performance/test_corpus.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-008",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-008",
+      "harness_test_evidence": [
+        "build/performance/test_catalog.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-009",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-009",
+      "harness_test_evidence": [
+        "build/performance/test_runner.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-010",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-010",
+      "harness_test_evidence": [
+        "build/performance/test_environment.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-011",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-011",
+      "harness_test_evidence": [
+        "build/performance/test_metrics.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-012",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-012",
+      "harness_test_evidence": [
+        "build/performance/test_jmh.py"
+      ]
+    },
+    {
+      "requirement_id": "JBSA-PERF-013",
+      "owner": "docs/spec/performance-v1.md#jbsa-perf-013",
+      "harness_test_evidence": [
+        "build/performance/test_metrics.py"
+      ]
+    }
+  ]
+}

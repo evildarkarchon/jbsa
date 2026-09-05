@@ -8,8 +8,9 @@ builds elsewhere do not create a portability or support claim.
 
 The single `0.1.0-SNAPSHOT` reactor contains the deep `jbsa` library, thin `jbsa-cli` consumer, and
 build-only `jbsa-test-support`, `jbsa-conformance-tests`, `jbsa-benchmarks`, and `jbsa-dist`
-projects. The build-only projects are scaffolds for later implementation issues and are not release
-artifacts.
+projects. The build-only projects contain verification and qualification tooling and are not product
+release artifacts. See [local performance qualification](performance.md) for explicit corpus,
+paired-run and JMH commands; ordinary Maven verification runs only small harness checks.
 
 ## Deterministic entry points
 

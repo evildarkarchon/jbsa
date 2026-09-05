@@ -50,3 +50,9 @@ path = "tests/conformance/**"
 precedence = "override"
 SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
 SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "tests/performance/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
+SPDX-License-Identifier = "CC0-1.0"

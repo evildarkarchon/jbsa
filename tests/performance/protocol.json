@@ -1,0 +1,61 @@
+{
+  "contract": "performance-v1",
+  "version": 1,
+  "jvm": {
+    "vendor": "Eclipse Temurin",
+    "version": "25.0.4.1+1",
+    "vm": "HotSpot",
+    "architecture": "x64",
+    "distribution_sha256": "00c847d804f4a78e9f04f2683faf14fed898535b177b7fc704486cb0284e9283",
+    "distribution_url": "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.4.1%2B1/OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1.zip"
+  },
+  "process": {
+    "warmup_rounds": 2,
+    "measured_rounds": 7,
+    "extended_rounds": 15,
+    "first_release_order": "alternate-candidate-oracle",
+    "baseline_order": "rotate-candidate-baseline-oracle",
+    "cache": "warm-exact-inputs",
+    "timing": "external-monotonic-process-creation-through-exit",
+    "launcher_flags": "shipping-production"
+  },
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 32011,
+    "percentile_method": "linear",
+    "confidence": 0.95,
+    "dispersion": "median-absolute-deviation/absolute-median",
+    "maximum_relative_dispersion": 0.05
+  },
+  "jmh": {
+    "version": "1.37",
+    "jvm_args": ["-Xms4g", "-Xmx4g", "-XX:+AlwaysPreTouch", "-XX:+UseG1GC"],
+    "forks": 3,
+    "warmup_iterations": 5,
+    "warmup_seconds": 2,
+    "measurement_iterations": 10,
+    "measurement_seconds": 2,
+    "entry_selection_seed": 32012,
+    "modes": ["SampleTime", "Throughput"],
+    "setup_scope": "Trial",
+    "profiling": "separate-from-unprofiled-timing"
+  },
+  "memory": {
+    "repetitions": 5,
+    "sample_interval_ms": 50,
+    "process_accounting": "Windows-Job-Object",
+    "heap_evidence": "JFR-GCHeapSummary",
+    "gate_statistic": "maximum"
+  },
+  "environment": {
+    "os": "Windows",
+    "architecture": "x64",
+    "filesystem": "NTFS",
+    "idle_seconds_after_reboot": 600,
+    "power_plan": "High performance",
+    "maximum_background_cpu_percent_exclusive": 2,
+    "minimum_free_space_percent": 20,
+    "security_software_active": true,
+    "concurrent_workload": false
+  }
+}
