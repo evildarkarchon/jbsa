@@ -37,8 +37,27 @@ public final class PublicationTransaction {
       OperationControl control,
       FileActions files)
       throws ArchiveException {
-    Session session = new Session(destination, policy, limits, control, files, false);
-    return session.run(List.copyOf(writers), List.of());
+    Session session =
+        new Session(
+            destination,
+            policy,
+            limits,
+            new OperationSession(Operation.PACK, limits, control),
+            files,
+            false);
+    return session.run(List.copyOf(writers), List.of()).artifacts();
+  }
+
+  /** Continues source preflight evidence and returns the complete report for an archive set. */
+  public static OperationReport archives(
+      Path destination,
+      List<Writer> writers,
+      TargetPolicy policy,
+      ResourceLimits limits,
+      OperationSession operation)
+      throws ArchiveException {
+    return new Session(destination, policy, limits, operation, new FileActions(), false)
+        .run(List.copyOf(writers), List.of());
   }
 
   /**
@@ -64,7 +83,31 @@ public final class PublicationTransaction {
       FileActions files)
       throws ArchiveException {
     List<Entry> selection = List.copyOf(entries);
-    return new Session(root, policy, limits, control, files, true)
+    return new Session(
+            root,
+            policy,
+            limits,
+            new OperationSession(Operation.EXTRACT, limits, control),
+            files,
+            true)
+        .run(
+            selection.stream().map(Entry::writer).toList(),
+            selection.stream().map(Entry::name).toList())
+        .artifacts();
+  }
+
+  /**
+   * Continues source assessment and diagnostic policy through staging and publication settlement.
+   */
+  public static OperationReport extract(
+      Path root,
+      List<Entry> entries,
+      TargetPolicy policy,
+      ResourceLimits limits,
+      OperationSession operation)
+      throws ArchiveException {
+    List<Entry> selection = List.copyOf(entries);
+    return new Session(root, policy, limits, operation, new FileActions(), true)
         .run(
             selection.stream().map(Entry::writer).toList(),
             selection.stream().map(Entry::name).toList());
@@ -144,6 +187,28 @@ public final class PublicationTransaction {
     public long size() {
       return size;
     }
+
+    /**
+     * Reports one final pack entry's uncompressed logical bytes after processing it exactly once.
+     * Archive framing, replay, backpatching, and shared-payload copies must not call this method.
+     * Extraction entries are counted by the publication adapter after their writer completes.
+     */
+    public void completedEntry(long decodedBytes) throws ArchiveException {
+      if (owner.extraction) throw new IllegalStateException("Extraction counts each writer once");
+      owner.operationSession.processedEntry(decodedBytes);
+    }
+
+    /**
+     * Admits a warning before retention and stops staging immediately if request policy rejects it.
+     */
+    public void diagnostic(Diagnostic diagnostic) throws ArchiveException {
+      owner.operationSession.diagnostic(diagnostic);
+    }
+
+    /** Observes explicit stop state around codec calls and other bounded non-I/O work. */
+    public void checkpoint() throws ArchiveException {
+      owner.checkpoint();
+    }
   }
 
   /**
@@ -177,14 +242,13 @@ public final class PublicationTransaction {
     private final Path destination;
     private final TargetPolicy policy;
     private final ResourceLimits limits;
-    private final OperationControl control;
     private final FileActions files;
     private final boolean extraction;
     private final ResourceBudget budget;
     private final List<Part> parts = new ArrayList<>();
     private final LinkedHashMap<Path, Long> owned = new LinkedHashMap<>();
     private final List<ResourceBudget.Lease> credits = new ArrayList<>();
-    private final FailureRetention failures;
+    private final OperationSession operationSession;
     private final Set<Path> retainedBackups = new HashSet<>();
     private Path staging;
     private ExtractionPaths containment;
@@ -192,6 +256,7 @@ public final class PublicationTransaction {
     private boolean rootPublished;
     private boolean existingTree;
     private Part committing;
+    private boolean commitInProgress;
     private final LinkedHashMap<Path, Long> createdDirectories = new LinkedHashMap<>();
     private final Set<Path> removedDirectories = new HashSet<>();
     private final LinkedHashMap<Path, Long> privateDirectories = new LinkedHashMap<>();
@@ -203,28 +268,29 @@ public final class PublicationTransaction {
         Path destination,
         TargetPolicy policy,
         ResourceLimits limits,
-        OperationControl control,
+        OperationSession operation,
         FileActions files,
         boolean extraction) {
       this.destination =
           Objects.requireNonNull(destination, "destination").toAbsolutePath().normalize();
       this.policy = Objects.requireNonNull(policy, "policy");
       this.limits = Objects.requireNonNull(limits, "limits");
-      this.control = Objects.requireNonNull(control, "control");
       this.files = Objects.requireNonNull(files, "files");
       this.extraction = extraction;
-      failures = new FailureRetention(limits, extraction ? Operation.EXTRACT : Operation.PACK);
+      operationSession = Objects.requireNonNull(operation, "operation");
       budget = ResourceBudget.forMutation(limits, context());
     }
 
     /** Settles cleanup before returning evidence, preserving the first accepted failure. */
-    List<Artifact> run(List<Writer> writers, List<String> names) throws ArchiveException {
+    OperationReport run(List<Writer> writers, List<String> names) throws ArchiveException {
       try {
-        checkpoint();
+        operationSession.ensurePreflight();
         if (writers.size() > limits.maxOutputs())
           throw context()
               .limit("maxOutputs", limits.maxOutputs(), Integer.toString(writers.size()));
         preflight(writers, names);
+        if (extraction) operationSession.advance(ProgressMetric.ENTRIES, names.size());
+        checkpoint();
         if (!parts.isEmpty() || (extraction && !existingTree)) {
           containment.recheckRoot();
           // A drive/share root has no parent; staging beside its planned files stays on that
@@ -240,29 +306,41 @@ public final class PublicationTransaction {
             stagedRoot = Files.createDirectory(staging.resolve("tree"));
             own(stagedRoot, 0);
           }
+          operationSession.completePhase();
+          operationSession.processing(existingTree);
           phase = OperationPhase.PROCESSING;
           for (Part part : parts) {
             ordinal = part.ordinal;
             checkpoint();
-            stage(part);
+            long logicalBytes = stage(part);
+            if (extraction) {
+              operationSession.processedEntry(logicalBytes);
+            }
             if (existingTree) {
               checkpoint();
               prepareParents(part);
-              checkpoint();
+              operationSession.beginCommit(phase, OptionalLong.of(ordinal));
               phase = OperationPhase.PUBLISHING;
               committing = part;
+              commitInProgress = true;
               publish(part);
+              commitInProgress = false;
+              operationSession.endCommit(part.ordinal == parts.size() - 1);
               committing = null;
               phase = OperationPhase.PROCESSING;
+              operationSession.advance(ProgressMetric.ARTIFACTS, 1);
             }
           }
           if (!existingTree) {
+            operationSession.completePhase();
+            operationSession.publishing();
             phase = OperationPhase.PUBLISHING;
             for (Part part : parts) {
               ordinal = part.ordinal;
               recheck(part, false);
             }
-            checkpoint();
+            operationSession.beginCommit(phase, OptionalLong.of(ordinal));
+            commitInProgress = true;
             if (stagedRoot != null) {
               containment.recheckRoot();
               files.move(stagedRoot, destination);
@@ -282,13 +360,33 @@ public final class PublicationTransaction {
                 publish(part);
               }
             }
+            commitInProgress = false;
+            operationSession.endCommit(true);
+            operationSession.advance(ProgressMetric.ARTIFACTS, parts.size());
           }
         }
+        if (parts.isEmpty() && !(extraction && !existingTree)) {
+          operationSession.completePhase();
+          operationSession.processing(existingTree);
+          phase = OperationPhase.PROCESSING;
+          operationSession.completePhase();
+          if (!existingTree) {
+            operationSession.publishing();
+            phase = OperationPhase.PUBLISHING;
+          }
+          operationSession.beginCommit(phase, OptionalLong.empty());
+          operationSession.endCommit(true);
+        }
+        operationSession.completePhase();
       } catch (IOException | UnsupportedOperationException | SecurityException cause) {
         accept(cause);
-        if (phase == OperationPhase.PUBLISHING && stagedRoot == null) rollback();
+        if (commitInProgress && stagedRoot == null) rollback();
+      } catch (RuntimeException | AssertionError cause) {
+        accept(context().failure(FailureKind.INTERNAL, "operation.internal-failure", cause));
+        if (commitInProgress && stagedRoot == null) rollback();
       } finally {
         phase = OperationPhase.CLEANUP;
+        operationSession.cleanup();
         cleanup();
         settleTargetStates();
         if (containment != null) {
@@ -300,11 +398,10 @@ public final class PublicationTransaction {
         }
         credits.forEach(ResourceBudget.Lease::close);
         budget.close();
+        operationSession.cleaned(artifacts().size());
       }
       List<Artifact> artifacts = artifacts();
-      ArchiveException failure = failures.finish(artifacts);
-      if (failure != null) throw failure;
-      return artifacts;
+      return operationSession.finish(artifacts);
     }
 
     /** Establishes the complete target plan before creating adjacent staging. */
@@ -335,8 +432,11 @@ public final class PublicationTransaction {
                 context());
     }
 
-    /** Opens one channel per artifact and closes it before making the path visible. */
-    private void stage(Part part) throws IOException {
+    /**
+     * Opens and closes one staged channel, returning its output extent as the extraction entry's
+     * uncompressed byte contribution. Pack writers account for logical entries independently.
+     */
+    private long stage(Part part) throws IOException {
       part.staged =
           stagedRoot == null
               ? staging.resolve("part-" + part.ordinal)
@@ -345,6 +445,7 @@ public final class PublicationTransaction {
       ResourceBudget.Lease scratch = budget.reserve(0, 0, 0, 0);
       part.scratch = scratch;
       credits.add(scratch);
+      long size;
       try (var handle = budget.reserve(0, 0, 1, 0);
           FileChannel channel =
               FileChannel.open(
@@ -354,8 +455,10 @@ public final class PublicationTransaction {
         part.writer.write(output);
         if (channel.size() < output.size())
           ExactIo.write(channel, output.size() - 1, ByteBuffer.wrap(new byte[1]), context());
+        size = output.size();
       }
       part.stagedIdentity = WindowsPathIdentity.inspect(part.staged);
+      return size;
     }
 
     /** Installs a fully staged artifact with no implicit replacement semantics. */
@@ -444,7 +547,7 @@ public final class PublicationTransaction {
           accept(cause);
         }
       }
-      if (failures.failed()) {
+      if (operationSession.failed()) {
         for (Path path : new ArrayList<>(createdDirectories.keySet()).reversed()) {
           try {
             files.delete(path);
@@ -509,19 +612,8 @@ public final class PublicationTransaction {
     }
 
     /** Samples explicit cancellation only before a publication surface begins. */
-    private void checkpoint() throws ArchiveCancelledException {
-      if (control.cancellationRequested().getAsBoolean()) {
-        Failure failure =
-            new Failure(
-                FailureKind.CANCELLED,
-                phase,
-                OptionalLong.of(ordinal),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty());
-        throw new ArchiveCancelledException(
-            "Operation cancelled", failure, List.of(), List.of(), Optional.empty(), List.of());
-      }
+    private void checkpoint() throws ArchiveException {
+      operationSession.checkpoint(phase, OptionalLong.of(ordinal));
     }
 
     /** Cleanup never displaces an accepted primary failure or exceeds secondary retention. */
@@ -581,7 +673,7 @@ public final class PublicationTransaction {
                 failure.assessment(),
                 failure.secondaryFailures());
       }
-      failures.accept(failure);
+      operationSession.accept(failure);
     }
 
     /** Reports planned artifacts first and residual paths next within their logical ordinal. */

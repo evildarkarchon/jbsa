@@ -15,6 +15,32 @@ import org.junit.jupiter.api.Test;
 
 /** Barrier-controlled lifetime evidence, without sleeps or format-parser claims. */
 final class OwnedArchiveRaceTest {
+  /** A failed eager open retains owned-handle cleanup as structured secondary evidence. */
+  @Test
+  void indexFailureRetainsStructuredCleanup() throws Exception {
+    ControlledChannel channel = new ControlledChannel();
+    channel.failClose = true;
+    IoContext context = IoContext.of(Path.of("synthetic.bin"), Operation.OPEN);
+    ArchiveException failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                OwnedArchive.load(
+                    new ArchiveInput(channel, context),
+                    ResourceLimits.standard(),
+                    context,
+                    builder -> {
+                      throw context.failure(FailureKind.FORMAT, "test.invalid-index", null);
+                    }));
+    assertEquals(FailureKind.FORMAT, failure.kind());
+    assertEquals(0, failure.getSuppressed().length);
+    assertEquals(1, failure.secondaryFailures().size());
+    assertEquals(OperationPhase.CLEANUP, failure.secondaryFailures().getFirst().phase());
+    assertEquals(FailureKind.SOURCE, failure.secondaryFailures().getFirst().kind());
+    assertTrue(failure.secondaryFailures().getFirst().cause().isPresent());
+    assertEquals(1, channel.closes);
+  }
+
   /** Cleanup failure cannot replace the required direct-interruption channel exception. */
   @Test
   void interruptionKeepsItsIdentityWhenSharedCloseFails() throws Exception {
@@ -89,6 +115,11 @@ final class OwnedArchiveRaceTest {
           assertThrows(ArchiveException.class, () -> child.read(ByteBuffer.allocate(1)));
       assertEquals(FailureKind.FORMAT, failure.kind());
       assertEquals(Operation.READ_CONTENT, failure.diagnostics().getFirst().operation());
+      ArchiveAssessment latest = failure.assessment().orElseThrow();
+      assertEquals(ArchiveDisposition.REJECTED, latest.disposition());
+      assertEquals(new ValidationExtent.Payloads(Set.of(0L)), latest.extent());
+      assertEquals(ArchiveDisposition.CONFORMING, parent.inspection().assessment().disposition());
+      assertEquals(new ValidationExtent.Structure(), parent.inspection().assessment().extent());
       assertFalse(child.isOpen());
       assertTrue(child.assessment().isEmpty());
       try (EntryContent sibling = parent.entry(0).openContent()) {

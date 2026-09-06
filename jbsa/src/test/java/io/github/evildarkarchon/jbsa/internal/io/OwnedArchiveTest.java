@@ -22,12 +22,13 @@ final class OwnedArchiveTest {
   @Test
   void enforcesMetadataAndDecodedLimitsBeforeReading() throws Exception {
     Path path = Files.write(directory.resolve("limits.bin"), new byte[] {41, 42});
-    ResourceLimits limits = new ResourceLimits(1, 1, 1, 0, 0, 1, 0);
+    ResourceLimits limits = new ResourceLimits(1, 1, 1, 0, 0, 2, 0);
     try (OpenArchive archive = open(path, limits, 2)) {
       ArchiveException failure =
           assertThrows(ArchiveException.class, () -> archive.entry(0).openContent());
       assertEquals(FailureKind.POLICY, failure.kind());
       assertEquals("maxDecodedBytes", failure.diagnostics().getFirst().values().get("field"));
+      assertSame(archive.inspection().assessment(), failure.assessment().orElseThrow());
     }
     ArchiveException failure =
         assertThrows(

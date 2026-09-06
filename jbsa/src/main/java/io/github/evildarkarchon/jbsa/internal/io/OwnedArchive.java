@@ -71,14 +71,40 @@ public final class OwnedArchive implements OpenArchive {
           || inspection.metadata().entryCount() != builder.expected) {
         throw context.failure(FailureKind.FORMAT, "io.index-count-mismatch", null);
       }
+      inspection =
+          ArchiveValidation.structure(
+              inspection,
+              builder.entries.stream().map(StoredEntry::metadata).toList(),
+              context,
+              new FailureRetention(limits, context.operation()));
       return new OwnedArchive(input, limits, context, budget, inspection, builder.entries);
     } catch (IOException | RuntimeException | Error cause) {
+      FailureRetention failures = new FailureRetention(limits, context.operation());
+      if (cause instanceof ArchiveException failure) {
+        failures.accept(failure);
+      } else if (cause instanceof IOException failure) {
+        failures.accept(context.failure(FailureKind.SOURCE, "operation.source-io", failure));
+      }
       try {
         input.close();
       } catch (IOException cleanup) {
-        cause.addSuppressed(cleanup);
+        if (failures.failed()) {
+          failures.accept(
+              cleanup instanceof ArchiveException failure
+                  ? failure
+                  : new IoContext(
+                          context.path(),
+                          context.operation(),
+                          OperationPhase.CLEANUP,
+                          context.ordinal())
+                      .failure(FailureKind.SOURCE, "operation.source-io", cleanup));
+        } else {
+          // Unchecked VM/programmer failures have no structured operation outcome to own cleanup.
+          cause.addSuppressed(cleanup);
+        }
       }
       budget.close();
+      if (failures.failed()) throw failures.finish(List.of());
       throw cause;
     }
   }
@@ -183,13 +209,31 @@ public final class OwnedArchive implements OpenArchive {
           synchronized (lifetime) {
             if (closed) throw new ClosedChannelException();
             if (stored.metadata().decodedSize() > limits.maxDecodedBytes()) {
-              throw contentContext(ordinal)
-                  .limit(
-                      "maxDecodedBytes",
-                      limits.maxDecodedBytes(),
-                      Long.toString(stored.metadata().decodedSize()));
+              FailureRetention retention = new FailureRetention(limits, Operation.READ_CONTENT);
+              retention.assessment(inspection.assessment());
+              retention.accept(
+                  contentContext(ordinal)
+                      .limit(
+                          "maxDecodedBytes",
+                          limits.maxDecodedBytes(),
+                          Long.toString(stored.metadata().decodedSize())));
+              throw retention.finish(List.of());
             }
-            ResourceBudget.Lease credit = budget.reserve(512, 0, 0, 0);
+            ResourceBudget.Lease credit;
+            try {
+              credit = budget.reserve(512, 0, 0, 0);
+            } catch (ArchiveException capacity) {
+              // The shared budget belongs to OPEN, but child admission is READ_CONTENT evidence.
+              FailureRetention retention = new FailureRetention(limits, Operation.READ_CONTENT);
+              retention.assessment(inspection.assessment());
+              retention.accept(
+                  contentContext(ordinal)
+                      .failure(
+                          capacity.kind(),
+                          capacity.primaryFailure().diagnosticIdentifier().orElseThrow(),
+                          capacity.getCause()));
+              throw retention.finish(List.of());
+            }
             Content content = new Content(stored, credit);
             children.add(content);
             return content;
@@ -315,12 +359,69 @@ public final class OwnedArchive implements OpenArchive {
             // Failed provider completions must honor the same close decision as successful reads.
             if (!open || closed) throw new AsynchronousCloseException();
             close();
-            throw contentContext(stored.metadata().ordinal())
-                .failure(
-                    cause.kind(), cause.diagnostics().getFirst().identifier(), cause.getCause());
+            throw payloadFailure(cause);
           }
         }
       }
+    }
+
+    /**
+     * Retains earlier evidence and records a corrupt selected payload without reclassifying the
+     * detached structural assessment. Provider I/O failures make no new content-validity claim.
+     */
+    private ArchiveException payloadFailure(ArchiveException cause) {
+      FailureRetention retention = new FailureRetention(limits, Operation.READ_CONTENT);
+      retention.assessment(assessment == null ? inspection.assessment() : assessment);
+      List<Diagnostic> diagnostics =
+          cause.diagnostics().stream()
+              .map(
+                  diagnostic ->
+                      new Diagnostic(
+                          diagnostic.identifier(),
+                          diagnostic.severity(),
+                          Operation.READ_CONTENT,
+                          OperationPhase.PROCESSING,
+                          payloadLocation(diagnostic.location()),
+                          diagnostic.values(),
+                          diagnostic.explanation()))
+              .toList();
+      Failure original = cause.primaryFailure();
+      Failure primary =
+          new Failure(
+              original.kind(),
+              OperationPhase.PROCESSING,
+              OptionalLong.of(stored.metadata().ordinal()),
+              original.diagnosticIdentifier(),
+              Optional.of(
+                  payloadLocation(original.location().orElse(DiagnosticLocation.operation()))),
+              original.cause());
+      retention.accept(
+          new ArchiveException(
+              cause.getMessage(),
+              primary,
+              diagnostics,
+              cause.artifacts(),
+              Optional.empty(),
+              cause.secondaryFailures()));
+      if (cause.kind() == FailureKind.FORMAT) {
+        retention.latestAssessment(
+            new ArchiveAssessment(
+                ArchiveDisposition.REJECTED,
+                new ValidationExtent.Payloads(Set.of(stored.metadata().ordinal())),
+                retention.diagnostics()));
+      }
+      return retention.finish(List.of());
+    }
+
+    /** Adds the selected entry while preserving the encoded field, span, and artifact evidence. */
+    private DiagnosticLocation payloadLocation(DiagnosticLocation original) {
+      return new DiagnosticLocation(
+          Optional.of(context.path()),
+          OptionalLong.of(stored.metadata().ordinal()),
+          Optional.of(stored.metadata().displayName()),
+          original.field(),
+          original.byteSpan(),
+          original.artifact());
     }
 
     /**

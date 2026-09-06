@@ -15,8 +15,8 @@ import java.util.PriorityQueue;
 import java.util.TreeMap;
 
 /**
- * Worker-confined bounded failure evidence for already ordered operation outcomes. The caller
- * selects its primary outcome before accepting later cleanup or rollback failures.
+ * Coordinator-confined bounded operation evidence. The first accepted outcome locks the
+ * cancellation race, while observed operational failures settle in deterministic semantic order.
  */
 public final class FailureRetention {
   private static final String TRUNCATED = "operation.records-truncated";
@@ -25,6 +25,7 @@ public final class FailureRetention {
   private static final Comparator<Failure> FAILURE_ORDER = FailureRetention::compareFailure;
   private final ResourceLimits limits;
   private final Operation operation;
+  private final DiagnosticPolicy policy;
   private final PriorityQueue<Diagnostic> diagnostics =
       new PriorityQueue<>(DIAGNOSTIC_ORDER.reversed());
   private final PriorityQueue<Failure> secondary = new PriorityQueue<>(FAILURE_ORDER.reversed());
@@ -36,46 +37,117 @@ public final class FailureRetention {
   private BigInteger omittedSecondary = BigInteger.ZERO;
   private boolean unseenDiagnostics;
   private boolean unseenSecondary;
+  private boolean summaryPolicyAccepted;
 
   /** Reserves one diagnostic slot for the single operation-wide truncation summary. */
   public FailureRetention(ResourceLimits limits, Operation operation) {
+    this(limits, operation, DiagnosticPolicy.standard());
+  }
+
+  /** Reserves summary capacity and evaluates immutable warning policy before dropping records. */
+  public FailureRetention(ResourceLimits limits, Operation operation, DiagnosticPolicy policy) {
     this.limits = Objects.requireNonNull(limits, "limits");
     this.operation = Objects.requireNonNull(operation, "operation");
+    this.policy = Objects.requireNonNull(policy, "policy");
   }
 
   /**
-   * Accepts the first failure as primary and later failures as secondary, retaining the smallest
-   * semantic-order records within the configured ceilings. Nested truncation summaries are merged.
+   * Accepts observed failures in any completion order, retaining the smallest semantic-order
+   * records within the configured ceilings. Nested truncation summaries are merged.
    */
   public void accept(ArchiveException failure) {
     Objects.requireNonNull(failure, "failure");
-    if (primary == null) {
-      primary = failure.primaryFailure();
-      message = failure.getMessage();
-      assessment = failure.assessment();
-    } else {
-      retainSecondary(failure.primaryFailure());
-    }
-    for (Failure additional : failure.secondaryFailures()) retainSecondary(additional);
-    for (Diagnostic diagnostic : failure.diagnostics()) {
-      if (TRUNCATED.equals(diagnostic.identifier())) {
-        Map<String, String> values = diagnostic.values();
-        omittedDiagnostics =
-            omittedDiagnostics.add(new BigInteger(values.get("omittedDiagnostics")));
-        omittedSecondary =
-            omittedSecondary.add(new BigInteger(values.get("omittedSecondaryFailures")));
-        unseenDiagnostics |= Boolean.parseBoolean(values.get("additionalDiagnosticsMayExist"));
-        unseenSecondary |= Boolean.parseBoolean(values.get("additionalSecondaryFailuresMayExist"));
-      } else if (!retain(diagnostics, diagnostic, limits.maxDiagnostics() - 1, DIAGNOSTIC_ORDER)) {
-        omittedDiagnostics = omittedDiagnostics.add(BigInteger.ONE);
-      }
-    }
+    acceptCandidate(failure.primaryFailure(), failure.getMessage());
+    failure.assessment().ifPresent(value -> assessment = Optional.of(value));
+    for (Failure additional : failure.secondaryFailures())
+      acceptCandidate(additional, additional.diagnosticIdentifier().orElse(null));
+    for (Diagnostic diagnostic : failure.diagnostics()) diagnostic(diagnostic);
     mergeArtifacts(failure.artifacts());
+    rejectTruncation();
+  }
+
+  /**
+   * Records a diagnostic and returns whether warning policy rejected it. Rejection is accepted as a
+   * referencing POLICY candidate before retention, preserving the warning's intrinsic severity.
+   */
+  public boolean diagnostic(Diagnostic diagnostic) {
+    Objects.requireNonNull(diagnostic, "diagnostic");
+    boolean rejected =
+        diagnostic.severity() == DiagnosticSeverity.WARNING
+            && policy.rejectedWarningIdentifiers().contains(diagnostic.identifier());
+    if (rejected && !TRUNCATED.equals(diagnostic.identifier())) {
+      Failure candidate =
+          new Failure(
+              FailureKind.POLICY,
+              diagnostic.phase(),
+              diagnostic.location().entryOrdinal(),
+              Optional.of(diagnostic.identifier()),
+              Optional.of(diagnostic.location()),
+              Optional.empty());
+      // Nested failures may already carry this warning's policy candidate; do not duplicate it.
+      if (!candidate.equals(primary)) acceptCandidate(candidate, diagnostic.identifier());
+    }
+    if (TRUNCATED.equals(diagnostic.identifier())) {
+      Map<String, String> values = diagnostic.values();
+      omittedDiagnostics = omittedDiagnostics.add(new BigInteger(values.get("omittedDiagnostics")));
+      omittedSecondary =
+          omittedSecondary.add(new BigInteger(values.get("omittedSecondaryFailures")));
+      unseenDiagnostics |= Boolean.parseBoolean(values.get("additionalDiagnosticsMayExist"));
+      unseenSecondary |= Boolean.parseBoolean(values.get("additionalSecondaryFailuresMayExist"));
+    } else if (!retain(diagnostics, diagnostic, limits.maxDiagnostics() - 1, DIAGNOSTIC_ORDER)) {
+      omittedDiagnostics = omittedDiagnostics.add(BigInteger.ONE);
+    }
+    rejectTruncation();
+    return rejected;
+  }
+
+  /**
+   * Rejects the reserved summary immediately when needed, before any later publication decision.
+   * Its CLEANUP key is fixed like the summary itself, independently of worker completion timing.
+   */
+  private void rejectTruncation() {
+    if (!summaryPolicyAccepted
+        && truncated()
+        && policy.rejectedWarningIdentifiers().contains(TRUNCATED)) {
+      summaryPolicyAccepted = true;
+      Failure candidate =
+          new Failure(
+              FailureKind.POLICY,
+              OperationPhase.CLEANUP,
+              OptionalLong.empty(),
+              Optional.of(TRUNCATED),
+              Optional.of(DiagnosticLocation.operation()),
+              Optional.empty());
+      if (!candidate.equals(primary) && !secondary.contains(candidate))
+        acceptCandidate(candidate, TRUNCATED);
+    }
+  }
+
+  /** Reports whether the single reserved summary is required without materializing it. */
+  private boolean truncated() {
+    return omittedDiagnostics.signum() > 0
+        || omittedSecondary.signum() > 0
+        || unseenDiagnostics
+        || unseenSecondary;
   }
 
   /** Returns whether an operational failure has been accepted. */
   public boolean failed() {
     return primary != null;
+  }
+
+  /** Establishes new immutable validation evidence and admits its diagnostics under policy. */
+  public void assessment(ArchiveAssessment value) {
+    latestAssessment(value);
+    for (Diagnostic diagnostic : value.diagnostics()) diagnostic(diagnostic);
+  }
+
+  /**
+   * Updates the latest validation boundary without readmitting an already retained diagnostic
+   * snapshot. This prevents nested truncation summaries from counting the same omission twice.
+   */
+  public void latestAssessment(ArchiveAssessment value) {
+    assessment = Optional.of(Objects.requireNonNull(value, "assessment"));
   }
 
   /**
@@ -85,11 +157,20 @@ public final class FailureRetention {
   public ArchiveException finish(List<Artifact> settledArtifacts) {
     if (primary == null) return null;
     mergeArtifacts(settledArtifacts);
+    var orderedSecondary = new ArrayList<>(secondary);
+    orderedSecondary.sort(FAILURE_ORDER);
+    if (primary.kind() == FailureKind.CANCELLED) {
+      return new ArchiveCancelledException(
+          message, primary, diagnostics(), orderedArtifacts(), assessment, orderedSecondary);
+    }
+    return new ArchiveException(
+        message, primary, diagnostics(), orderedArtifacts(), assessment, orderedSecondary);
+  }
+
+  /** Returns detached diagnostic evidence, including the single reserved truncation summary. */
+  public List<Diagnostic> diagnostics() {
     var orderedDiagnostics = new ArrayList<>(diagnostics);
-    if (omittedDiagnostics.signum() > 0
-        || omittedSecondary.signum() > 0
-        || unseenDiagnostics
-        || unseenSecondary) {
+    if (truncated()) {
       var values = new TreeMap<String, String>();
       values.put("omittedDiagnostics", omittedDiagnostics.toString());
       values.put("omittedSecondaryFailures", omittedSecondary.toString());
@@ -106,17 +187,22 @@ public final class FailureRetention {
               Optional.empty()));
     }
     orderedDiagnostics.sort(DIAGNOSTIC_ORDER);
-    var orderedSecondary = new ArrayList<>(secondary);
-    orderedSecondary.sort(FAILURE_ORDER);
+    return List.copyOf(orderedDiagnostics);
+  }
+
+  /** Returns a detached successful report after every artifact state has settled. */
+  public OperationReport report(List<Artifact> settledArtifacts) {
+    if (failed()) throw new IllegalStateException("An accepted failure cannot produce success");
+    mergeArtifacts(settledArtifacts);
+    return new OperationReport(operation, orderedArtifacts(), diagnostics(), assessment);
+  }
+
+  /** Orders normalized artifact states independently of discovery or cleanup completion timing. */
+  private List<Artifact> orderedArtifacts() {
     var orderedArtifacts = new ArrayList<>(artifacts.values());
     orderedArtifacts.sort(
         Comparator.comparingLong(Artifact::ordinal).thenComparing(a -> a.path().toString()));
-    if (primary.kind() == FailureKind.CANCELLED) {
-      return new ArchiveCancelledException(
-          message, primary, orderedDiagnostics, orderedArtifacts, assessment, orderedSecondary);
-    }
-    return new ArchiveException(
-        message, primary, orderedDiagnostics, orderedArtifacts, assessment, orderedSecondary);
+    return List.copyOf(orderedArtifacts);
   }
 
   /** Normalizes reporting paths without following links or changing filesystem state. */
@@ -131,6 +217,25 @@ public final class FailureRetention {
   private void retainSecondary(Failure failure) {
     if (!retain(secondary, failure, limits.maxSecondaryFailures(), FAILURE_ORDER)) {
       omittedSecondary = omittedSecondary.add(BigInteger.ONE);
+    }
+  }
+
+  /**
+   * Earlier admitted work may settle after a stop, but cancellation cannot cross the outcome race
+   * already won by either class. A displaced primary consumes ordinary secondary retention credit.
+   */
+  private void acceptCandidate(Failure candidate, String explanation) {
+    if (primary == null) {
+      primary = candidate;
+      message = explanation;
+    } else if (primary.kind() != FailureKind.CANCELLED
+        && candidate.kind() != FailureKind.CANCELLED
+        && FAILURE_ORDER.compare(candidate, primary) < 0) {
+      retainSecondary(primary);
+      primary = candidate;
+      message = explanation;
+    } else {
+      retainSecondary(candidate);
     }
   }
 

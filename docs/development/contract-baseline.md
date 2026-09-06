@@ -15,7 +15,7 @@ The permanent requirements were traced before implementation through
 | `JBSA-LIB-001`, `002`, `005`, `006`, `007`, `009`, `010`, `011` | Concrete stateless module, Path-first signatures, immutable metadata/request/outcome values, long quantities, exact standard limits, controls, and public JPMS consumer tests. |
 | `JBSA-LIB-008`, `012` | Sealed source values, ordered source retention, fresh-channel ownership contract, and name-identity derivation. Directory expansion, overlay replacement, and canonical-pack preflight execute in later packing slices. |
 | `JBSA-LIB-003`, `004` | Owned parent/entry/content signatures and documented lifetime/EOF contracts. The registry assigns backing-handle and close-race execution to #34. No simulated archive certifies these guarantees here. |
-| `JBSA-OPS-001` through `010` | Checked failures, immutable assessment/diagnostic/policy/report/progress/control values and constructor behavior. Shared execution, deterministic selection/retention, cancellation races, and observer delivery remain #36. |
+| `JBSA-OPS-001` through `010` | Checked failures and immutable public values. Issue #36 adds [shared operation execution](operation-semantics.md), deterministic selection/retention, cancellation acceptance, and observer delivery; family conformance remains downstream. |
 | `JBSA-OPS-011` | Immutable artifact states and normalized absolute artifact paths. Safe publication, rollback, residual cleanup, and ownership execution remain #35. |
 | `JBSA-DET-001` through `005` | Bounded binary recognition supports the module's detection entry point; no structural or payload conformance claim follows from detection. Family slices add their complete detection/conformance evidence. |
 
@@ -38,8 +38,12 @@ their parsers with the eager index and lazy content implementation.
 
 `inspect(Path)`, `inspect(Path, OpenOptions)`, `open(Path, OpenOptions)`,
 `extract(ExtractRequest, OperationControl)`, and `pack(PackRequest, OperationControl)` are callable
-baseline entry points. Until family execution is implemented, they report `CAPABILITY` with
-`baseline.archive-operation-unavailable` and no destination artifacts. They do not return fabricated
+baseline entry points. `inspect` and `open` validate source access and bounded recognition first,
+reporting `SOURCE`, `FORMAT`, or `UNSUPPORTED` when that layer fails. Supported selectors still
+report `CAPABILITY` with `baseline.archive-operation-unavailable` until family parsers arrive.
+Mutation entry points apply pre-cancellation, preflight progress, observer isolation, and cleanup
+semantics before returning their baseline capability failure, with no destination artifacts.
+They do not return fabricated
 inspections, reports, or open archives. Standard inspection options contain no Compatibility Profile,
 the exact standard Resource Limits, and no reconstruction DDS Target.
 

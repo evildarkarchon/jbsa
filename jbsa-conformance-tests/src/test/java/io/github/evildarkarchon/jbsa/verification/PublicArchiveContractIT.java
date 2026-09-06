@@ -73,7 +73,7 @@ final class PublicArchiveContractIT {
             .orElseThrow());
   }
 
-  /** Both inspection overloads preserve baseline capability failure; source I/O remains checked. */
+  /** Both inspection overloads preserve source-failure semantics without claiming structure. */
   @Test
   void inspectionDefaultsAndSourceFailuresAreStructured() throws Exception {
     Path path = directory.resolve("missing.bsa");
@@ -84,8 +84,11 @@ final class PublicArchiveContractIT {
     ArchiveException implicit = assertThrows(ArchiveException.class, () -> library.inspect(path));
     ArchiveException explicit =
         assertThrows(ArchiveException.class, () -> library.inspect(path, OpenOptions.standard()));
-    assertEquals(FailureKind.CAPABILITY, implicit.kind());
-    assertEquals(implicit.primaryFailure(), explicit.primaryFailure());
+    assertEquals(FailureKind.SOURCE, implicit.kind());
+    assertEquals(implicit.kind(), explicit.kind());
+    assertEquals(implicit.diagnostics(), explicit.diagnostics());
+    assertInstanceOf(java.nio.file.NoSuchFileException.class, implicit.getCause());
+    assertInstanceOf(java.nio.file.NoSuchFileException.class, explicit.getCause());
     assertTrue(implicit.assessment().isEmpty());
     assertTrue(implicit.artifacts().isEmpty());
     assertThrows(NullPointerException.class, () -> library.detect(null));
