@@ -22,6 +22,43 @@ final class ResourceBudgetTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("archive.bin"), Operation.OPEN);
 
   /**
+   * A growing scratch owner reuses one token, rejects over-limit growth, and returns all credit.
+   */
+  @Test
+  void growsScratchLeaseWithoutOvercountingTheExistingExtent() throws Exception {
+    try (ResourceBudget budget = new ResourceBudget(limits(100, 100, 10), CONTEXT, 0, 0, 0)) {
+      ResourceBudget.Lease scratch = budget.reserve(0, 0, 0, 4);
+      scratch.growScratch(6);
+      ArchiveException exceeded =
+          assertThrows(ArchiveException.class, () -> scratch.growScratch(1));
+      assertEquals("11", exceeded.diagnostics().getFirst().values().get("observed"));
+      assertThrows(IllegalArgumentException.class, () -> scratch.growScratch(-1));
+      scratch.close();
+      assertThrows(IllegalStateException.class, () -> scratch.growScratch(1));
+      try (ResourceBudget.Lease all = budget.reserve(0, 0, 0, 10)) {
+        assertNotNull(all);
+      }
+    }
+  }
+
+  /**
+   * Sequential mutation bounds its handle owners and the native Windows identity working window.
+   */
+  @Test
+  void mutationCapacityRemainsBoundedAndReleasesWithTheOperation() throws Exception {
+    try (ResourceBudget budget = ResourceBudget.forMutation(ResourceLimits.standard(), CONTEXT)) {
+      try (ResourceBudget.Lease owners = budget.reserve(64 * 1024, 128 * 1024, 4, 0)) {
+        assertNotNull(owners);
+        assertThrows(ArchiveException.class, () -> budget.reserve(0, 0, 1, 0));
+        assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
+      }
+      try (ResourceBudget.Lease returned = budget.reserve(64 * 1024, 128 * 1024, 4, 0)) {
+        assertNotNull(returned);
+      }
+    }
+  }
+
+  /**
    * An exhausted dimension rejects the whole reservation; closing a lease releases every credit.
    */
   @Test

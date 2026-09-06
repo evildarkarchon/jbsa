@@ -27,6 +27,14 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Only the internal Windows filesystem qualification tests need native access. -->
+          <argLine>-Dfile.encoding=UTF-8 --enable-native-access=io.github.evildarkarchon.jbsa</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
         <configuration>

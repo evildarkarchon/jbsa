@@ -21,6 +21,10 @@ is unchanged. The module requires `jdk.unsupported` only for OpenJDK's qualified
 extended sharing options; no reflection, native library, native-access grant, or
 public provider adapter is introduced.
 
+The subsequent [publication slice](publication.md) adds an internal Windows FFM
+identity backend and an explicit native-access grant for publication tests; the
+archive-read path described here remains unchanged.
+
 A future format loader calls `OwnedArchive.load`, declares its entry count before
 constructing entry records, reads encoded headers/tables through bounded
 `readMetadata` windows and names through `readName`, and adds checked stored

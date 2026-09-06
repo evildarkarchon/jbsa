@@ -30,6 +30,25 @@ public final class ResourceBudget implements AutoCloseable {
   }
 
   /**
+   * Creates bounded admission for sequential mutation with source, scratch, and staging handles.
+   * The native allowance covers one bounded Windows identity downcall at a time. The caller closes
+   * this operation-scoped budget after every owner releases its resources.
+   */
+  public static ResourceBudget forMutation(ResourceLimits limits, IoContext context) {
+    return new ResourceBudget(
+        limits,
+        context,
+        Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
+        128 * 1024,
+        4);
+  }
+
+  /** Returns immutable semantic limits to operation-owned cleanup reporters. */
+  ResourceLimits limits() {
+    return limits;
+  }
+
+  /**
    * Uses explicit capacities for deterministic admission tests; every ceiling must be nonnegative.
    */
   ResourceBudget(
@@ -153,7 +172,7 @@ public final class ResourceBudget implements AutoCloseable {
     private final long heap;
     private final long nativeBytes;
     private final long handles;
-    private final long scratch;
+    private long scratch;
     private boolean released;
 
     /** Records the credits admitted atomically by the owning budget. */
@@ -162,6 +181,27 @@ public final class ResourceBudget implements AutoCloseable {
       this.nativeBytes = nativeBytes;
       this.handles = handles;
       this.scratch = scratch;
+    }
+
+    /**
+     * Reserves additional retained scratch before its extent grows, without allocating another
+     * token. Failed admission preserves both the lease and shared budget; closed owners cannot
+     * grow.
+     *
+     * @throws ArchiveException if the cumulative scratch ceiling would be exceeded
+     */
+    public void growScratch(long added) throws ArchiveException {
+      synchronized (ResourceBudget.this) {
+        ensureOpen();
+        if (released) throw new IllegalStateException("Resource lease is released");
+        nonnegative(added);
+        long next =
+            semanticTotal(
+                ResourceBudget.this.scratch, added, limits.maxScratchBytes(), "maxScratchBytes");
+        // One mutable reservation keeps streaming bookkeeping independent of the number of writes.
+        scratch += added;
+        ResourceBudget.this.scratch = next;
+      }
     }
 
     /** Releases credits once, without checked cleanup failures or reopening a closed budget. */
