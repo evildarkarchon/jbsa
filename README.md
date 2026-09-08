@@ -32,3 +32,5 @@ The library is at the **pre-1.0 Contract Baseline**. See
 [the interface guide](docs/development/contract-baseline.md) for public JPMS usage, immutable
 contracts and archive execution gates. The [TES3 walking slice](docs/development/tes3.md)
 provides Morrowind BSA inspection, owned content reads, extraction, packing, and thin CLI commands.
+The [TES4 / Oblivion slice](docs/development/tes4.md) adds versioned BSA `0x67`,
+stored and zlib content, mixed-entry decoding, flags, and `-tes4` CLI operations.

@@ -51,9 +51,15 @@ function Invoke-ConformanceRegisteredCase {
         }
         $executable = Assert-ConformanceBoundFile @{ path = $Registration.command.executable; sha256 = $Registration.command.sha256 } $RepositoryRoot $Mode
         if ([IO.Path]::GetFileName($executable) -ieq 'BSArch.exe') { throw 'BSArch must use the dedicated local oracle adapter.' }
-        if (@($Case.metadata.golden_bindings).Count -ne 1) { throw 'Exactly one bound assertion golden is required.' }
-        $goldenPath = Assert-ConformanceBoundFile $Case.metadata.golden_bindings[0] $RepositoryRoot $Mode
-        $golden = Get-Content -Raw -LiteralPath $goldenPath | ConvertFrom-Json -AsHashtable -Depth 100
+        # A fixture can serve decode and encode cases. The catalog binds its complete provenance
+        # golden set; select this case's one golden without dropping the other digest checks.
+        $matchingGoldens = @(foreach ($goldenBinding in $Case.metadata.golden_bindings) {
+            $goldenPath = Assert-ConformanceBoundFile $goldenBinding $RepositoryRoot $Mode
+            $candidateGolden = Get-Content -Raw -LiteralPath $goldenPath | ConvertFrom-Json -AsHashtable -Depth 100
+            if ($candidateGolden.case_id -ceq $Case.identity.case_id) { $candidateGolden }
+        })
+        if ($matchingGoldens.Count -ne 1) { throw 'Exactly one bound assertion golden for this case is required.' }
+        $golden = $matchingGoldens[0]
         if ($golden.contract -cne 'conformance-v1' -or $golden.case_id -cne $Case.identity.case_id -or
             $golden.configuration_sha256 -cne $ConfigurationSha256 -or $golden.specification_sha256 -cne $SpecificationSha256) {
             throw 'Golden identity, specification, or configuration binding is stale or incomplete.'

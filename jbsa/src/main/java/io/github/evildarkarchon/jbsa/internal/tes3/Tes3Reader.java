@@ -43,30 +43,7 @@ public final class Tes3Reader {
   public static OpenArchive open(
       Path path, OpenOptions options, Operation operation, DiagnosticPolicy policy)
       throws IOException {
-    return OwnedArchive.load(
-        path,
-        options.resourceLimits(),
-        operation,
-        policy,
-        builder -> {
-          if (builder.size() < 4 || builder.readSelectors(4).getInt() != 0x100) {
-            // The existing source remains pinned during recognition of other archive families.
-            ArchiveDetection detection = BethesdaArchives.standard().detect(path);
-            IoContext context = IoContext.of(path, operation);
-            throw switch (detection.status()) {
-              case SUPPORTED_FAMILY ->
-                  context.failure(
-                      FailureKind.CAPABILITY, "baseline.archive-operation-unavailable", null);
-              case UNSUPPORTED_VARIANT ->
-                  context.failure(FailureKind.UNSUPPORTED, "archive.unsupported-variant", null);
-              case INDETERMINATE ->
-                  context.failure(FailureKind.FORMAT, "archive.incomplete-selector", null);
-              case UNRECOGNIZED ->
-                  context.failure(FailureKind.FORMAT, "archive.unrecognized", null);
-            };
-          }
-          return load(builder, path, options, operation, policy);
-        });
+    return ArchiveReaders.open(path, options, operation, policy);
   }
 
   /**
@@ -81,7 +58,7 @@ public final class Tes3Reader {
   /**
    * Retains selected policy during parse, including warnings later omitted by retention ceilings.
    */
-  private static ArchiveInspection load(
+  public static ArchiveInspection load(
       OwnedArchive.IndexBuilder builder,
       Path path,
       OpenOptions options,

@@ -16,12 +16,87 @@ import org.junit.jupiter.api.io.TempDir;
 class MainTest {
   @TempDir Path temporary;
 
+  /** TES4 switches reach the public packer and inspection renders actual compression and flags. */
+  @Test
+  void packsAndUnpacksTes4ZlibWithDetachedDump() throws Exception {
+    Path source = Files.createDirectories(temporary.resolve("tes4-input/meshes"));
+    Files.writeString(source.resolve("a.nif"), "payload".repeat(100));
+    Path archive = temporary.resolve("tes4.bsa");
+    Result packed =
+        run(
+            "pack",
+            source.getParent().toString(),
+            archive.toString(),
+            "-tes4",
+            "-z",
+            "-af:0x603",
+            "-ff:1",
+            "-share:no",
+            "--no-progress");
+    assertEquals(0, packed.status(), packed.error());
+    Result dumped = run(archive.toString(), "-dump");
+    assertEquals(0, dumped.status(), dumped.error());
+    assertTrue(dumped.output().contains("Family: TES4_BSA"));
+    assertTrue(dumped.output().contains("Compressed entries: 1"));
+    assertTrue(dumped.output().contains("Codec: ZLIB"));
+    assertTrue(dumped.output().contains("Folder hash:"));
+    assertTrue(dumped.output().contains("Archive flags:"));
+    Path destination = Files.createDirectory(temporary.resolve("tes4-output"));
+    Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
+    assertEquals(0, unpacked.status(), unpacked.error());
+    assertEquals("payload".repeat(100), Files.readString(destination.resolve("meshes/a.nif")));
+  }
+
   @Test
   void noArgumentsPrintsHelpToStandardOutput() throws Exception {
     Result result = run();
     assertEquals(0, result.status());
     assertTrue(result.output().contains("pack <source1+source2+...> <archive>"));
     assertEquals("", result.error());
+  }
+
+  /** Safe family/codec parsing rejects contradictory requests before touching missing sources. */
+  @Test
+  void rejectsInvalidTes4SelectorsAndFlags() throws Exception {
+    for (String[] options :
+        List.of(
+            new String[] {"-tes4", "-tes3"},
+            new String[] {"-tes4", "-z:lz4"},
+            new String[] {"-tes4", "-z:lz4f"},
+            new String[] {"-tes4", "-af:100000000"},
+            new String[] {"-tes4", "-ff:-1"},
+            new String[] {"-tes4", "-af:"},
+            new String[] {"-tes4", "-z", "-z:zlib"})) {
+      var args =
+          new ArrayList<>(List.of("pack", "missing", temporary.resolve("absent.bsa").toString()));
+      args.addAll(List.of(options));
+      assertEquals(2, run(args.toArray(String[]::new)).status(), args.toString());
+    }
+  }
+
+  /**
+   * The explicitly selected compatibility profile resolves multiple implemented families by
+   * priority.
+   */
+  @Test
+  void profileChoosesTes3BeforeTes4RegardlessOfSwitchOrder() throws Exception {
+    for (String[] order :
+        List.of(new String[] {"-tes4", "-tes3"}, new String[] {"-tes3", "-tes4"})) {
+      Path source = Files.createTempDirectory(temporary, "profile-source");
+      Files.writeString(source.resolve("a.txt"), "one");
+      Path archive = temporary.resolve(source.getFileName() + ".bsa");
+      var args =
+          new ArrayList<>(
+              List.of(
+                  "--compatibility-profile=bsarch-1.0/v1",
+                  "pack",
+                  source.toString(),
+                  archive.toString()));
+      args.addAll(List.of(order));
+      Result result = run(args.toArray(String[]::new));
+      assertEquals(0, result.status(), result.error());
+      assertTrue(run(archive.toString()).output().contains("Family: TES3_BSA"));
+    }
   }
 
   @Test

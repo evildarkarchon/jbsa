@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Set;
 
-/** Parent-owned input and eager stored-entry index; no storage seam is exported through JPMS. */
+/** Parent-owned input and eager payload index; no storage seam is exported through JPMS. */
 public final class OwnedArchive implements OpenArchive {
   private final Object lifetime = new Object();
   private final ArchiveInput input;
@@ -200,6 +200,41 @@ public final class OwnedArchive implements OpenArchive {
       return new WireName(bytes);
     }
 
+    /**
+     * Borrows at most 128 decoded bytes for format warnings without claiming complete payload
+     * validation. Codec and buffer credits are reserved before allocation and released on return.
+     */
+    public ByteBuffer readPayloadPrefix(
+        long offset, long streamSize, long decodedSize, boolean zlib, int length)
+        throws IOException {
+      if (length < 0 || length > 128) throw new IllegalArgumentException("Payload prefix extent");
+      ExactIo.end(offset, streamSize, input.size(), context);
+      try (var credit =
+          budget.reserve(
+              length + (zlib ? JdkZlib.DECODE_HEAP_BYTES : 0),
+              zlib ? JdkZlib.DECODE_NATIVE_BYTES : 0,
+              0,
+              0)) {
+        ByteBuffer prefix =
+            ByteBuffer.allocate((int) Math.min(length, decodedSize))
+                .order(java.nio.ByteOrder.LITTLE_ENDIAN);
+        if (zlib) {
+          try (var decoder =
+              JdkZlib.decoder(
+                  (relative, bytes) -> input.readExact(offset + relative, bytes),
+                  streamSize,
+                  decodedSize,
+                  context)) {
+            while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
+              // Only the bounded prefix is requested; full codec consumption belongs to content
+              // EOF.
+            }
+          }
+        } else input.readExact(offset, prefix);
+        return prefix.flip();
+      }
+    }
+
     /** Validates a stored span without touching payload bytes, retaining archive-order metadata. */
     public void addStored(EntryMetadata metadata, long offset) throws ArchiveException {
       if (expected < 0
@@ -209,12 +244,23 @@ public final class OwnedArchive implements OpenArchive {
         throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
       }
       ExactIo.end(offset, metadata.storedSize(), input.size(), context);
-      entries.add(new StoredEntry(metadata, offset));
+      entries.add(new StoredEntry(metadata, offset, metadata.storedSize(), false));
+    }
+
+    /**
+     * Admits zlib framing separately from its decoded size without eagerly decoding the payload.
+     */
+    public void addZlib(EntryMetadata metadata, long streamOffset, long streamSize)
+        throws ArchiveException {
+      if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
+        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
+      ExactIo.end(streamOffset, streamSize, input.size(), context);
+      entries.add(new StoredEntry(metadata, streamOffset, streamSize, true));
     }
   }
 
-  /** A stored range uses no per-entry payload buffer or decoded cache. */
-  private record StoredEntry(EntryMetadata metadata, long offset) {}
+  /** An encoded range has no decoded cache; each compressed child owns independent codec state. */
+  private record StoredEntry(EntryMetadata metadata, long offset, long streamSize, boolean zlib) {}
 
   /** Returns detached structural evidence, including after the owned input has closed. */
   @Override
@@ -263,7 +309,12 @@ public final class OwnedArchive implements OpenArchive {
             }
             ResourceBudget.Lease credit;
             try {
-              credit = budget.reserve(512, 0, 0, 0);
+              credit =
+                  budget.reserve(
+                      512 + (stored.zlib() ? JdkZlib.DECODE_HEAP_BYTES : 0),
+                      stored.zlib() ? JdkZlib.DECODE_NATIVE_BYTES : 0,
+                      0,
+                      0);
             } catch (ArchiveException capacity) {
               // Query children own READ_CONTENT evidence; mutation children retain their operation.
               FailureRetention retention = new FailureRetention(limits, contentOperation());
@@ -310,6 +361,7 @@ public final class OwnedArchive implements OpenArchive {
       closed = true;
       for (Content child : children) {
         child.open = false;
+        if (child.decoder != null) child.decoder.close();
         child.credit.close();
       }
       children.clear();
@@ -325,6 +377,7 @@ public final class OwnedArchive implements OpenArchive {
   private final class Content implements EntryContent {
     private final StoredEntry stored;
     private final ResourceBudget.Lease credit;
+    private final JdkZlib.Decoder decoder;
     private final Object reads = new Object();
     private boolean open = true;
     private long position;
@@ -333,6 +386,14 @@ public final class OwnedArchive implements OpenArchive {
     private Content(StoredEntry stored, ResourceBudget.Lease credit) {
       this.stored = stored;
       this.credit = credit;
+      decoder =
+          stored.zlib()
+              ? JdkZlib.decoder(
+                  (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
+                  stored.streamSize(),
+                  stored.metadata().decodedSize(),
+                  contentContext(stored.metadata().ordinal()))
+              : null;
     }
 
     /** Returns terminal EOF evidence when established, retaining it after any subsequent close. */
@@ -365,6 +426,21 @@ public final class OwnedArchive implements OpenArchive {
             throw new ClosedByInterruptException();
           }
           if (destination.isReadOnly()) throw new java.nio.ReadOnlyBufferException();
+          if (decoder != null) {
+            int count = decoder.read(destination);
+            synchronized (lifetime) {
+              // Codec completion and parent close use the same publication boundary as stored
+              // reads.
+              if (!open || closed) throw new AsynchronousCloseException();
+              if (count < 0 && assessment == null)
+                assessment =
+                    new ArchiveAssessment(
+                        inspection.assessment().disposition(),
+                        new ValidationExtent.Payloads(Set.of(stored.metadata().ordinal())),
+                        inspection.assessment().diagnostics());
+              return count;
+            }
+          }
           int count =
               (int)
                   Math.min(
@@ -480,6 +556,7 @@ public final class OwnedArchive implements OpenArchive {
       synchronized (lifetime) {
         open = false;
         children.remove(this);
+        if (decoder != null) decoder.close();
         credit.close();
       }
     }

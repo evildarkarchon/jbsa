@@ -67,6 +67,13 @@ try {
         $case.identity.case_id = "CV1-$($case.identity.archive_family).encode.$($case.identity.fixture).$($case.identity.codec).standard-v1"
     }
     Assert-CatalogRejected 'unsupported codec accepted' { param($c) ($c.cases | Where-Object { $_.metadata.expected_behavior -eq 'reject' } | Select-Object -First 1).metadata.expected_behavior = 'accept' }
+    Assert-CatalogRejected 'base-matrix membership cannot be false' { param($c) $c.cases[0].metadata | Add-Member base_matrix_cell $false }
+    Assert-CatalogRejected 'base-matrix membership cannot be a string' { param($c) $c.cases[0].metadata | Add-Member base_matrix_cell 'true' }
+    Assert-CatalogRejected 'additional explicit base cell cannot duplicate a required cell' {
+        param($c)
+        $case = $c.cases | Where-Object { $_.identity.archive_family -eq 'bsa-067' -and $_.identity.fixture -like 'malformed-*' -and $_.identity.operation -eq 'decode' } | Select-Object -First 1
+        $case.metadata | Add-Member base_matrix_cell $true
+    }
     foreach ($excludedPath in @('tests/fixtures/local/oracle/BSArch.exe', 'TES5Edit/README.md', 'tests/conformance/../fixtures/local/missing.bin')) {
         $rejectedBeforeRead = $false
         try { $null = Resolve-ConformanceBinding ([pscustomobject]@{ path = $excludedPath; sha256 = ('0' * 64) }) $repositoryRoot }

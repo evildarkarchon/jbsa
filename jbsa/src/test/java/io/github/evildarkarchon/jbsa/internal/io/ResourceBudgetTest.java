@@ -41,18 +41,16 @@ final class ResourceBudgetTest {
     }
   }
 
-  /**
-   * Sequential mutation bounds its handle owners and the native Windows identity working window.
-   */
+  /** Sequential mutation bounds its handle owners, codec state, and Windows identity window. */
   @Test
   void mutationCapacityRemainsBoundedAndReleasesWithTheOperation() throws Exception {
     try (ResourceBudget budget = ResourceBudget.forMutation(ResourceLimits.standard(), CONTEXT)) {
-      try (ResourceBudget.Lease owners = budget.reserve(64 * 1024, 128 * 1024, 4, 0)) {
+      try (ResourceBudget.Lease owners = budget.reserve(64 * 1024, 1024 * 1024, 4, 0)) {
         assertNotNull(owners);
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 0, 1, 0));
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
       }
-      try (ResourceBudget.Lease returned = budget.reserve(64 * 1024, 128 * 1024, 4, 0)) {
+      try (ResourceBudget.Lease returned = budget.reserve(64 * 1024, 1024 * 1024, 4, 0)) {
         assertNotNull(returned);
       }
     }
@@ -219,14 +217,20 @@ final class ResourceBudgetTest {
     }
   }
 
-  /** The stored substrate permits one owned file handle and allocates no native working buffers. */
+  /**
+   * An owned input permits one handle and bounded native decoder state, with all credits returned.
+   */
   @Test
-  void defaultCapacityAdmitsOneHandleAndNoNativeBuffers() throws Exception {
+  void defaultCapacityAdmitsOneHandleAndBoundedDecoderState() throws Exception {
     try (ResourceBudget budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT)) {
-      assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
-      try (ResourceBudget.Lease input = budget.reserve(512, 0, 1, 0)) {
+      assertThrows(ArchiveException.class, () -> budget.reserve(0, 1024 * 1024 + 1, 0, 0));
+      try (ResourceBudget.Lease input = budget.reserve(512, 1024 * 1024, 1, 0)) {
         assertNotNull(input);
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 0, 1, 0));
+        assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
+      }
+      try (ResourceBudget.Lease returned = budget.reserve(512, 1024 * 1024, 1, 0)) {
+        assertNotNull(returned);
       }
     }
   }

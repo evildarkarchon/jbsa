@@ -1,0 +1,808 @@
+{
+  "proposed_catalog_sha256": "1cbd4e4a6d29ebe08779710e978e78066d62b8d5033a3e566b6f8df40f397484",
+  "candidate_artifacts": [
+    {
+      "sha256": "2bafcc30249b57cdda459d390a666c6ffbecd54a813edaa7e9ff981a07a894dd",
+      "path": "jbsa/target/jbsa-0.1.0-SNAPSHOT.jar"
+    },
+    {
+      "sha256": "341e74e249d16242dc5d12413c0fe3a692118111bba3cc000a9647335152b43c",
+      "path": "jbsa-cli/target/jbsa-cli-0.1.0-SNAPSHOT.jar"
+    }
+  ],
+  "java_runtime": {
+    "version": "openjdk 25.0.4.1 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS, mixed mode, sharing)",
+    "executable": "C:\\OpenJDK\\jdk-25\\bin\\java.exe",
+    "sha256": "5808527e3dfc4eb285c7664ba356bc267055ef906e83ed4660d9f7976da7349b"
+  },
+  "automated_conformance": false,
+  "codec_profile_sha256": "b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda",
+  "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+  "adapter_registration_sha256": "ebaa269b2660499da82f0fd269ffd0572709fd461eab3e589b227908471a2355",
+  "report_sha256": "bfb04a0b32fdaea38ccdafba3acbbcc8db443cd80e36dbfddc2dcd112e90e77c",
+  "runtime_registrations_path": "target/bsa-cv1-review-final-registrations/registrations.json",
+  "review_bundle_sha256": "f6892e51ff1228c782ff551f83312568c0d3dfc5be3178d8cde21d3520fbc9b2",
+  "comparison_passes": 32,
+  "results": [
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-lz4-frame-v1.lz4-frame.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-mixed-v1.mixed.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": [
+        "PASS"
+      ]
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-raw-deflate-v1.raw-deflate.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-raw-lz4-v1.raw-lz4.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-stored-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": [
+        "PASS"
+      ]
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-zlib-v1.zlib.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": [
+        "PASS"
+      ]
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-arithmetic-overflow-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-arithmetic-overflow",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-decompression-mismatch-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-decompression-mismatch",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-equal-name-identities-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-equal-name-identities",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-exact-shared-spans-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-exact-shared-spans",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-harmless-trailing-bytes-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-harmless-trailing-bytes",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-ignorable-constants-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-ignorable-constants",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-illegal-tuples-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-illegal-tuples",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-impossible-counts-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-impossible-counts",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-missing-name-tables-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-missing-name-tables",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-out-of-range-spans-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-out-of-range-spans",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-owning-dispositions-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-owning-dispositions",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-partial-overlap-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-partial-overlap",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-truncated-spans-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-truncated-spans",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-undecodable-wire-names-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-undecodable-wire-names",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-unsafe-absolute-names-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-unsafe-absolute-names",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-unsafe-traversal-names-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-unsafe-traversal-names",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-usable-name-hash-mismatch-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-usable-name-hash-mismatch",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-windows-invalid-names-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-windows-invalid-names",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-lz4-frame-v1.lz4-frame.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-mixed-v1.mixed.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "encode-cross-directions",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "oracle-to-jbsa",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "jbsa-to-oracle",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": "PASS",
+      "independent_validator_results": [
+        "PASS"
+      ]
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-raw-deflate-v1.raw-deflate.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-raw-lz4-v1.raw-lz4.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-stored-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "encode-cross-directions",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "oracle-to-jbsa",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "jbsa-to-oracle",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": "PASS",
+      "independent_validator_results": [
+        "PASS"
+      ]
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-zlib-v1.zlib.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "encode-cross-directions",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "oracle-to-jbsa",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "jbsa-to-oracle",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": "PASS",
+      "independent_validator_results": [
+        "PASS"
+      ]
+    },
+    {
+      "case_id": "CV1-bsa-067.extract.bsa-067-malformed-unsafe-name-extraction-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-malformed-unsafe-name-extraction",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    },
+    {
+      "case_id": "CV1-bsa-067.scenario.bsa-067-xml-v1.stored.standard-v1",
+      "comparison_result": "PASS",
+      "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS"
+        },
+        {
+          "assertion_id": "coverage-bsa-xml-067",
+          "result": "PASS"
+        }
+      ],
+      "oracle_result": null,
+      "independent_validator_results": []
+    }
+  ]
+}

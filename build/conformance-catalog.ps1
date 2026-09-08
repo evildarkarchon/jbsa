@@ -273,11 +273,14 @@ function Read-ConformanceCatalog {
             foreach ($file in $binding.files) { $null = Resolve-ConformanceBinding $file $RepositoryRoot }
             $null = Resolve-ConformanceBinding $binding.generator.descriptor $RepositoryRoot
             $null = Resolve-ConformanceBinding $binding.generator.implementation $RepositoryRoot
-            $provenance = Read-ConformanceJson -Path (Resolve-ConformanceBinding $binding.provenance.manifest $RepositoryRoot)
+            $provenancePath = Resolve-ConformanceBinding $binding.provenance.manifest $RepositoryRoot
+            $provenance = Read-ConformanceJson -Path $provenancePath
+            # Independently generated corpora retain paths relative to their own pinned manifest.
+            $corpusPrefix = [IO.Path]::GetRelativePath($RepositoryRoot, (Split-Path $provenancePath -Parent)).Replace('\', '/') + '/'
             $sourceFixture = @($provenance.fixtures | Where-Object { $_.id -ceq $binding.provenance.fixture_id })
             if ($sourceFixture.Count -ne 1 -or $binding.files.Count -ne 1 -or
                 $binding.files[0].sha256 -cne $sourceFixture[0].output.sha256 -or
-                $binding.files[0].path -cne ('tests/fixtures/synthetic/' + $sourceFixture[0].output.path) -or
+                $binding.files[0].path -cne ($corpusPrefix + $sourceFixture[0].output.path) -or
                 $binding.generator.id -cne $provenance.generator.id -or
                 $binding.generator.version -cne $provenance.generator.version -or
                 $binding.generator.implementation.path -cne $provenance.generator.implementation -or
@@ -292,7 +295,7 @@ function Read-ConformanceCatalog {
             }
             foreach ($golden in $metadata.golden_bindings) {
                 if (@($expectedGoldens | Where-Object {
-                    $_.sha256 -ceq $golden.sha256 -and ('tests/fixtures/synthetic/' + $_.path) -ceq $golden.path
+                    $_.sha256 -ceq $golden.sha256 -and ($corpusPrefix + $_.path) -ceq $golden.path
                 }).Count -ne 1) { throw "Unbound golden source: '$expectedId'." }
             }
         }
@@ -303,7 +306,13 @@ function Read-ConformanceCatalog {
             throw "A missing fixture cannot carry available golden or input bytes: '$expectedId'."
         }
         foreach ($golden in $metadata.golden_bindings) { $null = Resolve-ConformanceBinding $golden $RepositoryRoot }
-        if ($identity.fixture -ceq "base-$($identity.archive_family)-$($identity.codec)") {
+        $explicitBase = @($metadata.PSObject.Properties | Where-Object Name -CEQ 'base_matrix_cell')
+        if ($explicitBase.Count -and ($explicitBase[0].Value -isnot [bool] -or $explicitBase[0].Value -ne $true)) {
+            throw "Explicit base-matrix membership must be true: '$expectedId'."
+        }
+        # Successor fixture tokens change when materialized content replaces an immutable assignment.
+        # Cell identity stays the family/direction/codec tuple, with all applicability checks below.
+        if ($explicitBase.Count -or $identity.fixture -ceq "base-$($identity.archive_family)-$($identity.codec)") {
             $key = "$($identity.archive_family).$($identity.operation).$($identity.codec)"
             if ($cells.ContainsKey($key)) { throw "Duplicate base matrix cell: '$key'." }
             $cells.Add($key, $case)

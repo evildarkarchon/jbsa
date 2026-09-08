@@ -60,6 +60,19 @@ public final class PublicationTransaction {
         .run(List.copyOf(writers), List.of());
   }
 
+  /** Borrows the planner's budget so retained stabilization and staged bytes share one ceiling. */
+  public static OperationReport archives(
+      Path destination,
+      List<Writer> writers,
+      TargetPolicy policy,
+      ResourceLimits limits,
+      OperationSession operation,
+      ResourceBudget budget)
+      throws ArchiveException {
+    return new Session(destination, policy, limits, operation, new FileActions(), false, budget)
+        .run(List.copyOf(writers), List.of());
+  }
+
   /**
    * Publishes validated selected names as one new root or ordered per-file existing-tree commits.
    */
@@ -261,6 +274,7 @@ public final class PublicationTransaction {
     private final FileActions files;
     private final boolean extraction;
     private final ResourceBudget budget;
+    private final boolean ownsBudget;
     private final List<Part> parts = new ArrayList<>();
     private final LinkedHashMap<Path, Long> owned = new LinkedHashMap<>();
     private final List<ResourceBudget.Lease> credits = new ArrayList<>();
@@ -287,6 +301,18 @@ public final class PublicationTransaction {
         OperationSession operation,
         FileActions files,
         boolean extraction) {
+      this(destination, policy, limits, operation, files, extraction, null);
+    }
+
+    /** Keeps a borrowed planner budget alive until its stabilization owner has settled cleanup. */
+    Session(
+        Path destination,
+        TargetPolicy policy,
+        ResourceLimits limits,
+        OperationSession operation,
+        FileActions files,
+        boolean extraction,
+        ResourceBudget sharedBudget) {
       this.destination =
           Objects.requireNonNull(destination, "destination").toAbsolutePath().normalize();
       this.policy = Objects.requireNonNull(policy, "policy");
@@ -294,7 +320,8 @@ public final class PublicationTransaction {
       this.files = Objects.requireNonNull(files, "files");
       this.extraction = extraction;
       operationSession = Objects.requireNonNull(operation, "operation");
-      budget = ResourceBudget.forMutation(limits, context());
+      ownsBudget = sharedBudget == null;
+      budget = ownsBudget ? ResourceBudget.forMutation(limits, context()) : sharedBudget;
     }
 
     /** Settles cleanup before returning evidence, preserving the first accepted failure. */
@@ -413,7 +440,7 @@ public final class PublicationTransaction {
           }
         }
         credits.forEach(ResourceBudget.Lease::close);
-        budget.close();
+        if (ownsBudget) budget.close();
         operationSession.cleaned(artifacts().size());
       }
       List<Artifact> artifacts = artifacts();

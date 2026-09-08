@@ -117,7 +117,7 @@ class OperationSemanticsTest {
   private PackRequest request() {
     return PackRequest.standard(
         directory.resolve("archive.bsa"),
-        ArchiveFamily.TES4_BSA,
+        ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA,
         ArchiveEncoding.tes3(),
         List.of(),
         Optional.empty());

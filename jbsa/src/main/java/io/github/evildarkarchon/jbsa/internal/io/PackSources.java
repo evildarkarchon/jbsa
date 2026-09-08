@@ -1,7 +1,7 @@
-package io.github.evildarkarchon.jbsa.internal.tes3;
+package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.*;
+import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -11,12 +11,54 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
 /** Complete source discovery and ordered overlays, before any payload factory is invoked. */
-final class Tes3Sources {
-  private Tes3Sources() {}
+public final class PackSources {
+  private PackSources() {}
+
+  /**
+   * Attributes lazy source revalidation and read failures to their final logical processing slot.
+   */
+  public static void consume(Entry entry, Reader reader, IoContext context) throws IOException {
+    try {
+      entry.payload().consume(reader);
+    } catch (ArchiveException failure) {
+      if (failure.primaryFailure().phase() != OperationPhase.PREFLIGHT) throw failure;
+      var diagnostics =
+          failure.diagnostics().stream()
+              .map(
+                  d ->
+                      new Diagnostic(
+                          d.identifier(),
+                          d.severity(),
+                          Operation.PACK,
+                          OperationPhase.PROCESSING,
+                          d.location(),
+                          d.values(),
+                          d.explanation()))
+              .toList();
+      Failure previous = failure.primaryFailure();
+      Failure primary =
+          new Failure(
+              previous.kind(),
+              OperationPhase.PROCESSING,
+              context.ordinal(),
+              previous.diagnosticIdentifier(),
+              previous.location(),
+              previous.cause());
+      throw new ArchiveException(
+          failure.getMessage(),
+          primary,
+          diagnostics,
+          failure.artifacts(),
+          failure.assessment(),
+          failure.secondaryFailures());
+    } catch (IOException failure) {
+      throw context.failure(FailureKind.SOURCE, "operation.source-io", failure);
+    }
+  }
 
   /** Expands each supplied root independently and preserves later-source replacement semantics. */
-  static List<Entry> plan(PackRequest request, OperationSession operation, ResourceBudget budget)
-      throws IOException {
+  public static List<Entry> plan(
+      PackRequest request, OperationSession operation, ResourceBudget budget) throws IOException {
     IoContext context = IoContext.of(request.destination(), Operation.PACK);
     Map<String, Entry> overlay = new LinkedHashMap<>();
     for (PackSource source : request.sources()) {
@@ -93,7 +135,7 @@ final class Tes3Sources {
                 budget);
           } else {
             try (OpenArchive archive =
-                Tes3Reader.open(
+                ArchiveReaders.open(
                     path,
                     new OpenOptions(
                         request.compatibilityProfile(), request.resourceLimits(), Optional.empty()),
@@ -102,8 +144,7 @@ final class Tes3Sources {
               operation.assessment(archive.inspection().assessment());
               // Each closed source index releases its own memory, while parsed metadata remains
               // charged to this pack invocation even when all its entries are later overlaid.
-              budget.consumedMetadata(
-                  ((ArchiveMetadata.Tes3) archive.inspection().metadata()).dataBaseOffset());
+              budget.consumedMetadata(metadataExtent(archive.inspection()));
               for (long ordinal = 0; ordinal < archive.entryCount(); ordinal++) {
                 EntryMetadata metadata = archive.entry(ordinal).metadata();
                 if (metadata.normalizedNameIdentity().isEmpty())
@@ -117,7 +158,7 @@ final class Tes3Sources {
                             stable.consume(
                                 ignored -> {
                                   try (OpenArchive reopened =
-                                          Tes3Reader.open(
+                                          ArchiveReaders.open(
                                               path,
                                               new OpenOptions(
                                                   request.compatibilityProfile(),
@@ -143,6 +184,25 @@ final class Tes3Sources {
       }
     }
     return new ArrayList<>(overlay.values());
+  }
+
+  /** Counts parsed wire sections without charging payload bytes to a repack invocation. */
+  private static long metadataExtent(ArchiveInspection inspection) {
+    return switch (inspection.metadata()) {
+      case ArchiveMetadata.Tes3 value -> value.dataBaseOffset();
+      case ArchiveMetadata.VersionedBsa value ->
+          36
+              + value.folderCount() * 16
+              + value.entryCount() * 16
+              + value.folderNamesLength()
+              + value.fileNamesLength()
+              + ((value.archiveFlags() & 1) != 0 ? value.folderCount() : 0)
+              + inspection.entries().stream()
+                      .filter(e -> ((EntryMetadata.VersionedBsa) e.facts()).compressed())
+                      .count()
+                  * 4;
+      default -> throw new IllegalStateException("Unsupported source parser");
+    };
   }
 
   /**
@@ -305,8 +365,8 @@ final class Tes3Sources {
 
   /** Uses a backtracking wildcard scan; TES3 admitted names contain only ASCII scalar values. */
   private static boolean matches(String mask, String name) {
-    int[] pattern = mask.codePoints().map(Tes3Sources::fold).toArray();
-    int[] value = name.codePoints().map(Tes3Sources::fold).toArray();
+    int[] pattern = mask.codePoints().map(PackSources::fold).toArray();
+    int[] value = name.codePoints().map(PackSources::fold).toArray();
     int p = 0, n = 0, star = -1, retry = 0;
     while (n < value.length) {
       if (p < pattern.length && (pattern[p] == '?' || pattern[p] == value[n])) {
@@ -329,19 +389,19 @@ final class Tes3Sources {
   }
 
   /** Detached, canonical input with a repeatable bounded consumption contract. */
-  record Entry(
+  public record Entry(
       String displayName, String identity, byte[] name, long hash, long size, Payload payload) {}
 
   /** Owns source handles only for a synchronous consumption, including final source validation. */
   @FunctionalInterface
-  interface Payload {
+  public interface Payload {
     /** Consumes the stable source and closes all source-owned resources before returning. */
     void consume(Reader reader) throws IOException;
   }
 
   /** Borrows a source channel until returning; callers must not retain or close that channel. */
   @FunctionalInterface
-  interface Reader {
+  public interface Reader {
     /** Reads a borrowed sequential source without retaining it after this call. */
     void read(ReadableByteChannel channel) throws IOException;
   }

@@ -10,10 +10,14 @@ function ConvertTo-ConformanceCanonicalJson {
     param([AllowNull()] $Value)
     if ($null -eq $Value) { return 'null' }
     if ($Value -is [System.Collections.IDictionary] -or $Value -is [pscustomobject]) {
-        $keys = [string[]]$(if ($Value -is [System.Collections.IDictionary]) { @($Value.Keys) } else { @($Value.PSObject.Properties.Name) })
+        if ($Value -is [System.Collections.IDictionary]) { [string[]]$keys = @($Value.Keys) }
+        else { [string[]]$keys = @($Value.PSObject.Properties | ForEach-Object Name) }
         [Array]::Sort($keys, [StringComparer]::Ordinal)
         $members = foreach ($key in $keys) {
-            $item = if ($Value -is [System.Collections.IDictionary]) { $Value[$key] } else { $Value.PSObject.Properties[$key].Value }
+            # Assign inside each branch: an if-expression pipeline unwraps singleton arrays and
+            # turns empty arrays into null, corrupting fixture bindings and diagnostic evidence.
+            if ($Value -is [System.Collections.IDictionary]) { $item = $Value[$key] }
+            else { $item = $Value.PSObject.Properties[$key].Value }
             (ConvertTo-Json -InputObject $key -Compress) + ':' + (ConvertTo-ConformanceCanonicalJson $item)
         }
         return '{' + ($members -join ',') + '}'

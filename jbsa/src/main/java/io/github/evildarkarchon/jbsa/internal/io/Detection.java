@@ -1,5 +1,6 @@
-package io.github.evildarkarchon.jbsa;
+package io.github.evildarkarchon.jbsa.internal.io;
 
+import io.github.evildarkarchon.jbsa.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -7,11 +8,11 @@ import java.util.Optional;
 import java.util.OptionalLong;
 
 /** Bounded selector recognition; no index validation or payload dispatch occurs here. */
-final class Detection {
+public final class Detection {
   private Detection() {}
 
   /** Retains all observed selector bytes, including incomplete and unknown selector components. */
-  static ArchiveDetection recognize(byte[] bytes) {
+  public static ArchiveDetection recognize(byte[] bytes) {
     int[][] magics = {{0, 1, 0, 0}, {66, 83, 65, 0}, {66, 84, 68, 88}};
     int magic = -1;
     for (int candidate = 0; candidate < magics.length; candidate++) {

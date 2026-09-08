@@ -93,8 +93,14 @@ public final class Main {
                     ? archives.pack(
                         new PackRequest(
                             invocation.archive(),
-                            ArchiveFamily.TES3_BSA,
-                            ArchiveEncoding.tes3(),
+                            invocation.family(),
+                            invocation.family() == ArchiveFamily.TES3_BSA
+                                ? ArchiveEncoding.tes3()
+                                : new ArchiveEncoding(
+                                    Optional.of(
+                                        new io.github.evildarkarchon.jbsa.WireVersion(0x67)),
+                                    Optional.empty(),
+                                    java.util.OptionalLong.empty()),
                             invocation.profile(),
                             invocation.sources(),
                             invocation.targetPolicy(),
@@ -166,17 +172,36 @@ public final class Main {
     }
   }
 
-  /** Renders stable TES3 header and archive-order entry facts from one detached inspection. */
+  /** Renders stable BSA header and archive-order entry facts from detached library metadata. */
   private static void renderInspection(
       Invocation invocation, ArchiveInspection inspection, PrintStream output) {
     output.println("Archive: " + invocation.archive());
     output.println("Family: " + inspection.metadata().family());
     output.println("Entries: " + inspection.metadata().entryCount());
-    output.println("Compressed entries: 0");
-    output.println("Codec: STORED");
+    long compressed =
+        inspection.entries().stream()
+            .filter(
+                entry ->
+                    entry.facts() instanceof EntryMetadata.VersionedBsa facts && facts.compressed())
+            .count();
+    output.println("Compressed entries: " + compressed);
+    output.println("Codec: " + (compressed == 0 ? "STORED" : "ZLIB"));
     if (inspection.metadata() instanceof ArchiveMetadata.Tes3 metadata) {
       output.println("Hash offset: " + metadata.hashOffset());
       output.println("Data base offset: " + metadata.dataBaseOffset());
+    }
+    if (inspection.metadata() instanceof ArchiveMetadata.VersionedBsa metadata) {
+      output.println("Version: " + metadata.encoding().wireVersion().orElseThrow().value());
+      output.println("Folders: " + metadata.folderCount());
+      output.println("Folder records offset: " + metadata.folderRecordsOffset());
+      output.println(
+          "Archive flags: "
+              + Long.toHexString(metadata.archiveFlags()).toUpperCase(java.util.Locale.ROOT));
+      output.println(
+          "File flags: "
+              + Long.toHexString(metadata.fileFlags()).toUpperCase(java.util.Locale.ROOT));
+      output.println("Folder names length: " + metadata.folderNamesLength());
+      output.println("File names length: " + metadata.fileNamesLength());
     }
     if (invocation.list()) {
       for (EntryMetadata entry : inspection.entries()) {
@@ -192,6 +217,23 @@ public final class Main {
           output.println("  Relative data offset: " + facts.relativeDataOffset());
           output.println("  Data offset: " + facts.dataOffset());
           output.println("  Compressed: false");
+        }
+        if (invocation.dump() && entry.facts() instanceof EntryMetadata.VersionedBsa facts) {
+          output.println("  Ordinal: " + entry.ordinal());
+          output.println("  Folder ordinal: " + facts.folderOrdinal());
+          output.println(
+              "  Folder hash: "
+                  + Long.toUnsignedString(facts.folderHash(), 16)
+                      .toUpperCase(java.util.Locale.ROOT));
+          output.println(
+              "  Name hash: "
+                  + Long.toUnsignedString(facts.nameHash(), 16).toUpperCase(java.util.Locale.ROOT));
+          output.println("  Folder offset: " + facts.folderOffset());
+          output.println("  Decoded size: " + entry.decodedSize());
+          output.println("  Stored size: " + entry.storedSize());
+          output.println("  Size and compression toggle: " + facts.sizeAndCompressionToggle());
+          output.println("  Data offset: " + facts.dataOffset());
+          output.println("  Compressed: " + facts.compressed());
         }
       }
     }
@@ -239,6 +281,8 @@ public final class Main {
         "jbsa [--compatibility-profile=bsarch-1.0/v1] unpack <archive> [existing-directory] [options]");
     output.println("jbsa [--compatibility-profile=bsarch-1.0/v1] <archive> [-list] [-dump]");
     output.println("TES3 pack: -tes3 -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
+    output.println(
+        "TES4 pack: -tes4 [-z|-z:zlib] [-af:hex] [-ff:hex] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println("Mutations: --replace --no-progress; administration: --help --version");
   }
 

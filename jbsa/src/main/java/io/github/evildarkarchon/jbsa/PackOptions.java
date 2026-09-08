@@ -1,12 +1,17 @@
 package io.github.evildarkarchon.jbsa;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
  * Immutable canonical-pack choices. Inclusion masks match the complete mapped basename with ASCII
  * case folding: '*' matches zero or more Unicode scalars and '?' exactly one. Masks form a union;
- * an empty list applies no filter. Packing and family/codec policy checks occur when invoked.
+ * an empty list applies no filter. Entry compression overrides address exact normalized identities
+ * in the final post-overlay entry set. Unmatched identities and unsupported family codecs are
+ * rejected before payload factories open. Overrides require a concrete codec choice; omit a key to
+ * inherit global compression. TES3 does not support per-entry overrides. Packing and family/codec
+ * policy checks occur when invoked.
  */
 public record PackOptions(
     List<String> inclusionMasks,
@@ -14,7 +19,8 @@ public record PackOptions(
     boolean sharing,
     Splitting splitting,
     FlagSelection archiveFlags,
-    FlagSelection fileFlags) {
+    FlagSelection fileFlags,
+    Map<NormalizedNameIdentity, Compression> entryCompression) {
   /** Copies masks and requires explicit choices; an empty individual mask is a programmer error. */
   public PackOptions {
     inclusionMasks = List.copyOf(inclusionMasks);
@@ -25,6 +31,18 @@ public record PackOptions(
     Objects.requireNonNull(splitting, "splitting");
     Objects.requireNonNull(archiveFlags, "archiveFlags");
     Objects.requireNonNull(fileFlags, "fileFlags");
+    entryCompression = Map.copyOf(entryCompression);
+  }
+
+  /** Preserves the original constructor and global compression behavior without entry overrides. */
+  public PackOptions(
+      List<String> inclusionMasks,
+      Compression compression,
+      boolean sharing,
+      Splitting splitting,
+      FlagSelection archiveFlags,
+      FlagSelection fileFlags) {
+    this(inclusionMasks, compression, sharing, splitting, archiveFlags, fileFlags, Map.of());
   }
 
   /**
@@ -44,7 +62,10 @@ public record PackOptions(
   public enum Compression {
     /** Stored for non-DDS families, zlib for FO4 DDS, and raw LZ4 for Starfield DDS. */
     FAMILY_DEFAULT,
-    /** Store canonical payload bytes without compression; inapplicable to DDS BA2. */
+    /**
+     * Store canonical payload bytes without compression. Forbidden for DDS BA2 output because
+     * Fallout 4 and Starfield crash when DDS archive files use stored payloads.
+     */
     STORED,
     /** Use the family's zlib framing. */
     ZLIB,

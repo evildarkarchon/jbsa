@@ -22,13 +22,15 @@ public final class Tes3Packer {
     boolean publicationOwnsSession = false;
     try (ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context)) {
       operation.begin();
+      if (!request.options().entryCompression().isEmpty())
+        throw context.failure(FailureKind.UNSUPPORTED, "tes3.entry-compression-inapplicable", null);
       Tes3Names.encoding(request.compatibilityProfile(), context);
       if (!request.encoding().equals(ArchiveEncoding.tes3()))
         throw context.failure(FailureKind.UNSUPPORTED, "archive.unsupported-encoding", null);
       if (request.options().archiveFlags() instanceof FlagSelection.Explicit
           || request.options().fileFlags() instanceof FlagSelection.Explicit)
         throw context.failure(FailureKind.UNSUPPORTED, "tes3.flags-inapplicable", null);
-      List<Tes3Sources.Entry> entries = Tes3Sources.plan(request, operation, budget);
+      List<PackSources.Entry> entries = PackSources.plan(request, operation, budget);
       if (entries.isEmpty())
         throw context.failure(FailureKind.POLICY, "tes3.empty-entry-set", null);
       entries.sort(
@@ -37,9 +39,9 @@ public final class Tes3Packer {
             int high = Long.compare(a.hash() >>> 32, b.hash() >>> 32);
             return low != 0 ? low : high != 0 ? high : Arrays.compareUnsigned(a.name(), b.name());
           });
-      List<List<Tes3Sources.Entry>> parts = split(entries, request.options(), context);
+      List<List<PackSources.Entry>> parts = split(entries, request.options(), context);
       long decoded = 0;
-      for (Tes3Sources.Entry entry : entries) {
+      for (PackSources.Entry entry : entries) {
         if (entry.size() > request.resourceLimits().maxDecodedBytes() - decoded)
           throw context.limit(
               "maxDecodedBytes",
@@ -49,10 +51,10 @@ public final class Tes3Packer {
                   .toString());
         decoded += entry.size();
       }
-      for (List<Tes3Sources.Entry> part : parts) {
+      for (List<PackSources.Entry> part : parts) {
         long metadata = 12 + part.size() * 20L;
         long relative = 0;
-        for (Tes3Sources.Entry entry : part) {
+        for (PackSources.Entry entry : part) {
           checkU32(entry.size(), context);
           checkU32(relative, context);
           relative = Math.addExact(relative, entry.size());
@@ -114,8 +116,8 @@ public final class Tes3Packer {
   }
 
   /** Forms whole-entry parts using the format's advisory per-entry estimate in canonical order. */
-  private static List<List<Tes3Sources.Entry>> split(
-      List<Tes3Sources.Entry> entries, PackOptions options, IoContext context)
+  private static List<List<PackSources.Entry>> split(
+      List<PackSources.Entry> entries, PackOptions options, IoContext context)
       throws ArchiveException {
     long target =
         switch (options.splitting()) {
@@ -123,10 +125,10 @@ public final class Tes3Packer {
           case PackOptions.Splitting.UpToBytes explicit -> explicit.targetBytes();
           case PackOptions.Splitting.LegacyPerEntry ignored -> 1L;
         };
-    List<List<Tes3Sources.Entry>> parts = new ArrayList<>();
-    List<Tes3Sources.Entry> current = new ArrayList<>();
+    List<List<PackSources.Entry>> parts = new ArrayList<>();
+    List<PackSources.Entry> current = new ArrayList<>();
     long estimated = 0;
-    for (Tes3Sources.Entry entry : entries) {
+    for (PackSources.Entry entry : entries) {
       checkU32(entry.size(), context);
       long cost = entry.size() + 200L + entry.name().length;
       if (target != 0 && !current.isEmpty() && cost > target - estimated) {
@@ -151,7 +153,7 @@ public final class Tes3Packer {
    * Writes bounded header/table records and sequential source bytes without whole-entry buffers.
    */
   private static void write(
-      List<Tes3Sources.Entry> entries,
+      List<PackSources.Entry> entries,
       PublicationTransaction.StagedFile output,
       IoContext context,
       boolean sharing,
@@ -166,7 +168,7 @@ public final class Tes3Packer {
     long dataOffset = 0;
     Map<String, List<StoredPayload>> shared = new HashMap<>();
     for (int index = 0; index < entries.size(); index++) {
-      Tes3Sources.Entry entry = entries.get(index);
+      PackSources.Entry entry = entries.get(index);
       IoContext processing =
           new IoContext(
               context.path(),
@@ -187,7 +189,7 @@ public final class Tes3Packer {
         ArchiveException primary = null;
         try {
           var digest = digest();
-          consume(
+          PackSources.consume(
               entry,
               input ->
                   transfer(
@@ -233,7 +235,7 @@ public final class Tes3Packer {
           }
         }
       } else {
-        consume(
+        PackSources.consume(
             entry,
             input ->
                 transfer(
@@ -248,49 +250,6 @@ public final class Tes3Packer {
       output.write(12 + index * 8L, words(entry.size(), relative));
       output.completedEntry(entry.size());
       nameOffset += entry.name().length + 1L;
-    }
-  }
-
-  /**
-   * Attributes lazy source revalidation and read failures to their final logical processing slot.
-   */
-  private static void consume(Tes3Sources.Entry entry, Tes3Sources.Reader reader, IoContext context)
-      throws IOException {
-    try {
-      entry.payload().consume(reader);
-    } catch (ArchiveException failure) {
-      if (failure.primaryFailure().phase() != OperationPhase.PREFLIGHT) throw failure;
-      var diagnostics =
-          failure.diagnostics().stream()
-              .map(
-                  d ->
-                      new Diagnostic(
-                          d.identifier(),
-                          d.severity(),
-                          Operation.PACK,
-                          OperationPhase.PROCESSING,
-                          d.location(),
-                          d.values(),
-                          d.explanation()))
-              .toList();
-      Failure previous = failure.primaryFailure();
-      Failure primary =
-          new Failure(
-              previous.kind(),
-              OperationPhase.PROCESSING,
-              context.ordinal(),
-              previous.diagnosticIdentifier(),
-              previous.location(),
-              previous.cause());
-      throw new ArchiveException(
-          failure.getMessage(),
-          primary,
-          diagnostics,
-          failure.artifacts(),
-          failure.assessment(),
-          failure.secondaryFailures());
-    } catch (IOException failure) {
-      throw context.failure(FailureKind.SOURCE, "operation.source-io", failure);
     }
   }
 

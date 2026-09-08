@@ -1,15 +1,14 @@
-package io.github.evildarkarchon.jbsa.internal.tes3;
+package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.*;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-/** Stored TES3 extraction through shared validated-path staging and publication semantics. */
-public final class Tes3Extractor {
-  private Tes3Extractor() {}
+/** Selected-entry extraction through shared validated-path staging and publication semantics. */
+public final class ArchiveExtractor {
+  private ArchiveExtractor() {}
 
   /**
    * Validates the complete selected plan before staging and settles the source before final commit.
@@ -26,7 +25,7 @@ public final class Tes3Extractor {
     try {
       operation.begin();
       archive =
-          Tes3Reader.open(
+          ArchiveReaders.open(
               request.source(),
               request.openOptions(),
               Operation.EXTRACT,
@@ -118,7 +117,8 @@ public final class Tes3Extractor {
   }
 
   /**
-   * Copies one stored span in bounded windows and records EOF evidence under extraction ownership.
+   * Copies one decoded payload in bounded windows and records EOF evidence under extraction
+   * ownership.
    */
   private static void transfer(
       ArchiveEntry entry,

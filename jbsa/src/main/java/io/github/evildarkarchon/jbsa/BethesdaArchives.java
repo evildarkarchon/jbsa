@@ -1,9 +1,8 @@
 package io.github.evildarkarchon.jbsa;
 
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveInput;
+import io.github.evildarkarchon.jbsa.internal.io.Detection;
 import io.github.evildarkarchon.jbsa.internal.io.OperationSession;
-import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive;
-import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Reader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -16,9 +15,9 @@ import java.util.OptionalLong;
 /**
  * The synchronous, stateless Bethesda Archive module, at pre-1.0 Contract Baseline.
  *
- * <p>Queries check source access and selectors before family dispatch. TES3 supports structural
- * inspection, owned stored content, extraction, and packing; other family slices report checked
- * capability failures. This object owns no resource lifetime.
+ * <p>Queries check source access and selectors before family dispatch. TES3 and TES4 support
+ * structural inspection, owned content, extraction, and packing; TES4 also supports zlib content.
+ * Other family slices report checked capability failures. This object owns no resource lifetime.
  */
 public final class BethesdaArchives {
   private static final BethesdaArchives STANDARD = new BethesdaArchives();
@@ -94,35 +93,8 @@ public final class BethesdaArchives {
   private static OpenArchive query(Operation operation, Path path, OpenOptions options)
       throws ArchiveException {
     try {
-      return OwnedArchive.load(
-          path,
-          options.resourceLimits(),
-          operation,
-          builder -> {
-            ArchiveDetection detection =
-                Detection.recognize(
-                    builder.readSelectors((int) Math.min(4, builder.size())).array());
-            if (detection.family().filter(ArchiveFamily.TES3_BSA::equals).isPresent()) {
-              return Tes3Reader.load(builder, path, options, operation);
-            }
-            detection =
-                Detection.recognize(
-                    builder.readSelectors((int) Math.min(36, builder.size())).array());
-            throw switch (detection.status()) {
-              case UNRECOGNIZED ->
-                  failure(operation, FailureKind.FORMAT, "archive.unrecognized", path, null);
-              case INDETERMINATE ->
-                  failure(operation, FailureKind.FORMAT, "archive.incomplete-selector", path, null);
-              case UNSUPPORTED_VARIANT ->
-                  failure(
-                      operation,
-                      FailureKind.UNSUPPORTED,
-                      "archive.unsupported-variant",
-                      path,
-                      null);
-              case SUPPORTED_FAMILY -> unavailable(operation, path);
-            };
-          });
+      return io.github.evildarkarchon.jbsa.internal.io.ArchiveReaders.open(
+          path, options, operation, DiagnosticPolicy.standard());
     } catch (ArchiveException failure) {
       throw failure;
     } catch (IOException cause) {
@@ -139,7 +111,7 @@ public final class BethesdaArchives {
       throws ArchiveException {
     Objects.requireNonNull(request, "request");
     Objects.requireNonNull(control, "control");
-    return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Extractor.extract(request, control);
+    return io.github.evildarkarchon.jbsa.internal.io.ArchiveExtractor.extract(request, control);
   }
 
   /**
@@ -154,6 +126,8 @@ public final class BethesdaArchives {
     Objects.requireNonNull(control, "control");
     if (request.family() == ArchiveFamily.TES3_BSA)
       return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Packer.pack(request, control);
+    if (request.family() == ArchiveFamily.TES4_BSA)
+      return io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
     return unavailableMutation(
         Operation.PACK,
         request.destination(),

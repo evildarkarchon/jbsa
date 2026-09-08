@@ -22,24 +22,27 @@ public final class ResourceBudget implements AutoCloseable {
   private long metadataBytes;
   private boolean closed;
 
-  /**
-   * Creates conservative stored-input capacities without changing public semantic limit defaults.
-   */
+  /** Creates bounded owned-input and decoder capacities without changing public semantic limits. */
   public ResourceBudget(ResourceLimits limits, IoContext context) {
-    this(limits, context, Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4), 0, 1);
+    this(
+        limits,
+        context,
+        Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
+        1024 * 1024,
+        1);
   }
 
   /**
    * Creates bounded admission for sequential mutation with source, scratch, and staging handles.
-   * The native allowance covers one bounded Windows identity downcall at a time. The caller closes
-   * this operation-scoped budget after every owner releases its resources.
+   * The native allowance covers sequential zlib state and a Windows identity downcall. The caller
+   * closes this operation-scoped budget after every owner releases its resources.
    */
   public static ResourceBudget forMutation(ResourceLimits limits, IoContext context) {
     return new ResourceBudget(
         limits,
         context,
         Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
-        128 * 1024,
+        1024 * 1024,
         4);
   }
 

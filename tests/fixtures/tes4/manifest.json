@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "corpus_id": "jbsa-bsa-067-wire-vectors-v1",
+  "creator": "JBSA project contributors",
+  "spdx_license": "CC0-1.0",
+  "redistribution_class": "project-authored-redistributable",
+  "source": "docs/spec/formats/versioned-bsa.md; independently authored wire vectors",
+  "generator": {
+    "path": "build/generate-bsa-fixtures.py",
+    "version": "1",
+    "spdx_license": "Apache-2.0",
+    "sha256": "09526e38d6e19173bf3ced9e3b958bfcb2713b338514362671115d29b319902d",
+    "command": "python build/generate-bsa-fixtures.py --output <directory>"
+  },
+  "fixtures": [
+    {
+      "id": "bsa-067-stored",
+      "path": "bsa-067-stored.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1132,
+      "wire_sha256": "ac733c54caa9bae42a7c0ffca9d86aa92aa2e8e55202a593b9036807d0cebf8a",
+      "file_sha256": "d3710a730cf2aa684700c82874b5b8a267e271fa6c2425684367560e78b65053",
+      "source": "independently authored BSA-002/003/006/008/009 wire vector; stored",
+      "oracle_sha256": null
+    },
+    {
+      "id": "bsa-067-zlib",
+      "path": "bsa-067-zlib.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 141,
+      "wire_sha256": "b08d8e36cef4dbd22a7f6ac6f80b9e3427f2b2e3c457fe7a3d82491afbeb447e",
+      "file_sha256": "99340ddaf3b5e2a74ec758e62debd9f6caaa5d3002abf5932073376e6fba8f41",
+      "source": "independently authored BSA-002/003/006/008/009 wire vector; zlib",
+      "oracle_sha256": null
+    },
+    {
+      "id": "bsa-067-mixed",
+      "path": "bsa-067-mixed.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 129,
+      "wire_sha256": "16fbe5c45e900d77a66fe8d370d4b5828c929a5383858c35b718a7419d96e760",
+      "file_sha256": "b85f1ac391e9c00309bb468299b21dde64f92107cb6dac390b0e5f0cf4818cd1",
+      "source": "independently authored BSA-002/003/006/008/009 wire vector; mixed",
+      "oracle_sha256": null
+    },
+    {
+      "id": "bsa-067-truncated-payload",
+      "path": "bsa-067-truncated-payload.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1131,
+      "wire_sha256": "47faf7cc3004e548381ae41370de8ef440afbddc94540b498f345d83154d0aa3",
+      "file_sha256": "a3b9af967810646da5515f984d096b93d132bc7a7729d02ad21bc288cc473300",
+      "source": "independently authored BSA-002/003/006/008/009 wire vector; truncated-payload",
+      "oracle_sha256": null
+    },
+    {
+      "id": "bsa-067-decoded-size-mismatch",
+      "path": "bsa-067-decoded-size-mismatch.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 129,
+      "wire_sha256": "07b06fb60dfde31756a62528f3f718f89cbf0cc08bb18d3e717eef824ae1f4dd",
+      "file_sha256": "5a2d77dfe26dea840cec696b8960fdda0310f0127aa2f0a630aefb13bc48c399",
+      "source": "independently authored BSA-002/003/006/008/009 wire vector; decoded-size-mismatch",
+      "oracle_sha256": null
+    }
+  ]
+}

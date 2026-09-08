@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/evildarkarchon/jbsa/tests/fixtures/synthetic/rebaseline-record.schema.json",
+  "title": "JBSA deliberate golden rebaseline record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "golden_id",
+    "status",
+    "old_sha256",
+    "new_sha256",
+    "source_fixture_sha256s",
+    "oracle_sha256",
+    "generator",
+    "configuration",
+    "affected_case_ids",
+    "rationale",
+    "semantic_difference",
+    "approval"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "golden_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "status": {
+      "const": "approved"
+    },
+    "old_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "new_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_fixture_sha256s": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/sha256"
+      }
+    },
+    "oracle_sha256": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "const": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+        }
+      ]
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "configuration": {
+      "type": "object"
+    },
+    "affected_case_ids": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^CV1-[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*){4}$"
+      }
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "semantic_difference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approver",
+        "approved_at",
+        "decision"
+      ],
+      "properties": {
+        "approver": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "decision": {
+          "const": "approved"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

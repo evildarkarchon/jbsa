@@ -39,9 +39,9 @@ their parsers with the eager index and lazy content implementation.
 `inspect(Path)`, `inspect(Path, OpenOptions)`, `open(Path, OpenOptions)`,
 `extract(ExtractRequest, OperationControl)`, and `pack(PackRequest, OperationControl)` are callable
 baseline entry points. `inspect` and `open` validate source access and bounded recognition first,
-reporting `SOURCE`, `FORMAT`, or `UNSUPPORTED` when that layer fails. Supported non-TES3 selectors still
+reporting `SOURCE`, `FORMAT`, or `UNSUPPORTED` when that layer fails. Selectors outside TES3 and TES4 still
 report `CAPABILITY` with `baseline.archive-operation-unavailable` until family parsers arrive.
-Non-TES3 mutation entry points apply pre-cancellation, preflight progress, observer isolation, and cleanup
+Unimplemented mutation entry points apply pre-cancellation, preflight progress, observer isolation, and cleanup
 semantics before returning their baseline capability failure, with no destination artifacts.
 They do not return fabricated
 inspections, reports, or open archives. Standard inspection options contain no Compatibility Profile,
@@ -59,6 +59,11 @@ Issue #37 exercises the [TES3 walking slice](tes3.md) end to end. Its ergonomics
 `OperationReport.archiveParts()` for the published path, byte size, and entry count of each packed
 part. Existing constructors remain available. These additions preserve the single public module
 and avoid extra archive opens merely to render a completed operation.
+
+Issue #38 adds the [TES4 slice](tes4.md) and format-neutral per-entry compression
+overrides in `PackOptions`. Existing six-argument construction retains its original
+defaults; the seventh argument is an immutable map keyed by `NormalizedNameIdentity`.
+Each format validates its permitted codecs, and TES3 rejects nonempty overrides.
 
 Windows packing and extraction require `--enable-native-access=io.github.evildarkarchon.jbsa`
 when run on the module path, or `--enable-native-access=ALL-UNNAMED` for a classpath application.

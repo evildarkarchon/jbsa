@@ -9,6 +9,12 @@ $ErrorActionPreference = 'Stop'
 if ((ConvertTo-ConformanceCanonicalJson @{ z = @($null, 1); A = @{ b = 2; a = 1 } }) -cne '{"A":{"a":1,"b":2},"z":[null,1]}') {
     throw 'Canonical JSON must sort keys ordinally, preserving arrays and null.'
 }
+foreach ($value in @(@{ empty = @(); object = @{}; singleton = @(@{ path = 'fixture.hex' }) },
+        [pscustomobject]@{ empty = @(); object = [pscustomobject]@{}; singleton = @([pscustomobject]@{ path = 'fixture.hex' }) })) {
+    if ((ConvertTo-ConformanceCanonicalJson $value) -cne '{"empty":[],"object":{},"singleton":[{"path":"fixture.hex"}]}') {
+        throw 'Canonical request serialization must preserve empty and singleton arrays.'
+    }
+}
 if ((Compare-ConformanceValue -Expected @{ a = 1 } -Observed @{ a = 2 } -Kind exact).result -cne 'FAIL') { throw 'An exact mismatch passed.' }
 $diagnostic = @{ identifier = 'JBSA.TEST'; severity = 'warning'; operation = 'decode'; affected = $null; values = @{ offset = 42 }; message = 'wording' }
 $otherDiagnostic = $diagnostic.Clone(); $otherDiagnostic.message = 'other wording'; $otherDiagnostic.exception_class = 'OtherException'

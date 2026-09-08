@@ -1,5 +1,6 @@
 package io.github.evildarkarchon.jbsa.cli;
 
+import io.github.evildarkarchon.jbsa.ArchiveFamily;
 import io.github.evildarkarchon.jbsa.CompatibilityProfile;
 import io.github.evildarkarchon.jbsa.FlagSelection;
 import io.github.evildarkarchon.jbsa.PackOptions;
@@ -26,13 +27,12 @@ record Invocation(
     TargetPolicy targetPolicy,
     WorkerSelection workers,
     PackOptions packOptions,
+    ArchiveFamily family,
     boolean list,
     boolean dump,
     boolean noProgress) {
 
-  /**
-   * Parses the TES3 command slice, rejecting invalid syntax before constructing any source paths.
-   */
+  /** Parses implemented BSA commands, rejecting invalid syntax before constructing source paths. */
   static Invocation parse(String[] args) {
     if (args.length == 0) {
       return administrative("help");
@@ -75,7 +75,10 @@ record Invocation(
     }
     boolean pack = operation.equals("pack");
     boolean mutation = pack || operation.equals("unpack");
-    boolean family = false;
+    ArchiveFamily family = null;
+    PackOptions.Compression compression = PackOptions.Compression.STORED;
+    FlagSelection archiveFlags = FlagSelection.AUTOMATIC;
+    FlagSelection fileFlags = FlagSelection.AUTOMATIC;
     boolean list = false;
     boolean dump = false;
     boolean noProgress = false;
@@ -90,15 +93,30 @@ record Invocation(
       String option = lower(original);
       String key = option.split(":", 2)[0];
       if (!seen.add(key)) {
-        if (profile.isPresent() && Set.of("-share", "-mt", "-split", "-f").contains(key)) {
+        if (profile.isPresent()
+            && Set.of("-share", "-mt", "-split", "-f", "-af", "-ff", "-z").contains(key)) {
           continue;
         }
         require(false, "Duplicate switch: " + key);
       }
       switch (key) {
-        case "-tes3" -> {
-          require(pack && option.equals(key), "Inapplicable family");
-          family = true;
+        case "-tes3", "-tes4" -> {
+          require(
+              pack && option.equals(key) && (family == null || profile.isPresent()),
+              "Inapplicable or duplicate family");
+          // The explicit profile uses fixed family priority, independent of switch order.
+          if (family == null || key.equals("-tes3"))
+            family = key.equals("-tes3") ? ArchiveFamily.TES3_BSA : ArchiveFamily.TES4_BSA;
+        }
+        case "-z" -> {
+          require(pack && (option.equals("-z") || option.equals("-z:zlib")), "Unsupported codec");
+          compression = PackOptions.Compression.ZLIB;
+        }
+        case "-af", "-ff" -> {
+          require(pack, "Flags apply only to versioned BSA pack");
+          FlagSelection flags = flagValue(option, key, profile.isPresent());
+          if (key.equals("-af")) archiveFlags = flags;
+          else fileFlags = flags;
         }
         case "-list" -> {
           require(!mutation && option.equals(key), "Inapplicable list");
@@ -139,7 +157,7 @@ record Invocation(
           require(masks.stream().noneMatch(String::isEmpty), "Empty inclusion mask");
         }
         default -> {
-          // Profiles cannot activate safety options at another position or enable TES3 compression.
+          // Profiles cannot activate safety options at another position.
           require(
               profile.isPresent()
                   && !option.startsWith("--")
@@ -150,7 +168,11 @@ record Invocation(
         }
       }
     }
-    require(!pack || family, "Pack requires -tes3");
+    require(!pack || family != null, "Pack requires one supported family selector");
+    require(
+        family != ArchiveFamily.TES3_BSA
+            || (!seen.contains("-z") && !seen.contains("-af") && !seen.contains("-ff")),
+        "TES3 does not accept compression or flag switches");
     Path archivePath = Path.of(archive);
     Path destinationPath =
         destination == null ? archivePath.toAbsolutePath().getParent() : Path.of(destination);
@@ -166,13 +188,8 @@ record Invocation(
         profile,
         target,
         workers,
-        new PackOptions(
-            masks,
-            PackOptions.Compression.STORED,
-            sharing,
-            splitting,
-            FlagSelection.AUTOMATIC,
-            FlagSelection.AUTOMATIC),
+        new PackOptions(masks, compression, sharing, splitting, archiveFlags, fileFlags),
+        family,
         list || dump,
         dump,
         noProgress);
@@ -189,6 +206,7 @@ record Invocation(
         TargetPolicy.FAIL,
         WorkerSelection.AUTOMATIC,
         PackOptions.standard(),
+        null,
         false,
         false,
         true);
@@ -201,6 +219,22 @@ record Invocation(
     }
     require(option.equals(key + ":yes") || option.equals(key + ":no"), "Expected yes or no");
     return option.endsWith(":yes");
+  }
+
+  /**
+   * Parses a complete unsigned hexadecimal override; profile zero retains legacy automatic
+   * selection.
+   */
+  private static FlagSelection flagValue(String option, String key, boolean profile) {
+    require(option.startsWith(key + ":"), "Missing flag value");
+    String digits = option.substring(key.length() + 1);
+    if (digits.startsWith("0x")) digits = digits.substring(2);
+    require(digits.matches("[0-9a-f]+"), "Flags require unsigned hexadecimal digits");
+    java.math.BigInteger value = new java.math.BigInteger(digits, 16);
+    require(value.bitLength() <= 32, "Flags exceed u32");
+    return profile && value.signum() == 0
+        ? FlagSelection.AUTOMATIC
+        : new FlagSelection.Explicit(value.longValue());
   }
 
   /** Maps the explicit profile's legacy integer rules to public whole-entry splitting choices. */

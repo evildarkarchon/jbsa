@@ -6,6 +6,7 @@ Tests golden comparison through a real public adapter process, including tamperi
 param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+& (Join-Path $PSScriptRoot 'test-bsa-cv1-review.ps1')
 . (Join-Path $PSScriptRoot 'conformance-execution.ps1')
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $temporary = Join-Path $root ('target/conformance-execution-test-' + [guid]::NewGuid().ToString('N'))
@@ -22,6 +23,19 @@ $registration = @{ case_id = $id; command = @{ executable = (Get-Command pwsh).S
 $parameters = @{ Case = $case; Registration = $registration; RepositoryRoot = $root; Mode = 'Hosted'; ConfigurationSha256 = $configDigest; SpecificationSha256 = $specDigest; CandidateArtifacts = @(); CodecProfileSha256 = ('c' * 64) }
 $result = Invoke-ConformanceRegisteredCase @parameters -EvidenceDirectory (Join-Path $temporary 'pass')
 if ($result.result -cne 'PASS') { throw "Expected pass from independently specified exit observation: $($result.reason)" }
+$sharedGolden = Join-Path $temporary 'shared-fixture-other-case.json'
+$otherGolden = Get-Content -Raw -LiteralPath $golden | ConvertFrom-Json -AsHashtable -Depth 30
+$otherGolden.case_id = 'CV1-global.command.other.none.default'
+[IO.File]::WriteAllText($sharedGolden, ($otherGolden | ConvertTo-Json -Depth 30))
+$case.metadata.golden_bindings += @{ path = $sharedGolden; sha256 = (Get-FileHash $sharedGolden).Hash.ToLowerInvariant() }
+$result = Invoke-ConformanceRegisteredCase @parameters -EvidenceDirectory (Join-Path $temporary 'shared-fixture')
+if ($result.result -cne 'PASS') { throw "Shared fixture goldens must select the exact case: $($result.reason)" }
+$otherGolden.case_id = $id
+[IO.File]::WriteAllText($sharedGolden, ($otherGolden | ConvertTo-Json -Depth 30))
+$case.metadata.golden_bindings[1].sha256 = (Get-FileHash $sharedGolden).Hash.ToLowerInvariant()
+$result = Invoke-ConformanceRegisteredCase @parameters -EvidenceDirectory (Join-Path $temporary 'duplicate-case-golden')
+if ($result.result -cne 'INVALID') { throw 'Two bound goldens for the same case must remain invalid.' }
+$case.metadata.golden_bindings = @($case.metadata.golden_bindings[0])
 $originalAdapter = [IO.File]::ReadAllText($adapter)
 $originalGolden = [IO.File]::ReadAllText($golden)
 [IO.File]::WriteAllText($adapter, $originalAdapter.Replace('"assertion_id":"exit"', '"assertion_id":"decode-semantic-projection"'))
