@@ -189,6 +189,22 @@ public final class PublicationTransaction {
     }
 
     /**
+     * Borrows an exact staged range for byte-confirmed sharing; never exposes the backing handle.
+     */
+    public void read(long position, ByteBuffer bytes) throws IOException {
+      owner.checkpoint();
+      ExactIo.read(channel, size, position, bytes, context);
+    }
+
+    /**
+     * Opens caller-closed stabilization scratch charged to the same peak budget as staged output.
+     * Writers must close it before returning, so publication never precedes source settlement.
+     */
+    public SpillBuffer scratch() throws IOException {
+      return SpillBuffer.open(owner.staging, owner.budget, context);
+    }
+
+    /**
      * Reports one final pack entry's uncompressed logical bytes after processing it exactly once.
      * Archive framing, replay, backpatching, and shared-payload copies must not call this method.
      * Extraction entries are counted by the publication adapter after their writer completes.
@@ -449,7 +465,10 @@ public final class PublicationTransaction {
       try (var handle = budget.reserve(0, 0, 1, 0);
           FileChannel channel =
               FileChannel.open(
-                  part.staged, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+                  part.staged,
+                  StandardOpenOption.CREATE_NEW,
+                  StandardOpenOption.WRITE,
+                  StandardOpenOption.READ)) {
         own(part.staged, part.ordinal);
         StagedFile output = new StagedFile(channel, scratch, context(), this);
         part.writer.write(output);
@@ -710,7 +729,7 @@ public final class PublicationTransaction {
   }
 
   /** Computes the permanent split-name rule, including leading and trailing full stops. */
-  static Path splitPath(Path destination, int number) {
+  public static Path splitPath(Path destination, int number) {
     if (number < 1) throw new IllegalArgumentException("Part numbers start at one");
     if (number == 1) return destination;
     String name = destination.getFileName().toString();

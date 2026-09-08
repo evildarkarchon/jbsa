@@ -75,6 +75,13 @@ public final class OperationSession {
     }
   }
 
+  /** Advances validation extent without counting already admitted structural diagnostics again. */
+  public void latestAssessment(ArchiveAssessment assessment) {
+    synchronized (outcome) {
+      failures.latestAssessment(assessment);
+    }
+  }
+
   /**
    * Accounts for one final logical entry and its decoded bytes without counting physical replay.
    */

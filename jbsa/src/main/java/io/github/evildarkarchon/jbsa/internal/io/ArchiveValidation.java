@@ -76,7 +76,8 @@ public final class ArchiveValidation {
     retention.latestAssessment(assessment);
     ArchiveException failure = retention.finish(List.of());
     if (failure != null) throw failure;
-    return new ArchiveInspection(inspection.detection(), inspection.metadata(), assessment);
+    return new ArchiveInspection(
+        inspection.detection(), inspection.metadata(), assessment, inspection.entries());
   }
 
   /** Records the complete display name separately from a segment's value and unsigned ordinal. */

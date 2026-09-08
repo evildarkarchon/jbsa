@@ -43,4 +43,17 @@
   <properties>
     <maven.install.skip>true</maven.install.skip>
   </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <!-- Public integration consumers run on the classpath and exercise Windows identity I/O. -->
+          <argLine>-Dfile.encoding=UTF-8 --enable-native-access=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

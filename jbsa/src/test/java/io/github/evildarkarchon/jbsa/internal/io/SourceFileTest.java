@@ -234,17 +234,14 @@ final class SourceFileTest {
     }
   }
 
-  /** The Windows baseline's absent file key is a capability failure, never a weaker identity. */
+  /** The Windows provider's absent NIO key is supplemented by qualified native identity. */
   @Test
-  void defaultWindowsProviderFailsClosedWhenFileIdentityIsUnavailable() throws Exception {
+  void defaultWindowsProviderUsesNativeIdentity() throws Exception {
     Path source = directory.resolve("native-identity-required.bin");
     Files.write(source, new byte[] {1});
     assertNull(Files.readAttributes(source, BasicFileAttributes.class).fileKey());
-    ArchiveException failure = assertThrows(ArchiveException.class, () -> SourceFile.plan(source));
-    assertEquals(FailureKind.CAPABILITY, failure.kind());
-    assertEquals(
-        "source.identity-unavailable",
-        failure.primaryFailure().diagnosticIdentifier().orElseThrow());
+    long length = SourceFile.plan(source).consume(input -> input.size());
+    assertEquals(1L, length);
   }
 
   /**

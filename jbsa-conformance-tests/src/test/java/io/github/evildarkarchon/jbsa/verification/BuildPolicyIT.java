@@ -184,8 +184,11 @@ final class BuildPolicyIT {
         "Library-local tests must not introduce product runtime dependencies");
 
     Element cli = parse(reactorRoot().resolve("jbsa-cli/pom.xml")).getDocumentElement();
-    List<Element> cliDependencies = dependencies(cli);
-    assertEquals(1, cliDependencies.size(), "The CLI skeleton should depend only on jbsa");
+    List<Element> cliDependencies =
+        dependencies(cli).stream()
+            .filter(dependency -> !"test".equals(directText(dependency, "scope")))
+            .toList();
+    assertEquals(1, cliDependencies.size(), "The CLI product should depend only on jbsa");
     Element dependency = cliDependencies.getFirst();
     assertEquals("io.github.evildarkarchon", directText(dependency, "groupId"));
     assertEquals("jbsa", directText(dependency, "artifactId"));

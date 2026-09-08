@@ -14,9 +14,8 @@ import java.util.Objects;
 /**
  * A no-handle loose-source plan, consumed under a revalidated deny-write/delete lifetime.
  *
- * <p>The current Windows NIO provider returns no stable file key. Planning therefore fails with
- * CAPABILITY on that provider until the packing slice supplies a qualified internal identity check;
- * path, size, and timestamps alone must never masquerade as identity.
+ * <p>The Windows NIO provider's absent file key is supplied by the native no-follow identity
+ * adapter. Providers without stable identity fail closed; timestamps never substitute for identity.
  */
 public final class SourceFile {
   private final Path path;
@@ -46,10 +45,71 @@ public final class SourceFile {
    * @throws ArchiveException with SOURCE for invalid input or CAPABILITY for unavailable identity
    */
   public static SourceFile plan(Path path) throws ArchiveException {
-    return plan(
-        path,
-        source ->
-            Files.readAttributes(source, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS));
+    return plan(path, SourceFile::nativeAttributes);
+  }
+
+  /** Binds NIO length/time metadata to the same native no-follow identity before and after it. */
+  private static BasicFileAttributes nativeAttributes(Path path) throws IOException {
+    BasicFileAttributes attributes =
+        Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+    if (path.getFileSystem() != java.nio.file.FileSystems.getDefault()
+        || !System.getProperty("os.name").startsWith("Windows")) return attributes;
+    WindowsPathIdentity.Snapshot before = WindowsPathIdentity.inspect(path);
+    attributes = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+    WindowsPathIdentity.Snapshot after = WindowsPathIdentity.inspect(path);
+    if (before == null || !before.equals(after))
+      throw IoContext.of(path, Operation.PACK).failure(FailureKind.SOURCE, "source.changed", null);
+    return new NativeAttributes(attributes, before);
+  }
+
+  /** Keeps native identity and reparse classification with the corresponding NIO timestamps. */
+  private record NativeAttributes(
+      BasicFileAttributes attributes, WindowsPathIdentity.Snapshot nativeInfo)
+      implements BasicFileAttributes {
+    @Override
+    public FileTime lastModifiedTime() {
+      return attributes.lastModifiedTime();
+    }
+
+    @Override
+    public FileTime lastAccessTime() {
+      return attributes.lastAccessTime();
+    }
+
+    @Override
+    public FileTime creationTime() {
+      return attributes.creationTime();
+    }
+
+    @Override
+    public boolean isRegularFile() {
+      return nativeInfo.regular();
+    }
+
+    @Override
+    public boolean isDirectory() {
+      return nativeInfo.directory();
+    }
+
+    @Override
+    public boolean isSymbolicLink() {
+      return nativeInfo.indirection();
+    }
+
+    @Override
+    public boolean isOther() {
+      return !isRegularFile() && !isDirectory() && !isSymbolicLink();
+    }
+
+    @Override
+    public long size() {
+      return attributes.size();
+    }
+
+    @Override
+    public Object fileKey() {
+      return nativeInfo.identity();
+    }
   }
 
   /** Supplies an internal no-follow identity provider for deterministic validation fault tests. */

@@ -13,7 +13,7 @@ The permanent requirements were traced before implementation through
 | Requirements | Baseline evidence and boundary |
 | --- | --- |
 | `JBSA-LIB-001`, `002`, `005`, `006`, `007`, `009`, `010`, `011` | Concrete stateless module, Path-first signatures, immutable metadata/request/outcome values, long quantities, exact standard limits, controls, and public JPMS consumer tests. |
-| `JBSA-LIB-008`, `012` | Sealed source values, ordered source retention, fresh-channel ownership contract, and name-identity derivation. Directory expansion, overlay replacement, and canonical-pack preflight execute in later packing slices. |
+| `JBSA-LIB-008`, `012` | Sealed source values, ordered source retention, fresh-channel ownership contract, and name-identity derivation. Directory expansion, overlay replacement, and canonical-pack preflight now execute for TES3 in #37. |
 | `JBSA-LIB-003`, `004` | Owned parent/entry/content signatures and documented lifetime/EOF contracts. The registry assigns backing-handle and close-race execution to #34. No simulated archive certifies these guarantees here. |
 | `JBSA-OPS-001` through `010` | Checked failures and immutable public values. Issue #36 adds [shared operation execution](operation-semantics.md), deterministic selection/retention, cancellation acceptance, and observer delivery; family conformance remains downstream. |
 | `JBSA-OPS-011` | Immutable artifact states and normalized absolute artifact paths. Safe publication, rollback, residual cleanup, and ownership execution remain #35. |
@@ -39,9 +39,9 @@ their parsers with the eager index and lazy content implementation.
 `inspect(Path)`, `inspect(Path, OpenOptions)`, `open(Path, OpenOptions)`,
 `extract(ExtractRequest, OperationControl)`, and `pack(PackRequest, OperationControl)` are callable
 baseline entry points. `inspect` and `open` validate source access and bounded recognition first,
-reporting `SOURCE`, `FORMAT`, or `UNSUPPORTED` when that layer fails. Supported selectors still
+reporting `SOURCE`, `FORMAT`, or `UNSUPPORTED` when that layer fails. Supported non-TES3 selectors still
 report `CAPABILITY` with `baseline.archive-operation-unavailable` until family parsers arrive.
-Mutation entry points apply pre-cancellation, preflight progress, observer isolation, and cleanup
+Non-TES3 mutation entry points apply pre-cancellation, preflight progress, observer isolation, and cleanup
 semantics before returning their baseline capability failure, with no destination artifacts.
 They do not return fabricated
 inspections, reports, or open archives. Standard inspection options contain no Compatibility Profile,
@@ -53,6 +53,18 @@ JBSA owns each channel once returned. Caller callback and factory references rem
 behavioral capabilities; callers are responsible for their own state and repeatability.
 
 ## Consumer example
+
+Issue #37 exercises the [TES3 walking slice](tes3.md) end to end. Its ergonomics review adds
+`ArchiveInspection.entries()` for detached list/dump consumers and
+`OperationReport.archiveParts()` for the published path, byte size, and entry count of each packed
+part. Existing constructors remain available. These additions preserve the single public module
+and avoid extra archive opens merely to render a completed operation.
+
+Windows packing and extraction require `--enable-native-access=io.github.evildarkarchon.jbsa`
+when run on the module path, or `--enable-native-access=ALL-UNNAMED` for a classpath application.
+This grants the existing no-follow filesystem identity adapter access. The explicit `bsarch-1.0/v1`
+profile also uses native access to snapshot the active Windows ANSI code page; default archive
+name decoding remains Windows-1252.
 
 ```java
 module example.archiveconsumer {
@@ -66,8 +78,7 @@ ArchiveDetection detection = archives.detect(path);
 // Recognition establishes selectors only, not structure, payload validity, or encode support.
 ```
 
-The following usage compiles at this baseline and becomes executable when the selected family is
-implemented:
+The following usage executes for TES3 and becomes available for other families as each is implemented:
 
 ```java
 try (OpenArchive archive = archives.open(path, OpenOptions.standard())) {
@@ -98,7 +109,7 @@ counts remain `long`.
 
 `PublicModuleConsumerIT` compiles and runs isolated CLI-like and embedded named modules against
 the packaged public JAR without `--add-exports`, opens, or classpath bypasses. It compiles the full
-entry/content/extract/pack usage and executes recognition plus honest baseline failure handling.
+entry/content/extract/pack usage and executes the TES3 consumer paths.
 `PublicArchiveContractIT`, `PublicMetadataContractIT`, `PublicRequestContractIT`, and
 `PublicOutcomeContractIT` verify the public value and baseline behavior. Existing architecture
 tests inspect exported signatures for third-party or internal types.

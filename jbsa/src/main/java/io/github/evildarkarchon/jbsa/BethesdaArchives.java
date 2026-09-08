@@ -1,8 +1,9 @@
 package io.github.evildarkarchon.jbsa;
 
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveInput;
-import io.github.evildarkarchon.jbsa.internal.io.FailureRetention;
 import io.github.evildarkarchon.jbsa.internal.io.OperationSession;
+import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive;
+import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Reader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -15,10 +16,9 @@ import java.util.OptionalLong;
 /**
  * The synchronous, stateless Bethesda Archive module, at pre-1.0 Contract Baseline.
  *
- * <p>Recognition is available now, and queries check source access and selectors before family
- * dispatch. Structural inspection, owned archive content, extraction, and packing become available
- * in subsequent Archive Family slices; supported-family execution currently reports a checked
- * capability failure without creating destination artifacts. This object owns no resource lifetime.
+ * <p>Queries check source access and selectors before family dispatch. TES3 supports structural
+ * inspection, owned stored content, extraction, and packing; other family slices report checked
+ * capability failures. This object owns no resource lifetime.
  */
 public final class BethesdaArchives {
   private static final BethesdaArchives STANDARD = new BethesdaArchives();
@@ -65,68 +65,69 @@ public final class BethesdaArchives {
   /**
    * Returns detached structural inspection without decoding every payload.
    *
-   * @throws ArchiveException if the source cannot be inspected; supported family parsers remain
-   *     unavailable in this baseline
+   * @throws ArchiveException if the source cannot be inspected or its family parser is unavailable
    */
   public ArchiveInspection inspect(Path path, OpenOptions options) throws ArchiveException {
     Objects.requireNonNull(path, "path");
     Objects.requireNonNull(options, "options");
-    throw unavailableQuery(Operation.INSPECT, path, options.resourceLimits());
+    try (OpenArchive archive = query(Operation.INSPECT, path, options)) {
+      return archive.inspection();
+    } catch (ArchiveException failure) {
+      throw failure;
+    } catch (IOException cause) {
+      throw failure(Operation.INSPECT, FailureKind.SOURCE, "operation.source-io", path, cause);
+    }
   }
 
   /**
    * Opens a caller-owned archive; the caller must close the result after all child content reads.
    *
-   * @throws ArchiveException if the archive cannot be opened; supported family parsers remain
-   *     unavailable in this baseline
+   * @throws ArchiveException if the archive cannot be opened or its family parser is unavailable
    */
   public OpenArchive open(Path path, OpenOptions options) throws ArchiveException {
     Objects.requireNonNull(path, "path");
     Objects.requireNonNull(options, "options");
-    throw unavailableQuery(Operation.OPEN, path, options.resourceLimits());
+    return query(Operation.OPEN, path, options);
   }
 
-  /** Applies bounded source/selector checks before parser capability without claiming structure. */
-  private static ArchiveException unavailableQuery(
-      Operation operation, Path path, ResourceLimits limits) {
-    FailureRetention retention = new FailureRetention(limits, operation);
-    ArchiveInput source = null;
+  /** Recognizes and loads from one owned handle, closing it on every unsuccessful dispatch. */
+  private static OpenArchive query(Operation operation, Path path, OpenOptions options)
+      throws ArchiveException {
     try {
-      source = ArchiveInput.open(path, operation);
-      // Recognition stays bounded even while family-specific structural parsers are unavailable.
-      ByteBuffer prefix = ByteBuffer.allocate((int) Math.min(36L, source.size()));
-      source.readExact(0, prefix);
-      ArchiveDetection detection = Detection.recognize(prefix.array());
-      retention.accept(
-          switch (detection.status()) {
-            case UNRECOGNIZED ->
-                failure(operation, FailureKind.FORMAT, "archive.unrecognized", path, null);
-            case INDETERMINATE ->
-                failure(operation, FailureKind.FORMAT, "archive.incomplete-selector", path, null);
-            case UNSUPPORTED_VARIANT ->
-                failure(
-                    operation, FailureKind.UNSUPPORTED, "archive.unsupported-variant", path, null);
-            case SUPPORTED_FAMILY -> unavailable(operation, path);
+      return OwnedArchive.load(
+          path,
+          options.resourceLimits(),
+          operation,
+          builder -> {
+            ArchiveDetection detection =
+                Detection.recognize(
+                    builder.readSelectors((int) Math.min(4, builder.size())).array());
+            if (detection.family().filter(ArchiveFamily.TES3_BSA::equals).isPresent()) {
+              return Tes3Reader.load(builder, path, options, operation);
+            }
+            detection =
+                Detection.recognize(
+                    builder.readSelectors((int) Math.min(36, builder.size())).array());
+            throw switch (detection.status()) {
+              case UNRECOGNIZED ->
+                  failure(operation, FailureKind.FORMAT, "archive.unrecognized", path, null);
+              case INDETERMINATE ->
+                  failure(operation, FailureKind.FORMAT, "archive.incomplete-selector", path, null);
+              case UNSUPPORTED_VARIANT ->
+                  failure(
+                      operation,
+                      FailureKind.UNSUPPORTED,
+                      "archive.unsupported-variant",
+                      path,
+                      null);
+              case SUPPORTED_FAMILY -> unavailable(operation, path);
+            };
           });
     } catch (ArchiveException failure) {
-      retention.accept(failure);
+      throw failure;
     } catch (IOException cause) {
-      retention.accept(failure(operation, FailureKind.SOURCE, "operation.source-io", path, cause));
-    } finally {
-      if (source != null) {
-        try {
-          source.close();
-        } catch (ArchiveException failure) {
-          retention.accept(failure);
-        } catch (IOException cause) {
-          retention.accept(
-              new io.github.evildarkarchon.jbsa.internal.io.IoContext(
-                      path, operation, OperationPhase.CLEANUP, OptionalLong.empty())
-                  .failure(FailureKind.SOURCE, "operation.source-io", cause));
-        }
-      }
+      throw failure(operation, FailureKind.SOURCE, "operation.source-io", path, cause);
     }
-    return retention.finish(List.of());
   }
 
   /**
@@ -138,12 +139,7 @@ public final class BethesdaArchives {
       throws ArchiveException {
     Objects.requireNonNull(request, "request");
     Objects.requireNonNull(control, "control");
-    return unavailableMutation(
-        Operation.EXTRACT,
-        request.source(),
-        request.resourceLimits(),
-        request.diagnosticPolicy(),
-        control);
+    return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Extractor.extract(request, control);
   }
 
   /**
@@ -156,6 +152,8 @@ public final class BethesdaArchives {
       throws ArchiveException {
     Objects.requireNonNull(request, "request");
     Objects.requireNonNull(control, "control");
+    if (request.family() == ArchiveFamily.TES3_BSA)
+      return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Packer.pack(request, control);
     return unavailableMutation(
         Operation.PACK,
         request.destination(),

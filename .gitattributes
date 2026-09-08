@@ -12,6 +12,8 @@ mvnw.cmd text eol=crlf
 tests/fixtures/synthetic/**/*.json text eol=lf
 tests/fixtures/synthetic/**/*.ba2 -text
 tests/fixtures/synthetic/**/*.bin -text
+tests/fixtures/tes3/*.hex text eol=lf
+tests/fixtures/tes3/*.json text eol=lf
 
 tests/conformance/**/*.json text eol=lf
 

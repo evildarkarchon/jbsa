@@ -40,7 +40,7 @@ final class QueryValidationTest {
         "archive.unsupported-variant");
     assertRecognition(
         query,
-        new byte[] {0, 1, 0, 0},
+        new byte[] {66, 83, 65, 0, 0x67, 0, 0, 0},
         FailureKind.CAPABILITY,
         "baseline.archive-operation-unavailable");
   }

@@ -30,4 +30,5 @@ No contributor license agreement or DCO sign-off is required.
 
 The library is at the **pre-1.0 Contract Baseline**. See
 [the interface guide](docs/development/contract-baseline.md) for public JPMS usage, immutable
-contracts, available bounded detection, and the subsequent archive execution gates.
+contracts and archive execution gates. The [TES3 walking slice](docs/development/tes3.md)
+provides Morrowind BSA inspection, owned content reads, extraction, packing, and thin CLI commands.

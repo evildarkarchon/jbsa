@@ -58,9 +58,32 @@ public final class OwnedArchive implements OpenArchive {
     return load(ArchiveInput.open(path, operation), limits, IoContext.of(path, operation), loader);
   }
 
+  /** Applies a mutation's warning policy before retained structural evidence can be truncated. */
+  public static OpenArchive load(
+      Path path,
+      ResourceLimits limits,
+      Operation operation,
+      DiagnosticPolicy policy,
+      IndexLoader loader)
+      throws IOException {
+    return load(
+        ArchiveInput.open(path, operation), limits, IoContext.of(path, operation), policy, loader);
+  }
+
   /** Adopts an input for internal format integration and deterministic fault-injection tests. */
   static OpenArchive load(
       ArchiveInput input, ResourceLimits limits, IoContext context, IndexLoader loader)
+      throws IOException {
+    return load(input, limits, context, DiagnosticPolicy.standard(), loader);
+  }
+
+  /** Owns the same failure-safe lifetime with an explicitly selected diagnostic policy. */
+  private static OpenArchive load(
+      ArchiveInput input,
+      ResourceLimits limits,
+      IoContext context,
+      DiagnosticPolicy policy,
+      IndexLoader loader)
       throws IOException {
     ResourceBudget budget = new ResourceBudget(limits, context);
     try {
@@ -72,11 +95,17 @@ public final class OwnedArchive implements OpenArchive {
         throw context.failure(FailureKind.FORMAT, "io.index-count-mismatch", null);
       }
       inspection =
+          new ArchiveInspection(
+              inspection.detection(),
+              inspection.metadata(),
+              inspection.assessment(),
+              builder.entries.stream().map(StoredEntry::metadata).toList());
+      inspection =
           ArchiveValidation.structure(
               inspection,
               builder.entries.stream().map(StoredEntry::metadata).toList(),
               context,
-              new FailureRetention(limits, context.operation()));
+              new FailureRetention(limits, context.operation(), policy));
       return new OwnedArchive(input, limits, context, budget, inspection, builder.entries);
     } catch (IOException | RuntimeException | Error cause) {
       FailureRetention failures = new FailureRetention(limits, context.operation());
@@ -124,6 +153,19 @@ public final class OwnedArchive implements OpenArchive {
       this.input = input;
       this.budget = budget;
       this.context = context;
+    }
+
+    /** Returns the stable source extent without transferring handle ownership to the loader. */
+    public long size() {
+      return input.size();
+    }
+
+    /** Reads the fixed recognition prefix without charging it again as parsed format metadata. */
+    public ByteBuffer readSelectors(int length) throws IOException {
+      if (length < 0 || length > 36) throw new IllegalArgumentException("Selector extent");
+      ByteBuffer result = ByteBuffer.allocate(length).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+      input.readExact(0, result);
+      return result.flip();
     }
 
     /** Checks the encoded count before a format loader allocates or constructs entry metadata. */
@@ -209,7 +251,7 @@ public final class OwnedArchive implements OpenArchive {
           synchronized (lifetime) {
             if (closed) throw new ClosedChannelException();
             if (stored.metadata().decodedSize() > limits.maxDecodedBytes()) {
-              FailureRetention retention = new FailureRetention(limits, Operation.READ_CONTENT);
+              FailureRetention retention = new FailureRetention(limits, contentOperation());
               retention.assessment(inspection.assessment());
               retention.accept(
                   contentContext(ordinal)
@@ -223,8 +265,8 @@ public final class OwnedArchive implements OpenArchive {
             try {
               credit = budget.reserve(512, 0, 0, 0);
             } catch (ArchiveException capacity) {
-              // The shared budget belongs to OPEN, but child admission is READ_CONTENT evidence.
-              FailureRetention retention = new FailureRetention(limits, Operation.READ_CONTENT);
+              // Query children own READ_CONTENT evidence; mutation children retain their operation.
+              FailureRetention retention = new FailureRetention(limits, contentOperation());
               retention.assessment(inspection.assessment());
               retention.accept(
                   contentContext(ordinal)
@@ -246,10 +288,16 @@ public final class OwnedArchive implements OpenArchive {
   /** Creates the consumer-thread operation location for payload and per-channel policy failures. */
   private IoContext contentContext(long ordinal) {
     return new IoContext(
-        context.path(),
-        Operation.READ_CONTENT,
-        OperationPhase.PROCESSING,
-        OptionalLong.of(ordinal));
+        context.path(), contentOperation(), OperationPhase.PROCESSING, OptionalLong.of(ordinal));
+  }
+
+  /**
+   * Public query children are separate operations; mutation children belong to their invocation.
+   */
+  private Operation contentOperation() {
+    return context.operation() == Operation.PACK || context.operation() == Operation.EXTRACT
+        ? context.operation()
+        : Operation.READ_CONTENT;
   }
 
   /**
@@ -370,7 +418,7 @@ public final class OwnedArchive implements OpenArchive {
      * detached structural assessment. Provider I/O failures make no new content-validity claim.
      */
     private ArchiveException payloadFailure(ArchiveException cause) {
-      FailureRetention retention = new FailureRetention(limits, Operation.READ_CONTENT);
+      FailureRetention retention = new FailureRetention(limits, contentOperation());
       retention.assessment(assessment == null ? inspection.assessment() : assessment);
       List<Diagnostic> diagnostics =
           cause.diagnostics().stream()
@@ -379,7 +427,7 @@ public final class OwnedArchive implements OpenArchive {
                       new Diagnostic(
                           diagnostic.identifier(),
                           diagnostic.severity(),
-                          Operation.READ_CONTENT,
+                          contentOperation(),
                           OperationPhase.PROCESSING,
                           payloadLocation(diagnostic.location()),
                           diagnostic.values(),

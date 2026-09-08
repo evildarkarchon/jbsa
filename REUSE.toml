@@ -40,7 +40,7 @@ SPDX-FileCopyrightText = "Copyright The Apache Software Foundation"
 SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
-path = "tests/fixtures/synthetic/**"
+path = ["tests/fixtures/synthetic/**", "tests/fixtures/tes3/**"]
 precedence = "override"
 SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
 SPDX-License-Identifier = "CC0-1.0"

@@ -116,6 +116,17 @@ public final class ResourceBudget implements AutoCloseable {
     metadataBytes = next;
   }
 
+  /**
+   * Counts metadata parsed by a transient source index without retaining its already-released heap
+   * credits. The invocation's final output metadata is admitted against this same semantic ledger.
+   */
+  public synchronized void consumedMetadata(long encodedBytes) throws ArchiveException {
+    ensureOpen();
+    nonnegative(encodedBytes);
+    metadataBytes =
+        semanticTotal(metadataBytes, encodedBytes, limits.maxMetadataBytes(), "maxMetadataBytes");
+  }
+
   /** Reserves the conservative per-entry object allowance until budget close, before allocation. */
   public synchronized void entryIndex(long count) throws ArchiveException {
     checkEntries(count);
