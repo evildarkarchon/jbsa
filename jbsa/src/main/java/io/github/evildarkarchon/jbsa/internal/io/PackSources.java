@@ -231,7 +231,17 @@ public final class PackSources {
                               ? 2 + entry.wireNames().get("complete").length()
                               : 0)
                   .sum();
-      default -> throw new IllegalStateException("Unsupported source parser");
+      case ArchiveMetadata.DdsBa2 ignored ->
+          24
+              + inspection.entries().stream()
+                  .mapToLong(
+                      entry ->
+                          24
+                              + 24L * ((EntryMetadata.DdsBa2) entry.facts()).chunks().size()
+                              + (entry.wireNames().containsKey("complete")
+                                  ? 2 + entry.wireNames().get("complete").length()
+                                  : 0))
+                  .sum();
     };
   }
 

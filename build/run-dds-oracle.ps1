@@ -5,7 +5,8 @@ param(
     [Parameter(Mandatory)][string]$InputPath,
     [Parameter(Mandatory)][string]$OutputPath,
     [Parameter(Mandatory)][string]$WorkingDirectory,
-    [Parameter(Mandatory)][string]$EvidenceDirectory
+    [Parameter(Mandatory)][string]$EvidenceDirectory,
+    [ValidateRange(1,3600)][int]$TimeoutSeconds = 30
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'conformance-adapters.ps1')
@@ -15,7 +16,7 @@ if ($Operation -eq 'pack') {
     $oracleArguments += @('-fo4dds', '-split:0', '-share:no', '-z:zlib')
 }
 $result = Invoke-ConformanceOracle -RepositoryRoot $repositoryRoot -Arguments $oracleArguments `
-    -WorkingDirectory $WorkingDirectory -EvidenceDirectory $EvidenceDirectory `
+    -WorkingDirectory $WorkingDirectory -EvidenceDirectory $EvidenceDirectory -TimeoutSeconds $TimeoutSeconds `
     -Hosted:($env:GITHUB_ACTIONS -eq 'true')
 [IO.Directory]::CreateDirectory($EvidenceDirectory) | Out-Null
 $json = $result | ConvertTo-Json -Depth 100

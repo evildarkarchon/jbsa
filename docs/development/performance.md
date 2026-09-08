@@ -60,7 +60,14 @@ Archive Family, chunk layout and stored/compressed mix before accepting the run.
 
 ## Bind an immutable profile and cases
 
-`catalog.py --profiles` accepts the exact runtime profile JSON with this shape:
+`catalog.py --profiles` preserves the exact UTF-8 runtime-profile document and its
+raw file digest, matching packaged CV1 evidence. It accepts the shipped
+`jbsa-jdk-zlib-v1` provider representation as well as the earlier explicit
+all-provider representation below. Unavailable provider lanes stay in the catalog
+with `profile_bound: false`; scoped qualification cannot invent those providers,
+and full qualification cannot silently drop their cases.
+
+The earlier explicit all-provider representation has this shape:
 
 ```json
 {

@@ -124,7 +124,70 @@ perform 64 fresh entry prefix reads in 1.17–1.32 ms. Summed heap-pool peaks ar
 97–190 MB; these are not simultaneous live-heap or process-memory peaks.
 Every extracted opaque payload is compared outside the timed operations.
 
-## Implementation verification
+## Reproducible PV1 preparation
+
+`build/prepare-dds-performance.py` binds the actual packaged profile bytes, installed
+JDK and protocol ZIP, public library/CLI/JMH artifacts, normative manifests and
+independently validated oracle archives. Its deliberately incomplete configuration
+retains `launcher: null`, an empty fixed-worker map and an empty environment
+attestation until genuine release inputs exist; it must not start qualification.
+
+```powershell
+python build/prepare-dds-performance.py --output build/target/dds-pv1/prepared-final `
+  --qualification-scope pc-only `
+  --oracle-root build/target/dds-pv1/oracle-final `
+  --jdk-home 'C:/Program Files/jdk' `
+  --jdk-distribution D:/Downloads/OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1.zip
+```
+
+The five DDS normative corpora total 8.25 GiB and 110,272 files. Their committed
+manifests materialize through the existing corpus tool under ignored
+`build/target/dds-pv1/corpus`. `build/performance/dds_validator.py` streams each
+compressed chunk into bounded hash buffers, independently checks texture/mip
+metadata and hashes the canonical reconstructed DDS against those manifests.
+It also validates extracted file trees. The JMH service now has a public DDS
+adapter that checks the exact external canonical DDS identities before timing.
+
+The selected 84 PV1 cases require 64 exact passed CV1 rows: 41 relevant FO4 DDS
+rows and 23 global CLI/source/limits/progress/failure rows. A DDS-only 47-case
+report cannot satisfy the global prerequisites. Thirty scaling assignments also
+require actual fixed-worker controls at 2/4/8/16; the current CLI specification
+and implementation expose only `-mt:yes|no`, so no invented flag or automatic
+worker alias is supplied. The two bulk random-access assignments can reuse their
+fixed-size full-corpus archives; the DDS-mipmapped and metadata assignments need
+selected fixed-size or 10k-companion oracle archives. A shipping launcher,
+approved CV1 evidence and a genuine quiet-machine attestation remain required.
+Regenerate preparation bindings after every candidate or benchmark rebuild.
+When preparing bindings without repeating the lengthy 100k-file traversal,
+`--skip-source-reverification` leaves `source_verified: false` explicitly.
+The normative runner still verifies every source byte before any measurement;
+this preparation option cannot satisfy or bypass that gate.
+
+For the user's PC-only qualification scope, the preparer explicitly identifies
+three deferred Xbox/mixed-target cases: positive Xbox encode, Xbox-target mismatch
+rejection and mixed reconstruction-target selection. The remaining PC/global
+set has 61 cases, including all 23 global prerequisites and PC-target rejection
+of Xbox input. The existing harness still requires its original 64-case set;
+the readiness report distinguishes that unresolved scope binding from missing
+PC evidence and never silently waives or deletes the original case identifiers.
+
+The performance catalog now accepts the shipped profile representation without
+rewriting it into the older hypothetical all-codec schema. Its exact raw bytes
+remain SHA-256 `b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda`,
+matching CV1. Unavailable LZ4 assignments remain present and unbound; they are
+never dropped from the full inventory or represented as working providers.
+
+The [PV1 preparation receipt](evidence/issue40-pv1-preparation.json) records all
+five independently validated oracle corpus archives and the exact incomplete
+configuration/readiness digests. Oracle legacy-PC inputs store tile mode 8;
+JBSA's legacy-input default is 0, while canonical PC DDS bytes are equal. Legacy
+input carries no explicit tile mode, so the independent corpus check does not
+invent a zero constraint or claim blanket wire-metadata equality. Oracle output
+also reserves space for four chunk headers per entry; bounded unused padding is
+excluded from semantic equality under `JBSA-CONF-010`, while partial referenced
+overlaps remain invalid.
+
+## Initial implementation verification (`f2f7467`)
 
 On 2026-09-08, `mvnw.cmd -B -ntp -C clean verify` passed across all seven
 reactor modules. The 47 focused DDS library tests, CLI process tests, and five
@@ -141,3 +204,19 @@ multi-entry limit test. Shared BA2 diagnostic/name parsing remains duplicated
 between family readers as a future refactoring opportunity. This commit is an
 implementation checkpoint, not a declaration that the outstanding CV1/PV1 merge
 qualification gates have passed.
+
+## PC qualification continuation
+
+The maintainer subsequently deferred Xbox compatibility and its separate DDS
+toolchain. The [PC review packet](../reviews/issue40-cv1/README.md) contains 44
+passing in-scope case comparisons, including the PC rejection of Xbox DDS input.
+Three original Xbox-related cases remain unchanged and deferred. The packet is
+pending explicit golden activation approval; it does not claim the deferred
+Xbox cases passed.
+
+This qualification fixed DDS archive-source repacking metadata accounting and
+added a public regression test. Full `mvnw.cmd -B -ntp -C clean verify` passed
+after the fix and qualification adapters. The performance harness tests and DDS
+benchmark adapter tests also passed. PV1 inputs and runtime bindings are prepared
+separately; no normative performance samples or passing performance qualification
+are claimed.

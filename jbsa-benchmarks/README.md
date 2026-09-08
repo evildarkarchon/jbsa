@@ -23,14 +23,15 @@ Supply all four JMH parameters with `-p name=value`:
 | `providerIdentity` | Exact immutable codec/provider/configuration identity |
 | `seed` | Manifest-pinned signed 64-bit entry-selection seed |
 
-`ArchiveAccessProvider` is a service-provider seam for the future production
-public random-access API. An implementation must be registered under
+`ArchiveAccessProvider` is a build-only service-provider seam for the production
+public random-access API. Implementations are registered under
 `META-INF/services/io.github.evildarkarchon.jbsa.benchmarks.ArchiveAccessProvider`,
 return the requested identity, validate the manifest in trial setup, and delegate
-metadata lookup and payload reads to that API. **No production implementation is
-available yet.** Unconfigured or missing providers fail setup, so this artifact
-cannot claim current archive performance. Tests exercise stream completion and
-the missing-provider boundary without shipping a fake adapter.
+metadata lookup and payload reads to that API. `DdsArchiveAccessProvider` supports
+FO4 DDS v1 under the exact packaged `jbsa-jdk-zlib-v1` byte identity. It verifies
+every external manifest length and canonical DDS hash before timing, then calls
+the public archive/entry/content API. Unconfigured or mismatched providers still
+fail setup. Provider availability alone does not establish a performance result.
 
 The bound corpus manifest is JSON with a `files` array. Each file supplies its
 relative `path`, exact `length`, and `sha256`; the adapter maps these entries to

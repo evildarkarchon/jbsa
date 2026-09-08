@@ -1,6 +1,8 @@
 """Behavioral checks of required PV1 lanes and targeted selection."""
 import copy
 import unittest
+import json
+from pathlib import Path
 
 import catalog
 
@@ -65,6 +67,34 @@ class CatalogTest(unittest.TestCase):
             elif missing == "profile_id": del profile[missing]
             else: del profile["codecs"]["zlib"]["configuration"][missing]
             with self.assertRaises(ValueError): catalog.create_catalog(profile)
+
+    def test_shipping_development_profile_binds_supported_lanes_without_rewriting_identity(self):
+        """Use the actual immutable release profile; unavailable providers remain unbound."""
+        profile = json.loads((Path(__file__).resolve().parents[2] /
+            'jbsa/src/main/resources/META-INF/jbsa-codec-profile.json').read_text())
+        document = catalog.create_catalog(profile)
+        dds = [c for c in document['cases'] if c['identity']['archive_family_or_layout'] == 'fo4-dx10-v1']
+        self.assertEqual(84, len(dds))
+        for case in dds:
+            self.assertTrue(case['configuration']['profile_bound'])
+            self.assertEqual(catalog.digest(profile), case['mapping']['codec_profile_sha256'])
+            self.assertEqual(9, case['mapping']['provider_configuration']['configuration']['parameters']['level'])
+        unavailable = [c for c in document['cases'] if c['mapping']['codec'] == 'raw-lz4']
+        self.assertTrue(unavailable)
+        self.assertTrue(all(not c['configuration']['profile_bound'] for c in unavailable))
+        self.assertEqual(len(catalog.create_catalog()['cases']), len(document['cases']))
+
+    def test_exact_profile_document_keeps_cv1_byte_identity(self):
+        """Whitespace and key order belong to the packaged profile's exact artifact digest."""
+        text = json.dumps(self.profile(), indent=2) + '\n'
+        profile = json.loads(text)
+        document = catalog.create_catalog(profile, profile_document=text)
+        expected = catalog.hashlib.sha256(text.encode('utf-8')).hexdigest()
+        self.assertNotEqual(catalog.digest(profile), expected)
+        self.assertTrue(all(c['mapping']['codec_profile_sha256'] == expected for c in document['cases']))
+        self.assertEqual(document['cases'], catalog.select_cases(document, 'full', logical_processors=16))
+        with self.assertRaises(ValueError):
+            catalog.create_catalog(profile, profile_document='{}')
 
     def test_random_gates_only_have_meaningful_index_and_payload_workloads(self):
         """Verify random gates only have meaningful index and payload workloads."""

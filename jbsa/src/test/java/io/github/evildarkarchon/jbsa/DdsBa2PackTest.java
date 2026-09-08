@@ -14,6 +14,30 @@ import org.junit.jupiter.api.io.TempDir;
 class DdsBa2PackTest {
   @TempDir Path temporary;
 
+  /** An existing DDS archive is a valid ordered pack source with canonical entry bytes. */
+  @Test
+  void repacksDdsArchiveThroughDetectedSource() throws Exception {
+    Path input = temporary.resolve("input.ba2"), output = temporary.resolve("output.ba2");
+    BethesdaArchives.standard().pack(request(input, bc1(4, 4, 1, 8)), OperationControl.standard());
+    var original = request(output, bc1(4, 4, 1, 8));
+    var repack =
+        PackRequest.standard(
+            output,
+            original.family(),
+            original.encoding(),
+            List.of(new PackSource.DetectedPath(input)),
+            original.ddsTarget());
+    BethesdaArchives.standard().pack(repack, OperationControl.standard());
+    try (var source = BethesdaArchives.standard().open(input, OpenOptions.standard());
+        var target = BethesdaArchives.standard().open(output, OpenOptions.standard());
+        var left = source.entry(0).openContent();
+        var right = target.entry(0).openContent()) {
+      assertArrayEquals(
+          Channels.newInputStream(left).readAllBytes(),
+          Channels.newInputStream(right).readAllBytes());
+    }
+  }
+
   /** Even an expanding one-block payload is independently zlib compressed by default. */
   @Test
   void compressesSmallOddTextureAndReconstructsCanonicalHeader() throws Exception {

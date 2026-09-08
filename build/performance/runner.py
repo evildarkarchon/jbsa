@@ -207,8 +207,11 @@ def check_prerequisites(case, registration, configuration, protocol):
                 raise ValueError("Provider version or configuration mismatch")
             if tool["codec_profile_sha256"] != case["mapping"]["codec_profile_sha256"]:
                 raise ValueError("Codec profile digest mismatch")
-            profile = load(bound_file(tool["codec_profile"], ROOT))
-            if digest(profile) != case["mapping"]["codec_profile_sha256"]:
+            profile_path = bound_file(tool["codec_profile"], ROOT)
+            profile = load(profile_path)
+            # A packaged CV1 profile is a byte-bound artifact. Older canonical
+            # inventory profiles remain valid only under their existing digest.
+            if case["mapping"]["codec_profile_sha256"] not in (file_digest(profile_path), digest(profile)):
                 raise ValueError("Runtime codec profile bytes differ from the case mapping")
     manifest_path = bound_file(registration["corpus_manifest"], ROOT)
     manifest = read_manifest(manifest_path)

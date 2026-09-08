@@ -23,6 +23,9 @@ def validate_profiles(profiles):
     configuration fields are implementation data; a documentation reference is
     not a replacement for recording their concrete values.
     """
+    if isinstance(profiles, dict) and "providers" in profiles:
+        shipping_codec_mappings(profiles)
+        return
     if (not isinstance(profiles, dict) or set(profiles) != {"profile_id", "codecs"}
             or not isinstance(profiles["profile_id"], str) or not profiles["profile_id"].strip()
             or not isinstance(profiles["codecs"], dict)
@@ -41,7 +44,45 @@ def validate_profiles(profiles):
             raise ValueError(f"Missing exact parameter, dispatch or native settings for {codec}")
 
 
-def create_catalog(profiles=None):
+def shipping_codec_mappings(profiles):
+    """Read the shipped JDK profile without rewriting its CV1-bound identity.
+
+    The older inventory schema describes every future provider. The actual release
+    profile instead records available providers and explicitly unavailable LZ4.
+    Only declared implementations get a bound lane; unavailable lanes remain in
+    the inventory so a full run cannot silently claim a reduced matrix.
+    """
+    required = {"profile_id", "providers", "size_dispatch", "resources", "native_configuration", "qualification"}
+    if (set(profiles) != required or not isinstance(profiles["profile_id"], str)
+            or not profiles["profile_id"] or set(profiles["providers"]) != {"zlib"}
+            or any(not isinstance(profiles[key], dict) for key in
+                   ("size_dispatch", "resources", "native_configuration"))
+            or profiles["native_configuration"].get("lz4") != "unavailable"):
+        raise ValueError("Unsupported shipping runtime-profile schema")
+    zlib = profiles["providers"]["zlib"]
+    if (set(zlib) != {"implementation", "runtime", "format", "level", "strategy", "nowrap"}
+            or zlib["implementation"] != "java.util.zip.Deflater/Inflater"
+            or not isinstance(zlib["runtime"], str) or not zlib["runtime"]
+            or zlib["format"] != "RFC1950" or type(zlib["level"]) is not int
+            or not 0 <= zlib["level"] <= 9 or zlib["strategy"] != "DEFAULT_STRATEGY"
+            or zlib["nowrap"] is not False):
+        raise ValueError("Unsupported shipping zlib-provider declaration")
+    return {
+        "stored": {"provider": "none", "version": "none", "configuration": {
+            "parameters": {}, "size_dispatch": {}, "native_configuration": {}}},
+        "zlib": {"provider": "jdk", "version": zlib["runtime"], "configuration": {
+            "parameters": {**zlib, "resources": profiles["resources"]},
+            "size_dispatch": profiles["size_dispatch"],
+            "native_configuration": profiles["native_configuration"]}}}
+
+
+def codec_mappings(profiles):
+    """Return exact lane configurations while retaining the original full profile for hashing."""
+    validate_profiles(profiles)
+    return profiles["codecs"] if "codecs" in profiles else shipping_codec_mappings(profiles)
+
+
+def create_catalog(profiles=None, profile_document=None):
     """Enumerate each required family, provider, direction and threading lane.
 
     Future slices bind concrete CV1 evidence and archives through registrations. Missing
@@ -51,7 +92,13 @@ def create_catalog(profiles=None):
     """
     if profiles is not None:
         validate_profiles(profiles)
-    profile_sha256 = digest(profiles) if profiles is not None else None
+    mappings = codec_mappings(profiles) if profiles is not None else {}
+    if profile_document is not None:
+        if not isinstance(profile_document, str) or json.loads(profile_document) != profiles:
+            raise ValueError("Exact profile document does not describe the supplied runtime profile")
+        profile_sha256 = hashlib.sha256(profile_document.encode('utf-8')).hexdigest()
+    else:
+        profile_sha256 = digest(profiles) if profiles is not None else None
     families = {
         "tes3": (0x100, None, None, "tes3", ["stored"]),
         "bsa-067": (0x67, None, None, "tes4", ["stored", "zlib", "mixed-zlib"]),
@@ -73,9 +120,11 @@ def create_catalog(profiles=None):
         for lane in codecs:
             codec = lane.removeprefix("mixed-")
             provider = "none" if codec == "stored" else "jdk" if codec == "zlib" else "lwjgl"
-            profile = profiles["codecs"][codec] if profiles is not None else None
+            profile = mappings.get(codec)
             if profile is not None:
                 provider = profile["provider"]
+            elif profiles is not None:
+                provider = "unavailable"
             workloads = ["mixed-10k", "metadata-100k", "bulk-compressible", "bulk-incompressible"]
             if kind == "DX10":
                 workloads.append("dds-mipmapped")
@@ -115,14 +164,17 @@ def create_catalog(profiles=None):
                                           "split": 2 if family == "tes3" or family.startswith("bsa-") else 0,
                                           "sharing": sharing, "oracle_mt": "no" if worker == "w1" else "yes",
                                           "candidate_workers": worker, "dds_input": kind == "DX10",
-                                          "profile_bound": profiles is not None,
+                                          "profile_bound": profile is not None,
                                           "medium_file_count": 1000 if switch is None else None,
                                           "split_boundary_required": family.startswith("bsa-") and codec == "stored" and workload == "bulk-incompressible"}
                                 cases.append({"identity": identity, "mapping": mapping, "configuration": config,
                                               "prerequisites": [], "requirements": ["JBSA-PERF-008"]})
     cases.sort(key=lambda c: c["identity"]["case_id"])
-    return {"schema_version": 1, "contract": "performance-v1", "profiles": profiles, "cases": cases,
-            "note": "Assignments require exact CV1, codec profile and corpus bindings before execution."}
+    result = {"schema_version": 1, "contract": "performance-v1", "profiles": profiles, "cases": cases,
+              "note": "Assignments require exact CV1, codec profile and corpus bindings before execution."}
+    if profile_document is not None:
+        result['profile_document'] = profile_document
+    return result
 
 
 def select_cases(document, mode, impact=None, logical_processors=16):
@@ -131,7 +183,7 @@ def select_cases(document, mode, impact=None, logical_processors=16):
     Unavailable scaling counts are structurally N/A and never enter the executed set.
     A targeted impact declares selectors and must list exactly their union of cases.
     """
-    expected = create_catalog(document.get("profiles"))
+    expected = create_catalog(document.get("profiles"), document.get('profile_document'))
     if document != expected:
         raise ValueError("Catalog differs from the versioned PV1 assignments")
     cases = document["cases"]
@@ -163,8 +215,9 @@ def main():
     parser.add_argument("--profiles", type=Path, help="Exact canonical runtime codec-profile JSON; omitted produces unbound assignments")
     args = parser.parse_args()
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    profiles = json.loads(args.profiles.read_text(encoding="utf-8")) if args.profiles else None
-    args.output.write_bytes(canonical(create_catalog(profiles)) + b"\n")
+    document = args.profiles.read_bytes().decode('utf-8') if args.profiles else None
+    profiles = json.loads(document) if document is not None else None
+    args.output.write_bytes(canonical(create_catalog(profiles, document)) + b"\n")
 
 
 if __name__ == "__main__":

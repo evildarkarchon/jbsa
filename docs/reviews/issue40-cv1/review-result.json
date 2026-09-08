@@ -1,0 +1,2076 @@
+{
+  "status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL",
+  "approval": null,
+  "automated_conformance": false,
+  "comparison_summary": {
+    "PASS": 44
+  },
+  "case_count": 44,
+  "raw_report": {
+    "path": "target/dds-pc-cv1-review-normalized/review-report.json",
+    "sha256": "6d956e9ff22b7f85ba294ea8fc57daf91a28ad44daa76c6ac53c94872e755633"
+  },
+  "proposed_catalog_sha256": "d8c6d5f91390106a52913bb6a6b4ddecf7f1a408eea248e04cdee04dc6476941",
+  "codec_profile_sha256": "b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda",
+  "candidate_artifacts": [
+    {
+      "sha256": "885d8880404a097676d1ccd1f14995103bcd1e41337df2116757dd527f3a06da",
+      "path": "jbsa/target/jbsa-0.1.0-SNAPSHOT.jar"
+    },
+    {
+      "sha256": "3085508ac877fe6ad4fe175d75e50283b742365cb0b543a60956cb8564a53e8c",
+      "path": "jbsa-cli/target/jbsa-cli-0.1.0-SNAPSHOT.jar"
+    }
+  ],
+  "adapter_registration_sha256": "68404262e0b3cc8e7c08e031948c4fc6ca7f2e28db8707dff96292410d9aed32",
+  "java_runtime": {
+    "executable": "D:\\Programs\\store\\OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1\\bin\\java.exe",
+    "sha256": "5808527e3dfc4eb285c7664ba356bc267055ef906e83ed4660d9f7976da7349b",
+    "version": "openjdk 25.0.4.1 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS, mixed mode, sharing)"
+  },
+  "results": [
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-lz4-frame-v1.lz4-frame.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-mixed-v1.mixed.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-raw-deflate-v1.raw-deflate.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-raw-lz4-v1.raw-lz4.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-stored-v1.stored.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-zlib-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bcf19a923823187\\work\\input.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bcf19a923823187\\work\\input.ba2",
+            "sha256": "880d87c4828cda767f1099319b40886a7dfeab0cbc2cbbf3aa704350d48fb9cc",
+            "size": 184
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bcf19a923823187\\validator-0\\objects\\d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5.bin",
+            "sha256": "d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5",
+            "size": 2017
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bcf19a923823187\\work\\input.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bcf19a923823187\\work\\input.ba2",
+            "sha256": "880d87c4828cda767f1099319b40886a7dfeab0cbc2cbbf3aa704350d48fb9cc",
+            "size": 184
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bcf19a923823187\\validator-1\\objects\\d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5.bin",
+            "sha256": "d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5",
+            "size": 2017
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-arithmetic-overflow-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-arithmetic-overflow",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-decompression-mismatch-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-decompression-mismatch",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-equal-name-identities-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-equal-name-identities",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-exact-shared-spans-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-exact-shared-spans",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-harmless-trailing-bytes-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-harmless-trailing-bytes",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-ignorable-constants-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-ignorable-constants",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-illegal-tuples-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-illegal-tuples",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-impossible-counts-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-impossible-counts",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-missing-name-tables-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-missing-name-tables",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-out-of-range-spans-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-out-of-range-spans",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-owning-dispositions-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-owning-dispositions",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-partial-overlap-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-partial-overlap",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-truncated-spans-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-truncated-spans",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-undecodable-wire-names-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-undecodable-wire-names",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-unsafe-absolute-names-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-unsafe-absolute-names",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-unsafe-traversal-names-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-unsafe-traversal-names",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-usable-name-hash-mismatch-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-usable-name-hash-mismatch",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-windows-invalid-names-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-windows-invalid-names",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-lz4-frame-v1.lz4-frame.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-mixed-v1.mixed.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-raw-deflate-v1.raw-deflate.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-raw-lz4-v1.raw-lz4.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-stored-v1.stored.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "explicit-rejection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-zlib-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "encode-cross-directions",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "oracle-to-jbsa",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "jbsa-to-oracle",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e1668f21ff13ed0b\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e1668f21ff13ed0b\\work\\candidate.ba2",
+            "sha256": "d6b6ff3568906bd13cf445dcefd78176866409b54a139e2efb6bc296963dde9e",
+            "size": 184
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e1668f21ff13ed0b\\validator-0\\objects\\d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5.bin",
+            "sha256": "d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5",
+            "size": 2017
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e1668f21ff13ed0b\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e1668f21ff13ed0b\\work\\candidate.ba2",
+            "sha256": "d6b6ff3568906bd13cf445dcefd78176866409b54a139e2efb6bc296963dde9e",
+            "size": 184
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e1668f21ff13ed0b\\validator-1\\objects\\d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5.bin",
+            "sha256": "d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5",
+            "size": 2017
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": "PASS"
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-dds-target-mismatch-pc-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "encode-cross-directions",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-target-mismatch-pc",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-dds-target-pc-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "encode-cross-directions",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-target-pc",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "oracle-to-jbsa",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "jbsa-to-oracle",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\8fad221eeffcc365\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\8fad221eeffcc365\\work\\candidate.ba2",
+            "sha256": "decc60c6e5f2fbb7107b9b96ea476fabf316acd9067537bb8b4b9d47d1c07143",
+            "size": 104
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\8fad221eeffcc365\\validator-0\\objects\\ce52c9432bcb72708414eec56d7b19b989f1a347922efa4bf65140df90d3158d.bin",
+            "sha256": "ce52c9432bcb72708414eec56d7b19b989f1a347922efa4bf65140df90d3158d",
+            "size": 1098
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\8fad221eeffcc365\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\8fad221eeffcc365\\work\\candidate.ba2",
+            "sha256": "decc60c6e5f2fbb7107b9b96ea476fabf316acd9067537bb8b4b9d47d1c07143",
+            "size": 104
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\8fad221eeffcc365\\validator-1\\objects\\ce52c9432bcb72708414eec56d7b19b989f1a347922efa4bf65140df90d3158d.bin",
+            "sha256": "ce52c9432bcb72708414eec56d7b19b989f1a347922efa4bf65140df90d3158d",
+            "size": 1098
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": "PASS"
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.extract.fo4-dds-malformed-unsafe-name-extraction-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-malformed-unsafe-name-extraction",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-bc16-boundaries-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-bc16-boundaries",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\25a384bb32eb4ff3\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\25a384bb32eb4ff3\\work\\candidate.ba2",
+            "sha256": "29847aab8b64d2985fcf0752d091d4882f03d00dfe85f02652267dfe8412aef2",
+            "size": 254
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\25a384bb32eb4ff3\\validator-0\\objects\\fd16b7c8095ceb5c5fdcc8b44781de449c1dadc66a966571afe73d59f12097c8.bin",
+            "sha256": "fd16b7c8095ceb5c5fdcc8b44781de449c1dadc66a966571afe73d59f12097c8",
+            "size": 2019
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\25a384bb32eb4ff3\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\25a384bb32eb4ff3\\work\\candidate.ba2",
+            "sha256": "29847aab8b64d2985fcf0752d091d4882f03d00dfe85f02652267dfe8412aef2",
+            "size": 254
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\25a384bb32eb4ff3\\validator-1\\objects\\fd16b7c8095ceb5c5fdcc8b44781de449c1dadc66a966571afe73d59f12097c8.bin",
+            "sha256": "fd16b7c8095ceb5c5fdcc8b44781de449c1dadc66a966571afe73d59f12097c8",
+            "size": 2019
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-bc8-boundaries-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-bc8-boundaries",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bd8933719f569bc\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bd8933719f569bc\\work\\candidate.ba2",
+            "sha256": "a0f8ad1650984d15176ff19ef50e51dc9e191ecf24d6b78c73aa9811a9584c50",
+            "size": 227
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bd8933719f569bc\\validator-0\\objects\\008e6ddedd1cedcf12cabb8bd633ac39d86f0949794b0370676394b0c017a133.bin",
+            "sha256": "008e6ddedd1cedcf12cabb8bd633ac39d86f0949794b0370676394b0c017a133",
+            "size": 2018
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bd8933719f569bc\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bd8933719f569bc\\work\\candidate.ba2",
+            "sha256": "a0f8ad1650984d15176ff19ef50e51dc9e191ecf24d6b78c73aa9811a9584c50",
+            "size": 227
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\9bd8933719f569bc\\validator-1\\objects\\008e6ddedd1cedcf12cabb8bd633ac39d86f0949794b0370676394b0c017a133.bin",
+            "sha256": "008e6ddedd1cedcf12cabb8bd633ac39d86f0949794b0370676394b0c017a133",
+            "size": 2018
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-cli-selector-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-cli-selector",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\d82ddbd7fe55b105\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\d82ddbd7fe55b105\\work\\candidate.ba2",
+            "sha256": "d6b6ff3568906bd13cf445dcefd78176866409b54a139e2efb6bc296963dde9e",
+            "size": 184
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\d82ddbd7fe55b105\\validator-0\\objects\\d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5.bin",
+            "sha256": "d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5",
+            "size": 2017
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\d82ddbd7fe55b105\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\d82ddbd7fe55b105\\work\\candidate.ba2",
+            "sha256": "d6b6ff3568906bd13cf445dcefd78176866409b54a139e2efb6bc296963dde9e",
+            "size": 184
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\d82ddbd7fe55b105\\validator-1\\objects\\d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5.bin",
+            "sha256": "d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5",
+            "size": 2017
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-cubemaps-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-cubemaps",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\40615fdb4ceed65d\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\40615fdb4ceed65d\\work\\candidate.ba2",
+            "sha256": "4bc2cdccef97c104e72753fba1674a4e4d6330bc6f861aa699f6b5c83a001b16",
+            "size": 435
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\40615fdb4ceed65d\\validator-0\\objects\\9ac34d273164e78599c14678c9a148460b7422dd690268a880fb2be566d93328.bin",
+            "sha256": "9ac34d273164e78599c14678c9a148460b7422dd690268a880fb2be566d93328",
+            "size": 1101
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\40615fdb4ceed65d\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\40615fdb4ceed65d\\work\\candidate.ba2",
+            "sha256": "4bc2cdccef97c104e72753fba1674a4e4d6330bc6f861aa699f6b5c83a001b16",
+            "size": 435
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\40615fdb4ceed65d\\validator-1\\objects\\9ac34d273164e78599c14678c9a148460b7422dd690268a880fb2be566d93328.bin",
+            "sha256": "9ac34d273164e78599c14678c9a148460b7422dd690268a880fb2be566d93328",
+            "size": 1101
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-dimensions-mips-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-dimensions-mips",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\2b2cf306ccdb1406\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\2b2cf306ccdb1406\\work\\candidate.ba2",
+            "sha256": "aed5302efbf281ec540bdf96bfc1f3a5ad02f97c402bd4d3eb3f2601d7dca1d1",
+            "size": 259
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\2b2cf306ccdb1406\\validator-0\\objects\\5af77da041fe7e8e607b8ec72d8cdbf32f12654731dcdc1cace653cc2a01e1ce.bin",
+            "sha256": "5af77da041fe7e8e607b8ec72d8cdbf32f12654731dcdc1cace653cc2a01e1ce",
+            "size": 2019
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\2b2cf306ccdb1406\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\2b2cf306ccdb1406\\work\\candidate.ba2",
+            "sha256": "aed5302efbf281ec540bdf96bfc1f3a5ad02f97c402bd4d3eb3f2601d7dca1d1",
+            "size": 259
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\2b2cf306ccdb1406\\validator-1\\objects\\5af77da041fe7e8e607b8ec72d8cdbf32f12654731dcdc1cace653cc2a01e1ce.bin",
+            "sha256": "5af77da041fe7e8e607b8ec72d8cdbf32f12654731dcdc1cace653cc2a01e1ce",
+            "size": 2019
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-name-tables-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-name-tables",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\28f695b9aff9e4ff\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\28f695b9aff9e4ff\\work\\candidate.ba2",
+            "sha256": "d6b6ff3568906bd13cf445dcefd78176866409b54a139e2efb6bc296963dde9e",
+            "size": 184
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\28f695b9aff9e4ff\\validator-0\\objects\\d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5.bin",
+            "sha256": "d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5",
+            "size": 2017
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\28f695b9aff9e4ff\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\28f695b9aff9e4ff\\work\\candidate.ba2",
+            "sha256": "d6b6ff3568906bd13cf445dcefd78176866409b54a139e2efb6bc296963dde9e",
+            "size": 184
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\28f695b9aff9e4ff\\validator-1\\objects\\d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5.bin",
+            "sha256": "d0927978751d94a14fcaaf7c2d54c96dc5ff7a4edf4168a98824b5585952a8e5",
+            "size": 2017
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-nonsquare-mips-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-nonsquare-mips",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e501d8e651ffe793\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e501d8e651ffe793\\work\\candidate.ba2",
+            "sha256": "bc4c8b66fafd30112cec92c1b3c0f81d461988b94460bf5fbdf796a91a0e011b",
+            "size": 428
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e501d8e651ffe793\\validator-0\\objects\\6cc60fdeff55d985e95a3a3706b440b1aa2b9358557e027e1246727406f0a9a6.bin",
+            "sha256": "6cc60fdeff55d985e95a3a3706b440b1aa2b9358557e027e1246727406f0a9a6",
+            "size": 1111
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e501d8e651ffe793\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e501d8e651ffe793\\work\\candidate.ba2",
+            "sha256": "bc4c8b66fafd30112cec92c1b3c0f81d461988b94460bf5fbdf796a91a0e011b",
+            "size": 428
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\e501d8e651ffe793\\validator-1\\objects\\6cc60fdeff55d985e95a3a3706b440b1aa2b9358557e027e1246727406f0a9a6.bin",
+            "sha256": "6cc60fdeff55d985e95a3a3706b440b1aa2b9358557e027e1246727406f0a9a6",
+            "size": 1111
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-odd-multichunk-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-odd-multichunk",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\32738fb8cdcd6154\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\32738fb8cdcd6154\\work\\candidate.ba2",
+            "sha256": "e4852a77998f87273c765147a81c93a3262b1608183eacd580b81f7393050361",
+            "size": 933
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\32738fb8cdcd6154\\validator-0\\objects\\ee74aff119ec153f0f433c21c331bc3bfb54ae40b69b3f9267ff6e895d053f33.bin",
+            "sha256": "ee74aff119ec153f0f433c21c331bc3bfb54ae40b69b3f9267ff6e895d053f33",
+            "size": 1294
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\32738fb8cdcd6154\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\32738fb8cdcd6154\\work\\candidate.ba2",
+            "sha256": "e4852a77998f87273c765147a81c93a3262b1608183eacd580b81f7393050361",
+            "size": 933
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\32738fb8cdcd6154\\validator-1\\objects\\ee74aff119ec153f0f433c21c331bc3bfb54ae40b69b3f9267ff6e895d053f33.bin",
+            "sha256": "ee74aff119ec153f0f433c21c331bc3bfb54ae40b69b3f9267ff6e895d053f33",
+            "size": 1294
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-partitions-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-partitions",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5da8feaf0b176301\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5da8feaf0b176301\\work\\candidate.ba2",
+            "sha256": "cbb8b51d253a88b8caeed6c453601d4eb8d3b39cd9f3323030f89fb9fe97c8b3",
+            "size": 10641
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5da8feaf0b176301\\validator-0\\objects\\833ed3aa8921a37d91240c6933f7f4fa2b5ad2f645c241fce074a8926f7ac521.bin",
+            "sha256": "833ed3aa8921a37d91240c6933f7f4fa2b5ad2f645c241fce074a8926f7ac521",
+            "size": 4077
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5da8feaf0b176301\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5da8feaf0b176301\\work\\candidate.ba2",
+            "sha256": "cbb8b51d253a88b8caeed6c453601d4eb8d3b39cd9f3323030f89fb9fe97c8b3",
+            "size": 10641
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5da8feaf0b176301\\validator-1\\objects\\833ed3aa8921a37d91240c6933f7f4fa2b5ad2f645c241fce074a8926f7ac521.bin",
+            "sha256": "833ed3aa8921a37d91240c6933f7f4fa2b5ad2f645c241fce074a8926f7ac521",
+            "size": 4077
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-reconstruction-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-reconstruction",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5625ad862718de1a\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5625ad862718de1a\\work\\candidate.ba2",
+            "sha256": "1c467dfe806fe449d2ae80ae90d7baa24132b490dbc9ef237cf85d05af3f6408",
+            "size": 3861
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5625ad862718de1a\\validator-0\\objects\\2b75d1006b55ff6ad62bd2e537569bd0dbd776de12a4328b508b1cfac3112e69.bin",
+            "sha256": "2b75d1006b55ff6ad62bd2e537569bd0dbd776de12a4328b508b1cfac3112e69",
+            "size": 23201
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5625ad862718de1a\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5625ad862718de1a\\work\\candidate.ba2",
+            "sha256": "1c467dfe806fe449d2ae80ae90d7baa24132b490dbc9ef237cf85d05af3f6408",
+            "size": 3861
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\5625ad862718de1a\\validator-1\\objects\\2b75d1006b55ff6ad62bd2e537569bd0dbd776de12a4328b508b1cfac3112e69.bin",
+            "sha256": "2b75d1006b55ff6ad62bd2e537569bd0dbd776de12a4328b508b1cfac3112e69",
+            "size": 23201
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-writable-formats-v1.zlib.pc-v1",
+      "comparison_result": "PASS",
+      "reason": "Every applicable golden comparison and required adapter evidence was evaluated.",
+      "assertions": [
+        {
+          "assertion_id": "fixture-integrity",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "authority-consistency",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "coverage-dds-writable-formats",
+          "result": "PASS",
+          "reason": null
+        },
+        {
+          "assertion_id": "decode-semantic-projection",
+          "result": "PASS",
+          "reason": null
+        }
+      ],
+      "validators": [
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "archive",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "jbsa-independent-specification-dds-ba2-scanner"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\dds-cv1-expectations.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\805154715905487a\\work\\candidate.ba2"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\805154715905487a\\work\\candidate.ba2",
+            "sha256": "1c467dfe806fe449d2ae80ae90d7baa24132b490dbc9ef237cf85d05af3f6408",
+            "size": 3861
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\805154715905487a\\validator-0\\objects\\2b75d1006b55ff6ad62bd2e537569bd0dbd776de12a4328b508b1cfac3112e69.bin",
+            "sha256": "2b75d1006b55ff6ad62bd2e537569bd0dbd776de12a4328b508b1cfac3112e69",
+            "size": 23201
+          },
+          "error": null
+        },
+        {
+          "result": "PASS",
+          "validator": {
+            "sha256": "3adbbf2af609e206e3ca18cd55fc7c4b52f5c8bb8218dd99fd5a9e50d7a193cd",
+            "independent": true,
+            "derived_from_reference": false,
+            "adapter_version": "1",
+            "kind": "dds",
+            "path": "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "identity": "Microsoft-DirectXTex-may2026-via-independent-DDS-reconstruction"
+          },
+          "invocation": [
+            "C:\\Users\\evild\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+            "D:\\repos\\jbsa\\build\\validate-dds-cv1-directx.py",
+            "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\805154715905487a\\work\\candidate.ba2",
+            "D:\\repos\\jbsa\\build\\target\\directxtex-may2026\\texdiag.exe"
+          ],
+          "input": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\805154715905487a\\work\\candidate.ba2",
+            "sha256": "1c467dfe806fe449d2ae80ae90d7baa24132b490dbc9ef237cf85d05af3f6408",
+            "size": 3861
+          },
+          "output": {
+            "path": "D:\\repos\\jbsa\\target\\dds-pc-cv1-review-normalized\\805154715905487a\\validator-1\\objects\\2b75d1006b55ff6ad62bd2e537569bd0dbd776de12a4328b508b1cfac3112e69.bin",
+            "sha256": "2b75d1006b55ff6ad62bd2e537569bd0dbd776de12a4328b508b1cfac3112e69",
+            "size": 23201
+          },
+          "error": null
+        }
+      ],
+      "oracle_result": null
+    }
+  ]
+}

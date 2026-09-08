@@ -6,8 +6,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Build-only service seam for benchmarks of public archive APIs. No implementation is shipped until
- * the production random-access API exists; missing providers must fail qualification setup.
+ * Build-only service seam for benchmarks of public archive APIs. Registered adapters delegate to
+ * implemented public capabilities; missing or mismatched providers fail qualification setup.
  */
 public interface ArchiveAccessProvider {
   /**
