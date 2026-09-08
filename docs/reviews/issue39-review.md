@@ -1,5 +1,9 @@
 # Issue 39 implementation review
 
+Activation update, 2026-09-08: the maintainer approved the CV1 proposal and its
+33 successor cases are now active. See the [activation record](issue39-cv1/activation.json).
+The review below records the state before that approval.
+
 Baseline: `a3b242fe8a6493bc57d440a48ee0651f5fa386fa` on
 `initial-implementation`. Scope: Fallout 4 General BA2 v1, issue #39.
 

@@ -1,5 +1,10 @@
 # General BA2 development coverage and CV1 boundaries
 
+The maintainer approved the [33-case activation](../reviews/issue39-cv1/activation.json)
+on 2026-09-08. The mapping below preserves the original development case names;
+the [successor mapping](../reviews/issue39-cv1/README.md#exact-successor-mapping)
+identifies the cases now in the active catalog.
+
 The immutable conformance catalog has 33 `fo4-gnrl-v1` cases. This document maps
 their scenarios to issue #39 development evidence. It does not fill missing
 catalog fixture bindings, approve goldens, or award formal CV1 qualification.

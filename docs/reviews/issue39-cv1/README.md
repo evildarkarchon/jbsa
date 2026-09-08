@@ -1,5 +1,25 @@
 # Issue 39: proposed General BA2 CV1 evidence
 
+## Approved activation
+
+The maintainer explicitly approved activation on 2026-09-08. The active catalog
+now contains all 33 reviewed successor cases. [Activation evidence](activation.json)
+binds the approval, catalog, and 33 schema-valid rebaseline records under
+`tests/conformance/rebaselines`. The rebaseline audit verified 45 golden-to-case
+bindings because decode and encode cases can share a fixture's goldens.
+
+The ordinary conformance runner passed all 33 active BA2 cases; the
+[activation result](activation-result.json) records the case and artifact
+identities. Other families retain their separate missing prerequisites.
+
+Activation corrected golden labels to the schema's lowercase hyphenated form
+and rebound the provenance manifest and descriptor digests. Approved case IDs,
+fixture bytes, and expected golden bytes are unchanged. The original proposal,
+pending records, and review results below remain historical evidence rather
+than being rewritten to imply approval existed at review time.
+
+## Original proposal record
+
 **Untrusted pending explicit maintainer approval.** The active conformance catalog
 and its accepted descriptor objects remain unchanged. `review.json` binds the
 proposed catalog, independent fixture manifest and all 33 exact supersessions.
@@ -35,7 +55,9 @@ by provider. Both directions must preserve the same exact source payload tree.
 Committed oracle hex and digest-pinned receipts contain only project-authored
 content; the executable is not redistributed.
 
-Run after a Java 25 packaged build, with `JAVA_HOME` pointing to the real JDK
+The following historical proposal-generation commands apply to the pre-activation
+checkout at `b3d2fa9`; do not regenerate the archived proposal in this activated
+checkout. Run after a Java 25 packaged build, with `JAVA_HOME` pointing to the real JDK
 directory rather than a junction (the evidence harness rejects indirections):
 
 ```powershell
