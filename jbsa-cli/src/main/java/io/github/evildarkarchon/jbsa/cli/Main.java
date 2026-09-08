@@ -100,11 +100,16 @@ public final class Main {
                                     Optional.of(
                                         new io.github.evildarkarchon.jbsa.WireVersion(
                                             invocation.family() == ArchiveFamily.FO4_GENERAL_BA2
+                                                    || invocation.family()
+                                                        == ArchiveFamily.FO4_DDS_BA2
                                                 ? 1
                                                 : 0x67)),
                                     invocation.family() == ArchiveFamily.FO4_GENERAL_BA2
                                         ? Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.GNRL)
-                                        : Optional.empty(),
+                                        : invocation.family() == ArchiveFamily.FO4_DDS_BA2
+                                            ? Optional.of(
+                                                io.github.evildarkarchon.jbsa.Ba2Subtype.DX10)
+                                            : Optional.empty(),
                                     java.util.OptionalLong.empty()),
                             invocation.profile(),
                             invocation.sources(),
@@ -113,7 +118,9 @@ public final class Main {
                             ResourceLimits.standard(),
                             invocation.workers(),
                             invocation.packOptions(),
-                            Optional.empty()),
+                            invocation.family() == ArchiveFamily.FO4_DDS_BA2
+                                ? Optional.of(io.github.evildarkarchon.jbsa.DdsTarget.PC)
+                                : Optional.empty()),
                         mutation.control())
                     : archives.extract(
                         new ExtractRequest(
@@ -177,7 +184,7 @@ public final class Main {
     }
   }
 
-  /** Renders stable BSA header and archive-order entry facts from detached library metadata. */
+  /** Renders stable archive headers and serialized entry facts from detached library metadata. */
   private static void renderInspection(
       Invocation invocation, ArchiveInspection inspection, PrintStream output) {
     output.println("Archive: " + invocation.archive());
@@ -190,10 +197,17 @@ public final class Main {
                     (entry.facts() instanceof EntryMetadata.VersionedBsa facts
                             && facts.compressed())
                         || (entry.facts() instanceof EntryMetadata.GeneralBa2 general
-                            && general.packedSize() != 0))
+                            && general.packedSize() != 0)
+                        || (entry.facts() instanceof EntryMetadata.DdsBa2 dds
+                            && dds.chunks().stream().anyMatch(chunk -> chunk.packedSize() != 0)))
             .count();
     output.println("Compressed entries: " + compressed);
     output.println("Codec: " + (compressed == 0 ? "STORED" : "ZLIB"));
+    if (inspection.metadata() instanceof ArchiveMetadata.DdsBa2 metadata) {
+      output.println("Version: " + metadata.encoding().wireVersion().orElseThrow().value());
+      output.println("Subtype: DX10");
+      output.println("Filename table offset: " + metadata.fileNameTableOffset());
+    }
     if (inspection.metadata() instanceof ArchiveMetadata.GeneralBa2 metadata) {
       output.println("Version: " + metadata.encoding().wireVersion().orElseThrow().value());
       output.println("Subtype: " + metadata.encoding().ba2Subtype().orElseThrow().value());
@@ -219,6 +233,32 @@ public final class Main {
     if (invocation.list()) {
       for (EntryMetadata entry : inspection.entries()) {
         output.println(entry.displayName());
+        if (invocation.dump() && entry.facts() instanceof EntryMetadata.DdsBa2 facts) {
+          output.println("  Ordinal: " + entry.ordinal());
+          output.println("  Basename hash: " + Long.toHexString(facts.identity().baseNameHash()));
+          output.println("  Directory hash: " + Long.toHexString(facts.identity().directoryHash()));
+          output.println(
+              "  Extension bytes: "
+                  + java.util.HexFormat.of().formatHex(facts.identity().extension().bytes()));
+          output.println("  Mod index: " + facts.identity().modIndex());
+          output.println("  Chunk count: " + facts.identity().chunkCount());
+          output.println("  Chunk header size: " + facts.identity().chunkHeaderSize());
+          output.println("  Dimensions: " + facts.width() + "x" + facts.height());
+          output.println("  DXGI format: " + facts.dxgiFormat());
+          output.println("  Cubemap: " + ((facts.flags() & 1) != 0));
+          output.println("  Tile mode: " + facts.tileMode());
+          output.println("  Mip count: " + facts.mipCount());
+          output.println("  Decoded size: " + entry.decodedSize());
+          output.println("  Stored size: " + entry.storedSize());
+          for (var chunk : facts.chunks()) {
+            output.println("    Data offset: " + chunk.payloadOffset());
+            output.println("    Packed size: " + chunk.packedSize());
+            output.println("    Decoded size: " + chunk.unpackedSize());
+            output.println("    Compressed: " + (chunk.packedSize() != 0));
+            output.println("    Mip range: " + chunk.startMip() + ".." + chunk.endMip());
+            output.println("    Sentinel: " + Long.toHexString(chunk.sentinel()));
+          }
+        }
         if (invocation.dump() && entry.facts() instanceof EntryMetadata.GeneralBa2 facts) {
           output.println("  Ordinal: " + entry.ordinal());
           output.println("  Basename hash: " + Long.toHexString(facts.identity().baseNameHash()));
@@ -303,6 +343,7 @@ public final class Main {
 
   /** Prints the supported archive invocation forms and family-specific option names. */
   private static void help(PrintStream output) {
+    output.println("Fallout 4 DDS BA2 pack: -fo4dds [-z|-z:zlib] (PC DDS only; always compressed)");
     output.println(
         "Fallout 4 General BA2 pack: -fo4 [-z|-z:zlib] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println(

@@ -257,10 +257,47 @@ public final class OwnedArchive implements OpenArchive {
       ExactIo.end(streamOffset, streamSize, input.size(), context);
       entries.add(new StoredEntry(metadata, streamOffset, streamSize, true));
     }
+
+    /** Admits a generated DDS envelope followed by independently bounded texture chunks. */
+    public void addDds(EntryMetadata metadata, byte[] header, List<EntryMetadata.DdsChunk> chunks)
+        throws ArchiveException {
+      if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
+        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
+      long decoded = header.length;
+      for (EntryMetadata.DdsChunk chunk : chunks) {
+        ExactIo.end(
+            chunk.payloadOffset(),
+            chunk.packedSize() == 0 ? chunk.unpackedSize() : chunk.packedSize(),
+            input.size(),
+            context);
+        decoded = ExactIo.end(decoded, chunk.unpackedSize(), Long.MAX_VALUE, context);
+      }
+      if (decoded != metadata.decodedSize())
+        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
+      entries.add(
+          new StoredEntry(
+              metadata,
+              0,
+              0,
+              chunks.stream().anyMatch(c -> c.packedSize() != 0),
+              header.clone(),
+              List.copyOf(chunks)));
+    }
   }
 
   /** An encoded range has no decoded cache; each compressed child owns independent codec state. */
-  private record StoredEntry(EntryMetadata metadata, long offset, long streamSize, boolean zlib) {}
+  private record StoredEntry(
+      EntryMetadata metadata,
+      long offset,
+      long streamSize,
+      boolean zlib,
+      byte[] header,
+      List<EntryMetadata.DdsChunk> chunks) {
+    /** Retains the existing single-span representation for non-texture entries. */
+    private StoredEntry(EntryMetadata metadata, long offset, long streamSize, boolean zlib) {
+      this(metadata, offset, streamSize, zlib, null, List.of());
+    }
+  }
 
   /** Returns detached structural evidence, including after the owned input has closed. */
   @Override
@@ -377,7 +414,9 @@ public final class OwnedArchive implements OpenArchive {
   private final class Content implements EntryContent {
     private final StoredEntry stored;
     private final ResourceBudget.Lease credit;
-    private final JdkZlib.Decoder decoder;
+    private JdkZlib.Decoder decoder;
+    private int chunkIndex;
+    private long chunkPosition;
     private final Object reads = new Object();
     private boolean open = true;
     private long position;
@@ -387,7 +426,7 @@ public final class OwnedArchive implements OpenArchive {
       this.stored = stored;
       this.credit = credit;
       decoder =
-          stored.zlib()
+          stored.zlib() && stored.header() == null
               ? JdkZlib.decoder(
                   (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
                   stored.streamSize(),
@@ -426,6 +465,19 @@ public final class OwnedArchive implements OpenArchive {
             throw new ClosedByInterruptException();
           }
           if (destination.isReadOnly()) throw new java.nio.ReadOnlyBufferException();
+          if (stored.header() != null) {
+            int count = readDds(destination);
+            synchronized (lifetime) {
+              if (!open || closed) throw new AsynchronousCloseException();
+              if (count < 0 && assessment == null)
+                assessment =
+                    new ArchiveAssessment(
+                        inspection.assessment().disposition(),
+                        new ValidationExtent.Payloads(Set.of(stored.metadata().ordinal())),
+                        inspection.assessment().diagnostics());
+              return count;
+            }
+          }
           if (decoder != null) {
             int count = decoder.read(destination);
             synchronized (lifetime) {
@@ -487,6 +539,55 @@ public final class OwnedArchive implements OpenArchive {
           }
         }
       }
+    }
+
+    /** Streams the generated envelope and serialized chunks with at most one live zlib decoder. */
+    private int readDds(ByteBuffer destination) throws IOException {
+      if (!destination.hasRemaining()) return 0;
+      if (position < stored.header().length) {
+        int count = (int) Math.min(destination.remaining(), stored.header().length - position);
+        destination.put(stored.header(), (int) position, count);
+        position += count;
+        return count;
+      }
+      while (chunkIndex < stored.chunks().size()) {
+        EntryMetadata.DdsChunk chunk = stored.chunks().get(chunkIndex);
+        if (chunk.packedSize() > 0) {
+          synchronized (lifetime) {
+            // Decoder creation shares close's lock so parent close cannot miss new native state.
+            if (!open || closed) throw new AsynchronousCloseException();
+            if (decoder == null)
+              decoder =
+                  JdkZlib.decoder(
+                      (offset, bytes) ->
+                          input.readExact(Math.addExact(chunk.payloadOffset(), offset), bytes),
+                      chunk.packedSize(),
+                      chunk.unpackedSize(),
+                      contentContext(stored.metadata().ordinal()));
+          }
+          int count = decoder.read(destination);
+          if (count >= 0) return count;
+          synchronized (lifetime) {
+            decoder.close();
+            decoder = null;
+          }
+        } else if (chunkPosition < chunk.unpackedSize()) {
+          int count =
+              (int)
+                  Math.min(
+                      Math.min(destination.remaining(), ExactIo.WINDOW_BYTES),
+                      chunk.unpackedSize() - chunkPosition);
+          ByteBuffer window = destination.slice();
+          window.limit(count);
+          input.readExact(Math.addExact(chunk.payloadOffset(), chunkPosition), window);
+          destination.position(destination.position() + count);
+          chunkPosition += count;
+          return count;
+        }
+        chunkIndex++;
+        chunkPosition = 0;
+      }
+      return -1;
     }
 
     /**

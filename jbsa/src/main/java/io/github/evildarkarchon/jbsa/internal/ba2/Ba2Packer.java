@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.ba2;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.*;
 import java.io.IOException;
 import java.nio.*;
@@ -9,10 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 
-/**
- * Canonical sequential Fallout 4 General BA2 writer with bounded stabilization before split
- * planning.
- */
+/** Canonical sequential Fallout 4 BA2 writer with bounded stabilization before split planning. */
 public final class Ba2Packer {
   private Ba2Packer() {}
 
@@ -28,6 +26,7 @@ public final class Ba2Packer {
     OperationReport result = null;
     var failures = new FailureRetention(request.resourceLimits(), Operation.PACK);
     ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context);
+    boolean dds = request.family() == ArchiveFamily.FO4_DDS_BA2;
     try {
       operation.begin();
       var encoding =
@@ -38,7 +37,7 @@ public final class Ba2Packer {
           .equals(
               new ArchiveEncoding(
                   Optional.of(new WireVersion(1)),
-                  Optional.of(Ba2Subtype.GNRL),
+                  Optional.of(dds ? Ba2Subtype.DX10 : Ba2Subtype.GNRL),
                   OptionalLong.empty())))
         throw context.failure(FailureKind.UNSUPPORTED, "archive.unsupported-encoding", null);
       boolean defaultCompressed = request.options().compression() == PackOptions.Compression.ZLIB;
@@ -52,6 +51,13 @@ public final class Ba2Packer {
       for (var choice : request.options().entryCompression().values())
         if (choice != PackOptions.Compression.STORED && choice != PackOptions.Compression.ZLIB)
           throw context.failure(FailureKind.UNSUPPORTED, "ba2.unsupported-entry-codec", null);
+      if (dds
+          && (request.options().compression() == PackOptions.Compression.STORED
+              || request
+                  .options()
+                  .entryCompression()
+                  .containsValue(PackOptions.Compression.STORED)))
+        throw context.failure(FailureKind.UNSUPPORTED, "dx10.stored-encode", null);
       Set<NormalizedNameIdentity> unmatched =
           new HashSet<>(request.options().entryCompression().keySet());
       List<Item> items = new ArrayList<>();
@@ -60,14 +66,17 @@ public final class Ba2Packer {
       for (PackSources.Entry source : PackSources.plan(request, operation, budget, encoding)) {
         unmatched.remove(new NormalizedNameIdentity(source.identity()));
         boolean compressed =
-            request
-                    .options()
-                    .entryCompression()
-                    .getOrDefault(
-                        new NormalizedNameIdentity(source.identity()),
-                        request.options().compression())
-                == PackOptions.Compression.ZLIB;
+            dds
+                || request
+                        .options()
+                        .entryCompression()
+                        .getOrDefault(
+                            new NormalizedNameIdentity(source.identity()),
+                            request.options().compression())
+                    == PackOptions.Compression.ZLIB;
         String display = source.displayName().replace('\\', '/');
+        if (dds && !display.toLowerCase(Locale.ROOT).endsWith(".dds"))
+          throw context.failure(FailureKind.UNSUPPORTED, "dds.non-dds-entry", null);
         int separator = display.lastIndexOf('/');
         if (separator <= 0 || separator == display.length() - 1)
           throw context.failure(FailureKind.POLICY, "ba2.invalid-encode-name", null);
@@ -94,15 +103,17 @@ public final class Ba2Packer {
           throw context.failure(FailureKind.POLICY, "ba2.invalid-encode-name", null);
         if (!wireIdentities.add(wireIdentity.orElseThrow()))
           throw context.failure(FailureKind.POLICY, "ba2.duplicate-encode-name", null);
-        checkU32(source.size(), context);
-        if (source.size() > request.resourceLimits().maxDecodedBytes() - decoded)
+        if (!dds) checkU32(source.size(), context);
+        if (!dds && source.size() > request.resourceLimits().maxDecodedBytes() - decoded)
           throw context.limit(
               "maxDecodedBytes",
               request.resourceLimits().maxDecodedBytes(),
               java.math.BigInteger.valueOf(decoded)
                   .add(java.math.BigInteger.valueOf(source.size()))
                   .toString());
-        decoded += source.size();
+        if (!dds) decoded += source.size();
+        // DDS adds bounded partition/header state beyond the shared source-entry allowance.
+        if (dds) budget.reserve(2048, 0, 0, 0);
         items.add(new Item(source, name, Ba2Names.identity(name), compressed));
       }
       if (!unmatched.isEmpty())
@@ -119,6 +130,7 @@ public final class Ba2Packer {
               0,
               0)) {
         Map<String, List<Item>> candidates = new HashMap<>();
+        Map<String, List<Chunk>> chunkCandidates = new HashMap<>();
         for (int ordinal = 0; ordinal < items.size(); ordinal++) {
           Item item = items.get(ordinal);
           var processing =
@@ -136,6 +148,30 @@ public final class Ba2Packer {
               processing);
           item.offset = item.rawOffset;
           item.size = item.source.size();
+          if (dds) {
+            stabilizeDds(item, stable, request, operation, processing, budget, chunkCandidates);
+            long entryDecoded =
+                item.texture.payloadSize()
+                    + DdsEnvelope.canonicalHeader(
+                            item.texture.width(),
+                            item.texture.height(),
+                            item.texture.mipCount(),
+                            item.texture.dxgiFormat(),
+                            item.texture.cubemap(),
+                            item.texture.tileMode(),
+                            request.ddsTarget().orElseThrow(),
+                            processing)
+                        .length;
+            if (entryDecoded > request.resourceLimits().maxDecodedBytes() - decoded)
+              throw processing.limit(
+                  "maxDecodedBytes",
+                  request.resourceLimits().maxDecodedBytes(),
+                  java.math.BigInteger.valueOf(decoded)
+                      .add(java.math.BigInteger.valueOf(entryDecoded))
+                      .toString());
+            decoded += entryDecoded;
+            continue;
+          }
           if (request.options().sharing()) {
             String key = digest(stable, item.rawOffset, item.source.size(), operation);
             for (Item previous : candidates.getOrDefault(key, List.of())) {
@@ -195,7 +231,7 @@ public final class Ba2Packer {
       List<List<Item>> parts = split(items, request.options());
       for (var part : parts)
         budget.metadata(
-            24 + part.size() * 36L + part.stream().mapToLong(i -> i.name.length + 2L).sum());
+            24 + part.stream().mapToLong(i -> i.recordSize() + i.name.length + 2L).sum());
       var writers = new ArrayList<PublicationTransaction.Writer>();
       var completed = new ArrayList<OperationReport.ArchivePart>();
       for (var part : parts) {
@@ -205,7 +241,7 @@ public final class Ba2Packer {
               /** Replays this independent part before the transaction may publish any sibling. */
               @Override
               public void write(PublicationTransaction.StagedFile output) throws IOException {
-                Ba2Packer.write(part, stable, output);
+                Ba2Packer.write(part, stable, output, dds);
                 // Stabilization is no longer needed after the last staged part; cleanup must
                 // precede
                 // commit.
@@ -226,7 +262,7 @@ public final class Ba2Packer {
               public void validate(Path staged) throws IOException {
                 long metadataBytes =
                     24
-                        + 36L * part.size()
+                        + part.stream().mapToLong(Item::recordSize).sum()
                         + part.stream().mapToLong(item -> item.name.length + 2L).sum();
                 // The reader owns its own budget, so admit its peak against the still-live pack
                 // budget as well; readback must not silently exceed the operation's capacity.
@@ -245,7 +281,7 @@ public final class Ba2Packer {
                             new OpenOptions(
                                 request.compatibilityProfile(),
                                 request.resourceLimits(),
-                                Optional.empty()),
+                                request.ddsTarget()),
                             Operation.PACK,
                             request.diagnosticPolicy())) {
                   if (archive.inspection().assessment().disposition()
@@ -319,20 +355,21 @@ public final class Ba2Packer {
         };
     List<List<Item>> parts = new ArrayList<>();
     List<Item> current = new ArrayList<>();
-    Set<Item> owners = new HashSet<>();
+    Set<Object> owners = new HashSet<>();
     long estimate = 0;
     for (Item item : items) {
       long overhead = 200L + item.source.displayName().length();
-      long cost = overhead + (owners.contains(item.owner) ? 0 : item.owner.size);
+      long cost = overhead + uniqueCost(item, owners);
       if (target != 0 && !current.isEmpty() && cost > target - estimate) {
         parts.add(List.copyOf(current));
         current.clear();
         owners.clear();
         estimate = 0;
-        cost = overhead + item.owner.size;
+        cost = overhead + uniqueCost(item, owners);
       }
       current.add(item);
-      owners.add(item.owner);
+      if (item.texture == null) owners.add(item.owner);
+      else for (Chunk chunk : item.chunks) owners.add(chunk.owner);
       estimate = Math.addExact(estimate, cost);
     }
     if (!current.isEmpty()) parts.add(List.copyOf(current));
@@ -341,14 +378,53 @@ public final class Ba2Packer {
 
   /** Emits record-order payloads and a trailing case-preserving filename table. */
   private static void write(
-      List<Item> items, SpillBuffer scratch, PublicationTransaction.StagedFile output)
+      List<Item> items, SpillBuffer scratch, PublicationTransaction.StagedFile output, boolean dds)
       throws IOException {
-    long payload = 24 + 36L * items.size();
+    long payload = 24 + items.stream().mapToLong(Item::recordSize).sum();
     output.reserve(payload);
-    Map<Item, Long> emitted = new IdentityHashMap<>();
+    Map<Object, Long> emitted = new IdentityHashMap<>();
+    long recordPosition = 24;
     for (int ordinal = 0; ordinal < items.size(); ordinal++) {
       Item item = items.get(ordinal), owner = item.owner;
       output.checkpoint();
+      if (dds) {
+        var texture = item.texture;
+        ByteBuffer record =
+            ByteBuffer.allocate((int) item.recordSize()).order(ByteOrder.LITTLE_ENDIAN);
+        record
+            .putInt((int) item.identity.baseNameHash())
+            .put(item.identity.extension().bytes())
+            .putInt((int) item.identity.directoryHash())
+            .put((byte) 0)
+            .put((byte) item.chunks.size())
+            .putShort((short) 24)
+            .putShort((short) texture.height())
+            .putShort((short) texture.width())
+            .put((byte) texture.mipCount())
+            .put((byte) texture.dxgiFormat())
+            .put((byte) (texture.cubemap() ? 1 : 0))
+            .put((byte) texture.tileMode());
+        for (Chunk chunk : item.chunks) {
+          Long destination = emitted.get(chunk.owner);
+          if (destination == null) {
+            destination = payload;
+            copy(scratch, chunk.owner.offset, chunk.owner.size, output, destination);
+            emitted.put(chunk.owner, destination);
+            payload = Math.addExact(payload, chunk.owner.size);
+          }
+          record
+              .putLong(destination)
+              .putInt((int) chunk.owner.size)
+              .putInt((int) chunk.rawSize)
+              .putShort((short) chunk.startMip)
+              .putShort((short) chunk.endMip)
+              .putInt(0xbaadf00d);
+        }
+        output.write(recordPosition, record.flip());
+        recordPosition += item.recordSize();
+        output.completedEntry(item.source.size());
+        continue;
+      }
       Long destination = emitted.get(owner);
       if (destination == null) {
         destination = payload;
@@ -379,7 +455,7 @@ public final class Ba2Packer {
             .order(ByteOrder.LITTLE_ENDIAN)
             .putInt(0x58445442)
             .putInt(1)
-            .putInt(0x4c524e47)
+            .putInt(dds ? 0x30315844 : 0x4c524e47)
             .putInt(items.size())
             .putLong(payload)
             .flip());
@@ -502,6 +578,13 @@ public final class Ba2Packer {
     final boolean compressed;
     Item owner = this;
     long rawOffset, offset, size;
+    DdsEnvelope.Analysis texture;
+    final List<Chunk> chunks = new ArrayList<>();
+
+    /** Returns the variable DX10 record extent or the fixed General record extent. */
+    long recordSize() {
+      return texture == null ? 36 : 24 + 24L * chunks.size();
+    }
 
     /** Retains the plan's original spelling and codec choice until stabilization. */
     Item(
@@ -514,5 +597,130 @@ public final class Ba2Packer {
       this.identity = identity;
       this.compressed = compressed;
     }
+  }
+
+  /** Tracks independently shareable chunks without coupling sharing to a texture's mip metadata. */
+  private static final class Chunk {
+    final long rawOffset, rawSize;
+    final int startMip, endMip;
+    long offset, size;
+    Chunk owner = this;
+
+    /** Retains normalized source coordinates until encoded bytes are stable. */
+    Chunk(long rawOffset, long rawSize, int startMip, int endMip) {
+      this.rawOffset = rawOffset;
+      this.rawSize = rawSize;
+      this.startMip = startMip;
+      this.endMip = endMip;
+    }
+  }
+
+  /** Charges each shared representation only once within a split part. */
+  private static long uniqueCost(Item item, Set<Object> owners) {
+    if (item.texture == null) return owners.contains(item.owner) ? 0 : item.owner.size;
+    Set<Chunk> counted = new HashSet<>();
+    long cost = 0;
+    for (Chunk chunk : item.chunks)
+      if (!owners.contains(chunk.owner) && counted.add(chunk.owner))
+        cost = Math.addExact(cost, chunk.owner.size);
+    return cost;
+  }
+
+  /** Validates the DDS envelope before independently encoding every normalized mip partition. */
+  private static void stabilizeDds(
+      Item item,
+      SpillBuffer stable,
+      PackRequest request,
+      OperationSession operation,
+      IoContext context,
+      ResourceBudget budget,
+      Map<String, List<Chunk>> candidates)
+      throws IOException {
+    ByteBuffer header = ByteBuffer.allocate((int) Math.min(164, item.source.size()));
+    stable.read(item.rawOffset, header);
+    item.texture =
+        DdsEnvelope.analyze(
+            header.flip(), item.source.size(), request.ddsTarget().orElseThrow(), context);
+    budget.metadata(item.texture.headerSize());
+    long payloadStart = item.rawOffset + item.texture.headerSize();
+    if (item.texture.normalizeBgr24()) {
+      // Append normalization so source and destination cannot overlap during BGR expansion.
+      long normalized = stable.size();
+      ByteBuffer input = ByteBuffer.allocate(49152), output = ByteBuffer.allocate(65536);
+      long sourceBytes = item.source.size() - item.texture.headerSize();
+      for (long position = 0, written = 0; position < sourceBytes; ) {
+        operation.checkpoint(OperationPhase.PROCESSING, context.ordinal());
+        int count = (int) Math.min(input.capacity(), sourceBytes - position);
+        input.clear().limit(count);
+        stable.read(payloadStart + position, input);
+        input.flip();
+        output.clear();
+        while (input.hasRemaining())
+          output.put(input.get()).put(input.get()).put(input.get()).put((byte) 255);
+        int expanded = output.position();
+        stable.write(normalized + written, output.flip());
+        position += count;
+        written += expanded;
+      }
+      payloadStart = normalized;
+    }
+    for (var slice : item.texture.chunks()) {
+      Chunk chunk =
+          new Chunk(payloadStart + slice.offset(), slice.size(), slice.startMip(), slice.endMip());
+      checkU32(chunk.rawSize, context);
+      if (request.options().sharing()) {
+        String key = digest(stable, chunk.rawOffset, chunk.rawSize, operation);
+        for (Chunk previous : candidates.getOrDefault(key, List.of()))
+          if (previous.rawSize == chunk.rawSize
+              && equal(stable, previous.rawOffset, chunk.rawOffset, chunk.rawSize, operation)) {
+            chunk.owner = previous;
+            break;
+          }
+        if (chunk.owner == chunk)
+          candidates.computeIfAbsent(key, ignored -> new ArrayList<>()).add(chunk);
+      }
+      if (chunk.owner == chunk) {
+        chunk.offset = stable.size();
+        try (var input = sliceChannel(stable, chunk.rawOffset, chunk.rawSize)) {
+          JdkZlib.encode(
+              input,
+              chunk.rawSize,
+              (offset, bytes) -> stable.write(chunk.offset + offset, bytes),
+              () -> operation.checkpoint(OperationPhase.PROCESSING, context.ordinal()),
+              context);
+        }
+        chunk.size = stable.size() - chunk.offset;
+        checkU32(chunk.size, context);
+      }
+      item.chunks.add(chunk);
+    }
+  }
+
+  /** Exposes one bounded spool slice without transferring ownership of the operation's scratch. */
+  private static ReadableByteChannel sliceChannel(SpillBuffer stable, long start, long size) {
+    return new ReadableByteChannel() {
+      long position;
+
+      /** Reads at most the remaining slice; EOF cannot consume an adjacent mip. */
+      public int read(ByteBuffer bytes) throws IOException {
+        if (position == size) return -1;
+        int count = (int) Math.min(bytes.remaining(), size - position);
+        ByteBuffer window = bytes.slice();
+        window.limit(count);
+        stable.read(start + position, window);
+        bytes.position(bytes.position() + count);
+        position += count;
+        return count;
+      }
+
+      public boolean isOpen() {
+        return true;
+      }
+
+      /** The pack operation retains the spool for publication replay. */
+      public void close() {
+        /* Scratch cleanup belongs to the operation. */
+      }
+    };
   }
 }

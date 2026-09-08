@@ -16,6 +16,37 @@ import org.junit.jupiter.api.io.TempDir;
 class MainTest {
   @TempDir Path temporary;
 
+  /** DDS family selection defaults to compressed PC output and exposes texture chunk facts. */
+  @Test
+  void packsDdsWithMandatoryDefaultCompression() throws Exception {
+    Path source = Files.createDirectories(temporary.resolve("dds-input/Textures"));
+    var bytes = java.nio.ByteBuffer.allocate(136).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+    bytes
+        .putInt(0, 0x20534444)
+        .putInt(4, 124)
+        .putInt(12, 1)
+        .putInt(16, 1)
+        .putInt(28, 1)
+        .putInt(76, 32)
+        .putInt(80, 4)
+        .putInt(84, 0x31545844);
+    Files.write(source.resolve("Small.dds"), bytes.array());
+    Path archive = temporary.resolve("dds.ba2");
+    Result packed = run("pack", source.getParent().toString(), archive.toString(), "-fo4dds");
+    assertEquals(0, packed.status(), packed.error());
+    Result dumped = run(archive.toString(), "-dump");
+    assertEquals(0, dumped.status(), dumped.error());
+    assertTrue(dumped.output().contains("Subtype: DX10"));
+    assertTrue(dumped.output().contains("Codec: ZLIB"));
+    assertTrue(dumped.output().contains("Dimensions: 1x1"));
+    assertTrue(dumped.output().contains("Mip range: 0..0"));
+    Files.writeString(source.resolve("Other.txt"), "not a texture");
+    Path rejected = temporary.resolve("non-dds.ba2");
+    Result invalid = run("pack", source.getParent().toString(), rejected.toString(), "-fo4dds");
+    assertEquals(1, invalid.status(), invalid.error());
+    assertTrue(Files.notExists(rejected));
+  }
+
   /** General BA2 commands expose compressed payloads through the public process boundary. */
   @Test
   void packsAndUnpacksFallout4GeneralZlib() throws Exception {

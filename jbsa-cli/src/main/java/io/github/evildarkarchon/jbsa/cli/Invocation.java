@@ -100,7 +100,7 @@ record Invocation(
         require(false, "Duplicate switch: " + key);
       }
       switch (key) {
-        case "-tes3", "-tes4", "-fo4" -> {
+        case "-tes3", "-tes4", "-fo4", "-fo4dds" -> {
           require(
               pack && option.equals(key) && (family == null || profile.isPresent()),
               "Inapplicable or duplicate family");
@@ -109,11 +109,13 @@ record Invocation(
               switch (key) {
                 case "-tes3" -> ArchiveFamily.TES3_BSA;
                 case "-tes4" -> ArchiveFamily.TES4_BSA;
+                case "-fo4dds" -> ArchiveFamily.FO4_DDS_BA2;
                 default -> ArchiveFamily.FO4_GENERAL_BA2;
               };
           if (family == null
               || selected == ArchiveFamily.TES3_BSA
-              || (selected == ArchiveFamily.TES4_BSA && family == ArchiveFamily.FO4_GENERAL_BA2))
+              || (selected == ArchiveFamily.TES4_BSA && family != ArchiveFamily.TES3_BSA)
+              || (selected == ArchiveFamily.FO4_GENERAL_BA2 && family == ArchiveFamily.FO4_DDS_BA2))
             family = selected;
         }
         case "-z" -> {
@@ -178,13 +180,16 @@ record Invocation(
     }
     require(!pack || family != null, "Pack requires one supported family selector");
     require(
-        family != ArchiveFamily.FO4_GENERAL_BA2 || (!seen.contains("-af") && !seen.contains("-ff")),
+        (family != ArchiveFamily.FO4_GENERAL_BA2 && family != ArchiveFamily.FO4_DDS_BA2)
+            || (!seen.contains("-af") && !seen.contains("-ff")),
         "BA2 does not accept BSA flag switches");
     require(
         family != ArchiveFamily.TES3_BSA
             || (!seen.contains("-z") && !seen.contains("-af") && !seen.contains("-ff")),
         "TES3 does not accept compression or flag switches");
     Path archivePath = Path.of(archive);
+    // The immutable compatibility bundle also prohibits unsafe stored DDS output.
+    if (family == ArchiveFamily.FO4_DDS_BA2) compression = PackOptions.Compression.ZLIB;
     Path destinationPath =
         destination == null ? archivePath.toAbsolutePath().getParent() : Path.of(destination);
     List<PackSource> sources =

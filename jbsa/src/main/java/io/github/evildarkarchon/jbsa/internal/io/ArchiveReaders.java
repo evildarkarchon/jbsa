@@ -32,6 +32,10 @@ public final class ArchiveReaders {
             return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Reader.load(
                 builder, path, options, operation, policy);
           IoContext context = IoContext.of(path, operation);
+          if (detection.family().filter(ArchiveFamily.FO4_DDS_BA2::equals).isPresent()
+              && detection.wireVersion().orElseThrow().value() == 1)
+            return io.github.evildarkarchon.jbsa.internal.ba2.DdsBa2Reader.load(
+                builder, path, options, operation, policy);
           throw switch (detection.status()) {
             case UNRECOGNIZED -> context.failure(FailureKind.FORMAT, "archive.unrecognized", null);
             case INDETERMINATE ->

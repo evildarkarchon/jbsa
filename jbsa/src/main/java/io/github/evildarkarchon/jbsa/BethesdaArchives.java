@@ -129,7 +129,8 @@ public final class BethesdaArchives {
       return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Packer.pack(request, control);
     if (request.family() == ArchiveFamily.TES4_BSA)
       return io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
-    if (request.family() == ArchiveFamily.FO4_GENERAL_BA2)
+    if (request.family() == ArchiveFamily.FO4_GENERAL_BA2
+        || request.family() == ArchiveFamily.FO4_DDS_BA2)
       return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Packer.pack(request, control);
     return unavailableMutation(
         Operation.PACK,
