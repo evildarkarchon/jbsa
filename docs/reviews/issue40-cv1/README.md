@@ -1,5 +1,23 @@
 # Issue 40: PC DDS qualification review
 
+## Approved activation
+
+The maintainer explicitly approved this 44-case PC packet on 2026-09-08.
+[Activation evidence](activation.json) binds that approval, the active catalog,
+and all 44 approved rebaseline records. The rebaseline audit verified 56
+golden-to-case bindings, including the goldens shared by decode/encode fixtures.
+The [ordinary runner result](activation-result.json) records the 44 active PC
+cases and their exact artifact identities. Xbox remains deferred, and unrelated
+conformance and PV1 prerequisites remain separate gates.
+
+Activation normalized only provenance golden labels to the lowercase hyphenated
+labels required by the approval-record schema. It uses a separate
+`activation-manifest.json` and rebound descriptor objects; all approved case
+identities, fixture bytes, and golden bytes are unchanged. The original review
+packet below remains unchanged as historical evidence.
+
+## Original proposal record
+
 **Pending explicit maintainer approval.** This packet proposes 44 materialized
 PC DDS CV1 successor cases. It does not activate their goldens, modify the active
 catalog, or claim complete release qualification.
@@ -54,6 +72,10 @@ Qualification also found and fixed a real archive-source defect:
 passes with explicit DDS metadata accounting.
 
 ## Reproduce before activation
+
+These historical proposal-generation commands apply to the pre-activation
+checkout at `47d803f`. Do not regenerate this archived proposal in the activated
+checkout. Use the ordinary conformance runner with the approved active catalog.
 
 Use the physical JDK directory rather than the `C:/Program Files/jdk` junction;
 CV1 deliberately rejects indirections in executable bindings. After packaging

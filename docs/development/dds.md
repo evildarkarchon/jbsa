@@ -210,9 +210,10 @@ qualification gates have passed.
 The maintainer subsequently deferred Xbox compatibility and its separate DDS
 toolchain. The [PC review packet](../reviews/issue40-cv1/README.md) contains 44
 passing in-scope case comparisons, including the PC rejection of Xbox DDS input.
-Three original Xbox-related cases remain unchanged and deferred. The packet is
-pending explicit golden activation approval; it does not claim the deferred
-Xbox cases passed.
+Three original Xbox-related cases remain unchanged and deferred. The maintainer
+approved activation on 2026-09-08. All 44 PC cases are now active, with approval
+records and ordinary-runner results linked from the packet; the deferred Xbox
+cases are not counted as passing.
 
 This qualification fixed DDS archive-source repacking metadata accounting and
 added a public regression test. Full `mvnw.cmd -B -ntp -C clean verify` passed

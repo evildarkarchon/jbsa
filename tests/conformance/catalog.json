@@ -5103,6 +5103,1488 @@
           },
           "state": "available"
         }
+      },
+      {
+        "token": "fo4-dds-base-fo4-dx10-v1-lz4-frame-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-base-fo4-dx10-v1-lz4-frame-v1",
+        "path": "tests/conformance/objects/sha256/657c71286694e60ee1f622a54473ce4b935f5a08bc7be9a7d0a3d2dedaaffdd2.json",
+        "sha256": "657c71286694e60ee1f622a54473ce4b935f5a08bc7be9a7d0a3d2dedaaffdd2",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-lz4-frame-v1.hex",
+              "sha256": "98ffda0c0e7d7c62d20b53d83ab755ab99f51134ca7fbfef4029233b8cd768f9"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-lz4-frame"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "1a5de3d9440b4be94557836bce9976a2898202676edd3bd381623f494a69d810",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-lz4-frame-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-base-fo4-dx10-v1-mixed-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-base-fo4-dx10-v1-mixed-v1",
+        "path": "tests/conformance/objects/sha256/b8ac0c5667194bfc70719dab74e7a10a75e5e5255456c2d152ad072ae62931fe.json",
+        "sha256": "b8ac0c5667194bfc70719dab74e7a10a75e5e5255456c2d152ad072ae62931fe",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-mixed-v1.hex",
+              "sha256": "bf06eb1082c9f828e4ba8552fbd39ae398d42d25fc49fb6866676116da8a2912"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-mixed"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "2a01bb1dbb4223a851e6bd388a8ed957de2caca08ca1aaa48bc171f4b7adc68f",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-mixed-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-base-fo4-dx10-v1-raw-deflate-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-base-fo4-dx10-v1-raw-deflate-v1",
+        "path": "tests/conformance/objects/sha256/d9399d01a2ec4e6635040ac819dc77693c50057266c6abdea0d98d8e885ca132.json",
+        "sha256": "d9399d01a2ec4e6635040ac819dc77693c50057266c6abdea0d98d8e885ca132",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-raw-deflate-v1.hex",
+              "sha256": "8edb22e0461023d57289f0a814d666170bd2e4f50842b0172c955eda639dd524"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-raw-deflate"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "1a26af5de41f0568d664d4ba9d2ebca6e60a6ca42265a59b7ef1b840f047ca49",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-raw-deflate-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-base-fo4-dx10-v1-raw-lz4-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-base-fo4-dx10-v1-raw-lz4-v1",
+        "path": "tests/conformance/objects/sha256/4e3dba6aedf42236215a70b22d7f1023605fc14353d490ec76017906bb90d947.json",
+        "sha256": "4e3dba6aedf42236215a70b22d7f1023605fc14353d490ec76017906bb90d947",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-raw-lz4-v1.hex",
+              "sha256": "50813e99c7a9d53b5c3d3be1290f73bb58d875786aa309e8e0643f62211853e6"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-raw-lz4"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c805ec979ca5a49e405d7e436a64505979384d4e655c4d6746d554d335cce83c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-raw-lz4-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-base-fo4-dx10-v1-stored-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-base-fo4-dx10-v1-stored-v1",
+        "path": "tests/conformance/objects/sha256/2b64a6fe1dfa0962b85c61fcf1043263f8f7b25e67b77f715d98199501fc8c0c.json",
+        "sha256": "2b64a6fe1dfa0962b85c61fcf1043263f8f7b25e67b77f715d98199501fc8c0c",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-stored-v1.hex",
+              "sha256": "762a2b2d9ce5ac804cd45b1180439104d6d4bb7ef8a0f28e9af765432b24c634"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-stored"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "cde568326dff8ce1ca4a0e67500105ccf55f1b38080bf7583ecfda58544c98d4",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-stored-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-base-fo4-dx10-v1-zlib-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-base-fo4-dx10-v1-zlib-v1",
+        "path": "tests/conformance/objects/sha256/100645e1166ad46fae309f944e25e712c19af7908fcb0197d03935520b9cd01e.json",
+        "sha256": "100645e1166ad46fae309f944e25e712c19af7908fcb0197d03935520b9cd01e",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-zlib-v1.hex",
+              "sha256": "9c46fad11a33be25f1f6795fffcd5740da670bc218ef064f04ff2b4d2f464954"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-zlib"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "6336ae6eb46915ae399d7f269f5b4aeda77aa4e89326d0dd11ca1290149a89a1",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-zlib-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-arithmetic-overflow-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-arithmetic-overflow-v1",
+        "path": "tests/conformance/objects/sha256/373b9940de9cd481f0740b4f00267759d75081cf23e6db1947e57564616afff8.json",
+        "sha256": "373b9940de9cd481f0740b4f00267759d75081cf23e6db1947e57564616afff8",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-arithmetic-overflow-v1.hex",
+              "sha256": "65332b322e2d2a72dee67aae90ceed6b5fc4c88a5eca06c12073591216075c5c"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-arithmetic-overflow"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "cc2b2d39542c73829ed670fd1653c42a0872cb7a2fcb125175bc06b41759fdfe",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-arithmetic-overflow-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-decompression-mismatch-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-decompression-mismatch-v1",
+        "path": "tests/conformance/objects/sha256/9502941271b9b3df50bc10c8d8786ea7f65819812b2c03c82e735e31c442439f.json",
+        "sha256": "9502941271b9b3df50bc10c8d8786ea7f65819812b2c03c82e735e31c442439f",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-decompression-mismatch-v1.hex",
+              "sha256": "1e7efb2fbc84c90e733b5ac6ccfaef87e63c58e2a618300c1bae3c1bc10afebe"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-decompression-mismatch"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c977941f5299c882f542eb6ea409f604b5cb9bc25ed770f99edac7f2aebe0b75",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-decompression-mismatch-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-equal-name-identities-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-equal-name-identities-v1",
+        "path": "tests/conformance/objects/sha256/69dd3c26d2d09c4f2bb187eebdcbecc2ac264b20e898c083b2b1c10f93ff86be.json",
+        "sha256": "69dd3c26d2d09c4f2bb187eebdcbecc2ac264b20e898c083b2b1c10f93ff86be",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-equal-name-identities-v1.hex",
+              "sha256": "e7d455573f69614d3bd59bfd979695eb74e934a17959b04697e86d40fb5aa568"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-equal-name-identities"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c2420856d08daae5daedc704ee2247f7f2567311d0994c22b126713530b0fc6a",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-equal-name-identities-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-exact-shared-spans-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-exact-shared-spans-v1",
+        "path": "tests/conformance/objects/sha256/dd60fc24b9f0448e67958b3ab44da7164f8ddf2b6f1ec757e7fd0a5554cc07a3.json",
+        "sha256": "dd60fc24b9f0448e67958b3ab44da7164f8ddf2b6f1ec757e7fd0a5554cc07a3",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-exact-shared-spans-v1.hex",
+              "sha256": "06199340bea902afa43412cbe43d21713a557b7b40350823e1ab9009871c2145"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-exact-shared-spans"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c6fb7692a242076fd0c06883c45d6d169f6fa62fd2c6807e9f9c6f9cbe23c045",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-exact-shared-spans-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-harmless-trailing-bytes-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-harmless-trailing-bytes-v1",
+        "path": "tests/conformance/objects/sha256/f8f488f92b1799e9b25ea9967d5c32daf89a1fcd5d9eee7497e249048d43db94.json",
+        "sha256": "f8f488f92b1799e9b25ea9967d5c32daf89a1fcd5d9eee7497e249048d43db94",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-harmless-trailing-bytes-v1.hex",
+              "sha256": "c10d13317fee4a1352882e27587dff253e25ad10757c0988b756bebaa1aa5c78"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-harmless-trailing-bytes"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "a249772870308c26dfed3209ebc1a5f14e0916d7a65d6313ac934746feb0e58d",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-harmless-trailing-bytes-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-ignorable-constants-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-ignorable-constants-v1",
+        "path": "tests/conformance/objects/sha256/9db60c26bc7516584136c908ba751a665f8bc7a5ee8d2d95d075882dfe95a847.json",
+        "sha256": "9db60c26bc7516584136c908ba751a665f8bc7a5ee8d2d95d075882dfe95a847",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-ignorable-constants-v1.hex",
+              "sha256": "9513e744434b04818edc3cf49f778b4e3a0ee798d17dcaf5d702962aa0083418"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-ignorable-constants"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "331a3bf52a0fdd5170a9a3633049f64ff0590d9e1eb747ee5402b170678a39c1",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-ignorable-constants-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-illegal-tuples-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-illegal-tuples-v1",
+        "path": "tests/conformance/objects/sha256/563e8142b144e2751038cfe1965fddd4399bf9700ace7da1490c2d2e9748f0d6.json",
+        "sha256": "563e8142b144e2751038cfe1965fddd4399bf9700ace7da1490c2d2e9748f0d6",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-illegal-tuples-v1.hex",
+              "sha256": "c730d6e38778e0f4d110f83b363874b2566ec34ed30afc275ac15a7cb0c0e743"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-illegal-tuples"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "4842ce73afdcbb7b839dde2c39ab287e48b61d37c85d12b378eaea4fbfbdf9ad",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-illegal-tuples-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-impossible-counts-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-impossible-counts-v1",
+        "path": "tests/conformance/objects/sha256/f0b34fcb87e019a61baf69db9f5abdaff3e5de5903619809c4baccb32f1bbb99.json",
+        "sha256": "f0b34fcb87e019a61baf69db9f5abdaff3e5de5903619809c4baccb32f1bbb99",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-impossible-counts-v1.hex",
+              "sha256": "0595963a219802f5f7ab09d2982b57b572c7fd738505ab9b0a1a6775cd93fd4b"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-impossible-counts"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "809d721c796f1a4dfb85c16a9429a0b08813c692b24fba23e6e50931d9ce1d8c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-impossible-counts-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-missing-name-tables-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-missing-name-tables-v1",
+        "path": "tests/conformance/objects/sha256/bb0af25245b046a43f8e40605b8ea9f02b330717e4d8b04ec5449adfc8cdce0c.json",
+        "sha256": "bb0af25245b046a43f8e40605b8ea9f02b330717e4d8b04ec5449adfc8cdce0c",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-missing-name-tables-v1.hex",
+              "sha256": "f3ff7226277ebb81cd8211847b6556cbb6188d0bddcdf5f22d3cec057ba908d0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-missing-name-tables"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "bd1b3463100c257e13ecef9be993d8dc19ddb1a8715705e5e5c06f2314a59c6c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-missing-name-tables-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-out-of-range-spans-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-out-of-range-spans-v1",
+        "path": "tests/conformance/objects/sha256/92cd91e564ecc07f279f5aeb5f4cc2a5d2199a71f59b5ac0c1d3b9fd9e0cac8b.json",
+        "sha256": "92cd91e564ecc07f279f5aeb5f4cc2a5d2199a71f59b5ac0c1d3b9fd9e0cac8b",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-out-of-range-spans-v1.hex",
+              "sha256": "f4a0f957100b3bc2d55babf1da6a8287dbad24206d091a3687b4e7a21a06d34c"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-out-of-range-spans"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "f6ac157678f7d6e347c31ca84c9e625041ca359adbf83b309dc346af2c2646ea",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-out-of-range-spans-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-owning-dispositions-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-owning-dispositions-v1",
+        "path": "tests/conformance/objects/sha256/8aad24e0dcf638e71f39285068078728fb0ceaa48f7e906fb7bdf839226094a2.json",
+        "sha256": "8aad24e0dcf638e71f39285068078728fb0ceaa48f7e906fb7bdf839226094a2",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-owning-dispositions-v1.hex",
+              "sha256": "9513e744434b04818edc3cf49f778b4e3a0ee798d17dcaf5d702962aa0083418"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-owning-dispositions"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "0e7f835e3761ef2717ffad86cc09ad6ff04f75bc1c1ee7a7c1c46f70bd549935",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-owning-dispositions-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-partial-overlap-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-partial-overlap-v1",
+        "path": "tests/conformance/objects/sha256/84e5a047f7e76a8944e4f9ebebecbd3e75d3f31e3057bdbab5ad1ef574fbfd1f.json",
+        "sha256": "84e5a047f7e76a8944e4f9ebebecbd3e75d3f31e3057bdbab5ad1ef574fbfd1f",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-partial-overlap-v1.hex",
+              "sha256": "a757ff1534f93051558c363ffb11cd72bc33f909b5670dd73716903ba84d5785"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-partial-overlap"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "e1a206f0863984d2cd536aff8868ea668d2eea48c10f041ef86a9cc3e1fd6dec",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-partial-overlap-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-truncated-spans-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-truncated-spans-v1",
+        "path": "tests/conformance/objects/sha256/a46c1a8d7ca837511b9b0f5c61b01627a244a6f174abb5486d9f31649560e124.json",
+        "sha256": "a46c1a8d7ca837511b9b0f5c61b01627a244a6f174abb5486d9f31649560e124",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-truncated-spans-v1.hex",
+              "sha256": "98ce6ec0f3ec78a498b4a2ab1440ffec45075c98f62276f996a72294d6776e3a"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-truncated-spans"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c1c2f75387b6649d063ee8eec3acf0a92f13ebd35bc37e5f5ae139c3023caf3d",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-truncated-spans-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-undecodable-wire-names-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-undecodable-wire-names-v1",
+        "path": "tests/conformance/objects/sha256/9506b50cf7e76366e373d61cc6b3371659a8dba60f811682091c578ada8acdc5.json",
+        "sha256": "9506b50cf7e76366e373d61cc6b3371659a8dba60f811682091c578ada8acdc5",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-undecodable-wire-names-v1.hex",
+              "sha256": "c62b73c0fd68a05b5bf0b398aeeadd68bb36ac9aa1b1c79ddf1a2a89b9bd969a"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-undecodable-wire-names"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c39c5c72e52864bf58903ba130c9b40f506d1534685e3921e891aac11a395016",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-undecodable-wire-names-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-unsafe-absolute-names-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-unsafe-absolute-names-v1",
+        "path": "tests/conformance/objects/sha256/77d790fb2283d5fad78a38dc39403bafb31e7b8343f429f6fb62ddcbf62e5625.json",
+        "sha256": "77d790fb2283d5fad78a38dc39403bafb31e7b8343f429f6fb62ddcbf62e5625",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-unsafe-absolute-names-v1.hex",
+              "sha256": "ccda74fac3fe29b6e11f4ea6994a724c2d906f2aa1513f9c4bb06d3499ef10d7"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-unsafe-absolute-names"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "48f19246fd9f04cfff074ae348624b6ed45b2d6de1b05d53ef92c1b7b6603196",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-unsafe-absolute-names-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-unsafe-traversal-names-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-unsafe-traversal-names-v1",
+        "path": "tests/conformance/objects/sha256/8e98e5e473fe96b033cdfeadbd048fb50310aab0f31cf9fa13c233da9c5ba142.json",
+        "sha256": "8e98e5e473fe96b033cdfeadbd048fb50310aab0f31cf9fa13c233da9c5ba142",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-unsafe-traversal-names-v1.hex",
+              "sha256": "eba396057cccc26981bed53660afc31a6ac4dd90d57f4365308ebc79389f51bf"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-unsafe-traversal-names"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "8538a5296d34b48c112d887123b58fc4ea211d5ed63524b6ca53ab46743681a6",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-unsafe-traversal-names-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-usable-name-hash-mismatch-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-usable-name-hash-mismatch-v1",
+        "path": "tests/conformance/objects/sha256/0e0c84efa61322847aa4caaff759d83bac152355017d3b9648000c1cda8892f2.json",
+        "sha256": "0e0c84efa61322847aa4caaff759d83bac152355017d3b9648000c1cda8892f2",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-usable-name-hash-mismatch-v1.hex",
+              "sha256": "074d264d14b20d53f107b7ebffc8a16b974e8ca5beff6a52868c9c8a7cf3c58b"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-usable-name-hash-mismatch"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "65ec7d964a08ac8637e741df080211a0a28e22aecbe625cc73d7ea288e021f87",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-usable-name-hash-mismatch-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-windows-invalid-names-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-windows-invalid-names-v1",
+        "path": "tests/conformance/objects/sha256/6caf0bc351826622dc9ca93b3e3474172899138310cf34cae9d9c8fed4f8d1ab.json",
+        "sha256": "6caf0bc351826622dc9ca93b3e3474172899138310cf34cae9d9c8fed4f8d1ab",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-windows-invalid-names-v1.hex",
+              "sha256": "47ffb0acc7493ad779b2722a99756399e3c8689bd3fa3e8574e2c99a54b81a9c"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-windows-invalid-names"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "2217eca98efaee370ffa003ccaedb217fc3e63560fb9b1d9bde0f104da19b431",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-windows-invalid-names-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-target-mismatch-pc-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-target-mismatch-pc-v1",
+        "path": "tests/conformance/objects/sha256/4086577cc6d49bd1d6e7441c46932a10edec99b40d0041b08998c9d77654bcf6.json",
+        "sha256": "4086577cc6d49bd1d6e7441c46932a10edec99b40d0041b08998c9d77654bcf6",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-target-mismatch-pc-v1.hex",
+              "sha256": "934ebd82c123111b938014909d9ed57ac59db6f4496906882b8cf53274bcb5c5"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-target-mismatch-pc"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "9790d368d874937833c77c2ba0414050a3f46fad95b2ae03860269dd03f4b4b7",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-target-mismatch-pc-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-target-pc-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-target-pc-v1",
+        "path": "tests/conformance/objects/sha256/63156e6d5b042ba8905fd79a9c96309454d8543ae6193702a431c08409622a9c.json",
+        "sha256": "63156e6d5b042ba8905fd79a9c96309454d8543ae6193702a431c08409622a9c",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-target-pc-v1.hex",
+              "sha256": "a5b2fb744a42a73c8936247728d79cdeb0cf200af2ae4a1c1fc00582edea684d"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-target-pc"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "f23b993d7bd418477cfffce7db0ee76c4c54f0937de7a5c974150e992f3e1d25",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-target-pc-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-malformed-unsafe-name-extraction-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-malformed-unsafe-name-extraction-v1",
+        "path": "tests/conformance/objects/sha256/7537533930046baaa1237a077d0842a289c637a77938ee0947512a22dbdeb97e.json",
+        "sha256": "7537533930046baaa1237a077d0842a289c637a77938ee0947512a22dbdeb97e",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-unsafe-name-extraction-v1.hex",
+              "sha256": "eba396057cccc26981bed53660afc31a6ac4dd90d57f4365308ebc79389f51bf"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-unsafe-name-extraction"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "afbc5a2ed9b0f4eb77adef3e36788da9cb1b25ad8d384aaa40ce36ecf38926e8",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-unsafe-name-extraction-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-bc16-boundaries-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-bc16-boundaries-v1",
+        "path": "tests/conformance/objects/sha256/fa42d31e30b80280d122b493e6118ee525be141c57f207379e0b1b642c0bef81.json",
+        "sha256": "fa42d31e30b80280d122b493e6118ee525be141c57f207379e0b1b642c0bef81",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-bc16-boundaries-v1.hex",
+              "sha256": "efdef934193081c6d6f41e70e69ea730bbc27c2f9b2fd15ae5f25d393c4be89f"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-bc16-boundaries"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "8b9b000656d9ba6cb8715f973c4612ce65853e89e75cff05cdc1966671c84408",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-bc16-boundaries-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-bc8-boundaries-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-bc8-boundaries-v1",
+        "path": "tests/conformance/objects/sha256/9ade1372ed4d836218bdf13d9aa7a32f5b06908c94740a97420a2be1d9297514.json",
+        "sha256": "9ade1372ed4d836218bdf13d9aa7a32f5b06908c94740a97420a2be1d9297514",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-bc8-boundaries-v1.hex",
+              "sha256": "b3ee2438e1a0bbcc02c23814998329eb43c8c122ecfb298de56cc02df15fe266"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-bc8-boundaries"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "97cc80a411cf9b471e596e9af6cd4b9634e5d4c67f799f06f211ac4e43f5b211",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-bc8-boundaries-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-cli-selector-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-cli-selector-v1",
+        "path": "tests/conformance/objects/sha256/f453e80b40154e655bc55ba1e986d9b3baa7cd32568bf5daa6291d63f21e97bb.json",
+        "sha256": "f453e80b40154e655bc55ba1e986d9b3baa7cd32568bf5daa6291d63f21e97bb",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-cli-selector-v1.hex",
+              "sha256": "9c46fad11a33be25f1f6795fffcd5740da670bc218ef064f04ff2b4d2f464954"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-cli-selector"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "40add7786b5ed647fcb727a167b5c44712f2aaab178d10a7f6168deebf864a65",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-cli-selector-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-cubemaps-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-cubemaps-v1",
+        "path": "tests/conformance/objects/sha256/ec8bc90a15be7a9fe3e5a45e7791591295d4a7174eb7ea3596b699264267e49a.json",
+        "sha256": "ec8bc90a15be7a9fe3e5a45e7791591295d4a7174eb7ea3596b699264267e49a",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-cubemaps-v1.hex",
+              "sha256": "d1b1943190720ef35de2eb1cc60ff4fb1483015adb8ba7b0ed0820c73419359f"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-cubemaps"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "04d231d6d7fe9a81976a267d071cc6e1509a021db3f41fda695edb34483697a9",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-cubemaps-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-dimensions-mips-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-dimensions-mips-v1",
+        "path": "tests/conformance/objects/sha256/8b1f721672acb7b298c14b13e1939c19a6c5614c898e61080f396c2edcb7ede4.json",
+        "sha256": "8b1f721672acb7b298c14b13e1939c19a6c5614c898e61080f396c2edcb7ede4",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-dimensions-mips-v1.hex",
+              "sha256": "e77648d9cdd230cef28b3e6455f3aa3e63cce6cdcb22f5c88439523a537239da"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-dimensions-mips"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "27c107aa663fa18a2760b7573ba6ae9b65a975d665c01782159128497f63392b",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-dimensions-mips-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-name-tables-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-name-tables-v1",
+        "path": "tests/conformance/objects/sha256/5eedba446145bb1b2205ff66a9a0c385106804ab3b5c0249f27e65437f7f5114.json",
+        "sha256": "5eedba446145bb1b2205ff66a9a0c385106804ab3b5c0249f27e65437f7f5114",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-name-tables-v1.hex",
+              "sha256": "9c46fad11a33be25f1f6795fffcd5740da670bc218ef064f04ff2b4d2f464954"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-name-tables"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "5e2d10f5a5108b6e4bb79cf4c600b2845260e3efb7bd686c1f2dee55d5dc33b2",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-name-tables-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-nonsquare-mips-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-nonsquare-mips-v1",
+        "path": "tests/conformance/objects/sha256/36825ef2b4900aaab2b1139207b8878d2147a60117523e4b73990f36350354ed.json",
+        "sha256": "36825ef2b4900aaab2b1139207b8878d2147a60117523e4b73990f36350354ed",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-nonsquare-mips-v1.hex",
+              "sha256": "7f612667ff3793b532e5a3ad57b54940a7f68fd4e223f3963fca160b5b176d6b"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-nonsquare-mips"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "2caed861d3270e67a889878f8179289ec92ca30e7dab8b6001ea1f18ac8955a9",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-nonsquare-mips-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-odd-multichunk-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-odd-multichunk-v1",
+        "path": "tests/conformance/objects/sha256/dc565d585c318835e37b3262f1a95fe7480fda4e951430abf7b98d918c739720.json",
+        "sha256": "dc565d585c318835e37b3262f1a95fe7480fda4e951430abf7b98d918c739720",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-odd-multichunk-v1.hex",
+              "sha256": "2ec9af26f3f3f11bcd0a768dcdbb1355b627173eb6650cb4fe5e5f8645790648"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-odd-multichunk"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "280d6f8ecd0a7d97347f71705392ae5760b3b4587c00433b6f10d0c24b76db6d",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-odd-multichunk-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-partitions-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-partitions-v1",
+        "path": "tests/conformance/objects/sha256/917b41eda54f398ec41f46cfbb58fa556fdbe4c2604cf2f01793a66ac92feec3.json",
+        "sha256": "917b41eda54f398ec41f46cfbb58fa556fdbe4c2604cf2f01793a66ac92feec3",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-partitions-v1.hex",
+              "sha256": "5e2db60f3f4f43065d6aa658ca80870838b2f7d2db6650b505109933c150b147"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-partitions"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "96c4c0e273f3a4504c949d575b850ca5ed5a621c559a2f302d244f8881b28897",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-partitions-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-reconstruction-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-reconstruction-v1",
+        "path": "tests/conformance/objects/sha256/a7fd73a9ce2abfae74e6657d8df5965cefe9d4a471463e3024d7bcfa9b4638ea.json",
+        "sha256": "a7fd73a9ce2abfae74e6657d8df5965cefe9d4a471463e3024d7bcfa9b4638ea",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-reconstruction-v1.hex",
+              "sha256": "8062b4133d02770207d9f8e2445de7b877ef0448bd642fb5748ae09d25b7ebf0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-reconstruction"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "6842b53c5a068b6e66ec6e51e4016265cdce27b0653fc0ff0df4ff34fcec6e1a",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-reconstruction-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "fo4-dds-dds-writable-formats-v1",
+        "description": "Proposed independent DDS BA2 v1 scenario fo4-dds-dds-writable-formats-v1",
+        "path": "tests/conformance/objects/sha256/2a62c80b4e5ece7b475554d4846e7d4f9ecc7264da473c79cdd8b2a6542ea3d0.json",
+        "sha256": "2a62c80b4e5ece7b475554d4846e7d4f9ecc7264da473c79cdd8b2a6542ea3d0",
+        "binding": {
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-writable-formats-v1.hex",
+              "sha256": "8062b4133d02770207d9f8e2445de7b877ef0448bd642fb5748ae09d25b7ebf0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-writable-formats"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "5584488377f11be40600e32c6e0d75bb1667841f13dbe59b1ee226869a9acfe3",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-writable-formats-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
       }
     ],
     "configuration": [
@@ -12066,11 +13548,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-lz4-frame.lz4-frame.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-lz4-frame-v1.lz4-frame.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "base-fo4-dx10-v1-lz4-frame",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-lz4-frame-v1",
         "codec": "lz4-frame",
         "configuration": "pc-v1"
       },
@@ -12085,13 +13567,48 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-lz4-frame-v1.hex",
+              "sha256": "98ffda0c0e7d7c62d20b53d83ab755ab99f51134ca7fbfef4029233b8cd768f9"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-lz4-frame"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "1a5de3d9440b4be94557836bce9976a2898202676edd3bd381623f494a69d810",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-lz4-frame-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/2d8bcf3beae93ddbad3fb7e3d23001b36e58341145ac5cfe4b1473411e6b139c.json",
+            "sha256": "2d8bcf3beae93ddbad3fb7e3d23001b36e58341145ac5cfe4b1473411e6b139c"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/fbfea368163857905e3f50402cb4b9c9d892d4a95719d17476f5b285ce3deed2.json",
+            "sha256": "fbfea368163857905e3f50402cb4b9c9d892d4a95719d17476f5b285ce3deed2"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12099,16 +13616,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-mixed.mixed.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-mixed-v1.mixed.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "base-fo4-dx10-v1-mixed",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-mixed-v1",
         "codec": "mixed",
         "configuration": "pc-v1"
       },
@@ -12123,13 +13641,48 @@
           "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-mixed-v1.hex",
+              "sha256": "bf06eb1082c9f828e4ba8552fbd39ae398d42d25fc49fb6866676116da8a2912"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-mixed"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "2a01bb1dbb4223a851e6bd388a8ed957de2caca08ca1aaa48bc171f4b7adc68f",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-mixed-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/34f84ad0d912f2dbd79b21599fd4aa96e71c9eb7586762e7b76ef157fd6dfda6.json",
+            "sha256": "34f84ad0d912f2dbd79b21599fd4aa96e71c9eb7586762e7b76ef157fd6dfda6"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/b5c21f5453f3a73a99394a54cbc850dbd566cb1628b6522ca483d54bc1c63073.json",
+            "sha256": "b5c21f5453f3a73a99394a54cbc850dbd566cb1628b6522ca483d54bc1c63073"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12138,16 +13691,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-raw-deflate.raw-deflate.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-raw-deflate-v1.raw-deflate.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "base-fo4-dx10-v1-raw-deflate",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-raw-deflate-v1",
         "codec": "raw-deflate",
         "configuration": "pc-v1"
       },
@@ -12162,13 +13716,48 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-raw-deflate-v1.hex",
+              "sha256": "8edb22e0461023d57289f0a814d666170bd2e4f50842b0172c955eda639dd524"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-raw-deflate"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "1a26af5de41f0568d664d4ba9d2ebca6e60a6ca42265a59b7ef1b840f047ca49",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-raw-deflate-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/f63a2b1e7b118252f6ea484386211ae8a5eb485c7627a0f185904d524ae1c84d.json",
+            "sha256": "f63a2b1e7b118252f6ea484386211ae8a5eb485c7627a0f185904d524ae1c84d"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/3faff65d939e522747681988e4d95c83f429f1ba38bbd9733af51e37e88de0e6.json",
+            "sha256": "3faff65d939e522747681988e4d95c83f429f1ba38bbd9733af51e37e88de0e6"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12176,16 +13765,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-raw-lz4.raw-lz4.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-raw-lz4-v1.raw-lz4.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "base-fo4-dx10-v1-raw-lz4",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-raw-lz4-v1",
         "codec": "raw-lz4",
         "configuration": "pc-v1"
       },
@@ -12200,13 +13790,48 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-raw-lz4-v1.hex",
+              "sha256": "50813e99c7a9d53b5c3d3be1290f73bb58d875786aa309e8e0643f62211853e6"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-raw-lz4"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c805ec979ca5a49e405d7e436a64505979384d4e655c4d6746d554d335cce83c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-raw-lz4-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/1ceb77a69eac37c7d4d856eabf25d5c20ad0e1109b0da433540fa45dd091068a.json",
+            "sha256": "1ceb77a69eac37c7d4d856eabf25d5c20ad0e1109b0da433540fa45dd091068a"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/af108b6cf551276fd0cdfef8daaa8a812a9bc05fa8c4e6ee07d9a511bbd03a39.json",
+            "sha256": "af108b6cf551276fd0cdfef8daaa8a812a9bc05fa8c4e6ee07d9a511bbd03a39"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12214,16 +13839,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-stored.stored.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-stored-v1.stored.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "base-fo4-dx10-v1-stored",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-stored-v1",
         "codec": "stored",
         "configuration": "pc-v1"
       },
@@ -12238,13 +13864,48 @@
           "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-stored-v1.hex",
+              "sha256": "762a2b2d9ce5ac804cd45b1180439104d6d4bb7ef8a0f28e9af765432b24c634"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-stored"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "cde568326dff8ce1ca4a0e67500105ccf55f1b38080bf7583ecfda58544c98d4",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-stored-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/70eb69b23b5f8af4a1ededabbd900f00a4e909b5e7570b9b51420d3091a152af.json",
+            "sha256": "70eb69b23b5f8af4a1ededabbd900f00a4e909b5e7570b9b51420d3091a152af"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/9f3d45f8396a667896ea3483c83a45cf71d308413d734b4cde30e1c1e69bdd0e.json",
+            "sha256": "9f3d45f8396a667896ea3483c83a45cf71d308413d734b4cde30e1c1e69bdd0e"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12253,16 +13914,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-zlib.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-base-fo4-dx10-v1-zlib-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "base-fo4-dx10-v1-zlib",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-zlib-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12277,13 +13939,48 @@
           "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-zlib-v1.hex",
+              "sha256": "9c46fad11a33be25f1f6795fffcd5740da670bc218ef064f04ff2b4d2f464954"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-zlib"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "6336ae6eb46915ae399d7f269f5b4aeda77aa4e89326d0dd11ca1290149a89a1",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-zlib-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/6513a3098391b164d906b30948e99c2e2ad5929fffa7be430a560093edd5a0cb.json",
+            "sha256": "6513a3098391b164d906b30948e99c2e2ad5929fffa7be430a560093edd5a0cb"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/f167a33ea775dbdb8ca969f118d79fa80ae0fed1d19967c951cd40fbe7a1501c.json",
+            "sha256": "f167a33ea775dbdb8ca969f118d79fa80ae0fed1d19967c951cd40fbe7a1501c"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12292,16 +13989,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-arithmetic-overflow.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-arithmetic-overflow-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-arithmetic-overflow",
+        "fixture": "fo4-dds-malformed-arithmetic-overflow-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12315,17 +14013,48 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-arithmetic-overflow"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-arithmetic-overflow-v1.hex",
+              "sha256": "65332b322e2d2a72dee67aae90ceed6b5fc4c88a5eca06c12073591216075c5c"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-arithmetic-overflow"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "cc2b2d39542c73829ed670fd1653c42a0872cb7a2fcb125175bc06b41759fdfe",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-arithmetic-overflow-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/799fd4c99fca5f23c129fcca6d2342c0875fbc0debd57377ebaa860ec9a353c3.json",
+            "sha256": "799fd4c99fca5f23c129fcca6d2342c0875fbc0debd57377ebaa860ec9a353c3"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12339,11 +14068,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-decompression-mismatch.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-decompression-mismatch-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-decompression-mismatch",
+        "fixture": "fo4-dds-malformed-decompression-mismatch-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12357,17 +14086,48 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-decompression-mismatch"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-decompression-mismatch-v1.hex",
+              "sha256": "1e7efb2fbc84c90e733b5ac6ccfaef87e63c58e2a618300c1bae3c1bc10afebe"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-decompression-mismatch"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c977941f5299c882f542eb6ea409f604b5cb9bc25ed770f99edac7f2aebe0b75",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-decompression-mismatch-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/d0101888fecb1074fe155bae42c0e9b1320b7b04a9a032357f602eca7b739c4a.json",
+            "sha256": "d0101888fecb1074fe155bae42c0e9b1320b7b04a9a032357f602eca7b739c4a"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12381,11 +14141,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-equal-name-identities.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-equal-name-identities-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-equal-name-identities",
+        "fixture": "fo4-dds-malformed-equal-name-identities-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12399,17 +14159,48 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-equal-name-identities"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-equal-name-identities-v1.hex",
+              "sha256": "e7d455573f69614d3bd59bfd979695eb74e934a17959b04697e86d40fb5aa568"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-equal-name-identities"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c2420856d08daae5daedc704ee2247f7f2567311d0994c22b126713530b0fc6a",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-equal-name-identities-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/af4960b24f1508a2e41778952d3c8093d44b521c0b927c40a44cd7d4ebcce0b8.json",
+            "sha256": "af4960b24f1508a2e41778952d3c8093d44b521c0b927c40a44cd7d4ebcce0b8"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12423,11 +14214,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-exact-shared-spans.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-exact-shared-spans-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-exact-shared-spans",
+        "fixture": "fo4-dds-malformed-exact-shared-spans-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12445,13 +14236,44 @@
           "coverage-malformed-exact-shared-spans"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-exact-shared-spans-v1.hex",
+              "sha256": "06199340bea902afa43412cbe43d21713a557b7b40350823e1ab9009871c2145"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-exact-shared-spans"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c6fb7692a242076fd0c06883c45d6d169f6fa62fd2c6807e9f9c6f9cbe23c045",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-exact-shared-spans-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/054f70304489740616dd81f8b77c960839951b6c3c5f28066f17f34462dee3bb.json",
+            "sha256": "054f70304489740616dd81f8b77c960839951b6c3c5f28066f17f34462dee3bb"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12465,11 +14287,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-harmless-trailing-bytes.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-harmless-trailing-bytes-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-harmless-trailing-bytes",
+        "fixture": "fo4-dds-malformed-harmless-trailing-bytes-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12487,13 +14309,44 @@
           "coverage-malformed-harmless-trailing-bytes"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-harmless-trailing-bytes-v1.hex",
+              "sha256": "c10d13317fee4a1352882e27587dff253e25ad10757c0988b756bebaa1aa5c78"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-harmless-trailing-bytes"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "a249772870308c26dfed3209ebc1a5f14e0916d7a65d6313ac934746feb0e58d",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-harmless-trailing-bytes-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/68a0e88a02da9a4c52c77a1f9c38e61f60eee972e3ee52813a35f936bfc561d9.json",
+            "sha256": "68a0e88a02da9a4c52c77a1f9c38e61f60eee972e3ee52813a35f936bfc561d9"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12507,11 +14360,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-ignorable-constants.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-ignorable-constants-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-ignorable-constants",
+        "fixture": "fo4-dds-malformed-ignorable-constants-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12529,13 +14382,44 @@
           "coverage-malformed-ignorable-constants"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-ignorable-constants-v1.hex",
+              "sha256": "9513e744434b04818edc3cf49f778b4e3a0ee798d17dcaf5d702962aa0083418"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-ignorable-constants"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "331a3bf52a0fdd5170a9a3633049f64ff0590d9e1eb747ee5402b170678a39c1",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-ignorable-constants-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/816d71bde5e88f8e3bd0fe00e2002370e1a0f0ab71238381c317f9a906211409.json",
+            "sha256": "816d71bde5e88f8e3bd0fe00e2002370e1a0f0ab71238381c317f9a906211409"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12549,11 +14433,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-illegal-tuples.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-illegal-tuples-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-illegal-tuples",
+        "fixture": "fo4-dds-malformed-illegal-tuples-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12567,17 +14451,48 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-illegal-tuples"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-illegal-tuples-v1.hex",
+              "sha256": "c730d6e38778e0f4d110f83b363874b2566ec34ed30afc275ac15a7cb0c0e743"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-illegal-tuples"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "4842ce73afdcbb7b839dde2c39ab287e48b61d37c85d12b378eaea4fbfbdf9ad",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-illegal-tuples-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/fd30f5c4ade902ca2e071de22725c6d7819260ff9b8aade7901f5412a8ea4b35.json",
+            "sha256": "fd30f5c4ade902ca2e071de22725c6d7819260ff9b8aade7901f5412a8ea4b35"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12591,11 +14506,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-impossible-counts.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-impossible-counts-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-impossible-counts",
+        "fixture": "fo4-dds-malformed-impossible-counts-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12609,17 +14524,48 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-impossible-counts"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-impossible-counts-v1.hex",
+              "sha256": "0595963a219802f5f7ab09d2982b57b572c7fd738505ab9b0a1a6775cd93fd4b"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-impossible-counts"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "809d721c796f1a4dfb85c16a9429a0b08813c692b24fba23e6e50931d9ce1d8c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-impossible-counts-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/6de2f2b43eac8fafccef97a95dd11cc9c56c3e2308b16854b4359d449f3153e3.json",
+            "sha256": "6de2f2b43eac8fafccef97a95dd11cc9c56c3e2308b16854b4359d449f3153e3"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12633,11 +14579,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-missing-name-tables.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-missing-name-tables-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-missing-name-tables",
+        "fixture": "fo4-dds-malformed-missing-name-tables-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12655,13 +14601,44 @@
           "coverage-malformed-missing-name-tables"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-missing-name-tables-v1.hex",
+              "sha256": "f3ff7226277ebb81cd8211847b6556cbb6188d0bddcdf5f22d3cec057ba908d0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-missing-name-tables"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "bd1b3463100c257e13ecef9be993d8dc19ddb1a8715705e5e5c06f2314a59c6c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-missing-name-tables-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/f67be3a5d79db061f03b1b9da1500417b500a85ba97491547daa85ceed4b5724.json",
+            "sha256": "f67be3a5d79db061f03b1b9da1500417b500a85ba97491547daa85ceed4b5724"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12675,11 +14652,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-out-of-range-spans.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-out-of-range-spans-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-out-of-range-spans",
+        "fixture": "fo4-dds-malformed-out-of-range-spans-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12693,17 +14670,48 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-out-of-range-spans"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-out-of-range-spans-v1.hex",
+              "sha256": "f4a0f957100b3bc2d55babf1da6a8287dbad24206d091a3687b4e7a21a06d34c"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-out-of-range-spans"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "f6ac157678f7d6e347c31ca84c9e625041ca359adbf83b309dc346af2c2646ea",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-out-of-range-spans-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/927f4eabcdc00f6b62ff87dd90e7885e7a71c09689c129115ab6fad35eb723b4.json",
+            "sha256": "927f4eabcdc00f6b62ff87dd90e7885e7a71c09689c129115ab6fad35eb723b4"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12717,11 +14725,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-owning-dispositions.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-owning-dispositions-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-owning-dispositions",
+        "fixture": "fo4-dds-malformed-owning-dispositions-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12739,13 +14747,44 @@
           "coverage-malformed-owning-dispositions"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-owning-dispositions-v1.hex",
+              "sha256": "9513e744434b04818edc3cf49f778b4e3a0ee798d17dcaf5d702962aa0083418"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-owning-dispositions"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "0e7f835e3761ef2717ffad86cc09ad6ff04f75bc1c1ee7a7c1c46f70bd549935",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-owning-dispositions-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/2951801e35cdbd8084914248fc829427dc5b5a30ca0981f0890d228d5c475001.json",
+            "sha256": "2951801e35cdbd8084914248fc829427dc5b5a30ca0981f0890d228d5c475001"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12759,11 +14798,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-partial-overlap.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-partial-overlap-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-partial-overlap",
+        "fixture": "fo4-dds-malformed-partial-overlap-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12777,17 +14816,48 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-partial-overlap"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-partial-overlap-v1.hex",
+              "sha256": "a757ff1534f93051558c363ffb11cd72bc33f909b5670dd73716903ba84d5785"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-partial-overlap"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "e1a206f0863984d2cd536aff8868ea668d2eea48c10f041ef86a9cc3e1fd6dec",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-partial-overlap-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/6457ec9e99b0a74f19501fcb6008344307d6a708d14cfdb9aaa6ee5f46163a88.json",
+            "sha256": "6457ec9e99b0a74f19501fcb6008344307d6a708d14cfdb9aaa6ee5f46163a88"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12801,11 +14871,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-truncated-spans.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-truncated-spans-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-truncated-spans",
+        "fixture": "fo4-dds-malformed-truncated-spans-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12819,17 +14889,48 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-truncated-spans"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-truncated-spans-v1.hex",
+              "sha256": "98ce6ec0f3ec78a498b4a2ab1440ffec45075c98f62276f996a72294d6776e3a"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-truncated-spans"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c1c2f75387b6649d063ee8eec3acf0a92f13ebd35bc37e5f5ae139c3023caf3d",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-truncated-spans-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/c987de3b6578d8dc5735c529957bb58593e8ba04c54d147a2c7cbea7e5d5a6a8.json",
+            "sha256": "c987de3b6578d8dc5735c529957bb58593e8ba04c54d147a2c7cbea7e5d5a6a8"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12843,11 +14944,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-undecodable-wire-names.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-undecodable-wire-names-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-undecodable-wire-names",
+        "fixture": "fo4-dds-malformed-undecodable-wire-names-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12865,13 +14966,44 @@
           "coverage-malformed-undecodable-wire-names"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-undecodable-wire-names-v1.hex",
+              "sha256": "c62b73c0fd68a05b5bf0b398aeeadd68bb36ac9aa1b1c79ddf1a2a89b9bd969a"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-undecodable-wire-names"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c39c5c72e52864bf58903ba130c9b40f506d1534685e3921e891aac11a395016",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-undecodable-wire-names-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/cf0331162beffa7d353fb05be0b8e60b6aa51e9bcd10e47e08a8b4e416c38374.json",
+            "sha256": "cf0331162beffa7d353fb05be0b8e60b6aa51e9bcd10e47e08a8b4e416c38374"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12885,11 +15017,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-unsafe-absolute-names.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-unsafe-absolute-names-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-unsafe-absolute-names",
+        "fixture": "fo4-dds-malformed-unsafe-absolute-names-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12907,13 +15039,44 @@
           "coverage-malformed-unsafe-absolute-names"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-unsafe-absolute-names-v1.hex",
+              "sha256": "ccda74fac3fe29b6e11f4ea6994a724c2d906f2aa1513f9c4bb06d3499ef10d7"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-unsafe-absolute-names"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "48f19246fd9f04cfff074ae348624b6ed45b2d6de1b05d53ef92c1b7b6603196",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-unsafe-absolute-names-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/aa8f44380855ee02d70a70d98d1ec8952bec93531fad24d2744dc2b758a03672.json",
+            "sha256": "aa8f44380855ee02d70a70d98d1ec8952bec93531fad24d2744dc2b758a03672"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12927,11 +15090,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-unsafe-traversal-names.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-unsafe-traversal-names-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-unsafe-traversal-names",
+        "fixture": "fo4-dds-malformed-unsafe-traversal-names-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12949,13 +15112,44 @@
           "coverage-malformed-unsafe-traversal-names"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-unsafe-traversal-names-v1.hex",
+              "sha256": "eba396057cccc26981bed53660afc31a6ac4dd90d57f4365308ebc79389f51bf"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-unsafe-traversal-names"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "8538a5296d34b48c112d887123b58fc4ea211d5ed63524b6ca53ab46743681a6",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-unsafe-traversal-names-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/e797d40bae70cf7a40347df8874b4d57a4e517d4cfb5b094e26ce60a4de5e940.json",
+            "sha256": "e797d40bae70cf7a40347df8874b4d57a4e517d4cfb5b094e26ce60a4de5e940"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -12969,11 +15163,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-usable-name-hash-mismatch.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-usable-name-hash-mismatch-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-usable-name-hash-mismatch",
+        "fixture": "fo4-dds-malformed-usable-name-hash-mismatch-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -12991,13 +15185,44 @@
           "coverage-malformed-usable-name-hash-mismatch"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-usable-name-hash-mismatch-v1.hex",
+              "sha256": "074d264d14b20d53f107b7ebffc8a16b974e8ca5beff6a52868c9c8a7cf3c58b"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-usable-name-hash-mismatch"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "65ec7d964a08ac8637e741df080211a0a28e22aecbe625cc73d7ea288e021f87",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-usable-name-hash-mismatch-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/88ad7697245368a503236e62a555a3ae57d929eac0792fe23e82b410d3e8a4bc.json",
+            "sha256": "88ad7697245368a503236e62a555a3ae57d929eac0792fe23e82b410d3e8a4bc"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13011,11 +15236,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.decode.malformed-windows-invalid-names.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.decode.fo4-dds-malformed-windows-invalid-names-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "decode",
-        "fixture": "malformed-windows-invalid-names",
+        "fixture": "fo4-dds-malformed-windows-invalid-names-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -13033,13 +15258,44 @@
           "coverage-malformed-windows-invalid-names"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-windows-invalid-names-v1.hex",
+              "sha256": "47ffb0acc7493ad779b2722a99756399e3c8689bd3fa3e8574e2c99a54b81a9c"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-windows-invalid-names"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "2217eca98efaee370ffa003ccaedb217fc3e63560fb9b1d9bde0f104da19b431",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-windows-invalid-names-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/a79149253ea98a9afa358a4ae9f3bd9d264a90b0d74976b825dc08f9b20ab389.json",
+            "sha256": "a79149253ea98a9afa358a4ae9f3bd9d264a90b0d74976b825dc08f9b20ab389"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13053,11 +15309,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-lz4-frame.lz4-frame.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-lz4-frame-v1.lz4-frame.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "encode",
-        "fixture": "base-fo4-dx10-v1-lz4-frame",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-lz4-frame-v1",
         "codec": "lz4-frame",
         "configuration": "pc-v1"
       },
@@ -13072,13 +15328,48 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-lz4-frame-v1.hex",
+              "sha256": "98ffda0c0e7d7c62d20b53d83ab755ab99f51134ca7fbfef4029233b8cd768f9"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-lz4-frame"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "1a5de3d9440b4be94557836bce9976a2898202676edd3bd381623f494a69d810",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-lz4-frame-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/2d8bcf3beae93ddbad3fb7e3d23001b36e58341145ac5cfe4b1473411e6b139c.json",
+            "sha256": "2d8bcf3beae93ddbad3fb7e3d23001b36e58341145ac5cfe4b1473411e6b139c"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/fbfea368163857905e3f50402cb4b9c9d892d4a95719d17476f5b285ce3deed2.json",
+            "sha256": "fbfea368163857905e3f50402cb4b9c9d892d4a95719d17476f5b285ce3deed2"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13086,16 +15377,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-mixed.mixed.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-mixed-v1.mixed.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "encode",
-        "fixture": "base-fo4-dx10-v1-mixed",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-mixed-v1",
         "codec": "mixed",
         "configuration": "pc-v1"
       },
@@ -13110,13 +15402,48 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-mixed-v1.hex",
+              "sha256": "bf06eb1082c9f828e4ba8552fbd39ae398d42d25fc49fb6866676116da8a2912"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-mixed"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "2a01bb1dbb4223a851e6bd388a8ed957de2caca08ca1aaa48bc171f4b7adc68f",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-mixed-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/34f84ad0d912f2dbd79b21599fd4aa96e71c9eb7586762e7b76ef157fd6dfda6.json",
+            "sha256": "34f84ad0d912f2dbd79b21599fd4aa96e71c9eb7586762e7b76ef157fd6dfda6"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/b5c21f5453f3a73a99394a54cbc850dbd566cb1628b6522ca483d54bc1c63073.json",
+            "sha256": "b5c21f5453f3a73a99394a54cbc850dbd566cb1628b6522ca483d54bc1c63073"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13124,16 +15451,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-raw-deflate.raw-deflate.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-raw-deflate-v1.raw-deflate.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "encode",
-        "fixture": "base-fo4-dx10-v1-raw-deflate",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-raw-deflate-v1",
         "codec": "raw-deflate",
         "configuration": "pc-v1"
       },
@@ -13148,13 +15476,48 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-raw-deflate-v1.hex",
+              "sha256": "8edb22e0461023d57289f0a814d666170bd2e4f50842b0172c955eda639dd524"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-raw-deflate"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "1a26af5de41f0568d664d4ba9d2ebca6e60a6ca42265a59b7ef1b840f047ca49",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-raw-deflate-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/f63a2b1e7b118252f6ea484386211ae8a5eb485c7627a0f185904d524ae1c84d.json",
+            "sha256": "f63a2b1e7b118252f6ea484386211ae8a5eb485c7627a0f185904d524ae1c84d"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/3faff65d939e522747681988e4d95c83f429f1ba38bbd9733af51e37e88de0e6.json",
+            "sha256": "3faff65d939e522747681988e4d95c83f429f1ba38bbd9733af51e37e88de0e6"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13162,16 +15525,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-raw-lz4.raw-lz4.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-raw-lz4-v1.raw-lz4.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "encode",
-        "fixture": "base-fo4-dx10-v1-raw-lz4",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-raw-lz4-v1",
         "codec": "raw-lz4",
         "configuration": "pc-v1"
       },
@@ -13186,13 +15550,48 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-raw-lz4-v1.hex",
+              "sha256": "50813e99c7a9d53b5c3d3be1290f73bb58d875786aa309e8e0643f62211853e6"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-raw-lz4"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "c805ec979ca5a49e405d7e436a64505979384d4e655c4d6746d554d335cce83c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-raw-lz4-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/1ceb77a69eac37c7d4d856eabf25d5c20ad0e1109b0da433540fa45dd091068a.json",
+            "sha256": "1ceb77a69eac37c7d4d856eabf25d5c20ad0e1109b0da433540fa45dd091068a"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/af108b6cf551276fd0cdfef8daaa8a812a9bc05fa8c4e6ee07d9a511bbd03a39.json",
+            "sha256": "af108b6cf551276fd0cdfef8daaa8a812a9bc05fa8c4e6ee07d9a511bbd03a39"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13200,16 +15599,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-stored.stored.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-stored-v1.stored.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "encode",
-        "fixture": "base-fo4-dx10-v1-stored",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-stored-v1",
         "codec": "stored",
         "configuration": "pc-v1"
       },
@@ -13224,13 +15624,48 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-stored-v1.hex",
+              "sha256": "762a2b2d9ce5ac804cd45b1180439104d6d4bb7ef8a0f28e9af765432b24c634"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-stored"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "cde568326dff8ce1ca4a0e67500105ccf55f1b38080bf7583ecfda58544c98d4",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-stored-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/70eb69b23b5f8af4a1ededabbd900f00a4e909b5e7570b9b51420d3091a152af.json",
+            "sha256": "70eb69b23b5f8af4a1ededabbd900f00a4e909b5e7570b9b51420d3091a152af"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/9f3d45f8396a667896ea3483c83a45cf71d308413d734b4cde30e1c1e69bdd0e.json",
+            "sha256": "9f3d45f8396a667896ea3483c83a45cf71d308413d734b4cde30e1c1e69bdd0e"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13238,16 +15673,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-zlib.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-zlib-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "encode",
-        "fixture": "base-fo4-dx10-v1-zlib",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-zlib-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -13264,13 +15700,48 @@
           "jbsa-to-oracle"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-base-fo4-dx10-v1-zlib-v1.hex",
+              "sha256": "9c46fad11a33be25f1f6795fffcd5740da670bc218ef064f04ff2b4d2f464954"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "base-fo4-dx10-v1-zlib"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "6336ae6eb46915ae399d7f269f5b4aeda77aa4e89326d0dd11ca1290149a89a1",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-base-fo4-dx10-v1-zlib-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/6513a3098391b164d906b30948e99c2e2ad5929fffa7be430a560093edd5a0cb.json",
+            "sha256": "6513a3098391b164d906b30948e99c2e2ad5929fffa7be430a560093edd5a0cb"
+          },
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/f167a33ea775dbdb8ca969f118d79fa80ae0fed1d19967c951cd40fbe7a1501c.json",
+            "sha256": "f167a33ea775dbdb8ca969f118d79fa80ae0fed1d19967c951cd40fbe7a1501c"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13279,16 +15750,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.encode.dds-target-mismatch-pc.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-dds-target-mismatch-pc-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "encode",
-        "fixture": "dds-target-mismatch-pc",
+        "fixture": "fo4-dds-dds-target-mismatch-pc-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -13306,13 +15778,44 @@
           "coverage-dds-target-mismatch-pc"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-target-mismatch-pc-v1.hex",
+              "sha256": "934ebd82c123111b938014909d9ed57ac59db6f4496906882b8cf53274bcb5c5"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-target-mismatch-pc"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "9790d368d874937833c77c2ba0414050a3f46fad95b2ae03860269dd03f4b4b7",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-target-mismatch-pc-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/8577e16ce659f1254b880acde032ce419985e699dadeba1663c2ffad982c0d55.json",
+            "sha256": "8577e16ce659f1254b880acde032ce419985e699dadeba1663c2ffad982c0d55"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13368,18 +15871,18 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.encode.dds-target-pc.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.encode.fo4-dds-dds-target-pc-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "encode",
-        "fixture": "dds-target-pc",
+        "fixture": "fo4-dds-dds-target-pc-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-target-pc"
         ],
@@ -13387,16 +15890,49 @@
           "fixture-integrity",
           "authority-consistency",
           "encode-cross-directions",
-          "coverage-dds-target-pc"
+          "coverage-dds-target-pc",
+          "oracle-to-jbsa",
+          "jbsa-to-oracle"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-target-pc-v1.hex",
+              "sha256": "a5b2fb744a42a73c8936247728d79cdeb0cf200af2ae4a1c1fc00582edea684d"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-target-pc"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "f23b993d7bd418477cfffce7db0ee76c4c54f0937de7a5c974150e992f3e1d25",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-target-pc-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/ae7039b0b8a5059809c943129ca4181cd3da28bde89e6d6ebb288d798be1ea59.json",
+            "sha256": "ae7039b0b8a5059809c943129ca4181cd3da28bde89e6d6ebb288d798be1ea59"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13452,11 +15988,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.extract.malformed-unsafe-name-extraction.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.extract.fo4-dds-malformed-unsafe-name-extraction-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "extract",
-        "fixture": "malformed-unsafe-name-extraction",
+        "fixture": "fo4-dds-malformed-unsafe-name-extraction-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
@@ -13473,13 +16009,44 @@
           "coverage-malformed-unsafe-name-extraction"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-malformed-unsafe-name-extraction-v1.hex",
+              "sha256": "eba396057cccc26981bed53660afc31a6ac4dd90d57f4365308ebc79389f51bf"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "malformed-unsafe-name-extraction"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "afbc5a2ed9b0f4eb77adef3e36788da9cb1b25ad8d384aaa40ce36ecf38926e8",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-malformed-unsafe-name-extraction-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/db6c3222dcd093f6d6b0ec48c62a6f86671d74c77c5671051ef2c75e1b628b61.json",
+            "sha256": "db6c3222dcd093f6d6b0ec48c62a6f86671d74c77c5671051ef2c75e1b628b61"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13493,34 +16060,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-bc16-boundaries.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-bc16-boundaries-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-bc16-boundaries",
+        "fixture": "fo4-dds-dds-bc16-boundaries-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-bc16-boundaries"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-bc16-boundaries"
+          "coverage-dds-bc16-boundaries",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-bc16-boundaries-v1.hex",
+              "sha256": "efdef934193081c6d6f41e70e69ea730bbc27c2f9b2fd15ae5f25d393c4be89f"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-bc16-boundaries"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "8b9b000656d9ba6cb8715f973c4612ce65853e89e75cff05cdc1966671c84408",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-bc16-boundaries-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/b12db332eef8804ab85f6feb9ba1dde18c3fa6e3ae6cced1f991867418b987e0.json",
+            "sha256": "b12db332eef8804ab85f6feb9ba1dde18c3fa6e3ae6cced1f991867418b987e0"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13534,34 +16133,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-bc8-boundaries.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-bc8-boundaries-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-bc8-boundaries",
+        "fixture": "fo4-dds-dds-bc8-boundaries-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-bc8-boundaries"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-bc8-boundaries"
+          "coverage-dds-bc8-boundaries",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-bc8-boundaries-v1.hex",
+              "sha256": "b3ee2438e1a0bbcc02c23814998329eb43c8c122ecfb298de56cc02df15fe266"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-bc8-boundaries"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "97cc80a411cf9b471e596e9af6cd4b9634e5d4c67f799f06f211ac4e43f5b211",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-bc8-boundaries-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/5e3ba416615dde03267a1d86f6c9fe98f641af4e204fc3395ae5377b53d7decf.json",
+            "sha256": "5e3ba416615dde03267a1d86f6c9fe98f641af4e204fc3395ae5377b53d7decf"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13575,34 +16206,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-cli-selector.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-cli-selector-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-cli-selector",
+        "fixture": "fo4-dds-dds-cli-selector-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-cli-selector"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-cli-selector"
+          "coverage-dds-cli-selector",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-cli-selector-v1.hex",
+              "sha256": "9c46fad11a33be25f1f6795fffcd5740da670bc218ef064f04ff2b4d2f464954"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-cli-selector"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "40add7786b5ed647fcb727a167b5c44712f2aaab178d10a7f6168deebf864a65",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-cli-selector-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/9dce48c760d1a4062684ece8626c5181eea469ea1f1653085e19dc2ba5756f8a.json",
+            "sha256": "9dce48c760d1a4062684ece8626c5181eea469ea1f1653085e19dc2ba5756f8a"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13616,34 +16279,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-cubemaps.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-cubemaps-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-cubemaps",
+        "fixture": "fo4-dds-dds-cubemaps-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-cubemaps"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-cubemaps"
+          "coverage-dds-cubemaps",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-cubemaps-v1.hex",
+              "sha256": "d1b1943190720ef35de2eb1cc60ff4fb1483015adb8ba7b0ed0820c73419359f"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-cubemaps"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "04d231d6d7fe9a81976a267d071cc6e1509a021db3f41fda695edb34483697a9",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-cubemaps-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/d5cd0aabbfea0a810216eb4e36044560c970b475252d284b7ae1796cded01bf6.json",
+            "sha256": "d5cd0aabbfea0a810216eb4e36044560c970b475252d284b7ae1796cded01bf6"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13657,34 +16352,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-dimensions-mips.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-dimensions-mips-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-dimensions-mips",
+        "fixture": "fo4-dds-dds-dimensions-mips-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-dimensions-mips"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-dimensions-mips"
+          "coverage-dds-dimensions-mips",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-dimensions-mips-v1.hex",
+              "sha256": "e77648d9cdd230cef28b3e6455f3aa3e63cce6cdcb22f5c88439523a537239da"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-dimensions-mips"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "27c107aa663fa18a2760b7573ba6ae9b65a975d665c01782159128497f63392b",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-dimensions-mips-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/408f5d5dbfc3ed850ca8b0d765ac2b424e64e018459d50ba52860d779b04b3b5.json",
+            "sha256": "408f5d5dbfc3ed850ca8b0d765ac2b424e64e018459d50ba52860d779b04b3b5"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13698,34 +16425,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-name-tables.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-name-tables-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-name-tables",
+        "fixture": "fo4-dds-dds-name-tables-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-name-tables"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-name-tables"
+          "coverage-dds-name-tables",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-name-tables-v1.hex",
+              "sha256": "9c46fad11a33be25f1f6795fffcd5740da670bc218ef064f04ff2b4d2f464954"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-name-tables"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "5e2d10f5a5108b6e4bb79cf4c600b2845260e3efb7bd686c1f2dee55d5dc33b2",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-name-tables-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/02efeb9f7af826aa7a18a966a67c736ab783682a7ac096e5fecc8432d2ee4ede.json",
+            "sha256": "02efeb9f7af826aa7a18a966a67c736ab783682a7ac096e5fecc8432d2ee4ede"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13739,34 +16498,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-nonsquare-mips.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-nonsquare-mips-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-nonsquare-mips",
+        "fixture": "fo4-dds-dds-nonsquare-mips-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-nonsquare-mips"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-nonsquare-mips"
+          "coverage-dds-nonsquare-mips",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-nonsquare-mips-v1.hex",
+              "sha256": "7f612667ff3793b532e5a3ad57b54940a7f68fd4e223f3963fca160b5b176d6b"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-nonsquare-mips"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "2caed861d3270e67a889878f8179289ec92ca30e7dab8b6001ea1f18ac8955a9",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-nonsquare-mips-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/f7b3c193880e6da99284610ea5564736e9e7cc5ff1bb929359808a221c77d3a1.json",
+            "sha256": "f7b3c193880e6da99284610ea5564736e9e7cc5ff1bb929359808a221c77d3a1"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13780,34 +16571,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-odd-multichunk.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-odd-multichunk-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-odd-multichunk",
+        "fixture": "fo4-dds-dds-odd-multichunk-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-odd-multichunk"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-odd-multichunk"
+          "coverage-dds-odd-multichunk",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-odd-multichunk-v1.hex",
+              "sha256": "2ec9af26f3f3f11bcd0a768dcdbb1355b627173eb6650cb4fe5e5f8645790648"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-odd-multichunk"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "280d6f8ecd0a7d97347f71705392ae5760b3b4587c00433b6f10d0c24b76db6d",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-odd-multichunk-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/504d0a2c620980ff90f389b0c953627b2947b4d99a02e23adaa480d3d1897cd8.json",
+            "sha256": "504d0a2c620980ff90f389b0c953627b2947b4d99a02e23adaa480d3d1897cd8"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13821,34 +16644,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-partitions.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-partitions-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-partitions",
+        "fixture": "fo4-dds-dds-partitions-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-partitions"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-partitions"
+          "coverage-dds-partitions",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-partitions-v1.hex",
+              "sha256": "5e2db60f3f4f43065d6aa658ca80870838b2f7d2db6650b505109933c150b147"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-partitions"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "96c4c0e273f3a4504c949d575b850ca5ed5a621c559a2f302d244f8881b28897",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-partitions-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/f1356c725ec0ddddd83ccf793b9acd1ecb518bde526751493bc4bb91c493e99d.json",
+            "sha256": "f1356c725ec0ddddd83ccf793b9acd1ecb518bde526751493bc4bb91c493e99d"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13903,34 +16758,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-reconstruction.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-reconstruction-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-reconstruction",
+        "fixture": "fo4-dds-dds-reconstruction-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-reconstruction"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-reconstruction"
+          "coverage-dds-reconstruction",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-reconstruction-v1.hex",
+              "sha256": "8062b4133d02770207d9f8e2445de7b877ef0448bd642fb5748ae09d25b7ebf0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-reconstruction"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "6842b53c5a068b6e66ec6e51e4016265cdce27b0653fc0ff0df4ff34fcec6e1a",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-reconstruction-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/699f89fd9e8e105b65882df4cba8e915eb5818160f64c84352feb11acee728cf.json",
+            "sha256": "699f89fd9e8e105b65882df4cba8e915eb5818160f64c84352feb11acee728cf"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -13944,34 +16831,66 @@
     },
     {
       "identity": {
-        "case_id": "CV1-fo4-dx10-v1.scenario.dds-writable-formats.zlib.pc-v1",
+        "case_id": "CV1-fo4-dx10-v1.scenario.fo4-dds-dds-writable-formats-v1.zlib.pc-v1",
         "contract": "conformance-v1",
         "archive_family": "fo4-dx10-v1",
         "operation": "scenario",
-        "fixture": "dds-writable-formats",
+        "fixture": "fo4-dds-dds-writable-formats-v1",
         "codec": "zlib",
         "configuration": "pc-v1"
       },
       "metadata": {
         "classification": "REQUIRED",
         "mode": "hosted",
-        "expected_behavior": "assert-specified-outcome",
+        "expected_behavior": "accept",
         "coverage_items": [
           "dds-writable-formats"
         ],
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "coverage-dds-writable-formats"
+          "coverage-dds-writable-formats",
+          "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "docs/reviews/issue40-cv1/fixtures/fo4-dds-dds-writable-formats-v1.hex",
+              "sha256": "8062b4133d02770207d9f8e2445de7b877ef0448bd642fb5748ae09d25b7ebf0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "recipe": "dds-writable-formats"
+            },
+            "descriptor": {
+              "path": "docs/reviews/issue40-cv1/generator.json",
+              "sha256": "613a9ec99e8aba4f263158ea10cc7c7d11396b69741f97d595515f6597b84168"
+            },
+            "id": "jbsa-dds-cv1-review-v1",
+            "implementation": {
+              "path": "build/prepare-dds-cv1-review.py",
+              "sha256": "526c144d036f187000000f25316b65972cccf21a9827d4b143e257ab716bcb96"
+            },
+            "recipe_sha256": "5584488377f11be40600e32c6e0d75bb1667841f13dbe59b1ee226869a9acfe3",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "fo4-dds-dds-writable-formats-v1",
+            "manifest": {
+              "path": "docs/reviews/issue40-cv1/activation-manifest.json",
+              "sha256": "77cd48347c3586ccbda3bb6c0f167e65c55446751171c6cae92c523a67e0e8be"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "docs/reviews/issue40-cv1/goldens/sha256/7dc0f2b455d12d6d8f36f26b5b115ffaf3abf2729d28fcb3addc6f20a1eb3f57.json",
+            "sha256": "7dc0f2b455d12d6d8f36f26b5b115ffaf3abf2729d28fcb3addc6f20a1eb3f57"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
