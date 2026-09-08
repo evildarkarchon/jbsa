@@ -3933,6 +3933,1176 @@
           },
           "state": "available"
         }
+      },
+      {
+        "token": "bsa-067-lz4-frame-v1",
+        "description": "Proposed independently authored TES4 bsa-067-lz4-frame fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/998b6e8c54406d63824a5f5bf87265f048a82c6b3f36c3d63002e4df274e8b5e.json",
+        "sha256": "998b6e8c54406d63824a5f5bf87265f048a82c6b3f36c3d63002e4df274e8b5e",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-lz4-frame.hex",
+              "sha256": "d73381c4d00c31a7e72b5f09d3d910ca5b1cc1a6d1a605e00ac830e0a0945e90"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "2a9ec2162c4c21b93025ea37af1dc5345aa8dbe0287e5573dbd97c72782f130f",
+                "wire_size": "1151"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=lz4-frame; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "99b49bf690904151e96fc6d5183003f2e2145e82f1070d9a6104b44cb688ac9b",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-lz4-frame",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-mixed-v1",
+        "description": "Proposed independently authored TES4 bsa-067-mixed fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/5bc191db9592efec4dd219de484784a2b97aae5199df03891751c63d0025c54b.json",
+        "sha256": "5bc191db9592efec4dd219de484784a2b97aae5199df03891751c63d0025c54b",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-mixed.hex",
+              "sha256": "784934f6a8d2b831a06967cc119b4c03ed00e1be7b4e69f5901a03df0db3f450"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "55198b65c048935a24c9f3276503e8c4d961d90d3cbf8d390096dd1b6624e266",
+                "wire_size": "1147"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=mixed; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "72812d04eb29ee698fae4096dbf0898074bee32dc6409219f4857cd827dda1ff",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-mixed",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-raw-deflate-v1",
+        "description": "Proposed independently authored TES4 bsa-067-raw-deflate fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/188ed86861c1e98474170a3dfca0a411fb5c61ce3d8c17d33b56a382f0518231.json",
+        "sha256": "188ed86861c1e98474170a3dfca0a411fb5c61ce3d8c17d33b56a382f0518231",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-raw-deflate.hex",
+              "sha256": "5684cb30fb7fb51b19d3dc7983ce958303604858ffec4641f9f02e2abbeacb7a"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "8bd9e23ac7f4ab035e8c26ce341d892cd85aee635a47ec10df35b8775b3e2f7b",
+                "wire_size": "1141"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=raw-deflate; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "b23a0a0522bd8e003a5804fa4eb7ffdad282cfe9c0120175dc15339722fa09ec",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-raw-deflate",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-raw-lz4-v1",
+        "description": "Proposed independently authored TES4 bsa-067-raw-lz4 fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/9c7ee4de806d4e2aba4f8ae7fab81e5841d69eca74cfff462d5c6b5840b587b1.json",
+        "sha256": "9c7ee4de806d4e2aba4f8ae7fab81e5841d69eca74cfff462d5c6b5840b587b1",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-raw-lz4.hex",
+              "sha256": "bf69a06146123d1c20ca471e25445f43795336309cd53646ca23b1aba3316c83"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "f063a79764ce50baf0edfbfbb38ba79063086e7558f8fc4f583433fa05c480c5",
+                "wire_size": "1141"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=raw-lz4; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "b4d48401f82361fa2b0144d8b686568f7af335eedd0ef3cfffc212c54b1b1277",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-raw-lz4",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-stored-v1",
+        "description": "Proposed independently authored TES4 bsa-067-stored fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/a96265199b6b1bf2ce11e09b5098e0cc3a310c99ebb151a031a03343eba2ec96.json",
+        "sha256": "a96265199b6b1bf2ce11e09b5098e0cc3a310c99ebb151a031a03343eba2ec96",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-stored.hex",
+              "sha256": "d3710a730cf2aa684700c82874b5b8a267e271fa6c2425684367560e78b65053"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "ac733c54caa9bae42a7c0ffca9d86aa92aa2e8e55202a593b9036807d0cebf8a",
+                "wire_size": "1132"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=stored; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "d90c30f4826143c56e4197ab1a1389559bd17a631781d109165b63ed80650d93",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-stored",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-zlib-v1",
+        "description": "Proposed independently authored TES4 bsa-067-zlib fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/96536d5423638ee7f9f685e1ae4a494aa4ec911ef42ffd3ceaddd75ab4cd1269.json",
+        "sha256": "96536d5423638ee7f9f685e1ae4a494aa4ec911ef42ffd3ceaddd75ab4cd1269",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-zlib.hex",
+              "sha256": "d25e21e4043d3f8608400ce45e19895620285977b2ca49ddb31593f695faa927"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "912ab876c6bcc1f78a69415efd81bbfb0f9b9dfb978a31151357f80db7bbbbac",
+                "wire_size": "1162"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=zlib; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "86accb4cf963e92f0f23f7446d24d361408e1102442bedbdb5423e497f64f931",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-zlib",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-arithmetic-overflow-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-arithmetic-overflow fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/6c43c2fe6ef61f1b50e5e69c34e172c3ea3c4a0c64411178a277e1408601e197.json",
+        "sha256": "6c43c2fe6ef61f1b50e5e69c34e172c3ea3c4a0c64411178a277e1408601e197",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-arithmetic-overflow.hex",
+              "sha256": "2f5fb2f4eb0e61e674f81b7606f349bba80abd87093203de3adc302f5c4bfa28"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "70b09140e0bdd241c5d67acd26ad2a1c2cf67f37cd68769efb6549b2275f371f",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe arithmetic-overflow to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "fb40f9232e3600348a20c41afc9519765b041b5b0323f2ae9e611c83be6a69b5",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-arithmetic-overflow",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-decompression-mismatch-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-decompression-mismatch fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/acee1c462040830f4720e015e6e45dc76c6911fb12649b2b790725fa08bbd608.json",
+        "sha256": "acee1c462040830f4720e015e6e45dc76c6911fb12649b2b790725fa08bbd608",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-decompression-mismatch.hex",
+              "sha256": "5840b55a7af3e066a7cf4974a420b9c4850c8773b992f97eb8e704b12b513dd4"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "205b82f6cc1e4fa684685d829e76641a7232f8779fdbe880ab54739e04b30e61",
+                "wire_size": "1147"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe decompression-mismatch to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "092683047456e96644b1ef85f9e37281a2057a3134514da0ee899c7b47ab926a",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-decompression-mismatch",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-equal-name-identities-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-equal-name-identities fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/2a27b4b34223f217b8d6ab7922b6d0aa95a53bf8e03c9ed96f5512ef2ce49f4e.json",
+        "sha256": "2a27b4b34223f217b8d6ab7922b6d0aa95a53bf8e03c9ed96f5512ef2ce49f4e",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-equal-name-identities.hex",
+              "sha256": "89719451518ee8f68bb871ea6eb711ca13c18b3938d41bbdc7231fec29396ab5"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "83d4b8f3e2fc6a30c632661a7a456b70ae4fb424a10c9102c7adbb10760e3916",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe equal-name-identities to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "844a45402107418b3bf9d87d9f57ad889cbce8a024dbe7b3fb5e68764ee3a86f",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-equal-name-identities",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-exact-shared-spans-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-exact-shared-spans fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/2f0945acfc404ac871b4490a8a2e92612f70d2740fafb5c294d463b00c372ec2.json",
+        "sha256": "2f0945acfc404ac871b4490a8a2e92612f70d2740fafb5c294d463b00c372ec2",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-exact-shared-spans.hex",
+              "sha256": "ad5a23ced241544c1b83d0d870cee96c9217e62187e94d40b8a7063a12f2bd20"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "b63069c8177b4452121c41eba8ba0e19749d772c3f7d73052b09d187e6d57b90",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe exact-shared-spans to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "a90b1457b7124a0f8a8e09655a01bdaf380a7c54408a8972a51d2a9aa2098128",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-exact-shared-spans",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-harmless-trailing-bytes-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-harmless-trailing-bytes fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/0e9e946bf3809251f3a10520973131b246f7768d099c237a51f28d79f800fe9c.json",
+        "sha256": "0e9e946bf3809251f3a10520973131b246f7768d099c237a51f28d79f800fe9c",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-harmless-trailing-bytes.hex",
+              "sha256": "7ecd8f5f6fe82409990433014c88d35c54e3e510883e8296c202ba6745a3e8e0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "2d4bcf428684e95111a5e52386c6bbbcf487dc1c2a4dd407de4fc47b1f7ebe0f",
+                "wire_size": "1135"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe harmless-trailing-bytes to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "90a48a13d8516c11d2468fce4d5750c132e30564b36b90828d572a8891fd33bc",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-harmless-trailing-bytes",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-ignorable-constants-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-ignorable-constants fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/75bf3d91d8c0facd5929dc2dd81ed5b0db6f5765bf4e8e7ee515cfbb88bf0034.json",
+        "sha256": "75bf3d91d8c0facd5929dc2dd81ed5b0db6f5765bf4e8e7ee515cfbb88bf0034",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-ignorable-constants.hex",
+              "sha256": "33f15af0620ee8856014a122876aa9c80f1b47ce750eab00292ebd38bf516b68"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "7a4a853416314f62dcea036beb00703e3afa50222840bd26c4c82559ee70e465",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe ignorable-constants to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "8c90914d310e39268339158bc40cded9606da0667d72a94d5f8b5da6a59e4da6",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-ignorable-constants",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-illegal-tuples-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-illegal-tuples fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/74debc42f6fc92b8baa961620f2fc456c8d2ab427488ecbe325d8d0820897b76.json",
+        "sha256": "74debc42f6fc92b8baa961620f2fc456c8d2ab427488ecbe325d8d0820897b76",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-illegal-tuples.hex",
+              "sha256": "5fff077cef5d2bb9dbfbaa99c5f10488d387bd50f463459e389b219e342a2ad1"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "3751d8c539346225df48fb448d5243eee0c7cfb12f21cfbc77232cf330f30d17",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe illegal-tuples to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "9ddc0ec2ab5f4008d92bb1123059ab6c2df9c3fc80b4f665549391e796c3b0d0",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-illegal-tuples",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-impossible-counts-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-impossible-counts fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/792b335fef9f722cba800fa3bdc33ce1578b04841222116221dc02186b3c77b5.json",
+        "sha256": "792b335fef9f722cba800fa3bdc33ce1578b04841222116221dc02186b3c77b5",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-impossible-counts.hex",
+              "sha256": "58349c96997b7e12dc06e998aff2418abd895e433c26ab823d6696fbf3b188e4"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "01f52682097ddec52f868a62f83c09d8b3168e7974c25cbd850e41dce1b33f14",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe impossible-counts to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "8d43088e1ac853baae2e9101e7d326f54d80015f73272f5b62f16f12fc394050",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-impossible-counts",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-missing-name-tables-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-missing-name-tables fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/1701bbb81eff91e67c02b80e0d79d1d4540128420f6b6099c5681afbca86dd9f.json",
+        "sha256": "1701bbb81eff91e67c02b80e0d79d1d4540128420f6b6099c5681afbca86dd9f",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-missing-name-tables.hex",
+              "sha256": "4d59e95195eaa1d1ca58418716baccb254d9fe84ca6eda496c5889dca4864a30"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "a631dd69f6a24632ae874847b1b5bf920f850dbfef20f705cc75fc599c79c316",
+                "wire_size": "1112"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe missing-name-tables to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "1331f8d3a1bcfa5277b8ef5aad401d2dc2ec6a37f1acb4a2791ff96ef60ccab7",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-missing-name-tables",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-out-of-range-spans-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-out-of-range-spans fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/e8b284c9c28033ef1ccfb2721fa2007d8ec1d9f94e398de6bb46c08b67c0019f.json",
+        "sha256": "e8b284c9c28033ef1ccfb2721fa2007d8ec1d9f94e398de6bb46c08b67c0019f",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-out-of-range-spans.hex",
+              "sha256": "0dd50083f2832bf4898fdb89130b812a82f4dfb1b00f9327f4ec44ec038fc313"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "6c8285712cd877f531d1dcfd0c29e8130a3e43f16da27609d4d1604f3ea02b43",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe out-of-range-spans to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "9af981e521892b5b00952ef96cf02a6deca5152f3854383aa4d0726845e5d311",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-out-of-range-spans",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-owning-dispositions-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-owning-dispositions fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/acbdfd6b2c4637722b712179d371fa76d9163ea940525d59dd276d60ebc20e95.json",
+        "sha256": "acbdfd6b2c4637722b712179d371fa76d9163ea940525d59dd276d60ebc20e95",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-owning-dispositions.hex",
+              "sha256": "96820b1b2fce570cd2975faa452ead1e7d4d987d8a86c71c427a32f47b5e973e"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "7f3eead6224813999e2aac777bc3a4eaf96b0b34f2049131142f4f16a64221e3",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe owning-dispositions to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "e3654187b645c5fd4ff78574b89be71a3f9f3a2d53b328f6512bff94bc48fd77",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-owning-dispositions",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-partial-overlap-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-partial-overlap fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/d0662baed8ef34bc7c6d77e97d7ef177c4e4e8779248141d0e06bcd8a9036c4e.json",
+        "sha256": "d0662baed8ef34bc7c6d77e97d7ef177c4e4e8779248141d0e06bcd8a9036c4e",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-partial-overlap.hex",
+              "sha256": "491c3ccd1c7998997f95a456801df64e3f122ae79621ac7f1bd8885e58695853"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "44dd1a1abf5376090ecb9cbb9bfca9305605a15a73eafa2cb9524373c7d026b8",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe partial-overlap to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "61a39b64377f009504ed734697ccb8499be4f20bff86de2023de227dbde569ba",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-partial-overlap",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-truncated-spans-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-truncated-spans fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/80757a9e2f06a0b8f97f85d2a265f078e00fc4da990064d7411a6a2d8c305599.json",
+        "sha256": "80757a9e2f06a0b8f97f85d2a265f078e00fc4da990064d7411a6a2d8c305599",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-truncated-spans.hex",
+              "sha256": "a3b9af967810646da5515f984d096b93d132bc7a7729d02ad21bc288cc473300"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "47faf7cc3004e548381ae41370de8ef440afbddc94540b498f345d83154d0aa3",
+                "wire_size": "1131"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe truncated-spans to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "b4e0e7d942482a1a10b034222ce55997eeee518e9075c13a79cfe99fa94e3797",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-truncated-spans",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-undecodable-wire-names-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-undecodable-wire-names fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/0e9666c41cd340d5191de344da181948c9d1917b7a9832e679ef68c567e9553b.json",
+        "sha256": "0e9666c41cd340d5191de344da181948c9d1917b7a9832e679ef68c567e9553b",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-undecodable-wire-names.hex",
+              "sha256": "085f5edab6827a02571a0e1270613ddb791a3bce5e93f90b2f1c23d2bb151faa"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "ff40a13872fce1c1bdf0a86dd0f44df8bcfa88472cdde8f495b8701cd6c8994e",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe undecodable-wire-names to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "613365a7e9910017f1387843a9cc7ce9cbeb363ccf258acf0cf9b9f9999c950f",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-undecodable-wire-names",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-unsafe-absolute-names-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-unsafe-absolute-names fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/76852428878f4383cde1f1641d4fa598a0b3822b400878907f163e2a3be70d1a.json",
+        "sha256": "76852428878f4383cde1f1641d4fa598a0b3822b400878907f163e2a3be70d1a",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-unsafe-absolute-names.hex",
+              "sha256": "a8be577475ad88c7a1b0a0128fc7ef50a3d608200dee217d92f093c908485b67"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "1e54b8adc583f219a6ea6489e2d1d2475a654a0208a40f27f4f79ad514323d6c",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe unsafe-absolute-names to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "f213de4969ccc6365b66391b011a88a6241b599443db36299534e1871b23fbf8",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-unsafe-absolute-names",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-unsafe-traversal-names-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-unsafe-traversal-names fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/98d7e6458a4c02ee8721dc83e5637b71e0dde120c9d9999330978093441f4909.json",
+        "sha256": "98d7e6458a4c02ee8721dc83e5637b71e0dde120c9d9999330978093441f4909",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-unsafe-traversal-names.hex",
+              "sha256": "1dff5c196edc8ddc0070ec1f98f85992e40839eee85fe1f1ccf150b159d9b8c0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "b6d68666a81e1d513a1a5339e770c4a88164d0f7d83f21ffd57df40d1197ba0e",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe unsafe-traversal-names to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "bf758a96078fcc2a521909c05b528e1a00f57ae0d85fbb89d0570df9570e46f6",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-unsafe-traversal-names",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-usable-name-hash-mismatch-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-usable-name-hash-mismatch fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/ca7a9dcf962a9b7e319fd46a94963ade5537bdb06bfa6232b90f260efa667787.json",
+        "sha256": "ca7a9dcf962a9b7e319fd46a94963ade5537bdb06bfa6232b90f260efa667787",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-usable-name-hash-mismatch.hex",
+              "sha256": "96820b1b2fce570cd2975faa452ead1e7d4d987d8a86c71c427a32f47b5e973e"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "7f3eead6224813999e2aac777bc3a4eaf96b0b34f2049131142f4f16a64221e3",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe usable-name-hash-mismatch to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "d58c95d8fb532babe24b9406f1f431a989305a67ee6fa25cf48c90c3ee5e86e2",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-usable-name-hash-mismatch",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-windows-invalid-names-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-windows-invalid-names fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/aadc3a6948d9c543f6d4d4f43bafc76481b81b8c002cbc549c5fcd73140f217b.json",
+        "sha256": "aadc3a6948d9c543f6d4d4f43bafc76481b81b8c002cbc549c5fcd73140f217b",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-windows-invalid-names.hex",
+              "sha256": "b1f2badd5bd654faf81a7e4c67cb739110b72d39bb6af358d126ebe17593376e"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "f49ad58419af61dcfbff486532be5ec1a6cc531dd0a0e450ce9cc1dfd1e46933",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe windows-invalid-names to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "4b1a5a770b66970988e62366f4c013bce24c90680610bdb3673a2e03b633359c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-windows-invalid-names",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-malformed-unsafe-name-extraction-v1",
+        "description": "Proposed independently authored TES4 bsa-067-malformed-unsafe-name-extraction fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/0eca73c92a3ddcbc1d22d3e2a550df32f81f61eb05d19d37d456295d00c0d70f.json",
+        "sha256": "0eca73c92a3ddcbc1d22d3e2a550df32f81f61eb05d19d37d456295d00c0d70f",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-unsafe-name-extraction.hex",
+              "sha256": "1dff5c196edc8ddc0070ec1f98f85992e40839eee85fe1f1ccf150b159d9b8c0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "b6d68666a81e1d513a1a5339e770c4a88164d0f7d83f21ffd57df40d1197ba0e",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe unsafe-name-extraction to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "5514cf07398790ee3892742e5fed87471a8e97e425a18c091304adb1838bbc8e",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-unsafe-name-extraction",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
+      },
+      {
+        "token": "bsa-067-xml-v1",
+        "description": "Proposed independently authored TES4 bsa-067-xml fixture, revision 1",
+        "path": "tests/conformance/objects/sha256/e3def4af2f1f6c0bedaff318d712389d5b0a34f5b782a29834091a90831d7bd6.json",
+        "sha256": "e3def4af2f1f6c0bedaff318d712389d5b0a34f5b782a29834091a90831d7bd6",
+        "binding": {
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-xml.hex",
+              "sha256": "7c473d10aa4a667aa4d4e059d521a00379ffca7cb8e6811a45e5029ef84291af"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "a21331e85ccdb937cb3856d2f435ff10885bf9315652200c53797e39812039d7",
+                "wire_size": "1132"
+              },
+              "procedure": "Meshes a.xml contributes XML file flag 4 in addition to root-derived mesh flag 1"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "cec99c3c63c5f74c0bab7cb893e43373e3af425a2157d8a63ba9f1b4b792ebb5",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-xml",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
+        }
       }
     ],
     "configuration": [
@@ -4806,11 +5976,11 @@
   "cases": [
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.base-bsa-067-lz4-frame.lz4-frame.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-lz4-frame-v1.lz4-frame.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "base-bsa-067-lz4-frame",
+        "fixture": "bsa-067-lz4-frame-v1",
         "codec": "lz4-frame",
         "configuration": "standard-v1"
       },
@@ -4825,13 +5995,54 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-lz4-frame.hex",
+              "sha256": "d73381c4d00c31a7e72b5f09d3d910ca5b1cc1a6d1a605e00ac830e0a0945e90"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "2a9ec2162c4c21b93025ea37af1dc5345aa8dbe0287e5573dbd97c72782f130f",
+                "wire_size": "1151"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=lz4-frame; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "99b49bf690904151e96fc6d5183003f2e2145e82f1070d9a6104b44cb688ac9b",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-lz4-frame",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/05402f8c736219efcc7c955faf8898813624be0680c65ce708d224aa2b733c58.json",
+            "sha256": "05402f8c736219efcc7c955faf8898813624be0680c65ce708d224aa2b733c58"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/8a48734308831f68d5662aab86e02a85d7f24eff556e303f9a038e9814ca4b69.json",
+            "sha256": "8a48734308831f68d5662aab86e02a85d7f24eff556e303f9a038e9814ca4b69"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -4839,16 +6050,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.base-bsa-067-mixed.mixed.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-mixed-v1.mixed.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "base-bsa-067-mixed",
+        "fixture": "bsa-067-mixed-v1",
         "codec": "mixed",
         "configuration": "standard-v1"
       },
@@ -4863,13 +6075,54 @@
           "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-mixed.hex",
+              "sha256": "784934f6a8d2b831a06967cc119b4c03ed00e1be7b4e69f5901a03df0db3f450"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "55198b65c048935a24c9f3276503e8c4d961d90d3cbf8d390096dd1b6624e266",
+                "wire_size": "1147"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=mixed; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "72812d04eb29ee698fae4096dbf0898074bee32dc6409219f4857cd827dda1ff",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-mixed",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/eb1dce5e3429cdbd76eb96744e3352ee655926c7b563827d1a94a9780e3059a5.json",
+            "sha256": "eb1dce5e3429cdbd76eb96744e3352ee655926c7b563827d1a94a9780e3059a5"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/80cdfa4dcbd9d5c13b82ead104190f174c80a058cec692463ba24423417b3de7.json",
+            "sha256": "80cdfa4dcbd9d5c13b82ead104190f174c80a058cec692463ba24423417b3de7"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -4878,16 +6131,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.base-bsa-067-raw-deflate.raw-deflate.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-raw-deflate-v1.raw-deflate.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "base-bsa-067-raw-deflate",
+        "fixture": "bsa-067-raw-deflate-v1",
         "codec": "raw-deflate",
         "configuration": "standard-v1"
       },
@@ -4902,13 +6156,54 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-raw-deflate.hex",
+              "sha256": "5684cb30fb7fb51b19d3dc7983ce958303604858ffec4641f9f02e2abbeacb7a"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "8bd9e23ac7f4ab035e8c26ce341d892cd85aee635a47ec10df35b8775b3e2f7b",
+                "wire_size": "1141"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=raw-deflate; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "b23a0a0522bd8e003a5804fa4eb7ffdad282cfe9c0120175dc15339722fa09ec",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-raw-deflate",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/a19aa66d5c19a67e62163108f1eaaf686949bfcf9c90519939a4ecc970467266.json",
+            "sha256": "a19aa66d5c19a67e62163108f1eaaf686949bfcf9c90519939a4ecc970467266"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/32b27795c8f223f50d331ff3bf6d7d8fc94cf705cefb109ec0ec126254a50cbf.json",
+            "sha256": "32b27795c8f223f50d331ff3bf6d7d8fc94cf705cefb109ec0ec126254a50cbf"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -4916,16 +6211,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.base-bsa-067-raw-lz4.raw-lz4.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-raw-lz4-v1.raw-lz4.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "base-bsa-067-raw-lz4",
+        "fixture": "bsa-067-raw-lz4-v1",
         "codec": "raw-lz4",
         "configuration": "standard-v1"
       },
@@ -4940,13 +6236,54 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-raw-lz4.hex",
+              "sha256": "bf69a06146123d1c20ca471e25445f43795336309cd53646ca23b1aba3316c83"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "f063a79764ce50baf0edfbfbb38ba79063086e7558f8fc4f583433fa05c480c5",
+                "wire_size": "1141"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=raw-lz4; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "b4d48401f82361fa2b0144d8b686568f7af335eedd0ef3cfffc212c54b1b1277",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-raw-lz4",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/527a613f4963d8986ff3f249b4fbb07aee1b51db72b7ead8d3d256bda15ddb9c.json",
+            "sha256": "527a613f4963d8986ff3f249b4fbb07aee1b51db72b7ead8d3d256bda15ddb9c"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/c368dc3bbb0e4b51c66d5716232feb3fe48f809d756517f21a08824463977dd7.json",
+            "sha256": "c368dc3bbb0e4b51c66d5716232feb3fe48f809d756517f21a08824463977dd7"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -4954,16 +6291,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.base-bsa-067-stored.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-stored-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "base-bsa-067-stored",
+        "fixture": "bsa-067-stored-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -4978,13 +6316,54 @@
           "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-stored.hex",
+              "sha256": "d3710a730cf2aa684700c82874b5b8a267e271fa6c2425684367560e78b65053"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "ac733c54caa9bae42a7c0ffca9d86aa92aa2e8e55202a593b9036807d0cebf8a",
+                "wire_size": "1132"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=stored; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "d90c30f4826143c56e4197ab1a1389559bd17a631781d109165b63ed80650d93",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-stored",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/f7173efa115641fc67b887ec7ba4daf4a815c231bf3d6e086a92633e861aad57.json",
+            "sha256": "f7173efa115641fc67b887ec7ba4daf4a815c231bf3d6e086a92633e861aad57"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/0467f9f09aff2ccc34be8d72767c76d6cdba715d490b89644b8e5934ba2e3846.json",
+            "sha256": "0467f9f09aff2ccc34be8d72767c76d6cdba715d490b89644b8e5934ba2e3846"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -4993,16 +6372,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.base-bsa-067-zlib.zlib.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-zlib-v1.zlib.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "base-bsa-067-zlib",
+        "fixture": "bsa-067-zlib-v1",
         "codec": "zlib",
         "configuration": "standard-v1"
       },
@@ -5017,13 +6397,54 @@
           "decode-semantic-projection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-zlib.hex",
+              "sha256": "d25e21e4043d3f8608400ce45e19895620285977b2ca49ddb31593f695faa927"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "912ab876c6bcc1f78a69415efd81bbfb0f9b9dfb978a31151357f80db7bbbbac",
+                "wire_size": "1162"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=zlib; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "86accb4cf963e92f0f23f7446d24d361408e1102442bedbdb5423e497f64f931",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-zlib",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/71e565cb5dba076a9da649ce8a1b12dda167ab7ae373ff99a9a898c4657d196b.json",
+            "sha256": "71e565cb5dba076a9da649ce8a1b12dda167ab7ae373ff99a9a898c4657d196b"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/d5c8919ee55d4adde80ab85cb07fdc719b3f5065d56434e8c727989ad3b1ba03.json",
+            "sha256": "d5c8919ee55d4adde80ab85cb07fdc719b3f5065d56434e8c727989ad3b1ba03"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5032,16 +6453,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-arithmetic-overflow.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-arithmetic-overflow-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-arithmetic-overflow",
+        "fixture": "bsa-067-malformed-arithmetic-overflow-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5055,17 +6477,54 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-arithmetic-overflow"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-arithmetic-overflow.hex",
+              "sha256": "2f5fb2f4eb0e61e674f81b7606f349bba80abd87093203de3adc302f5c4bfa28"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "70b09140e0bdd241c5d67acd26ad2a1c2cf67f37cd68769efb6549b2275f371f",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe arithmetic-overflow to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "fb40f9232e3600348a20c41afc9519765b041b5b0323f2ae9e611c83be6a69b5",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-arithmetic-overflow",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/1b0451c3f4c8eec7308d323a3014801e288acf0515bf15da0d984a2b346c48ab.json",
+            "sha256": "1b0451c3f4c8eec7308d323a3014801e288acf0515bf15da0d984a2b346c48ab"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5079,11 +6538,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-decompression-mismatch.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-decompression-mismatch-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-decompression-mismatch",
+        "fixture": "bsa-067-malformed-decompression-mismatch-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5097,17 +6556,54 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-decompression-mismatch"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-decompression-mismatch.hex",
+              "sha256": "5840b55a7af3e066a7cf4974a420b9c4850c8773b992f97eb8e704b12b513dd4"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "205b82f6cc1e4fa684685d829e76641a7232f8779fdbe880ab54739e04b30e61",
+                "wire_size": "1147"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe decompression-mismatch to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "092683047456e96644b1ef85f9e37281a2057a3134514da0ee899c7b47ab926a",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-decompression-mismatch",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/e6fc401fbddfc6d250731bfd3ca8ed828cb07577d9683f1043a99526aca31a71.json",
+            "sha256": "e6fc401fbddfc6d250731bfd3ca8ed828cb07577d9683f1043a99526aca31a71"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5121,11 +6617,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-equal-name-identities.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-equal-name-identities-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-equal-name-identities",
+        "fixture": "bsa-067-malformed-equal-name-identities-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5139,17 +6635,54 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-equal-name-identities"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-equal-name-identities.hex",
+              "sha256": "89719451518ee8f68bb871ea6eb711ca13c18b3938d41bbdc7231fec29396ab5"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "83d4b8f3e2fc6a30c632661a7a456b70ae4fb424a10c9102c7adbb10760e3916",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe equal-name-identities to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "844a45402107418b3bf9d87d9f57ad889cbce8a024dbe7b3fb5e68764ee3a86f",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-equal-name-identities",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/6d1a9fd8cd9aae5a0665ce70e5ddba88bd1f919674966bd1a49dbcf590695498.json",
+            "sha256": "6d1a9fd8cd9aae5a0665ce70e5ddba88bd1f919674966bd1a49dbcf590695498"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5163,11 +6696,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-exact-shared-spans.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-exact-shared-spans-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-exact-shared-spans",
+        "fixture": "bsa-067-malformed-exact-shared-spans-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5185,13 +6718,50 @@
           "coverage-malformed-exact-shared-spans"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-exact-shared-spans.hex",
+              "sha256": "ad5a23ced241544c1b83d0d870cee96c9217e62187e94d40b8a7063a12f2bd20"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "b63069c8177b4452121c41eba8ba0e19749d772c3f7d73052b09d187e6d57b90",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe exact-shared-spans to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "a90b1457b7124a0f8a8e09655a01bdaf380a7c54408a8972a51d2a9aa2098128",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-exact-shared-spans",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/8b98552015f849b671179e0e658a7a2ea9528aea750ef9762afbbdd8cdab39f1.json",
+            "sha256": "8b98552015f849b671179e0e658a7a2ea9528aea750ef9762afbbdd8cdab39f1"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5205,11 +6775,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-harmless-trailing-bytes.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-harmless-trailing-bytes-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-harmless-trailing-bytes",
+        "fixture": "bsa-067-malformed-harmless-trailing-bytes-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5227,13 +6797,50 @@
           "coverage-malformed-harmless-trailing-bytes"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-harmless-trailing-bytes.hex",
+              "sha256": "7ecd8f5f6fe82409990433014c88d35c54e3e510883e8296c202ba6745a3e8e0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "2d4bcf428684e95111a5e52386c6bbbcf487dc1c2a4dd407de4fc47b1f7ebe0f",
+                "wire_size": "1135"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe harmless-trailing-bytes to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "90a48a13d8516c11d2468fce4d5750c132e30564b36b90828d572a8891fd33bc",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-harmless-trailing-bytes",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/230e8991793dfd56599f571084b459107afef704484e05fdb871b536d72d2874.json",
+            "sha256": "230e8991793dfd56599f571084b459107afef704484e05fdb871b536d72d2874"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5247,11 +6854,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-ignorable-constants.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-ignorable-constants-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-ignorable-constants",
+        "fixture": "bsa-067-malformed-ignorable-constants-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5269,13 +6876,50 @@
           "coverage-malformed-ignorable-constants"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-ignorable-constants.hex",
+              "sha256": "33f15af0620ee8856014a122876aa9c80f1b47ce750eab00292ebd38bf516b68"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "7a4a853416314f62dcea036beb00703e3afa50222840bd26c4c82559ee70e465",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe ignorable-constants to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "8c90914d310e39268339158bc40cded9606da0667d72a94d5f8b5da6a59e4da6",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-ignorable-constants",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/e033285178ae1b3b5396ac73cb60579be8711ab7f87ec79c734e55e24cae0587.json",
+            "sha256": "e033285178ae1b3b5396ac73cb60579be8711ab7f87ec79c734e55e24cae0587"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5289,11 +6933,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-illegal-tuples.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-illegal-tuples-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-illegal-tuples",
+        "fixture": "bsa-067-malformed-illegal-tuples-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5307,17 +6951,54 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-illegal-tuples"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-illegal-tuples.hex",
+              "sha256": "5fff077cef5d2bb9dbfbaa99c5f10488d387bd50f463459e389b219e342a2ad1"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "3751d8c539346225df48fb448d5243eee0c7cfb12f21cfbc77232cf330f30d17",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe illegal-tuples to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "9ddc0ec2ab5f4008d92bb1123059ab6c2df9c3fc80b4f665549391e796c3b0d0",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-illegal-tuples",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/5346e941767a39196b7f70249c5acbb942186948b7a7936356b49b0689d86164.json",
+            "sha256": "5346e941767a39196b7f70249c5acbb942186948b7a7936356b49b0689d86164"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5331,11 +7012,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-impossible-counts.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-impossible-counts-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-impossible-counts",
+        "fixture": "bsa-067-malformed-impossible-counts-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5349,17 +7030,54 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-impossible-counts"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-impossible-counts.hex",
+              "sha256": "58349c96997b7e12dc06e998aff2418abd895e433c26ab823d6696fbf3b188e4"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "01f52682097ddec52f868a62f83c09d8b3168e7974c25cbd850e41dce1b33f14",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe impossible-counts to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "8d43088e1ac853baae2e9101e7d326f54d80015f73272f5b62f16f12fc394050",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-impossible-counts",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/7a8f182959c27ccc6eefa8b22762b74b71ad9f3c9106378302312550b3e1fa7f.json",
+            "sha256": "7a8f182959c27ccc6eefa8b22762b74b71ad9f3c9106378302312550b3e1fa7f"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5373,11 +7091,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-missing-name-tables.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-missing-name-tables-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-missing-name-tables",
+        "fixture": "bsa-067-malformed-missing-name-tables-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5395,13 +7113,50 @@
           "coverage-malformed-missing-name-tables"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-missing-name-tables.hex",
+              "sha256": "4d59e95195eaa1d1ca58418716baccb254d9fe84ca6eda496c5889dca4864a30"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "a631dd69f6a24632ae874847b1b5bf920f850dbfef20f705cc75fc599c79c316",
+                "wire_size": "1112"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe missing-name-tables to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "1331f8d3a1bcfa5277b8ef5aad401d2dc2ec6a37f1acb4a2791ff96ef60ccab7",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-missing-name-tables",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/b0b47e395d7020a756ab71a3a7673f550b2c4fec5d4313a9019a6c3688aa35aa.json",
+            "sha256": "b0b47e395d7020a756ab71a3a7673f550b2c4fec5d4313a9019a6c3688aa35aa"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5415,11 +7170,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-out-of-range-spans.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-out-of-range-spans-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-out-of-range-spans",
+        "fixture": "bsa-067-malformed-out-of-range-spans-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5433,17 +7188,54 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-out-of-range-spans"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-out-of-range-spans.hex",
+              "sha256": "0dd50083f2832bf4898fdb89130b812a82f4dfb1b00f9327f4ec44ec038fc313"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "6c8285712cd877f531d1dcfd0c29e8130a3e43f16da27609d4d1604f3ea02b43",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe out-of-range-spans to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "9af981e521892b5b00952ef96cf02a6deca5152f3854383aa4d0726845e5d311",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-out-of-range-spans",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/2d1473b7e6296590dd92dcc71c2c3bdd8c2a8368e0652cd4305838a7a7f836e6.json",
+            "sha256": "2d1473b7e6296590dd92dcc71c2c3bdd8c2a8368e0652cd4305838a7a7f836e6"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5457,11 +7249,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-owning-dispositions.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-owning-dispositions-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-owning-dispositions",
+        "fixture": "bsa-067-malformed-owning-dispositions-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5479,13 +7271,50 @@
           "coverage-malformed-owning-dispositions"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-owning-dispositions.hex",
+              "sha256": "96820b1b2fce570cd2975faa452ead1e7d4d987d8a86c71c427a32f47b5e973e"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "7f3eead6224813999e2aac777bc3a4eaf96b0b34f2049131142f4f16a64221e3",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe owning-dispositions to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "e3654187b645c5fd4ff78574b89be71a3f9f3a2d53b328f6512bff94bc48fd77",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-owning-dispositions",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/c6072136d5da47667de626993a06dcace37ad88f0c8de5cf8922f2dabc2becb5.json",
+            "sha256": "c6072136d5da47667de626993a06dcace37ad88f0c8de5cf8922f2dabc2becb5"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5499,11 +7328,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-partial-overlap.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-partial-overlap-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-partial-overlap",
+        "fixture": "bsa-067-malformed-partial-overlap-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5517,17 +7346,54 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-partial-overlap"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-partial-overlap.hex",
+              "sha256": "491c3ccd1c7998997f95a456801df64e3f122ae79621ac7f1bd8885e58695853"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "44dd1a1abf5376090ecb9cbb9bfca9305605a15a73eafa2cb9524373c7d026b8",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe partial-overlap to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "61a39b64377f009504ed734697ccb8499be4f20bff86de2023de227dbde569ba",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-partial-overlap",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/bd085f4369858c63b81b37bb6dd9f2858b81592600cba7aba073a2b622ceb23d.json",
+            "sha256": "bd085f4369858c63b81b37bb6dd9f2858b81592600cba7aba073a2b622ceb23d"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5541,11 +7407,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-truncated-spans.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-truncated-spans-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-truncated-spans",
+        "fixture": "bsa-067-malformed-truncated-spans-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5559,17 +7425,54 @@
         "assertions": [
           "fixture-integrity",
           "authority-consistency",
-          "decode-semantic-projection",
+          "explicit-rejection",
           "coverage-malformed-truncated-spans"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-truncated-spans.hex",
+              "sha256": "a3b9af967810646da5515f984d096b93d132bc7a7729d02ad21bc288cc473300"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "47faf7cc3004e548381ae41370de8ef440afbddc94540b498f345d83154d0aa3",
+                "wire_size": "1131"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe truncated-spans to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "b4e0e7d942482a1a10b034222ce55997eeee518e9075c13a79cfe99fa94e3797",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-truncated-spans",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/2d715d4fdc57080fb2f759ca0fdfd0b2f3a2ea75be9bfc9244dccd05c49e46ad.json",
+            "sha256": "2d715d4fdc57080fb2f759ca0fdfd0b2f3a2ea75be9bfc9244dccd05c49e46ad"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5583,11 +7486,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-undecodable-wire-names.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-undecodable-wire-names-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-undecodable-wire-names",
+        "fixture": "bsa-067-malformed-undecodable-wire-names-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5605,13 +7508,50 @@
           "coverage-malformed-undecodable-wire-names"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-undecodable-wire-names.hex",
+              "sha256": "085f5edab6827a02571a0e1270613ddb791a3bce5e93f90b2f1c23d2bb151faa"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "ff40a13872fce1c1bdf0a86dd0f44df8bcfa88472cdde8f495b8701cd6c8994e",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe undecodable-wire-names to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "613365a7e9910017f1387843a9cc7ce9cbeb363ccf258acf0cf9b9f9999c950f",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-undecodable-wire-names",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/669a54f4445228917e001b680e924f7f35e8891bab55c9bf1bc7dd91057818e4.json",
+            "sha256": "669a54f4445228917e001b680e924f7f35e8891bab55c9bf1bc7dd91057818e4"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5625,11 +7565,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-unsafe-absolute-names.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-unsafe-absolute-names-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-unsafe-absolute-names",
+        "fixture": "bsa-067-malformed-unsafe-absolute-names-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5647,13 +7587,50 @@
           "coverage-malformed-unsafe-absolute-names"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-unsafe-absolute-names.hex",
+              "sha256": "a8be577475ad88c7a1b0a0128fc7ef50a3d608200dee217d92f093c908485b67"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "1e54b8adc583f219a6ea6489e2d1d2475a654a0208a40f27f4f79ad514323d6c",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe unsafe-absolute-names to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "f213de4969ccc6365b66391b011a88a6241b599443db36299534e1871b23fbf8",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-unsafe-absolute-names",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/bb78a8b130fb53c2c784910a3e76e532d997e2143c04a535987c788e74631c5f.json",
+            "sha256": "bb78a8b130fb53c2c784910a3e76e532d997e2143c04a535987c788e74631c5f"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5667,11 +7644,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-unsafe-traversal-names.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-unsafe-traversal-names-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-unsafe-traversal-names",
+        "fixture": "bsa-067-malformed-unsafe-traversal-names-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5689,13 +7666,50 @@
           "coverage-malformed-unsafe-traversal-names"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-unsafe-traversal-names.hex",
+              "sha256": "1dff5c196edc8ddc0070ec1f98f85992e40839eee85fe1f1ccf150b159d9b8c0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "b6d68666a81e1d513a1a5339e770c4a88164d0f7d83f21ffd57df40d1197ba0e",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe unsafe-traversal-names to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "bf758a96078fcc2a521909c05b528e1a00f57ae0d85fbb89d0570df9570e46f6",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-unsafe-traversal-names",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/0a3ac7810017cf4ea43f76df5587fccc7b7359e8d904ecce6394ea5540b0f4c7.json",
+            "sha256": "0a3ac7810017cf4ea43f76df5587fccc7b7359e8d904ecce6394ea5540b0f4c7"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5709,11 +7723,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-usable-name-hash-mismatch.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-usable-name-hash-mismatch-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-usable-name-hash-mismatch",
+        "fixture": "bsa-067-malformed-usable-name-hash-mismatch-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5731,13 +7745,50 @@
           "coverage-malformed-usable-name-hash-mismatch"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-usable-name-hash-mismatch.hex",
+              "sha256": "96820b1b2fce570cd2975faa452ead1e7d4d987d8a86c71c427a32f47b5e973e"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "7f3eead6224813999e2aac777bc3a4eaf96b0b34f2049131142f4f16a64221e3",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe usable-name-hash-mismatch to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "d58c95d8fb532babe24b9406f1f431a989305a67ee6fa25cf48c90c3ee5e86e2",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-usable-name-hash-mismatch",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/86ad5a8bb672d3bb698c8d24d436c9ae6ce6412fc8ea284e152c7998735f8800.json",
+            "sha256": "86ad5a8bb672d3bb698c8d24d436c9ae6ce6412fc8ea284e152c7998735f8800"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5751,11 +7802,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.decode.malformed-windows-invalid-names.stored.standard-v1",
+        "case_id": "CV1-bsa-067.decode.bsa-067-malformed-windows-invalid-names-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "decode",
-        "fixture": "malformed-windows-invalid-names",
+        "fixture": "bsa-067-malformed-windows-invalid-names-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5773,13 +7824,50 @@
           "coverage-malformed-windows-invalid-names"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-windows-invalid-names.hex",
+              "sha256": "b1f2badd5bd654faf81a7e4c67cb739110b72d39bb6af358d126ebe17593376e"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "f49ad58419af61dcfbff486532be5ec1a6cc531dd0a0e450ce9cc1dfd1e46933",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe windows-invalid-names to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "4b1a5a770b66970988e62366f4c013bce24c90680610bdb3673a2e03b633359c",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-windows-invalid-names",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/275b039c6b0f7e97bd0073c656988bf92e8ceddc0014f1f80faf0a5f9553851d.json",
+            "sha256": "275b039c6b0f7e97bd0073c656988bf92e8ceddc0014f1f80faf0a5f9553851d"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5793,11 +7881,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.encode.base-bsa-067-lz4-frame.lz4-frame.standard-v1",
+        "case_id": "CV1-bsa-067.encode.bsa-067-lz4-frame-v1.lz4-frame.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "encode",
-        "fixture": "base-bsa-067-lz4-frame",
+        "fixture": "bsa-067-lz4-frame-v1",
         "codec": "lz4-frame",
         "configuration": "standard-v1"
       },
@@ -5812,13 +7900,54 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-lz4-frame.hex",
+              "sha256": "d73381c4d00c31a7e72b5f09d3d910ca5b1cc1a6d1a605e00ac830e0a0945e90"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "2a9ec2162c4c21b93025ea37af1dc5345aa8dbe0287e5573dbd97c72782f130f",
+                "wire_size": "1151"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=lz4-frame; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "99b49bf690904151e96fc6d5183003f2e2145e82f1070d9a6104b44cb688ac9b",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-lz4-frame",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/05402f8c736219efcc7c955faf8898813624be0680c65ce708d224aa2b733c58.json",
+            "sha256": "05402f8c736219efcc7c955faf8898813624be0680c65ce708d224aa2b733c58"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/8a48734308831f68d5662aab86e02a85d7f24eff556e303f9a038e9814ca4b69.json",
+            "sha256": "8a48734308831f68d5662aab86e02a85d7f24eff556e303f9a038e9814ca4b69"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5826,16 +7955,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.encode.base-bsa-067-mixed.mixed.standard-v1",
+        "case_id": "CV1-bsa-067.encode.bsa-067-mixed-v1.mixed.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "encode",
-        "fixture": "base-bsa-067-mixed",
+        "fixture": "bsa-067-mixed-v1",
         "codec": "mixed",
         "configuration": "standard-v1"
       },
@@ -5852,13 +7982,54 @@
           "jbsa-to-oracle"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-mixed.hex",
+              "sha256": "784934f6a8d2b831a06967cc119b4c03ed00e1be7b4e69f5901a03df0db3f450"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "55198b65c048935a24c9f3276503e8c4d961d90d3cbf8d390096dd1b6624e266",
+                "wire_size": "1147"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=mixed; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "72812d04eb29ee698fae4096dbf0898074bee32dc6409219f4857cd827dda1ff",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-mixed",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/eb1dce5e3429cdbd76eb96744e3352ee655926c7b563827d1a94a9780e3059a5.json",
+            "sha256": "eb1dce5e3429cdbd76eb96744e3352ee655926c7b563827d1a94a9780e3059a5"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/80cdfa4dcbd9d5c13b82ead104190f174c80a058cec692463ba24423417b3de7.json",
+            "sha256": "80cdfa4dcbd9d5c13b82ead104190f174c80a058cec692463ba24423417b3de7"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5867,16 +8038,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.encode.base-bsa-067-raw-deflate.raw-deflate.standard-v1",
+        "case_id": "CV1-bsa-067.encode.bsa-067-raw-deflate-v1.raw-deflate.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "encode",
-        "fixture": "base-bsa-067-raw-deflate",
+        "fixture": "bsa-067-raw-deflate-v1",
         "codec": "raw-deflate",
         "configuration": "standard-v1"
       },
@@ -5891,13 +8063,54 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-raw-deflate.hex",
+              "sha256": "5684cb30fb7fb51b19d3dc7983ce958303604858ffec4641f9f02e2abbeacb7a"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "8bd9e23ac7f4ab035e8c26ce341d892cd85aee635a47ec10df35b8775b3e2f7b",
+                "wire_size": "1141"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=raw-deflate; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "b23a0a0522bd8e003a5804fa4eb7ffdad282cfe9c0120175dc15339722fa09ec",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-raw-deflate",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/a19aa66d5c19a67e62163108f1eaaf686949bfcf9c90519939a4ecc970467266.json",
+            "sha256": "a19aa66d5c19a67e62163108f1eaaf686949bfcf9c90519939a4ecc970467266"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/32b27795c8f223f50d331ff3bf6d7d8fc94cf705cefb109ec0ec126254a50cbf.json",
+            "sha256": "32b27795c8f223f50d331ff3bf6d7d8fc94cf705cefb109ec0ec126254a50cbf"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5905,16 +8118,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.encode.base-bsa-067-raw-lz4.raw-lz4.standard-v1",
+        "case_id": "CV1-bsa-067.encode.bsa-067-raw-lz4-v1.raw-lz4.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "encode",
-        "fixture": "base-bsa-067-raw-lz4",
+        "fixture": "bsa-067-raw-lz4-v1",
         "codec": "raw-lz4",
         "configuration": "standard-v1"
       },
@@ -5929,13 +8143,54 @@
           "explicit-rejection"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-raw-lz4.hex",
+              "sha256": "bf69a06146123d1c20ca471e25445f43795336309cd53646ca23b1aba3316c83"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "f063a79764ce50baf0edfbfbb38ba79063086e7558f8fc4f583433fa05c480c5",
+                "wire_size": "1141"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=raw-lz4; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "b4d48401f82361fa2b0144d8b686568f7af335eedd0ef3cfffc212c54b1b1277",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-raw-lz4",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/527a613f4963d8986ff3f249b4fbb07aee1b51db72b7ead8d3d256bda15ddb9c.json",
+            "sha256": "527a613f4963d8986ff3f249b4fbb07aee1b51db72b7ead8d3d256bda15ddb9c"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/c368dc3bbb0e4b51c66d5716232feb3fe48f809d756517f21a08824463977dd7.json",
+            "sha256": "c368dc3bbb0e4b51c66d5716232feb3fe48f809d756517f21a08824463977dd7"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5943,16 +8198,17 @@
           "ordered-assertion-observations",
           "authority-consistency"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.encode.base-bsa-067-stored.stored.standard-v1",
+        "case_id": "CV1-bsa-067.encode.bsa-067-stored-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "encode",
-        "fixture": "base-bsa-067-stored",
+        "fixture": "bsa-067-stored-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -5969,13 +8225,54 @@
           "jbsa-to-oracle"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-stored.hex",
+              "sha256": "d3710a730cf2aa684700c82874b5b8a267e271fa6c2425684367560e78b65053"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "ac733c54caa9bae42a7c0ffca9d86aa92aa2e8e55202a593b9036807d0cebf8a",
+                "wire_size": "1132"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=stored; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "d90c30f4826143c56e4197ab1a1389559bd17a631781d109165b63ed80650d93",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-stored",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/f7173efa115641fc67b887ec7ba4daf4a815c231bf3d6e086a92633e861aad57.json",
+            "sha256": "f7173efa115641fc67b887ec7ba4daf4a815c231bf3d6e086a92633e861aad57"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/0467f9f09aff2ccc34be8d72767c76d6cdba715d490b89644b8e5934ba2e3846.json",
+            "sha256": "0467f9f09aff2ccc34be8d72767c76d6cdba715d490b89644b8e5934ba2e3846"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -5984,16 +8281,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.encode.base-bsa-067-zlib.zlib.standard-v1",
+        "case_id": "CV1-bsa-067.encode.bsa-067-zlib-v1.zlib.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "encode",
-        "fixture": "base-bsa-067-zlib",
+        "fixture": "bsa-067-zlib-v1",
         "codec": "zlib",
         "configuration": "standard-v1"
       },
@@ -6010,13 +8308,54 @@
           "jbsa-to-oracle"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-zlib.hex",
+              "sha256": "d25e21e4043d3f8608400ce45e19895620285977b2ca49ddb31593f695faa927"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "912ab876c6bcc1f78a69415efd81bbfb0f9b9dfb978a31151357f80db7bbbbac",
+                "wire_size": "1162"
+              },
+              "procedure": "Two meshes entries a.nif=A repeated 1024 times and b.nif=000102ff; codec=zlib; RFC1950 literal-only streams"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "86accb4cf963e92f0f23f7446d24d361408e1102442bedbdb5423e497f64f931",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-zlib",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/71e565cb5dba076a9da649ce8a1b12dda167ab7ae373ff99a9a898c4657d196b.json",
+            "sha256": "71e565cb5dba076a9da649ce8a1b12dda167ab7ae373ff99a9a898c4657d196b"
+          },
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/d5c8919ee55d4adde80ab85cb07fdc719b3f5065d56434e8c727989ad3b1ba03.json",
+            "sha256": "d5c8919ee55d4adde80ab85cb07fdc719b3f5065d56434e8c727989ad3b1ba03"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -6025,16 +8364,17 @@
           "authority-consistency",
           "accepted-semantic-golden"
         ],
-        "adapter": null
+        "adapter": null,
+        "base_matrix_cell": true
       }
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.extract.malformed-unsafe-name-extraction.stored.standard-v1",
+        "case_id": "CV1-bsa-067.extract.bsa-067-malformed-unsafe-name-extraction-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "extract",
-        "fixture": "malformed-unsafe-name-extraction",
+        "fixture": "bsa-067-malformed-unsafe-name-extraction-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -6051,13 +8391,50 @@
           "coverage-malformed-unsafe-name-extraction"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-malformed-unsafe-name-extraction.hex",
+              "sha256": "1dff5c196edc8ddc0070ec1f98f85992e40839eee85fe1f1ccf150b159d9b8c0"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "b6d68666a81e1d513a1a5339e770c4a88164d0f7d83f21ffd57df40d1197ba0e",
+                "wire_size": "1132"
+              },
+              "procedure": "Apply independent TES4 wire fault recipe unsafe-name-extraction to the fixed two-entry corpus"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "5514cf07398790ee3892742e5fed87471a8e97e425a18c091304adb1838bbc8e",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-malformed-unsafe-name-extraction",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/a64a0ff8b735466a7abf1f34ea888a61c2527caafb57e3bc2beed301d69daf0a.json",
+            "sha256": "a64a0ff8b735466a7abf1f34ea888a61c2527caafb57e3bc2beed301d69daf0a"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",
@@ -6071,11 +8448,11 @@
     },
     {
       "identity": {
-        "case_id": "CV1-bsa-067.scenario.bsa-xml-067.stored.standard-v1",
+        "case_id": "CV1-bsa-067.scenario.bsa-067-xml-v1.stored.standard-v1",
         "contract": "conformance-v1",
         "archive_family": "bsa-067",
         "operation": "scenario",
-        "fixture": "bsa-xml-067",
+        "fixture": "bsa-067-xml-v1",
         "codec": "stored",
         "configuration": "standard-v1"
       },
@@ -6092,13 +8469,50 @@
           "coverage-bsa-xml-067"
         ],
         "fixture_binding": {
-          "state": "missing",
-          "files": [],
-          "generator": null,
-          "provenance": null,
-          "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+          "files": [
+            {
+              "path": "tests/fixtures/bsa067/artifacts/bsa-067-xml.hex",
+              "sha256": "7c473d10aa4a667aa4d4e059d521a00379ffca7cb8e6811a45e5029ef84291af"
+            }
+          ],
+          "generator": {
+            "configuration": {
+              "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator --output <empty-directory>",
+              "options": {
+                "representation": "lowercase hexadecimal plus LF",
+                "wire_sha256": "a21331e85ccdb937cb3856d2f435ff10885bf9315652200c53797e39812039d7",
+                "wire_size": "1132"
+              },
+              "procedure": "Meshes a.xml contributes XML file flag 4 in addition to root-derived mesh flag 1"
+            },
+            "descriptor": {
+              "path": "tests/fixtures/bsa067/generator.json",
+              "sha256": "94080ce21d6ff0f188c1dd637b55d37bf8bfaee1374505d640fbc2df360a06c9"
+            },
+            "id": "jbsa-bsa067-cv1-fixture-generator",
+            "implementation": {
+              "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java",
+              "sha256": "67a3f4067152944389494fa1273d84fa71ef1b48f1d40770b346ecdd78a744c9"
+            },
+            "recipe_sha256": "cec99c3c63c5f74c0bab7cb893e43373e3af425a2157d8a63ba9f1b4b792ebb5",
+            "version": "1"
+          },
+          "provenance": {
+            "fixture_id": "bsa-067-xml",
+            "manifest": {
+              "path": "tests/fixtures/bsa067/proposal-manifest.json",
+              "sha256": "df36f109f568f71adf558e79a2ba24c014f831ce6be2ea06115523df554c969d"
+            },
+            "oracle_sha256": null
+          },
+          "state": "available"
         },
-        "golden_bindings": [],
+        "golden_bindings": [
+          {
+            "path": "tests/fixtures/bsa067/goldens/sha256/e93ea26e33074f0f4439bf44e9fd9f1375c9ae961d18cc5cbd23bb978511e5f5.json",
+            "sha256": "e93ea26e33074f0f4439bf44e9fd9f1375c9ae961d18cc5cbd23bb978511e5f5"
+          }
+        ],
         "evidence_required": [
           "candidate-artifact",
           "codec-profile",

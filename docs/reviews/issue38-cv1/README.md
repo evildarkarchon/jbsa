@@ -1,8 +1,19 @@
 # Issue 38: proposed TES4 CV1 evidence
 
-**Untrusted pending explicit maintainer approval.** This directory does not
-activate the proposed catalog or claim Automated Conformance. The active
-`tests/conformance/catalog.json` remains unchanged.
+**Approved and activated.** The maintainer explicitly approved these 32 golden
+records. [activation.json](activation.json) records the approval, the exact
+reviewed bundle, and the merged active catalog. The activation preserves the
+General BA2 cases approved after this proposal was prepared. This scoped
+approval does not claim whole-release Automated Conformance.
+
+The proposal, pending records, and original comparison summary below remain
+unchanged as historical evidence of what was reviewed. Approved review records
+are in `tests/conformance/rebaselines/` and are bound by `activation.json`.
+
+The authoring command below is historical: do not regenerate these approved
+goldens during normal verification. Further expected-byte changes require a new
+deliberate review. The runtime review command remains usable to refresh executable
+registrations; its historical untrusted label does not supersede this approval.
 
 `review.json` identifies the exact proposed catalog, fixture provenance, 32 new
 case identifiers and golden digests. `pending-records.json` contains the complete
@@ -73,8 +84,8 @@ pwsh -NoProfile -File build/run-conformance.ps1 -Mode Local -RegistrationPath ta
 First run the review command to materialize the bound oracle archives from the
 committed hexadecimal observations into `target/bsa-cv1-review-inputs`. Runtime
 registrations must be regenerated when any pinned executable or adapter changes.
-The ordinary full catalog will still report unrelated unimplemented families as
-`INVALID`; these 32 scoped cases cannot award whole-release conformance.
+The ordinary full catalog will still report cases without runtime registrations
+as `INVALID`; these 32 scoped cases cannot award whole-release conformance.
 
 Approval is required by [JBSA-CONF-007](../../spec/conformance-v1.md#jbsa-conf-007):
 “Golden creation or replacement **MUST** occur only through a separate,

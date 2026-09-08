@@ -1,0 +1,155 @@
+{
+  "status": "approved-and-activated",
+  "approval": {
+    "approver": "evildarkarchon",
+    "approved_at": "2026-09-08T22:26:39.283705Z",
+    "decision": "approved"
+  },
+  "approved_review": {
+    "path": "docs/reviews/issue38-cv1/review.json",
+    "sha256": "f6892e51ff1228c782ff551f83312568c0d3dfc5be3178d8cde21d3520fbc9b2"
+  },
+  "active_catalog": {
+    "path": "tests/conformance/catalog.json",
+    "sha256": "872ed7eefdde91008f76d6254e172b51c8fcfb6d4606dc63c68972100564f63c"
+  },
+  "previous_catalog_sha256": "17637d41de209ce4f2cdba75235ddc64bfa9e2b6fb0b3a61764e9b53370a9359",
+  "baseline_commit": "876158b2dd7df27095aea3b20ea3c47631dc039c",
+  "case_count": 32,
+  "rebaseline_records": [
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-lz4-frame-v1-lz4-frame-standard-v1.json",
+      "sha256": "cf70992112c022e09e76da730a832d83ed09f2d8b46c5d9ad0de2933140c471a"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-mixed-v1-mixed-standard-v1.json",
+      "sha256": "478e3a6f3bd2898c161ba8cddafcb7aeee95264e2165adf47da367764c887912"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-raw-deflate-v1-raw-deflate-standard-v1.json",
+      "sha256": "f79ff537c014868ab002ecb1d4bf073ab0a49125453512abcc6ef831b112d9e0"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-raw-lz4-v1-raw-lz4-standard-v1.json",
+      "sha256": "ab52c3cbdebc303c15d9393a322396daac23d38cd1b5993e5db221635cd89374"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-stored-v1-stored-standard-v1.json",
+      "sha256": "edc1742cab1b81cf9b67d62239e27be9b6759f079f81ff355e84bdd788eef8c9"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-zlib-v1-zlib-standard-v1.json",
+      "sha256": "b167308c006e807e993b76b8dba5a82d4c06a57c37fcda7db9a19a6b72143481"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-arithmetic-overflow-v1-stored-standard-v1.json",
+      "sha256": "fb240f1672800dc193306eae6d2806acf8fb6ed1670caa12fb5c6da591bab4e9"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-decompression-mismatch-v1-stored-standard-v1.json",
+      "sha256": "a9cdd60351342e136387fe2918f516f7320cb9a346e43b1294af5f3552364601"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-equal-name-identities-v1-stored-standard-v1.json",
+      "sha256": "6d2ad6317e19b8e6469baa4b15e759022f940e4429384e3b5ff2b39b1acf5aeb"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-exact-shared-spans-v1-stored-standard-v1.json",
+      "sha256": "aca8a9499e3bb9fcbf3685d738bc8cf6bd18079b117d0878717e89fcc8ededb2"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-harmless-trailing-bytes-v1-stored-standard-v1.json",
+      "sha256": "29ccdd1b798b77d32e9c429c533e7349eea8fd39df645c6f1b9c9f2617f744c8"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-ignorable-constants-v1-stored-standard-v1.json",
+      "sha256": "f1e86594513c30f86d31f5db7d050c344ee87c889f0cb3ccd03baae513acaf53"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-illegal-tuples-v1-stored-standard-v1.json",
+      "sha256": "af75af9b1642949fd7200ac01b2028170e62d36c11cc3e2b9c635fcb92fd64f2"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-impossible-counts-v1-stored-standard-v1.json",
+      "sha256": "8980523743cee976501ea83235cc625473b3d5458e1e51ce766a8dac783f06ad"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-missing-name-tables-v1-stored-standard-v1.json",
+      "sha256": "b3fc4107d6cc90e7877cf511658f3ab6342559b541bfe0c860144c676c4e9747"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-out-of-range-spans-v1-stored-standard-v1.json",
+      "sha256": "09497d441c93194760a28a3f835faf4ddd8943f0577f7fa17de3dbd59a821f84"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-owning-dispositions-v1-stored-standard-v1.json",
+      "sha256": "1e66fabe5930d0c2f3c999666e2218070e1618edcfdb0cca4883b5a8f6cc4e92"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-partial-overlap-v1-stored-standard-v1.json",
+      "sha256": "bfe215eb13c86b7fb2281050d817e2d5179ef4b8221d1ba9c268c3cf50ba4659"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-truncated-spans-v1-stored-standard-v1.json",
+      "sha256": "003ca054e3ae883173b2553587ca7857753c349822922c51bb6e71565c590d14"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-undecodable-wire-names-v1-stored-standard-v1.json",
+      "sha256": "c6fcc3240529022b216baba4aa539c17ed6a64892a998f12a1b0181f708ddd51"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-unsafe-absolute-names-v1-stored-standard-v1.json",
+      "sha256": "c469b2b22a7e07ca7780d5dc027d5f5623b3d041a07d7e19d2bd8ebfef80401c"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-unsafe-traversal-names-v1-stored-standard-v1.json",
+      "sha256": "5de53fce7d0040611811f8974c5cd4e7df1b396b11968e95a23480c619d2ed0d"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-usable-name-hash-mismatch-v1-stored-standard-v1.json",
+      "sha256": "17091e48cd03083e4378b3e4e2d5d9b74e8ddd3e671b6ce59fa1b159d6c17384"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-decode-bsa-067-malformed-windows-invalid-names-v1-stored-standard-v1.json",
+      "sha256": "d1f99798efd56182f3404307fcbcc9d192899b8a38f6d050b2d806c0c4c41d91"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-encode-bsa-067-lz4-frame-v1-lz4-frame-standard-v1.json",
+      "sha256": "e20c7b586783fec45b61e6c86a101f7e36e55a0fd053ef2190f5a7310594f462"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-encode-bsa-067-mixed-v1-mixed-standard-v1.json",
+      "sha256": "d4b31ac07653c23c0a8341e95b5ae1283a037a8bb59006bf495f8b1d38795f34"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-encode-bsa-067-raw-deflate-v1-raw-deflate-standard-v1.json",
+      "sha256": "79a9ab399149141c7357906d10a85309f12c6c1653112c7c46b0057a8614ecda"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-encode-bsa-067-raw-lz4-v1-raw-lz4-standard-v1.json",
+      "sha256": "91e0fb69e8d77e5afbe220b7357fe7f35a96b1f102ff710b5c74e76a101af48b"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-encode-bsa-067-stored-v1-stored-standard-v1.json",
+      "sha256": "25d40198d052df9ae8b39c471033f14239e1b0fe96f5d6b2cf159bdd8830f2af"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-encode-bsa-067-zlib-v1-zlib-standard-v1.json",
+      "sha256": "0330cda067cb3b94732846c8d81eb9aada6632965ea3dd2408ba3c6be323642d"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-extract-bsa-067-malformed-unsafe-name-extraction-v1-stored-standard-v1.json",
+      "sha256": "8e699b4f056893d389bd1409eaff95fde9597310aa8d822cb45c9a49fdf8267e"
+    },
+    {
+      "path": "tests/conformance/rebaselines/issue38-bsa-067-scenario-bsa-067-xml-v1-stored-standard-v1.json",
+      "sha256": "110fa27a346b031f61777d83cfdce5c52107273fbf8e1f96637cc6e676afc278"
+    }
+  ],
+  "approval_source": "Maintainer replied \"approve\" to the 32-record review request in this implementation conversation.",
+  "integration": "Merged only the approved TES4 successors and new fixture tokens; existing General BA2 activation and all other cases are preserved.",
+  "verification": {
+    "path": "docs/reviews/issue38-cv1/activation-results.json",
+    "sha256": "38816bd6845c0fa13fba880a1016a8dbc2e0207cbd010e082a8c1c1cd8e0ed21"
+  }
+}

@@ -58,11 +58,13 @@ split controls and inspection output. CONF-010–014 govern semantic,
 differential, malformed and independent evidence. Identifiers here have the
 `JBSA-` prefix in the [requirements registry](../spec/requirements.yaml).
 
-The immutable CV1 catalog assigns 32 `bsa-067` cases: twelve base
+The active CV1 catalog contains 32 approved `bsa-067` successor cases: twelve base
 decode/encode codec cells, eighteen malformed decode cases, unsafe-name
-extraction, and the XML scenario. The focused integration tests supply slice
-evidence, not a passing complete CV1 report. Full case registrations and approved
-goldens remain separate conformance-harness inputs.
+extraction, and the XML scenario. The [approval record](../reviews/issue38-cv1/activation.json)
+binds their reviewed golden bytes and activation. Runtime registrations are
+regenerated against the packaged artifacts as described in the
+[review guide](../reviews/issue38-cv1/README.md). This scoped evidence does not
+claim that unrelated archive families or the complete release have conformed.
 
 The reference's automatic 0x67 flags contain the documented embedded-name
 contradiction. Oracle tests compare semantic cross-decoding rather than those

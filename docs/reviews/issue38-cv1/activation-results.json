@@ -1,0 +1,186 @@
+{
+  "result": "PASS",
+  "scope": "bsa-067",
+  "case_count": 32,
+  "automated_conformance": false,
+  "catalog_sha256": "872ed7eefdde91008f76d6254e172b51c8fcfb6d4606dc63c68972100564f63c",
+  "source_report": {
+    "path": "target/issue38-active-conformance-final/report.json",
+    "sha256": "4be87f35be2f4a4ef056b86daaed8dc460069e5f30ecf1830d170125d5364669"
+  },
+  "candidate_artifacts": [
+    {
+      "path": "jbsa/target/jbsa-0.1.0-SNAPSHOT.jar",
+      "sha256": "eb81c6f760518648c729d44321ee7a7677e0045a624a7cf7d25c607932c85a7b"
+    },
+    {
+      "path": "jbsa-cli/target/jbsa-cli-0.1.0-SNAPSHOT.jar",
+      "sha256": "e14a8f1ad7decee72c541e90485d7b858ea7295afeea7dab542d24f90cde761c"
+    }
+  ],
+  "codec_profile_sha256": "b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda",
+  "registration_sha256": "4d06f4d4342f4ad4bf437dfedef8e1087cac236fa5123a3415f18d80391e719a",
+  "cases": [
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-lz4-frame-v1.lz4-frame.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-arithmetic-overflow-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-decompression-mismatch-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-equal-name-identities-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-exact-shared-spans-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-harmless-trailing-bytes-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-ignorable-constants-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-illegal-tuples-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-impossible-counts-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-missing-name-tables-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-out-of-range-spans-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-owning-dispositions-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-partial-overlap-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-truncated-spans-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-undecodable-wire-names-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-unsafe-absolute-names-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-unsafe-traversal-names-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-usable-name-hash-mismatch-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-malformed-windows-invalid-names-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 4
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-mixed-v1.mixed.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-raw-deflate-v1.raw-deflate.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-raw-lz4-v1.raw-lz4.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-stored-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.decode.bsa-067-zlib-v1.zlib.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-lz4-frame-v1.lz4-frame.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-mixed-v1.mixed.standard-v1",
+      "result": "PASS",
+      "assertion_count": 5
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-raw-deflate-v1.raw-deflate.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-raw-lz4-v1.raw-lz4.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-stored-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 5
+    },
+    {
+      "case_id": "CV1-bsa-067.encode.bsa-067-zlib-v1.zlib.standard-v1",
+      "result": "PASS",
+      "assertion_count": 5
+    },
+    {
+      "case_id": "CV1-bsa-067.extract.bsa-067-malformed-unsafe-name-extraction-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    },
+    {
+      "case_id": "CV1-bsa-067.scenario.bsa-067-xml-v1.stored.standard-v1",
+      "result": "PASS",
+      "assertion_count": 3
+    }
+  ],
+  "non_tes4_cases_preserved": true
+}
