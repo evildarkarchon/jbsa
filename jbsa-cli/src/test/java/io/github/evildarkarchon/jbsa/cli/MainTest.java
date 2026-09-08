@@ -16,6 +16,53 @@ import org.junit.jupiter.api.io.TempDir;
 class MainTest {
   @TempDir Path temporary;
 
+  /** General BA2 commands expose compressed payloads through the public process boundary. */
+  @Test
+  void packsAndUnpacksFallout4GeneralZlib() throws Exception {
+    Path source = Files.createDirectories(temporary.resolve("fo4-input/Meshes"));
+    Files.writeString(source.resolve("A.nif"), "payload".repeat(100));
+    Path archive = temporary.resolve("fo4.ba2");
+    Result packed =
+        run(
+            "pack",
+            source.getParent().toString(),
+            archive.toString(),
+            "-fo4",
+            "-z",
+            "-share:no",
+            "--no-progress");
+    assertEquals(0, packed.status(), packed.error());
+    Result dumped = run(archive.toString(), "-dump");
+    assertEquals(0, dumped.status(), dumped.error());
+    assertTrue(dumped.output().contains("Family: FO4_GENERAL_BA2"));
+    assertTrue(dumped.output().contains("Codec: ZLIB"));
+    assertTrue(dumped.output().contains("Subtype: GNRL"));
+    assertTrue(dumped.output().contains("Directory hash:"));
+    Path destination = Files.createDirectory(temporary.resolve("fo4-output"));
+    Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
+    assertEquals(0, unpacked.status(), unpacked.error());
+    assertEquals("payload".repeat(100), Files.readString(destination.resolve("Meshes/A.nif")));
+  }
+
+  /** Inapplicable BA2 flags and conflicting families fail before filesystem source access. */
+  @Test
+  void rejectsInvalidGeneralBa2Invocations() throws Exception {
+    for (String[] options :
+        List.of(
+            new String[] {"-fo4", "-af:0"},
+            new String[] {"-fo4", "-ff:0"},
+            new String[] {"-fo4", "-z:lz4"},
+            new String[] {"-fo4", "-tes4"},
+            new String[] {"-fo4", "-fo4"})) {
+      var args =
+          new ArrayList<>(List.of("pack", "missing", temporary.resolve("absent.ba2").toString()));
+      args.addAll(List.of(options));
+      Result result = run(args.toArray(String[]::new));
+      assertEquals(2, result.status(), result.error());
+      assertEquals("", result.output());
+    }
+  }
+
   /** TES4 switches reach the public packer and inspection renders actual compression and flags. */
   @Test
   void packsAndUnpacksTes4ZlibWithDetachedDump() throws Exception {

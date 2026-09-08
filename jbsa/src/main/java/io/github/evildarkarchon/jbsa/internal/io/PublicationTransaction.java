@@ -140,6 +140,11 @@ public final class PublicationTransaction {
   public interface Writer {
     /** Writes the complete artifact; checked semantic failures retain their original evidence. */
     void write(StagedFile output) throws IOException;
+
+    /** Checks a closed staged artifact before any member of the output set can be published. */
+    default void validate(Path staged) throws IOException {
+      // Formats without a readback hook retain their existing staging behavior.
+    }
   }
 
   /**
@@ -503,6 +508,8 @@ public final class PublicationTransaction {
           ExactIo.write(channel, output.size() - 1, ByteBuffer.wrap(new byte[1]), context());
         size = output.size();
       }
+      // Readback needs a closed write handle under Windows sharing rules, but must precede commit.
+      part.writer.validate(part.staged);
       part.stagedIdentity = WindowsPathIdentity.inspect(part.staged);
       return size;
     }

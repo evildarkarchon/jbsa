@@ -27,6 +27,10 @@ public final class ArchiveReaders {
             return Tes3Reader.load(builder, path, options, operation, policy);
           if (detection.family().filter(ArchiveFamily.TES4_BSA::equals).isPresent())
             return BsaReader.load(builder, path, options, operation, policy);
+          if (detection.family().filter(ArchiveFamily.FO4_GENERAL_BA2::equals).isPresent()
+              && detection.wireVersion().orElseThrow().value() == 1)
+            return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Reader.load(
+                builder, path, options, operation, policy);
           IoContext context = IoContext.of(path, operation);
           throw switch (detection.status()) {
             case UNRECOGNIZED -> context.failure(FailureKind.FORMAT, "archive.unrecognized", null);

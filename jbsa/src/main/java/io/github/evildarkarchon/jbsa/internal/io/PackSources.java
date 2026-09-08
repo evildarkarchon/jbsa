@@ -4,7 +4,10 @@ import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -59,6 +62,16 @@ public final class PackSources {
   /** Expands each supplied root independently and preserves later-source replacement semantics. */
   public static List<Entry> plan(
       PackRequest request, OperationSession operation, ResourceBudget budget) throws IOException {
+    return plan(request, operation, budget, StandardCharsets.US_ASCII);
+  }
+
+  /**
+   * Plans names under a format-selected encoding while retaining Unicode overlay identity. The
+   * format writer must still validate encoded-byte qualification and wire-name aliases.
+   */
+  public static List<Entry> plan(
+      PackRequest request, OperationSession operation, ResourceBudget budget, Charset encoding)
+      throws IOException {
     IoContext context = IoContext.of(request.destination(), Operation.PACK);
     Map<String, Entry> overlay = new LinkedHashMap<>();
     for (PackSource source : request.sources()) {
@@ -69,14 +82,20 @@ public final class PackSources {
                 generated.name(),
                 generated.length(),
                 reader -> consumeGenerated(generated, reader, context, request.resourceLimits()),
-                context),
+                context,
+                encoding),
             overlay,
             request,
             operation,
             budget);
       } else if (source instanceof PackSource.NamedFile named) {
         rejectOutput(named.path(), request.destination(), context);
-        admit(loose(named.name(), named.path(), context), overlay, request, operation, budget);
+        admit(
+            loose(named.name(), named.path(), context, encoding),
+            overlay,
+            request,
+            operation,
+            budget);
       } else if (source instanceof PackSource.DetectedPath detected) {
         Path path = detected.path().toAbsolutePath().normalize();
         rejectOutput(path, request.destination(), context);
@@ -111,7 +130,7 @@ public final class PackSources {
                   if (outputPath(file, request.destination())) return FileVisitResult.CONTINUE;
                   var current = shape(file, context);
                   if (current != null && current.regular() && !current.indirection()) {
-                    Entry entry = loose(path.relativize(file).toString(), file, context);
+                    Entry entry = loose(path.relativize(file).toString(), file, context, encoding);
                     // Count candidates before retaining them, even if a later overlay replaces
                     // them.
                     account(entry, operation, budget);
@@ -128,7 +147,7 @@ public final class PackSources {
           ArchiveDetection detection = BethesdaArchives.standard().detect(path);
           if (detection.status() == DetectionStatus.UNRECOGNIZED) {
             admit(
-                loose(path.getFileName().toString(), path, context),
+                loose(path.getFileName().toString(), path, context, encoding),
                 overlay,
                 request,
                 operation,
@@ -172,7 +191,8 @@ public final class PackSources {
                                   }
                                   return null;
                                 }),
-                        context),
+                        context,
+                        encoding),
                     overlay,
                     request,
                     operation,
@@ -201,6 +221,16 @@ public final class PackSources {
                       .filter(e -> ((EntryMetadata.VersionedBsa) e.facts()).compressed())
                       .count()
                   * 4;
+      case ArchiveMetadata.GeneralBa2 value ->
+          24
+              + value.entryCount() * 36
+              + inspection.entries().stream()
+                  .mapToLong(
+                      entry ->
+                          entry.wireNames().containsKey("complete")
+                              ? 2 + entry.wireNames().get("complete").length()
+                              : 0)
+                  .sum();
       default -> throw new IllegalStateException("Unsupported source parser");
     };
   }
@@ -280,7 +310,8 @@ public final class PackSources {
   }
 
   /** Plans one loose source and revalidates its identity around bounded, deny-write consumption. */
-  private static Entry loose(String name, Path path, IoContext context) throws ArchiveException {
+  private static Entry loose(String name, Path path, IoContext context, Charset encoding)
+      throws ArchiveException {
     SourceFile source = SourceFile.plan(path);
     return entry(
         name,
@@ -322,16 +353,26 @@ public final class PackSources {
                       });
                   return null;
                 }),
-        context);
+        context,
+        encoding);
   }
 
-  /** Validates canonical name eligibility before an entry can participate in an overlay. */
-  private static Entry entry(String name, long size, Payload source, IoContext context)
+  /** Strictly encodes an eligible Unicode name before it can participate in an overlay. */
+  private static Entry entry(
+      String name, long size, Payload source, IoContext context, Charset encoding)
       throws ArchiveException {
-    var identity = NormalizedNameIdentity.from(name, StandardCharsets.US_ASCII);
+    var identity = NormalizedNameIdentity.from(name, encoding);
     if (identity.isEmpty())
       throw context.failure(FailureKind.POLICY, "tes3.invalid-encode-name", null);
-    byte[] bytes = identity.orElseThrow().value().getBytes(StandardCharsets.US_ASCII);
+    byte[] bytes;
+    try {
+      ByteBuffer encoded =
+          encoding.newEncoder().encode(CharBuffer.wrap(identity.orElseThrow().value()));
+      bytes = new byte[encoded.remaining()];
+      encoded.get(bytes);
+    } catch (CharacterCodingException failure) {
+      throw context.failure(FailureKind.POLICY, "tes3.invalid-encode-name", failure);
+    }
     return new Entry(
         name, identity.orElseThrow().value(), bytes, Tes3Names.hash(bytes), size, source);
   }

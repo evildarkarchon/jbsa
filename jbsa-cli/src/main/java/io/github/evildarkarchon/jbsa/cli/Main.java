@@ -98,8 +98,13 @@ public final class Main {
                                 ? ArchiveEncoding.tes3()
                                 : new ArchiveEncoding(
                                     Optional.of(
-                                        new io.github.evildarkarchon.jbsa.WireVersion(0x67)),
-                                    Optional.empty(),
+                                        new io.github.evildarkarchon.jbsa.WireVersion(
+                                            invocation.family() == ArchiveFamily.FO4_GENERAL_BA2
+                                                ? 1
+                                                : 0x67)),
+                                    invocation.family() == ArchiveFamily.FO4_GENERAL_BA2
+                                        ? Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.GNRL)
+                                        : Optional.empty(),
                                     java.util.OptionalLong.empty()),
                             invocation.profile(),
                             invocation.sources(),
@@ -182,10 +187,18 @@ public final class Main {
         inspection.entries().stream()
             .filter(
                 entry ->
-                    entry.facts() instanceof EntryMetadata.VersionedBsa facts && facts.compressed())
+                    (entry.facts() instanceof EntryMetadata.VersionedBsa facts
+                            && facts.compressed())
+                        || (entry.facts() instanceof EntryMetadata.GeneralBa2 general
+                            && general.packedSize() != 0))
             .count();
     output.println("Compressed entries: " + compressed);
     output.println("Codec: " + (compressed == 0 ? "STORED" : "ZLIB"));
+    if (inspection.metadata() instanceof ArchiveMetadata.GeneralBa2 metadata) {
+      output.println("Version: " + metadata.encoding().wireVersion().orElseThrow().value());
+      output.println("Subtype: " + metadata.encoding().ba2Subtype().orElseThrow().value());
+      output.println("Filename table offset: " + metadata.fileNameTableOffset());
+    }
     if (inspection.metadata() instanceof ArchiveMetadata.Tes3 metadata) {
       output.println("Hash offset: " + metadata.hashOffset());
       output.println("Data base offset: " + metadata.dataBaseOffset());
@@ -206,6 +219,21 @@ public final class Main {
     if (invocation.list()) {
       for (EntryMetadata entry : inspection.entries()) {
         output.println(entry.displayName());
+        if (invocation.dump() && entry.facts() instanceof EntryMetadata.GeneralBa2 facts) {
+          output.println("  Ordinal: " + entry.ordinal());
+          output.println("  Basename hash: " + Long.toHexString(facts.identity().baseNameHash()));
+          output.println("  Directory hash: " + Long.toHexString(facts.identity().directoryHash()));
+          output.println(
+              "  Extension bytes: "
+                  + java.util.HexFormat.of().formatHex(facts.identity().extension().bytes()));
+          output.println("  Mod index: " + facts.identity().modIndex());
+          output.println("  Chunk count: " + facts.identity().chunkCount());
+          output.println("  Chunk header size: " + facts.identity().chunkHeaderSize());
+          output.println("  Data offset: " + facts.payloadOffset());
+          output.println("  Packed size: " + facts.packedSize());
+          output.println("  Decoded size: " + facts.unpackedSize());
+          output.println("  Sentinel: " + Long.toHexString(facts.sentinel()));
+        }
         if (invocation.dump() && entry.facts() instanceof EntryMetadata.Tes3 facts) {
           output.println("  Ordinal: " + entry.ordinal());
           output.println(
@@ -273,8 +301,10 @@ public final class Main {
             + failure.location());
   }
 
-  /** Prints the stable supported TES3 invocation forms and option names. */
+  /** Prints the supported archive invocation forms and family-specific option names. */
   private static void help(PrintStream output) {
+    output.println(
+        "Fallout 4 General BA2 pack: -fo4 [-z|-z:zlib] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println(
         "jbsa [--compatibility-profile=bsarch-1.0/v1] pack <source1+source2+...> <archive> [options]");
     output.println(

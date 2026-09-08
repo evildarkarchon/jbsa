@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "corpus_id": "jbsa-fo4-general-wire-vectors-v1",
+  "creator": "JBSA project contributors",
+  "spdx_license": "CC0-1.0",
+  "redistribution_class": "project-authored-redistributable",
+  "source": "docs/spec/formats/general-ba2.md; independently authored wire vectors",
+  "generator": {
+    "path": "build/generate-ba2-fixtures.py",
+    "version": "1",
+    "spdx_license": "Apache-2.0",
+    "sha256": "3f5629bd495848daa1a4a26a16da066c82952be0e0f060f08a97966efad285c9",
+    "command": "python build/generate-ba2-fixtures.py --output <directory>"
+  },
+  "fixtures": [
+    {
+      "id": "fo4-general-stored",
+      "path": "fo4-general-stored.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1152,
+      "expected_disposition": "CONFORMING",
+      "wire_sha256": "2f73c0e8bfeece96fbe394e3355b5b474b692e48f466d547a5d127f25a3f4f0d",
+      "file_sha256": "2187786a54c79160685eb09c8f121afb8a739ce91b2765b642c476d95376cdf7",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-zlib",
+      "path": "fo4-general-zlib.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 153,
+      "expected_disposition": "CONFORMING",
+      "wire_sha256": "de67947d958e2adb8a3ed8078673ec1a09718e7c28fc9f1a0515e113f52d362d",
+      "file_sha256": "2a8f01c92f4fef8a2e42e3f2b69b7a33ad786a202f1ed6c7a1c9a485fc12b086",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-mixed",
+      "path": "fo4-general-mixed.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 145,
+      "expected_disposition": "CONFORMING",
+      "wire_sha256": "60c610b03cbb301cb501756df54f49f4a7d60d88e5e2703904dd884e38d7727c",
+      "file_sha256": "d79f570b640c68ecf352d9874cc8ad75474e8509e79997eca5f6c40766c799fa",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-raw-deflate",
+      "path": "fo4-general-raw-deflate.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 139,
+      "expected_disposition": "REJECTED_AT_PAYLOAD",
+      "wire_sha256": "57f14e84c4f6a06e2f376139153a1ffcb24bbe45b23e295b490eec90010e1752",
+      "file_sha256": "2bbbc27e2815363a0c12e484937ab89cda08f22fdef534b26d60b061e12a9e86",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-raw-lz4",
+      "path": "fo4-general-raw-lz4.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1157,
+      "expected_disposition": "REJECTED_AT_PAYLOAD",
+      "wire_sha256": "d58ca735d56cbaaa2710b32ae25ea28fd44c42e39b7dcc026facb8372bd809b4",
+      "file_sha256": "319d77a404a9e331199a13d4c3ca5e80ad87a5ad5735ef0cb3392a6f9cb7237a",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-lz4-frame",
+      "path": "fo4-general-lz4-frame.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1167,
+      "expected_disposition": "REJECTED_AT_PAYLOAD",
+      "wire_sha256": "9763ec86469552a83df60fffb6e350ad6a7ab1d0fa3fdf9880166d8bcfdcfae9",
+      "file_sha256": "49f6685b3be16f7ff9a2f509ea20ec1abfb848995367a76a9385604aa4ef4532",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-decoded-size-mismatch",
+      "path": "fo4-general-decoded-size-mismatch.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 145,
+      "expected_disposition": "REJECTED_AT_PAYLOAD",
+      "wire_sha256": "b26b284030c06572b0124fd71bfa10b2280b47dfadb4b27c8b0051b088ea54ea",
+      "file_sha256": "45cfee4efd2b9486a2faf6b940099aa02763348005a46738051495d2c9e36cc2",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-truncated-payload",
+      "path": "fo4-general-truncated-payload.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1152,
+      "expected_disposition": "REJECTED_AT_STRUCTURE",
+      "wire_sha256": "8d9d9607605133fe45ffc28628f07cc176f46628bac41ee3ea46164d35e6ae7c",
+      "file_sha256": "f6a3a1b5469d55c201b4a99589ed997082dc92111bd4fd8c750dbbcc5ca003dd",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-missing-name-table",
+      "path": "fo4-general-missing-name-table.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1152,
+      "expected_disposition": "TOLERATED_NONCANONICAL",
+      "wire_sha256": "62c2b0b530e83d7aa6440dc83f27459d1870ba7b80c1306d1dde114e683d301d",
+      "file_sha256": "06a58b72c628ddbc8913b5c6294c5e33dc407a22f36301570c6451979aaa886c",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-sentinel-mismatch",
+      "path": "fo4-general-sentinel-mismatch.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1152,
+      "expected_disposition": "TOLERATED_NONCANONICAL",
+      "wire_sha256": "0597acbe4b6ed1dd5938d75d73aefd8edec727c4c8ecd57e2cac850300eb2005",
+      "file_sha256": "14d67e7f74e08797246f91546b3ab34d9f4cab0bcf048a36ffadc9c479f26ad7",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-hash-mismatch",
+      "path": "fo4-general-hash-mismatch.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1152,
+      "expected_disposition": "TOLERATED_NONCANONICAL",
+      "wire_sha256": "394573143efc01d7fd5a2ab13b7f37f552f1b8247f50463de385982e2233ac62",
+      "file_sha256": "6bb43087ca08bb621f0dae3478fa895524fbdb21fe3268b9093bcccb660ac3d5",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-chunk-count",
+      "path": "fo4-general-chunk-count.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1152,
+      "expected_disposition": "REJECTED_AT_STRUCTURE",
+      "wire_sha256": "c4c50df38873eadfd08fb2e07870f76b374bf6345200cf24b188ef31ccf201a3",
+      "file_sha256": "ed000d1ad54f03e5bb3c2692dc8b6878ae1d5eea33b4346346da91be273e9448",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-partial-overlap",
+      "path": "fo4-general-partial-overlap.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1152,
+      "expected_disposition": "REJECTED_AT_STRUCTURE",
+      "wire_sha256": "bd64624c40c16faab802b8ca7b8b91bb53579ef4cf2f8debfd99301da33e9676",
+      "file_sha256": "3c9a79fe1ac630947c66a0b2c8152b12bbac8b9c1250da6a64233e6237950203",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fo4-general-trailing-data",
+      "path": "fo4-general-trailing-data.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 1157,
+      "expected_disposition": "TOLERATED_NONCANONICAL",
+      "wire_sha256": "1fb2510e60b98054ed36e2e477a45b6cb01d1f422b4966f3a1e4c8dfb3cf7c26",
+      "file_sha256": "278f567594c6748eb856f1974b68d2d8b6aeffb439be4aa12d1e53e6c40b4fbe",
+      "oracle_sha256": null
+    }
+  ]
+}

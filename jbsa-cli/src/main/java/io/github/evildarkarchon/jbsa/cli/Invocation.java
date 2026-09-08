@@ -32,7 +32,7 @@ record Invocation(
     boolean dump,
     boolean noProgress) {
 
-  /** Parses implemented BSA commands, rejecting invalid syntax before constructing source paths. */
+  /** Parses implemented archive commands, rejecting invalid syntax before constructing paths. */
   static Invocation parse(String[] args) {
     if (args.length == 0) {
       return administrative("help");
@@ -100,13 +100,21 @@ record Invocation(
         require(false, "Duplicate switch: " + key);
       }
       switch (key) {
-        case "-tes3", "-tes4" -> {
+        case "-tes3", "-tes4", "-fo4" -> {
           require(
               pack && option.equals(key) && (family == null || profile.isPresent()),
               "Inapplicable or duplicate family");
           // The explicit profile uses fixed family priority, independent of switch order.
-          if (family == null || key.equals("-tes3"))
-            family = key.equals("-tes3") ? ArchiveFamily.TES3_BSA : ArchiveFamily.TES4_BSA;
+          ArchiveFamily selected =
+              switch (key) {
+                case "-tes3" -> ArchiveFamily.TES3_BSA;
+                case "-tes4" -> ArchiveFamily.TES4_BSA;
+                default -> ArchiveFamily.FO4_GENERAL_BA2;
+              };
+          if (family == null
+              || selected == ArchiveFamily.TES3_BSA
+              || (selected == ArchiveFamily.TES4_BSA && family == ArchiveFamily.FO4_GENERAL_BA2))
+            family = selected;
         }
         case "-z" -> {
           require(pack && (option.equals("-z") || option.equals("-z:zlib")), "Unsupported codec");
@@ -169,6 +177,9 @@ record Invocation(
       }
     }
     require(!pack || family != null, "Pack requires one supported family selector");
+    require(
+        family != ArchiveFamily.FO4_GENERAL_BA2 || (!seen.contains("-af") && !seen.contains("-ff")),
+        "BA2 does not accept BSA flag switches");
     require(
         family != ArchiveFamily.TES3_BSA
             || (!seen.contains("-z") && !seen.contains("-af") && !seen.contains("-ff")),
