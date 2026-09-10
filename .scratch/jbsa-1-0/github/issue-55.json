@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nRun the full local same-machine performance-v1 protocol on final release artifacts and establish the immutable first Performance Baseline.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-PERF-*\n- JBSA-REL-*\n\n## Acceptance\n\n- Preflight the final candidate, Conformance Oracle, Benchmark Corpus, JVM, provider profile, runtime, protocol, and machine identities and reject mismatched/noisy runs as INVALID.\n- Run all applicable throughput, random-access latency, peak memory, parallel scaling, and output-size Performance Cases with raw samples and confidence evidence.\n- Meet candidate/oracle throughput lower bound 0.80, applicable baseline bound, latency ceilings, strict memory/size limits, and 1.50x/2.50x/4.00x scaling gates at 2/4/8 workers.\n- Record independent metric outcomes without composites or waivers and investigate every regression or invalid result.\n- Publish the first immutable Performance Baseline artifact and its complete Benchmark Corpus, JVM, provider, protocol, and checksum identity.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:33Z",
+  "labels": [],
+  "milestone": null,
+  "number": 55,
+  "state": "OPEN",
+  "title": "Run first-release performance-v1 qualification and establish the baseline",
+  "updatedAt": "2026-09-03T06:54:33Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/55"
+}

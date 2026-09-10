@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nProduce the canonical modular library artifacts and self-contained single-process Windows CLI image with its final provider/runtime graph.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-DIST-*\n- JBSA-BUILD-*\n- JBSA-CLI-*\n- JBSA-LIC-*\n\n## Acceptance\n\n- Build the final jbsa JAR, flattened consumer POM, sources/Javadoc artifacts, thin CLI, and distribution module from the pinned full JDK build.\n- Review jdeps output plus reflection, service, resource, and native needs; create a jlink --compress=2 runtime and jpackage --type app-image --win-console image.\n- Apply and verify win.norestart=true, jbsa.exe single-process launch, no child launcher, working-directory behavior, UTF-8 streams, exits, Ctrl+C cleanup, and native loading.\n- Assemble jbsa-cli-<version>-windows-x64.zip with checksums, license/notices, SBOM/provenance inputs, and no proprietary or unintended bytes.\n- Pass clean-machine smoke coverage for every CLI operation and fail on missing runtime modules, unexplained module-set changes, or unqualified toolchain/provider changes.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:28Z",
+  "labels": [],
+  "milestone": null,
+  "number": 53,
+  "state": "OPEN",
+  "title": "Assemble and verify the self-contained Windows x64 application image",
+  "updatedAt": "2026-09-03T06:54:28Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/53"
+}

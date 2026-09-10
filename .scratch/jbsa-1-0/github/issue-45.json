@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nExtend the shared General BA2 model to Starfield v2 zlib and v3 method-3 raw-LZ4 decode and encode behavior.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-GNRL-*\n- JBSA-CODEC-*\n- JBSA-CLI-*\n- JBSA-CONF-*\n- JBSA-PERF-*\n\n## Acceptance\n\n- Implement General BA2 v2 extra-header behavior and v3 compression-method fields while preserving stored, zlib, and raw-LZ4 distinctions.\n- Emit v3 only for raw LZ4 and otherwise v2; decode specified non-method-3 v3 inputs as zlib and reject oversize or invalid blocks safely.\n- Use the qualified internal raw-LZ4 profile and common BA2 model without changing the public Archive Family/subtype/wire-version separation.\n- Add applicable library/CLI behavior, project-authored v3 fixtures, optional local-corpus coverage, oracle differentials, independent validation, and all CV1 cases.\n- Run and record targeted raw-LZ4, zlib, memory, output-size, native-loading, and General BA2 performance cases before merge.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:11Z",
+  "labels": [],
+  "milestone": null,
+  "number": 45,
+  "state": "OPEN",
+  "title": "Implement Starfield General BA2",
+  "updatedAt": "2026-09-03T06:54:11Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/45"
+}

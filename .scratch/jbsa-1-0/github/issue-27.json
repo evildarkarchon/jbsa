@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nPublish the normative consumer, compatibility-profile, conformance, performance, distribution, and release-gate contracts used to judge every implementation slice and release claim.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-COMPAT-*\n- JBSA-CLI-*\n- JBSA-CONF-*\n- JBSA-PERF-*\n- JBSA-DIST-*\n- JBSA-REL-*\n\n## Acceptance\n\n- Create compatibility-profiles, bsarch-cli, conformance-v1, performance-v1, distribution, and release-gates specifications.\n- Define the safe normative default and immutable bsarch-1.0/v1 deviation bundle, including commands, switches, streams, exits, records, progress, cancellation, and implicit DDS compression.\n- Define CV1 Conformance Case identities, authority order, oracle and fixture rules, differential directions, independent validators, binary qualification, hosted-CI claims, and rebaseline controls.\n- Define PV1 Performance Case identities, deterministic Benchmark Corpus, paired protocol, thresholds, invalid-run rules, baseline lifecycle, and targeted/full requalification triggers.\n- Define the self-contained Windows application-image contract and ordered specification, interface, conformance, performance, packaging, compliance, manual qualification, approval, and publication gates.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-03T09:48:00Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:27Z",
+  "labels": [],
+  "milestone": null,
+  "number": 27,
+  "state": "CLOSED",
+  "title": "Materialize the CLI and qualification specifications",
+  "updatedAt": "2026-09-03T09:48:00Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/27"
+}

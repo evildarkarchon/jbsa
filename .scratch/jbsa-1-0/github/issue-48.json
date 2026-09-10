@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nAdd operation-owned bounded platform-worker scheduling beneath the caller-thread coordinator without changing single-worker semantics or observable ordering.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-SCHED-*\n- JBSA-OPS-*\n- JBSA-PERF-*\n- JBSA-CONF-*\n\n## Acceptance\n\n- Complete preflight and Logical Plan Order assignment before task admission or destination effects and preserve UP_TO(1) as the sequential correctness mode.\n- Implement AUTOMATIC and bounded parallelism with at most 2N admitted tasks plus heap, native, scratch, handle, and result-slot credits.\n- Stage private worker results while the coordinator alone sequences hashing/sharing decisions, archive writes, splits, publication, progress, and failures.\n- Prove worker-count-independent bytes where deterministic, semantic output, diagnostics, Primary/Secondary Failures, cancellation, rollback, and return-after-settlement behavior.\n- Pass bounded/out-of-order stress and record 1/2/4/8/16-worker scaling, throughput, memory, and backpressure qualification before merge.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:17Z",
+  "labels": [],
+  "milestone": null,
+  "number": 48,
+  "state": "OPEN",
+  "title": "Introduce bounded deterministic parallel archive operations",
+  "updatedAt": "2026-09-03T06:54:17Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/48"
+}

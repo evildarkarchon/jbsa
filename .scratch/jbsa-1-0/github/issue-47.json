@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nComplete the supported Archive Family matrix with decode-only Fallout 4 General and DDS BA2 v7/v8 behavior and explicit encode rejection.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-GNRL-*\n- JBSA-DX10-*\n- JBSA-DDS-*\n- JBSA-CLI-*\n- JBSA-CONF-*\n\n## Acceptance\n\n- Implement BTDX/GNRL and BTDX/DX10 v7/v8 recognition, version-specific records, names, hashes, chunks, zlib payloads, DDS reconstruction, and bounded validation.\n- Reject every v7/v8 encode request as unsupported before destination effects while keeping decoding available through the shared public interface and CLI.\n- Add project-authored/oracle-generated fixtures for absent shipping combinations and optional local corpus observations where legally available.\n- Pass oracle decode differentials, independent General/DDS validation, malformed/limit cases, and all applicable decode-only CV1 cases.\n- Run targeted unpack, metadata, DDS, memory, and random-access regression performance cases before merge.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:15Z",
+  "labels": [],
+  "milestone": null,
+  "number": 47,
+  "state": "OPEN",
+  "title": "Implement Fallout 4 BA2 v7 and v8 decoding",
+  "updatedAt": "2026-09-03T06:54:15Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/47"
+}

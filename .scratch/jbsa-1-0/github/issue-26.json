@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nPublish the complete deep-module interface and caller-observable operation contract while keeping storage, providers, scheduling mechanics, and transactions internal.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-LIB-*\n- JBSA-OPS-*\n- JBSA-IO-*\n- JBSA-CODEC-*\n- JBSA-SCHED-*\n\n## Acceptance\n\n- Create library-interface, operation-semantics, io-and-publication, codecs, and execution-model specifications.\n- Specify BethesdaArchives.standard(), immutable requests/results, OpenArchive ownership, entry channels, long-valued sizes and offsets, ResourceLimits, and OperationControl.\n- Specify Archive Assessment, Validation Extent, Diagnostic Policy, Failure Kind, deterministic Primary and Secondary Failures, Progress Snapshots, Cooperative Cancellation, Artifact State, and Residual Artifacts.\n- Specify positional I/O, Windows deny-write/delete lifetimes, bounded streaming, spill staging, extraction containment, Publication Commit, replacement, rollback, and durability limits.\n- Keep provider selection, executors, buffers, pools, spill mechanics, callback cadence, codec thresholds, native details, and generalized storage ports outside the public interface.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-03T09:30:00Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:25Z",
+  "labels": [],
+  "milestone": null,
+  "number": 26,
+  "state": "CLOSED",
+  "title": "Materialize the library behavior specifications",
+  "updatedAt": "2026-09-03T09:30:00Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/26"
+}

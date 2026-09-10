@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nImplement the shared caller-observable operation semantics that every Archive Family slice must exercise consistently.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-OPS-*\n- JBSA-SCHED-*\n\n## Acceptance\n\n- Implement layered recognition, structure, payload, policy, source, destination, and capability validation without adding an unsupported full-archive validate operation.\n- Implement stable Conformance Diagnostic identifiers, immutable Diagnostic Policy, checked Failure Kind outcomes, and deterministic Primary and bounded Secondary Failure selection.\n- Implement semantic monotonic Progress Snapshots whose timing and cadence remain non-normative and isolate observer failures as specified.\n- Implement explicit Cooperative Cancellation rather than thread interruption, including pre/post-Publication Commit behavior and deterministic cleanup settlement.\n- Test failure ordering, streaming late-failure behavior, cancellation races, rollback, residual artifacts, and exact operation reports through the public interface.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-06T04:09:29Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:49Z",
+  "labels": [],
+  "milestone": null,
+  "number": 36,
+  "state": "CLOSED",
+  "title": "Implement validation, failures, diagnostics, progress, and cancellation",
+  "updatedAt": "2026-09-06T04:09:30Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/36"
+}

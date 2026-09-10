@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nEstablish the 1.0 compatibility baseline only after all Archive Families, real consumers, native capability behavior, bounded scheduling, and Automated Conformance have exercised the deep interface.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-LIB-*\n- JBSA-OPS-*\n- JBSA-REL-*\n\n## Acceptance\n\n- Audit every public package, exported type, invariant, ordering rule, error mode, configuration, ownership contract, and performance characteristic against the normative specifications.\n- Run source/binary compatibility baselining plus compiled CLI-like and embedded consumer suites across all Archive Families and sequential/parallel modes.\n- Verify third-party types and internal storage, provider, scheduler, transaction, buffer, pool, native, and dispatch details remain absent from the public interface.\n- Resolve all conformance-driven interface corrections and update requirement/test traceability before recording the freeze.\n- Document that a later breaking change requires an explicit decision, compatibility assessment, specification revision, and reset of affected conformance/release gates.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:24Z",
+  "labels": [],
+  "milestone": null,
+  "number": 51,
+  "state": "OPEN",
+  "title": "Freeze the JBSA 1.0 public archive interface",
+  "updatedAt": "2026-09-03T06:54:24Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/51"
+}

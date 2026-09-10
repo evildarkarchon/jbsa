@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nIntroduce the common versioned-BSA model and baseline JDK zlib profile through a complete BSA 0x67 read/write and consumer slice.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-BSA-*\n- JBSA-CODEC-*\n- JBSA-CLI-*\n- JBSA-CONF-*\n- JBSA-PERF-*\n\n## Acceptance\n\n- Implement BSA 0x67 stored, zlib, and mixed-entry recognition, metadata, folder/file records, signed-byte TES4 hashing, flags, names, ordering, splitting, decode, and encode behavior.\n- Implement the release-pinned JDK zlib stream adapter, size-prefix/framing rules, deterministic settings, bounded streaming, and provider-neutral failures behind an internal seam.\n- Expose applicable library and thin-CLI information, list, dump, unpack, and pack behavior with exact format switches, diagnostics, exits, and artifacts.\n- Pass bidirectional oracle differentials, an independent validator, malformed/limit cases, and all applicable CV1 cases; restrict Binary Conformance to qualified stored cases.\n- Run and record the accepted targeted zlib, I/O, memory, size, and random-access performance checkpoint before merge.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-08T11:54:13Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:54Z",
+  "labels": [],
+  "milestone": null,
+  "number": 38,
+  "state": "CLOSED",
+  "title": "Implement the TES4 / Oblivion BSA vertical slice",
+  "updatedAt": "2026-09-08T11:54:13Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/38"
+}

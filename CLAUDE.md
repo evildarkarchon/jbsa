@@ -12,7 +12,7 @@ Rules:
 
 ### Issue tracker
 
-Issues and specs are tracked in this repository’s GitHub Issues. See `docs/agents/issue-tracker.md`.
+Issues and specs are tracked locally under `.scratch/`. Read `docs/agents/issue-tracker.md` before creating, triaging, or fetching tickets.
 
 ### Triage labels
 

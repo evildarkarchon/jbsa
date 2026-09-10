@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nImplement bounded spill-backed staging and the Windows filesystem safety model for archive outputs, split sets, extraction trees, replacement, rollback, and residual cleanup.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-IO-*\n- JBSA-OPS-*\n\n## Acceptance\n\n- Implement adjacent private staging, explicit FAIL/REPLACE behavior, atomic per-artifact publication, and ordered split-set publication.\n- Implement rollback/restoration and exact Artifact State and Residual Artifact reporting when cleanup or replacement fails.\n- Contain extraction against traversal, absolute paths, alternate data streams, symlink/junction/reparse-point escapes, and Windows name/case collisions.\n- Preserve per-file atomicity for existing extraction trees without claiming operation-wide atomic visibility, crash recovery, forced durability, or privileged race protection.\n- Verify Publication Commit behavior and ensure pre-commit accepted cancellation prevents externally visible publication.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-06T00:20:30Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:46Z",
+  "labels": [],
+  "milestone": null,
+  "number": 35,
+  "state": "CLOSED",
+  "title": "Implement safe staging, publication, rollback, and extraction containment",
+  "updatedAt": "2026-09-06T00:20:30Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/35"
+}

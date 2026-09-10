@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nImplement the parent-owned positional-channel substrate, bounded exact reads, lazy payload access, and Windows lifetime behavior beneath the public interface.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-IO-*\n- JBSA-LIB-*\n\n## Acceptance\n\n- Use checked long arithmetic and bounded positional FileChannel reads for headers, indexes, names, and payload spans.\n- Open archives with the specified deny-write/delete Windows lifetime and keep parent/child close behavior linearizable and race-tested.\n- Build eager bounded metadata indexes while keeping payload access lazy and sequential entry channels explicit.\n- Enforce ResourceLimits for counts, names, spans, handles, heap, native memory, and scratch space without whole-archive buffering.\n- Provide deterministic source/destination/capability failures without leaking provider or operating-system exception details through the public interface.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-05T12:06:05Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:44Z",
+  "labels": [],
+  "milestone": null,
+  "number": 34,
+  "state": "CLOSED",
+  "title": "Implement bounded positional archive I/O and owned lifetimes",
+  "updatedAt": "2026-09-05T12:06:05Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/34"
+}

@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Destination\n\nImplement and qualify the Windows-first Java 25 Bethesda archive library and thin BSArch-compatible CLI specified by the completed Wayfinder effort, culminating in the first public JBSA 1.0 GitHub Release.\n\n## Planning authority\n\n- [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1) is the planning map.\n- [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) records the accepted implementation order, milestones, and gate policy.\n- Version-controlled normative specifications and their permanent requirement identifiers become the implementation authority before production code begins.\n\n## Delivery model\n\n- Child issues are independently mergeable, evidence-gated units connected with native GitHub dependencies.\n- Archive work proceeds through risk-ordered vertical slices across the same deep public library interface; family-specific CLI behavior, fixtures, documentation, and applicable conformance evidence ship with each slice.\n- Automated Conformance and independent validation close a slice. Manual game/tool Release Qualification blocks the public release rather than unrelated implementation.\n- Conformance cannot be waived by performance. Provider promotion cannot mutate an existing release profile.\n- Apply `ready-for-agent` or `ready-for-human` only when a child is fully specified, unblocked, and safe to start.\n\n## Interface milestones\n\n1. **Contract Baseline** after the normative specification and compileable public types exist.\n2. **Interface Candidate** after representative TES3, versioned BSA, General BA2, and DDS BA2 slices pass their automated gates.\n3. **Interface Freeze** after all Archive Families, bounded scheduling, the complete CLI, and Automated Conformance exercise the public interface.\n4. **Release Candidate** after performance, packaging, compliance, provenance, and distribution verification; JBSA 1.0 follows manual Release Qualification.\n\n## Scope boundaries\n\n- The pinned `TES5Edit` Reference Snapshot is read-only evidence and must never be modified.\n- No proprietary game assets enter version control or release artifacts.\n- GUI work, non-Windows guarantees, Maven Central/GitHub Packages publication, and moving-reference compatibility are outside this program.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:52:31Z",
+  "labels": [],
+  "milestone": null,
+  "number": 23,
+  "state": "OPEN",
+  "title": "Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI",
+  "updatedAt": "2026-09-03T06:52:31Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/23"
+}

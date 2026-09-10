@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nPerform the final human gate over the frozen specification, traceability, conformance claims, performance evidence, packaging, compliance, documentation, and manual qualification.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-REL-*\n\n## Acceptance\n\n- Verify every requirement registry row has the required review, implementation, test, conformance, performance, package, or manual-release evidence.\n- Approve the exact Automated Conformance, case-level Binary Conformance, Encode/Decode Conformance, and Release Qualification claims without implication beyond their evidence.\n- Approve the final public interface baseline, immutable compatibility/codec profiles, deviations, known limitations, documentation, packaging, and artifact digests.\n- Confirm all performance metrics pass independently and the first Performance Baseline is fixed and reproducible.\n- Record explicit approval of the JBSA 1.0 release candidate or return named gates to open state with required remediation.\n\n## Ownership\n\nHuman-driven when unblocked. Preparation may be automated, but the named evidence or approval must come from the maintainer or operator.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:43Z",
+  "labels": [],
+  "milestone": null,
+  "number": 59,
+  "state": "OPEN",
+  "title": "Approve the JBSA 1.0 specification and release gate",
+  "updatedAt": "2026-09-03T06:54:43Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/59"
+}

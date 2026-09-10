@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nExtend the common BSA implementation to version 0x68 without forking the public model or duplicating version-0x67 behavior.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-BSA-*\n- JBSA-CLI-*\n- JBSA-CONF-*\n\n## Acceptance\n\n- Implement BSA 0x68 stored, zlib, and mixed-entry decode/encode behavior, unsigned TES5 hashing, embedded-name prefixes, flags, ordering, and validation.\n- Reuse the common BSA and JDK zlib implementations while isolating version-specific records and name/hash rules internally.\n- Add family-specific library/CLI cases, game-specific committed fixtures, optional local-corpus observations, malformed inputs, and resource-limit coverage.\n- Pass bidirectional oracle differentials, independent validation, applicable CV1 cases, and qualified stored Binary Conformance candidates only.\n- Run targeted regression performance cases and investigate any material change to the established zlib, I/O, memory, size, or random-access evidence.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:04Z",
+  "labels": [],
+  "milestone": null,
+  "number": 42,
+  "state": "OPEN",
+  "title": "Implement BSA for Fallout 3, New Vegas, and Skyrim LE",
+  "updatedAt": "2026-09-03T06:54:04Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/42"
+}

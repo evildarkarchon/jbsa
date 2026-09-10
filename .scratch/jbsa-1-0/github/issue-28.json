@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nCreate the reproducible greenfield reactor, deep library and thin CLI module seams, build-only verification modules, and basic hosted Windows build gates.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-BUILD-*\n\n## Acceptance\n\n- Create the Maven wrapper, parent/aggregator, jbsa, jbsa-cli, jbsa-test-support, jbsa-conformance-tests, jbsa-benchmarks, and jbsa-dist projects with one reactor version.\n- Target the pinned Java 25 toolchain and provide explicit JPMS descriptors, exports, requires clauses, and architectural tests that prevent CLI or third-party type leakage across the public seam.\n- Configure reproducible builds, dependency pinning, flattened consumer POM generation, sources and Javadoc artifacts, and deterministic test entry points.\n- Add hosted Windows GitHub Actions for compile, unit, architecture, formatting, and foundational policy checks without claiming local Release Qualification.\n- Leave modules empty of Archive Family behavior except for the minimum compileable skeleton required to verify the seams.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-03T22:11:44Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:29Z",
+  "labels": [],
+  "milestone": null,
+  "number": 28,
+  "state": "CLOSED",
+  "title": "Bootstrap the Java 25 Maven and JPMS reactor",
+  "updatedAt": "2026-09-03T22:11:44Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/28"
+}

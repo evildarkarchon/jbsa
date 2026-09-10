@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nClose every hosted-CI-runnable conformance-v1 obligation across formats, operations, codecs, interactions, malformed inputs, resources, concurrency, deviations, CLI behavior, and filesystem safety.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-CONF-*\n- JBSA-COMPAT-*\n- JBSA-CLI-*\n\n## Acceptance\n\n- Run every applicable CV1 case with mandatory assertions and publish case-level evidence; no percentage, waiver, expected failure, or invalid result counts as passing.\n- Complete decode and encode differentials, independent validators, interaction matrices, warning/error policies, malformed inputs, resource limits, cancellation, rollback, and extraction containment.\n- Prove sequential/parallel semantic equivalence and JBSA determinism across worker counts while restricting Binary Conformance to separately qualified cases.\n- Qualify safe-default and bsarch-1.0/v1 behavior independently and ensure every deviation has identity, evidence, safety analysis, tests, approval, and revalidation triggers.\n- Resolve each contradiction or unknown with evidence or keep its affected case blocked; publish the precise Automated Conformance claim earned by hosted CI.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:21Z",
+  "labels": [],
+  "milestone": null,
+  "number": 50,
+  "state": "OPEN",
+  "title": "Complete the mandatory Automated Conformance matrix",
+  "updatedAt": "2026-09-03T06:54:21Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/50"
+}

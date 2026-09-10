@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nComplete the strict thin Windows CLI contract across every Archive Family and operation using only the public jbsa library interface.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-CLI-*\n- JBSA-COMPAT-*\n- JBSA-DIST-*\n\n## Acceptance\n\n- Complete command and switch parsing, help/version, information/list/dump, pack/unpack, source overlays, defaults, format selection, multithreading controls, and invalid-invocation behavior.\n- Map only public library requests, reports, failures, diagnostics, progress, cancellation, and artifacts to deterministic UTF-8 records, streams, exit statuses, and filesystem effects.\n- Implement the safe default and immutable all-or-nothing bsarch-1.0/v1 Compatibility Profile, including every qualified deviation and implicit DDS compression rule.\n- Implement Ctrl+C through Cooperative Cancellation, deterministic progress presentation, cleanup, and no business logic or reference-code adaptation in the CLI.\n- Pass the complete CLI Observation matrix through library-backed integration tests, including single/multithreaded equivalence and all Archive Families.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:19Z",
+  "labels": [],
+  "milestone": null,
+  "number": 49,
+  "state": "OPEN",
+  "title": "Complete the cross-family BSArch-compatible CLI",
+  "updatedAt": "2026-09-03T06:54:19Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/49"
+}

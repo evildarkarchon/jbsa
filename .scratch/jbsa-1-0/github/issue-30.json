@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nCreate redistributable deterministic fixtures, generators, manifests, malformed and boundary inputs, and golden-storage rules without committing proprietary game data.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-CONF-*\n- JBSA-LIC-*\n\n## Acceptance\n\n- Define the fixture manifest and generator schema with creator/source, SPDX license, command/options, Reference Snapshot revision, oracle digest when applicable, input/output SHA-256, date, and redistribution class.\n- Create small structural, boundary, malformed, compression, name-encoding, ordering, overlay, split, and resource-limit fixtures needed by conformance-v1.\n- Provide independently authored generated coverage for supported-but-unused Fallout 4 General BA2 v7 and Starfield General BA2 v3 combinations.\n- Define immutable content-addressed golden storage and deliberate rebaseline records containing old/new hashes, oracle identity, rationale, and approval.\n- Keep the ignored 12-archive local corpus discoverable but read-only and outside every committed or assembled artifact.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-05T09:12:49Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:35Z",
+  "labels": [],
+  "milestone": null,
+  "number": 30,
+  "state": "CLOSED",
+  "title": "Create the committed synthetic Fixture Corpus",
+  "updatedAt": "2026-09-05T09:12:49Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/30"
+}

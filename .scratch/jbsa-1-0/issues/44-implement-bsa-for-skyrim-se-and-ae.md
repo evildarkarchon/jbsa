@@ -1,0 +1,59 @@
+# Implement BSA for Skyrim SE and AE
+
+Status: needs-triage
+State: open
+GitHub issue: #44
+Source: https://github.com/evildarkarchon/jbsa/issues/44
+Author: evildarkarchon
+Created: 2026-09-03T06:54:08Z
+Source updated: 2026-09-03T06:54:08Z
+Closed: none
+Migrated: 2026-09-10
+Labels: needs-triage
+Assignees: none
+Blocked by: [#42](../issues/42-implement-bsa-for-fallout-3-new-vegas-and-skyrim-le.md), [#43](../issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md)
+Parent: [#23](../map.md)
+
+Intended owner: agent
+Triage reviewed: 2026-09-10
+Triage rationale: Reassess readiness after open prerequisites close: #42, #43.
+
+## Original issue body
+
+## Objective
+
+Complete versioned-BSA support with BSA 0x69 stored and LZ4-frame behavior using the qualified native adapter.
+
+## Planning context
+
+This is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).
+
+Before implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:
+
+- JBSA-BSA-*
+- JBSA-CODEC-*
+- JBSA-CLI-*
+- JBSA-CONF-*
+- JBSA-PERF-*
+
+## Acceptance
+
+- Implement BSA 0x69 24-byte folder records, embedded names, stored/LZ4-frame/mixed entries, flags, hashes, ordering, validation, decode, and encode behavior.
+- Use the qualified internal LZ4-frame profile with bounded streaming and deterministic capability failures; do not reinterpret raw LZ4 as framed LZ4.
+- Add applicable library/CLI behavior, committed and optional local fixtures, malformed frames/records, cancellation, resource, and split coverage.
+- Pass bidirectional oracle differentials, independent validation, applicable CV1 cases, and only earned stored Binary Conformance claims.
+- Run and record the targeted LZ4-frame, native-loading, memory, size, random-access, and regression performance checkpoint before merge.
+
+## Ownership
+
+Agent-driven when unblocked and labelled ready-for-agent.
+
+## Non-goals
+
+- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.
+- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.
+- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.
+
+## Comments
+
+No comments at migration time.

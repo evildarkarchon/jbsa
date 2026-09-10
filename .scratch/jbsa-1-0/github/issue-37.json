@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nDeliver the first complete stored-archive walking slice across detection, inspection, owned reading, extraction, packing, CLI behavior, and conformance evidence.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-TES3-*\n- JBSA-LIB-*\n- JBSA-CLI-*\n- JBSA-CONF-*\n\n## Acceptance\n\n- Implement unversioned TES3 recognition, layout, names, hashes, ordering, validation, decode, extraction, and encode behavior; compression requests remain intentionally ignored as specified.\n- Exercise detect, inspect, open/openContent, extract, and pack through the public interface and applicable thin-CLI commands without duplicated business logic.\n- Add committed independent fixtures, malformed and boundary cases, optional local-corpus/oracle coverage, and bidirectional semantic differentials.\n- Qualify the designated stored Binary Conformance candidate only if its repeatability evidence passes; otherwise report only earned semantic conformance.\n- Review Contract Baseline ergonomics with compiled CLI-like and embedded consumers and resolve findings before the interface spreads.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-08T10:33:21Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:51Z",
+  "labels": [],
+  "milestone": null,
+  "number": 37,
+  "state": "CLOSED",
+  "title": "Implement the TES3 / Morrowind BSA vertical slice",
+  "updatedAt": "2026-09-08T10:33:21Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/37"
+}

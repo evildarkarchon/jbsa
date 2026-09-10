@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nPublish the approved JBSA 1.0 artifacts and evidence as the first public GitHub Release without introducing unqualified assets or claims.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-DIST-*\n- JBSA-REL-*\n\n## Acceptance\n\n- Create the final version tag and GitHub Release only from the exact approved commit and release-candidate artifact digests.\n- Attach the self-contained Windows x64 ZIP, library artifacts, flattened POM, sources/Javadoc, checksums, license/notices, SBOM, provenance, and approved evidence documents.\n- Publish precise scope, Automated/Decode/Encode/Binary/Release Qualification claims, compatibility profile, codec profile, requirements, known limitations, and upgrade/support information.\n- Verify anonymous download, clean-machine launch, checksums, asset names, links, and release notes after publication.\n- Do not publish to Maven Central or GitHub Packages and do not attach local oracle, proprietary corpus, unapproved binaries, or superseded artifacts.\n\n## Ownership\n\nHuman-driven when unblocked. Preparation may be automated, but the named evidence or approval must come from the maintainer or operator.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:46Z",
+  "labels": [],
+  "milestone": null,
+  "number": 60,
+  "state": "OPEN",
+  "title": "Publish the first public JBSA GitHub Release",
+  "updatedAt": "2026-09-03T06:54:46Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/60"
+}

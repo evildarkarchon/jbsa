@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nConfirm and publish only those designated deterministic cases that earn byte-for-byte Binary Conformance under the final release profile and a second Windows x64 CPU.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-CONF-*\n- JBSA-REL-*\n\n## Acceptance\n\n- Use the pinned ordered-file configuration, final codec/profile/toolchain identity, exact fixtures, and five fresh identical Conformance Oracle runs per candidate case.\n- Confirm byte-identical JBSA output and required cross-decoding on the primary qualification machine.\n- Repeat the required confirmation on a second Windows x64 CPU and record CPU, Windows, JVM, provider, fixture, command, and digest evidence.\n- Publish claims at Conformance Case granularity only; omit compressed or DDS cases that do not independently earn the designation.\n- Attach the complete evidence and update traceability without generalizing results to other inputs, worker modes, codecs, or profiles.\n\n## Ownership\n\nHuman-driven when unblocked. Preparation may be automated, but the named evidence or approval must come from the maintainer or operator.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-05T11:21:05Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:36Z",
+  "labels": [],
+  "milestone": null,
+  "number": 56,
+  "state": "CLOSED",
+  "title": "Qualify Binary Conformance cases on a second Windows x64 CPU",
+  "updatedAt": "2026-09-05T11:21:05Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/56"
+}

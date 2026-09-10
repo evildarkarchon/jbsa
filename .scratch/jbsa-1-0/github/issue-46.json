@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nExtend the shared DDS BA2 and DDS-envelope implementations to Starfield v2 zlib and v3 raw-LZ4 chunk behavior.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-DX10-*\n- JBSA-DDS-*\n- JBSA-CODEC-*\n- JBSA-CLI-*\n- JBSA-CONF-*\n- JBSA-PERF-*\n\n## Acceptance\n\n- Implement DX10 BA2 v2 and v3 extra-header and compression-method behavior across DDS metadata, mip chunks, reconstruction, decode, and encode paths.\n- Support the specified v2 zlib and v3 method-3 raw-LZ4 profiles, including the Starfield default and allowed zlib behavior.\n- Reuse common BA2/DDS implementations and internal codecs without leaking format-specific or native details into the public interface.\n- Pass bidirectional oracle differentials, DirectXTex or equivalent validation, committed fixtures, malformed/limit cases, reconstruction checks, and all CV1 cases.\n- Run targeted Starfield DDS chunk, codec, memory, output-size, and random-access performance cases before merge.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:13Z",
+  "labels": [],
+  "milestone": null,
+  "number": 46,
+  "state": "OPEN",
+  "title": "Implement Starfield DDS BA2",
+  "updatedAt": "2026-09-03T06:54:13Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/46"
+}

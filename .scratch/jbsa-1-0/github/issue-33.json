@@ -1,0 +1,27 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nPublish the provisional first-release deep library interface and contract tests without exposing hypothetical storage, provider, executor, or transaction seams.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-LIB-*\n- JBSA-OPS-*\n\n## Acceptance\n\n- Implement the concrete stateless BethesdaArchives.standard() module and Path-first detect, inspect, open/openContent, extract, and pack entry points required by the specification.\n- Implement immutable Archive Family, wire-version, subtype, request, result, metadata, diagnostic, policy, report, failure, progress, resource-limit, and operation-control domain values.\n- Implement owned OpenArchive and child-channel contracts with long sizes, counts, and offsets and explicit caller-visible lifetime rules.\n- Add compile-time and behavioral contract tests using both CLI-like and embedded-library consumers through the public JPMS exports.\n- Mark the interface as pre-1.0 Contract Baseline and keep all third-party, provider, storage, scheduling, buffering, and publication mechanics internal.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-05T11:30:14Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:42Z",
+  "labels": [
+    {
+      "id": "LA_kwDOULuKyc8AAAACzh8JpA",
+      "name": "ready-for-agent",
+      "description": "Fully specified, unblocked, and ready for an AFK agent",
+      "color": "0E8A16"
+    }
+  ],
+  "milestone": null,
+  "number": 33,
+  "state": "CLOSED",
+  "title": "Establish the Contract Baseline public archive interface",
+  "updatedAt": "2026-09-05T11:30:14Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/33"
+}
