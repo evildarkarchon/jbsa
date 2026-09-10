@@ -85,17 +85,27 @@ storage adapter.
 
 ## Gate record
 
-Status: **OPEN** pending final immutable-candidate execution.
+Status: **PASS — Interface Candidate** for the four representative families.
 Evaluator: Codex, 2026-09-10. Procedure: issue41-interface-audit-v1.
 Product version: `0.1.0-SNAPSHOT`. Specification: `0.13.0`.
-Starting commit: `86d6b797d0eb99aabbff440f8b5f9e036782b692`.
+Candidate commit: `11ef5a21179b168875183a0eb295c60603c9235e`.
+Review baseline: `86d6b797d0eb99aabbff440f8b5f9e036782b692`.
 
 The maintainer approved the exact 109-object rebaseline packet during this
 implementation. [Activation evidence](evidence/issue41-activation.json) records
-the review digest, approval records and successful rebaseline validation. The
-final immutable implementation commit and fresh test/evidence results must be
-recorded before changing this record to PASS. The current Contract Baseline
-remains the last declared interface milestone until then.
+the review digest, approval records and successful rebaseline validation.
+[Build evidence](evidence/issue41-build.json) records the successful seven-module
+clean verification: 410 reported tests, no failures or errors, and eight optional
+skips. The subsequent source-location correction was separately validated and
+passed staged-file compliance; it preserved every admitted case exactly.
+
+The [fresh scoped CV1 evidence](evidence/issue41-cv1.json) retains all 109 passing
+result objects for this immutable candidate: 32 BSA 067, 33 Fallout 4 General
+BA2 v1 and 44 Fallout 4 PC DDS BA2 v1 cases. It binds the JARs, runtime, codec
+profile, compatibility profile, specification and catalog identities. The full
+508-case runner also reports 399 INVALID cases outside this milestone's admitted
+scope; these remain unqualified, including the three explicitly deferred Xbox
+cases. This is not the all-family Automated Conformance Gate.
 
 The focused architecture run passed all 16 checks. The compiled consumer check
 passed all four families in both consumer modes. The JDK-mechanism rejection
@@ -105,6 +115,11 @@ All seven TES3 slice checks, including the pinned local oracle differential and
 independent validator, also passed with no skipped cases. The complete CV1
 matrix remains a later gate; this milestone reevaluates the 32 BSA 067, 33
 General BA2 and 44 PC DDS admitted cases alongside the accepted TES3 slice.
+
+Separate Standards and Spec reviews found no remaining findings. Interface
+Freeze, all-family Automated Conformance, Binary Conformance, performance and
+manual release qualification remain separate gates. Later breaking corrections
+must follow REL-004 and REL-020, including explicit evidence and gate reset.
 
 Run the focused contracts and architecture checks with:
 

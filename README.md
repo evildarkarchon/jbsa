@@ -28,7 +28,8 @@ No contributor license agreement or DCO sign-off is required.
 
 ## Public interface milestone
 
-The library is at the **pre-1.0 Contract Baseline**. See
+The library is at the **pre-1.0 Interface Candidate** milestone. The interface
+remains unfrozen. See
 [the Interface Candidate audit](docs/development/interface-candidate.md) for the
 four-family consumer checks, post-1.0 Xbox scope and evidence gate status, and
 [the interface guide](docs/development/contract-baseline.md) for public JPMS usage, immutable

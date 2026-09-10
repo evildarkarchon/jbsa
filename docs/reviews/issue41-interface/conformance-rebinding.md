@@ -1,5 +1,36 @@
 # Conformance evidence after the Interface Candidate specification change
 
+## Recorded activation
+
+The maintainer approved review
+`a2e9702750796da6cad78a0e36458475c14bbdaf9b2d3da69c16825710b93c3c` on
+2026-09-10. Its 109 assertion objects were activated after the rebaseline
+verifier passed; see the [activation receipt](../../development/evidence/issue41-activation.json).
+The preparation procedure below is retained for that historical input catalog.
+
+A subsequent [source-location correction](../../development/evidence/issue41-source-repair.json)
+reuses original tracked synthetic bytes for 16 already-unqualified cases. All
+109 admitted case records and all three deferred Xbox case records remain
+exactly unchanged. The correction needed zero golden replacements and makes
+the active catalog usable without duplicate binary fixtures outside the
+synthetic corpus.
+
+The historical packet's nine raw binary copies are deliberately ignored.
+Their exact bytes already exist in the tracked synthetic corpus. To inspect the
+frozen historical packet, reconstruct those copies with:
+
+```powershell
+python build/materialize-interface-historical-sources.py
+```
+
+The materializer checks source hashes and limits writes to the recorded
+historical artifact directory. Current catalog execution uses the tracked
+original sources directly. The frozen packet and preparation/activation tools
+retain their reviewed bytes; their old active-catalog precondition intentionally
+prevents repeating activation against the later catalog.
+
+## Historical preparation procedure
+
 The governing specification is bound as a complete set in the active CV1
 catalog. Every executable assertion golden also embeds the SHA-256 of that set.
 Updating the catalog's specification hashes alone therefore makes its existing
