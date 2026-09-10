@@ -229,7 +229,11 @@ manifest **MUST** assign targeted cases that collectively cover:
   [JBSA-DDS-013](formats/dds-payload.md#jbsa-dds-013), canonical
   reconstruction, chunk boundaries, both `PC` and `XBOX` encode targets with
   matching inputs, both mismatch rejections, CLI DDS-selector-to-`PC` mapping,
-  and explicit, default, and qualified-profile reconstruction selection;
+  and explicit, default, and qualified-profile reconstruction selection, subject
+  to the 1.0 applicability boundary in
+  [JBSA-SCOPE-009](scope.md#jbsa-scope-009); matching-Xbox encode, Xbox-target
+  mismatch, and Xbox reconstruction-selection cases remain deferred after 1.0,
+  while PC-target rejection of Xbox input remains mandatory;
 - zero and out-of-range filename tables for General and DDS BA2, including the
   exact ordinal-disambiguated synthetic display names and absent original
   wire-name bytes and Normalized Name Identities;

@@ -2,7 +2,10 @@
 
 This specification owns DDS input analysis, mip partitioning, and canonical
 reconstruction for DDS BA2. It treats DDS as a binary envelope around opaque
-image bytes; it does not require BC or other pixel decoding.
+image bytes; it does not require BC or other pixel decoding. Xbox-specific
+behavior below is deferred beyond 1.0 by
+[JBSA-SCOPE-009](../scope.md#jbsa-scope-009); PC encode rejection of Xbox input
+remains applicable to 1.0.
 
 ## JBSA-DDS-001
 

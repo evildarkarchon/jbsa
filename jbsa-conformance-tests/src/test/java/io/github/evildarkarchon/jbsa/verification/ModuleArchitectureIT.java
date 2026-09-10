@@ -32,6 +32,37 @@ final class ModuleArchitectureIT {
   private static final String LIBRARY_ANCHOR = "io.github.evildarkarchon.jbsa.PackageAnchor";
   private static final String LIBRARY_MODULE = "io.github.evildarkarchon.jbsa";
   private static final Set<String> LIBRARY_EXPORTS = Set.of("io.github.evildarkarchon.jbsa");
+  // JDK types are not automatically safe API: executors, storage and native handles are internal.
+  private static final Set<String> PUBLIC_JDK_TYPES =
+      Set.of(
+          "java.lang.Object",
+          "java.lang.Record",
+          "java.lang.Enum",
+          "java.lang.String",
+          "java.lang.Long",
+          "java.lang.Class",
+          "java.lang.annotation.Annotation",
+          "java.lang.annotation.Retention",
+          "java.lang.annotation.RetentionPolicy",
+          "java.lang.annotation.Target",
+          "java.lang.annotation.ElementType",
+          "java.lang.Throwable",
+          "java.lang.AutoCloseable",
+          "java.lang.Comparable",
+          "java.lang.FunctionalInterface",
+          "java.io.IOException",
+          "java.nio.ByteBuffer",
+          "java.nio.channels.ReadableByteChannel",
+          "java.nio.charset.Charset",
+          "java.nio.file.Path",
+          "java.util.List",
+          "java.util.Map",
+          "java.util.Set",
+          "java.util.SortedMap",
+          "java.util.Optional",
+          "java.util.OptionalLong",
+          "java.util.function.BooleanSupplier",
+          "java.util.function.Consumer");
 
   /**
    * Asserts that inspecting one fixture reports the precise third-party type carried in its API
@@ -311,6 +342,12 @@ final class ModuleArchitectureIT {
       Class<?> exposedType = classType;
       Module module = exposedType.getModule();
       boolean isJavaType = module.isNamed() && module.getName().startsWith("java.");
+      if (isJavaType) {
+        assertTrue(
+            PUBLIC_JDK_TYPES.contains(exposedType.getName()),
+            () ->
+                boundary.context() + " exposes unreviewed JDK mechanism " + exposedType.getName());
+      }
       assertTrue(
           isJavaType || boundary.exportedPackages().contains(exposedType.getPackageName()),
           () ->
@@ -426,6 +463,31 @@ final class ModuleArchitectureIT {
         Class<?> type = Class.forName(className(entry), false, loader);
         assertExportedApiClassUsesAllowedTypes(type, exportedPackages);
       }
+    }
+  }
+
+  /** Checks that JDK implementation mechanisms cannot silently become public adapter seams. */
+  @Test
+  void publicBoundaryRejectsJdkImplementationMechanisms() {
+    for (Class<?> mechanism :
+        new Class<?>[] {
+          java.util.concurrent.Executor.class,
+          java.util.concurrent.ExecutorService.class,
+          java.util.concurrent.ForkJoinPool.class,
+          java.nio.channels.FileChannel.class,
+          java.nio.channels.SeekableByteChannel.class,
+          java.nio.file.FileSystem.class,
+          java.lang.foreign.MemorySegment.class,
+          java.io.PrintStream.class,
+          java.nio.IntBuffer.class
+        }) {
+      AssertionError failure =
+          assertThrows(
+              AssertionError.class,
+              () ->
+                  assertAllowedType(
+                      mechanism, new SignatureBoundary(LIBRARY_EXPORTS, "public request")));
+      assertFailureNamesType(failure, mechanism);
     }
   }
 

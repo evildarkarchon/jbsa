@@ -43,7 +43,11 @@ Public requests, options, policies, detections, detached metadata, Archive
 Assessments, Operation Reports, diagnostics, progress snapshots, and failure
 data **MUST** be immutable values. Collections and byte-valued metadata exposed
 by those values **MUST NOT** be mutable through a reference retained by either
-the caller or JBSA.
+the caller or JBSA. Referenced failure causes (`Throwable`) and caller-supplied
+callbacks or generated-payload factories retain their identity and lifetime
+contracts; immutability of the containing value does not promise a deep copy or
+freeze of those external objects. This exception does not permit mutable
+collections or byte-valued metadata to escape.
 
 Successful query operations **MUST** return their domain values. Successful
 `extract` and `pack` operations **MUST** return the common Operation Report, and
@@ -91,7 +95,10 @@ _Source decisions: [accepted entry capability](https://github.com/evildarkarchon
 ## JBSA-LIB-005
 
 Every public size, count, offset, span, ordinal, and progress counter **MUST** use
-`long`. Payloads **MUST NOT** cross the interface as whole-entry `byte[]` values.
+`long`. The inherited `ReadableByteChannel.read(ByteBuffer)` return value is
+the JDK `int` count for one bounded transfer (or its end-of-stream sentinel),
+not an archive or entry size; it is exempt from this rule.
+Payloads **MUST NOT** cross the interface as whole-entry `byte[]` values.
 Entry reads and caller-generated pack inputs **MUST** use channels, and the
 interface **MUST** admit archives and entries larger than 2 GiB without requiring
 resident payload memory proportional to the total archive, entry, or decoded
@@ -131,7 +138,9 @@ file-flag selection.
 
 The public `DdsTarget` value **MUST** have exactly `PC` and `XBOX` variants and
 **MUST** remain distinct from Archive Family, wire version, BA2 subtype, codec,
-and destination target policy. A `PackRequest` for FO4 DDS BA2 or Starfield DDS
+and destination target policy. For 1.0, `XBOX` is reserved for the later feature
+under [JBSA-SCOPE-009](scope.md#jbsa-scope-009).
+A `PackRequest` for FO4 DDS BA2 or Starfield DDS
 BA2 **MUST** carry exactly one encode `DdsTarget`; a request for every other
 Archive Family **MUST NOT** carry one. That encode field is independent of any
 `DdsTarget` later supplied through `OpenOptions` for reconstruction. Missing or
@@ -287,7 +296,10 @@ Subject to [JBSA-BUILD-003](modules-and-build.md#jbsa-build-003),
 extraction-target ports, output transactions, provider selection, provider or
 parser implementations, executors, schedulers, buffers, pools, spill or staging
 mechanics, callback dispatch mechanics, codec thresholds, native paths or
-handles, console streams, process exits, or third-party types.
+handles, console streams, process exits, or third-party types. The caller-owned
+`ByteBuffer` destination required by inherited
+`ReadableByteChannel.read(ByteBuffer)` is permitted; it does not expose a
+library-owned buffer, allocation strategy, or pooling contract.
 
 An additional public adapter seam **MUST NOT** be introduced without an explicit
 specification change and a demonstrated second production adapter. Internal

@@ -29,6 +29,8 @@ No contributor license agreement or DCO sign-off is required.
 ## Public interface milestone
 
 The library is at the **pre-1.0 Contract Baseline**. See
+[the Interface Candidate audit](docs/development/interface-candidate.md) for the
+four-family consumer checks, post-1.0 Xbox scope and evidence gate status, and
 [the interface guide](docs/development/contract-baseline.md) for public JPMS usage, immutable
 contracts and archive execution gates. The [TES3 walking slice](docs/development/tes3.md)
 provides Morrowind BSA inspection, owned content reads, extraction, packing, and thin CLI commands.
@@ -37,3 +39,6 @@ stored and zlib content, mixed-entry decoding, flags, and `-tes4` CLI operations
 The [Fallout 4 General BA2 slice](docs/development/fo4-general.md) adds `BTDX/GNRL`
 version 1 stored/zlib reading and writing, source overlays, sharing, splitting,
 and `-fo4` CLI operations.
+The [Fallout 4 PC DDS BA2 slice](docs/development/dds.md) adds compressed texture
+chunks and canonical PC DDS reconstruction. Xbox DDS support and qualification
+are deferred until after 1.0.

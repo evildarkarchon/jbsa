@@ -53,6 +53,10 @@ Selection **MUST** activate the complete bundle as one unit. JBSA **MUST NOT**
 provide an environment variable, configuration file, executable alias, or
 per-deviation switch that activates the profile or any subset of it.
 
+The first-release applicability of Xbox reconstruction and filename inference
+is governed by [JBSA-SCOPE-009](scope.md#jbsa-scope-009). The immutable profile
+payload below retains the later feature's definition and original digest.
+
 _Source decisions: [accepted profile and deviation policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted all-or-nothing CLI activation](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [profile-aware inspection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179510)._
 
 ## JBSA-COMPAT-004

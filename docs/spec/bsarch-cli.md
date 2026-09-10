@@ -107,7 +107,8 @@ encode directions **MUST** fail according to
 
 The v1 CLI **MUST NOT** provide a form that selects the `XBOX` DDS encode
 target. The `bsarch-1.0/v1` `_xbox.` filename behavior remains
-reconstruction-only under
+reconstruction-only and is deferred after 1.0 by
+[JBSA-SCOPE-009](scope.md#jbsa-scope-009), under
 [JBSA-DDS-010](formats/dds-payload.md#jbsa-dds-010) and
 [JBSA-COMPAT-006](compatibility-profiles.md#jbsa-compat-006).
 

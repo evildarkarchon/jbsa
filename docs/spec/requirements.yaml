@@ -1,6 +1,6 @@
 schema_version: 1
 specification:
-  version: 0.12.0
+  version: 0.13.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -1725,7 +1725,10 @@ requirements:
     lifecycle_state: active
     verification_class: automated-test
     implementing_issue: 33
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-candidate.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicMetadataContractIT.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
   - id: JBSA-LIB-003
     owner:
       document: docs/spec/library-interface.md
@@ -1759,7 +1762,9 @@ requirements:
     lifecycle_state: active
     verification_class: automated-test
     implementing_issue: 33
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-candidate.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicArchiveContractIT.java
   - id: JBSA-LIB-006
     owner:
       document: docs/spec/library-interface.md
@@ -1841,7 +1846,9 @@ requirements:
     lifecycle_state: active
     verification_class: automated-test
     implementing_issue: 33
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-candidate.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java
   - id: JBSA-LIB-012
     owner:
       document: docs/spec/library-interface.md
@@ -2473,10 +2480,14 @@ requirements:
       anchor: jbsa-rel-004
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
+      - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#acceptance
     lifecycle_state: active
     verification_class: conformance-case
     implementing_issue: 41
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-candidate.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicModuleConsumerIT.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java
   - id: JBSA-REL-005
     owner:
       document: docs/spec/release-gates.md
@@ -2873,6 +2884,17 @@ requirements:
     verification_class: release-audit
     implementing_issue: 60
     test_evidence: []
+  - id: JBSA-SCOPE-009
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-009
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#post-10-xbox-dds-deferral
+    lifecycle_state: active
+    verification_class: document-review
+    implementing_issue: 41
+    test_evidence:
+      - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#post-10-xbox-dds-deferral
   - id: JBSA-TES3-001
     owner:
       document: docs/spec/formats/tes3-bsa.md

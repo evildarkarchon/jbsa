@@ -15,18 +15,15 @@ import org.junit.jupiter.api.io.TempDir;
 final class PublicModuleConsumerIT {
   @TempDir Path directory;
 
-  /** A CLI-like and an embedded consumer both learn the same deep module and lifetime contracts. */
+  /**
+   * Runs embedded generated-input/owned-read and CLI-like detached-query/extraction flows across
+   * TES3, TES4, General BA2, and PC DDS BA2 with the CLI implementation absent.
+   */
   @Test
   void publicExportsSupportBothConsumerStyles() throws Exception {
     String libraryJar = System.getProperty("jbsa.library.jar");
-    Path vector =
-        Path.of(System.getProperty("jbsa.reactor.root"))
-            .resolve("tests/fixtures/tes3/tes3-stored.hex");
-    Path archive =
-        Files.write(
-            directory.resolve("independent.bsa"),
-            java.util.HexFormat.of().parseHex(Files.readString(vector).strip()));
-    for (String consumer : new String[] {"cli", "embedded"}) {
+    // The CLI and test-support JARs are deliberately absent from the consumer module path.
+    for (String consumer : new String[] {"embedded", "cli"}) {
       Path source = Files.createDirectories(directory.resolve("source-" + consumer));
       Path classes = Files.createDirectories(directory.resolve("classes-" + consumer));
       Path descriptor = source.resolve("module-info.java");
@@ -44,26 +41,106 @@ final class PublicModuleConsumerIT {
             /** Runs each real operation through named-module exports and owned public capabilities. */
             public static void main(String[] args) throws Exception {
               var library = BethesdaArchives.standard();
-              if (library.detect(Path.of(args[0])).status() != DetectionStatus.SUPPORTED_FAMILY) {
-                throw new AssertionError("Recognition unavailable through public exports");
-              }
-              var inspection = library.inspect(Path.of(args[0]));
-              if (inspection.entries().size() != 2 || embeddedRead(Path.of(args[0])) != 4) {
-                throw new AssertionError("Public entry inspection or owned reading failed");
-              }
-              Path extracted = Path.of(args[1]).resolve("extracted");
-              cliExtract(ExtractRequest.standard(Path.of(args[0]), extracted));
-              Path packed = Path.of(args[1]).resolve("repacked.bsa");
-              embeddedPack(PackRequest.standard(packed, ArchiveFamily.TES3_BSA,
-                  ArchiveEncoding.tes3(), java.util.List.of(new PackSource.DetectedPath(extracted)),
-                  java.util.Optional.empty()), OperationControl.standard());
-              if (java.nio.file.Files.mismatch(Path.of(args[0]), packed) != -1) {
-                throw new AssertionError("Public extract and repack changed independent fixture bytes");
+              Path root = Path.of(args[0]);
+              for (ArchiveFamily family : new ArchiveFamily[] {ArchiveFamily.TES3_BSA,
+                  ArchiveFamily.TES4_BSA, ArchiveFamily.FO4_GENERAL_BA2, ArchiveFamily.FO4_DDS_BA2}) {
+                Path path = root.resolve(family + ".archive");
+                byte[] expected = payload(family);
+                String name = family == ArchiveFamily.FO4_DDS_BA2 ? "textures/sample.dds" : "meshes/sample.txt";
+                if (args[1].equals("embedded")) {
+                  long[] opened = {0}, closed = {0};
+                  var source = new PackSource.GeneratedEntry(name, expected.length, () -> {
+                    opened[0]++;
+                    return java.nio.channels.Channels.newChannel(new java.io.ByteArrayInputStream(expected) {
+                      /** Records JBSA's release of every generated channel. */
+                      public void close() throws java.io.IOException {
+                        super.close();
+                        closed[0]++;
+                      }
+                    });
+                  });
+                  var progress = new java.util.ArrayList<ProgressSnapshot>();
+                  checkReport(library.pack(request(path, family, java.util.List.of(source)),
+                      new OperationControl(progress::add, () -> false)), Operation.PACK);
+                  require(opened[0] > 0 && opened[0] == closed[0], "generated ownership");
+                  require(!progress.isEmpty(), "progress");
+                  require(embeddedRead(path, expected) == expected.length, "owned payload");
+                  Path repacked = root.resolve(family + ".repacked");
+                  checkReport(embeddedPack(request(repacked, family,
+                      java.util.List.of(new PackSource.DetectedPath(path))), OperationControl.standard()),
+                      Operation.PACK);
+                  require(java.nio.file.Files.mismatch(path, repacked) == -1, "canonical repack");
+                } else {
+                  require(library.detect(path).status() == DetectionStatus.SUPPORTED_FAMILY, "detection");
+                  var inspection = library.inspect(path);
+                  require(inspection.equals(library.inspect(path, OpenOptions.standard())), "defaults");
+                  require(inspection.entries().size() == 1, "inspection count");
+                  require(inspection.entries().getFirst().family() == family, "family");
+                  Path extracted = root.resolve(family + "-extracted");
+                  checkReport(cliExtract(ExtractRequest.standard(path, extracted)), Operation.EXTRACT);
+                  require(java.util.Arrays.equals(expected,
+                      java.nio.file.Files.readAllBytes(extracted.resolve(name))), "extracted bytes");
+                  Path cancelled = root.resolve(family + "-cancelled");
+                  try {
+                    library.extract(ExtractRequest.standard(path, cancelled),
+                        new OperationControl(snapshot -> {
+                          throw new AssertionError("pre-cancel progress");
+                        }, () -> true));
+                    throw new AssertionError("cancellation succeeded");
+                  } catch (ArchiveCancelledException failure) {
+                    require(failure.kind() == FailureKind.CANCELLED, "cancellation kind");
+                    require(!java.nio.file.Files.exists(cancelled), "cancellation effects");
+                  }
+                }
               }
             }
+            /** Returns independent canonical bytes, including a 4x4 PC BC1 DDS envelope. */
+            static byte[] payload(ArchiveFamily family) {
+              if (family != ArchiveFamily.FO4_DDS_BA2) return new byte[] {1, 2, 3, 4};
+              var bytes = java.nio.ByteBuffer.allocate(136).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+              bytes.putInt(0, 0x20534444).putInt(4, 124).putInt(8, 0xa1007);
+              bytes.putInt(12, 4).putInt(16, 4).putInt(20, 8).putInt(24, 1).putInt(28, 1);
+              bytes.putInt(76, 32).putInt(80, 4).putInt(84, 0x31545844).putInt(108, 0x1000);
+              for (int i = 128; i < 136; i++) bytes.put(i, (byte) i);
+              return bytes.array();
+            }
+            /** Selects family wire encoding and the mandatory explicit DDS encode target. */
+            static PackRequest request(Path path, ArchiveFamily family, java.util.List<PackSource> sources) {
+              var encoding = family == ArchiveFamily.TES3_BSA ? ArchiveEncoding.tes3()
+                  : new ArchiveEncoding(java.util.Optional.of(new WireVersion(
+                      family == ArchiveFamily.TES4_BSA ? 103 : 1)),
+                      family == ArchiveFamily.TES4_BSA ? java.util.Optional.empty()
+                          : java.util.Optional.of(family == ArchiveFamily.FO4_DDS_BA2
+                              ? Ba2Subtype.DX10 : Ba2Subtype.GNRL),
+                      java.util.OptionalLong.empty());
+              var defaults = PackRequest.standard(path, family, encoding, sources,
+                  family == ArchiveFamily.FO4_DDS_BA2 ? java.util.Optional.of(DdsTarget.PC)
+                      : java.util.Optional.empty());
+              if (family == ArchiveFamily.TES3_BSA || family == ArchiveFamily.FO4_DDS_BA2) return defaults;
+              var options = defaults.options();
+              return new PackRequest(path, family, encoding, defaults.compatibilityProfile(), sources,
+                  defaults.targetPolicy(), defaults.diagnosticPolicy(), defaults.resourceLimits(),
+                  defaults.workerSelection(), new PackOptions(options.inclusionMasks(),
+                      PackOptions.Compression.ZLIB, options.sharing(), options.splitting(),
+                      options.archiveFlags(), options.fileFlags()), defaults.ddsTarget());
+            }
+            /** Checks detached successful publication facts. */
+            static void checkReport(OperationReport report, Operation operation) {
+              require(report.operation() == operation && !report.artifacts().isEmpty(), "report");
+              for (Artifact artifact : report.artifacts()) {
+                require(artifact.state() == ArtifactState.PUBLISHED, "publication state");
+                require(artifact.path().isAbsolute()
+                    && artifact.path().equals(artifact.path().normalize()), "artifact path");
+              }
+            }
+            /** Makes failures in the independently compiled consumer visible to the parent test. */
+            static void require(boolean condition, String message) {
+              if (!condition) throw new AssertionError(message);
+            }
             /** Reads one payload to EOF while retaining detached metadata after all handles close. */
-            static long embeddedRead(Path path) throws Exception {
+            static long embeddedRead(Path path, byte[] expected) throws Exception {
               EntryMetadata metadata;
+              EntryContent outstanding;
               try (OpenArchive archive = BethesdaArchives.standard().open(path, OpenOptions.standard())) {
                 ArchiveInspection detached = archive.inspection();
                 long count = archive.entryCount();
@@ -71,10 +148,19 @@ final class PublicModuleConsumerIT {
                 ArchiveEntry entry = archive.entry(0L);
                 metadata = entry.metadata();
                 try (EntryContent content = entry.openContent()) {
-                  java.nio.ByteBuffer window = java.nio.ByteBuffer.allocate(4096);
-                  while (content.read(window) != -1) window.clear();
+                  require(content.assessment().isEmpty(), "premature assessment");
+                  require(java.util.Arrays.equals(expected,
+                      java.nio.channels.Channels.newInputStream(content).readAllBytes()), "owned bytes");
                   content.assessment().orElseThrow();
                 }
+                outstanding = entry.openContent();
+              }
+              require(!outstanding.isOpen(), "parent-owned child lifetime");
+              try {
+                outstanding.read(java.nio.ByteBuffer.allocate(1));
+                throw new AssertionError("closed child accepted a read");
+              } catch (java.nio.channels.ClosedChannelException expectedClose) {
+                // Parent close invalidates all outstanding content channels.
               }
               return metadata.decodedSize();
             }
@@ -114,8 +200,8 @@ final class PublicModuleConsumerIT {
                   modulePath,
                   "--module",
                   "consumer." + consumer + "/consumer.Main",
-                  archive.toString(),
-                  Files.createDirectory(directory.resolve("outputs-" + consumer)).toString())
+                  directory.toString(),
+                  consumer)
               .redirectErrorStream(true)
               .redirectOutput(output.toFile())
               .start();

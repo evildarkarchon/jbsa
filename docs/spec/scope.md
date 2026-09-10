@@ -77,3 +77,22 @@ first immutable Performance Baseline, and pass the separately specified human
 qualification and approval gates.
 
 _Source decision: [accepted first-release rule](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241)._
+
+## JBSA-SCOPE-009
+
+For JBSA 1.0, Xbox DDS encode, Xbox canonical reconstruction, and Xbox filename
+inference **MUST** be deferred until after version 1.0. Their implementation and
+qualification obligations, including matching-Xbox encode, Xbox-target mismatch,
+and Xbox reconstruction-selection cases, **MUST NOT** gate the Interface
+Candidate or any subsequent 1.0 release gate. Existing unqualified results
+**MUST** remain unqualified and **MUST NOT** be represented as passing evidence.
+
+The remaining DDS PC obligations, including rejection of Xbox input when the
+encode target is `PC`, **MUST** remain in scope. `DdsTarget.XBOX` **MUST** remain
+a reserved public value for the later feature; its presence, internal code, or
+local tests **MUST NOT** imply a 1.0 Xbox support or qualification claim. The
+detailed Xbox rules retained in the DDS, CLI, and compatibility specifications
+apply to that later feature. All first-release completeness claims in this set
+**MUST** use this boundary; no other Archive Family or feature is deferred by it.
+
+_Source decision: [post-1.0 Xbox DDS deferral](../../.scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#post-10-xbox-dds-deferral)._

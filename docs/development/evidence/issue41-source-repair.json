@@ -1,0 +1,89 @@
+{
+  "admitted_case_count": 109,
+  "admitted_cases_exactly_unchanged": true,
+  "admitted_cases_sha256": "d24b3922539b9440d062c0c708e163c432e1737b5718d71d560f862127bea79a",
+  "before_catalog": {
+    "path": "docs/reviews/issue41-interface/conformance-rebinding/catalog.json",
+    "sha256": "bb37f9b75333149d56f5e0c8ab98cfebfdcb526bac6241d7282e1d421fb742ba"
+  },
+  "golden_rebaseline_required": false,
+  "rationale": "Reuse original tracked synthetic bytes within the compliance allowlist; no golden evidence changes.",
+  "repaired_cases": [
+    {
+      "new": "CV1-bsa-068.scenario.compression-boundaries-interface-v1-tracked-source-v1.zlib.standard-v1",
+      "old": "CV1-bsa-068.scenario.compression-boundaries-interface-v1.zlib.standard-v1"
+    },
+    {
+      "new": "CV1-bsa-068.scenario.names-wire-encodings-interface-v1-tracked-source-v1.stored.standard-v1",
+      "old": "CV1-bsa-068.scenario.names-wire-encodings-interface-v1.stored.standard-v1"
+    },
+    {
+      "new": "CV1-bsa-068.scenario.source-splitting-interface-v1-tracked-source-v1.stored.standard-v1",
+      "old": "CV1-bsa-068.scenario.source-splitting-interface-v1.stored.standard-v1"
+    },
+    {
+      "new": "CV1-fo4-gnrl-v7.decode.base-fo4-gnrl-v7-stored-interface-v1-tracked-source-v1.stored.standard-v1",
+      "old": "CV1-fo4-gnrl-v7.decode.base-fo4-gnrl-v7-stored-interface-v1.stored.standard-v1"
+    },
+    {
+      "new": "CV1-fo4-gnrl-v7.decode.base-fo4-gnrl-v7-zlib-interface-v1-tracked-source-v1.zlib.standard-v1",
+      "old": "CV1-fo4-gnrl-v7.decode.base-fo4-gnrl-v7-zlib-interface-v1.zlib.standard-v1"
+    },
+    {
+      "new": "CV1-fo4-gnrl-v7.encode.base-fo4-gnrl-v7-stored-interface-v1-tracked-source-v1.stored.standard-v1",
+      "old": "CV1-fo4-gnrl-v7.encode.base-fo4-gnrl-v7-stored-interface-v1.stored.standard-v1"
+    },
+    {
+      "new": "CV1-fo4-gnrl-v7.encode.base-fo4-gnrl-v7-zlib-interface-v1-tracked-source-v1.zlib.standard-v1",
+      "old": "CV1-fo4-gnrl-v7.encode.base-fo4-gnrl-v7-zlib-interface-v1.zlib.standard-v1"
+    },
+    {
+      "new": "CV1-global.scenario.limits-standard-boundaries-interface-v1-tracked-source-v1.none.standard-v1",
+      "old": "CV1-global.scenario.limits-standard-boundaries-interface-v1.none.standard-v1"
+    },
+    {
+      "new": "CV1-global.scenario.source-overlay-interface-v1-tracked-source-v1.none.standard-v1",
+      "old": "CV1-global.scenario.source-overlay-interface-v1.none.standard-v1"
+    },
+    {
+      "new": "CV1-sf-gnrl-v3-m3.decode.base-sf-gnrl-v3-m3-mixed-interface-v1-tracked-source-v1.mixed.standard-v1",
+      "old": "CV1-sf-gnrl-v3-m3.decode.base-sf-gnrl-v3-m3-mixed-interface-v1.mixed.standard-v1"
+    },
+    {
+      "new": "CV1-sf-gnrl-v3-m3.decode.base-sf-gnrl-v3-m3-raw-lz4-interface-v1-tracked-source-v1.raw-lz4.standard-v1",
+      "old": "CV1-sf-gnrl-v3-m3.decode.base-sf-gnrl-v3-m3-raw-lz4-interface-v1.raw-lz4.standard-v1"
+    },
+    {
+      "new": "CV1-sf-gnrl-v3-m3.decode.truncated-ba2-header-interface-v1-tracked-source-v1.raw-lz4.standard-v1",
+      "old": "CV1-sf-gnrl-v3-m3.decode.truncated-ba2-header-interface-v1.raw-lz4.standard-v1"
+    },
+    {
+      "new": "CV1-sf-gnrl-v3-m3.decode.unsupported-v3-method-interface-v1-tracked-source-v1.zlib.standard-v1",
+      "old": "CV1-sf-gnrl-v3-m3.decode.unsupported-v3-method-interface-v1.zlib.standard-v1"
+    },
+    {
+      "new": "CV1-sf-gnrl-v3-m3.encode.base-sf-gnrl-v3-m3-mixed-interface-v1-tracked-source-v1.mixed.standard-v1",
+      "old": "CV1-sf-gnrl-v3-m3.encode.base-sf-gnrl-v3-m3-mixed-interface-v1.mixed.standard-v1"
+    },
+    {
+      "new": "CV1-sf-gnrl-v3-m3.encode.base-sf-gnrl-v3-m3-raw-lz4-interface-v1-tracked-source-v1.raw-lz4.standard-v1",
+      "old": "CV1-sf-gnrl-v3-m3.encode.base-sf-gnrl-v3-m3-raw-lz4-interface-v1.raw-lz4.standard-v1"
+    },
+    {
+      "new": "CV1-tes3.scenario.determinism-sequential-interface-v1-tracked-source-v1.stored.standard-v1",
+      "old": "CV1-tes3.scenario.determinism-sequential-interface-v1.stored.standard-v1"
+    }
+  ],
+  "source_manifest": {
+    "path": "docs/development/evidence/issue41-unqualified-manifest.json",
+    "sha256": "11955ffdb18fb5777e79f2213ead4b67735f475512a576f6059162c250b0670d"
+  },
+  "status": "source-correction-applied",
+  "corrected_catalog": {
+    "path": "tests/conformance/catalog.json",
+    "sha256": "2e809dcd21304abf4edacf83d296414ee428b72ff1f0a4130f42b7eb99282e77"
+  },
+  "rebaseline_verification": "PASS: immutable CV1 identities and 0 approved golden replacements",
+  "deferred_xbox_case_objects_exactly_unchanged": true,
+  "qualification_change": false
+}

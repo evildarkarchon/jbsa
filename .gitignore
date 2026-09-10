@@ -31,3 +31,14 @@ graphify-out/
 !/tests/fixtures/local/README.md
 .claude/settings.json
 /codex/hooks.json
+
+# Historical approved packet binaries are reconstructed from tracked synthetic sources.
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/0e28f31ac9c0dff4f2f60d08f3e4b20f3571699ca363b757073759d972bbe1e8.bin
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/1dc8e7619873d827ea3675356313869e80048fe67bddf9b03369fb75780c34c4.ba2
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/2dd431fbf6c5595d005b39798c2a3a9a6fe0f22d8b184d62cae663d30477c729.ba2
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/4cc8ba2a423efb5b9ad2457f9538a902ea36954a35b92922892930bfe6a99633.ba2
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/54a3a04988e447191b3d1ca3f88e5b9cca675f89d24c3c81278061e14f3b7fea.ba2
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/5e642abf58bbee7fd37e090e3dae2d0b60d491cb660dd52e3812a43f2f4f1e46.bin
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/bf5e8ffa51a9e748985800c1d3d7f1a2a6ae7435136593ca8d9637e3f87c699c.bin
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/dd9136724bbb62723df2d2ab271f154e6ea035195ba1b53e23485673ac8b1b04.ba2
+/docs/reviews/issue41-interface/conformance-rebinding/corpora/88727fae349b7e58/artifacts/e53d0bf336fb396d59feb69b2d81631688ea92f6bdbbb410ccab720d8de7d481.ba2

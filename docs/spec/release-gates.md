@@ -5,7 +5,9 @@ implemented behavior into bounded release claims. It does not redefine behavior
 owned by the format, library, CLI, compatibility, conformance, performance,
 distribution, or compliance specifications. A linked owning requirement or
 case decides whether its evidence passes; this file decides when that evidence
-is sufficient to advance a candidate.
+is sufficient to advance a candidate. First-release applicability follows
+[JBSA-SCOPE-009](scope.md#jbsa-scope-009), including the post-1.0 Xbox DDS
+deferral; retained unqualified Xbox cases do not become passing results.
 
 ## JBSA-REL-001
 
@@ -61,7 +63,23 @@ interface and all known corrective changes revealed by those representative
 stored, compressed, General, DDS, BSA, and BA2 structures. Passing it **MUST NOT**
 freeze the interface or imply coverage of remaining Archive Families.
 
-_Source decision: [accepted Interface Candidate milestone and representative-slice order](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241)._
+The candidate evidence **MUST** audit public packages and names, immutable
+values, requests, results, errors, diagnostics, ownership, resource limits,
+progress, cancellation, and artifact semantics across those four slices. It
+**MUST** include compiled CLI-like and embedded consumer contract tests and
+module deletion/depth checks. Each finding **MUST** be resolved with owning
+specification and requirement-registry updates and compatibility tests.
+
+Before Interface Freeze, a later breaking correction **MUST** identify its
+conformance evidence, affected contract, specification and registry updates,
+and compatibility tests. It **MUST** return the Interface Candidate Gate and
+any downstream gate relying on that interface to `OPEN` before rerunning their
+applicable evidence against the corrected candidate. An earlier `PASS`
+**MUST NOT** be retained for the changed interface. This reset does not establish
+source or binary compatibility or apply the post-freeze approval rule in
+[JBSA-REL-007](#jbsa-rel-007).
+
+_Source decisions: [accepted Interface Candidate milestone and representative-slice order](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [Interface Candidate audit and later-correction acceptance](../../.scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#acceptance)._
 
 ## JBSA-REL-005
 

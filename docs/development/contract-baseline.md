@@ -1,5 +1,10 @@
 # Public archive Contract Baseline
 
+This page records the historical baseline. The current
+[Interface Candidate audit](interface-candidate.md) covers the four representative
+families and the later evidence gate; its status supersedes capability-availability
+notes below.
+
 Issue [#33](https://github.com/evildarkarchon/jbsa/issues/33) establishes the **pre-1.0
 Contract Baseline**, not Interface Candidate or Interface Freeze. Breaking corrections remain
 expected as the representative Archive Families exercise these contracts. The sole production
