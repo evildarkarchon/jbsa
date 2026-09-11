@@ -218,6 +218,13 @@ public final class PackSources {
               + value.fileNamesLength()
               + ((value.archiveFlags() & 1) != 0 ? value.folderCount() : 0)
               + inspection.entries().stream()
+                  .mapToLong(
+                      entry ->
+                          entry.wireNames().containsKey("embedded")
+                              ? 1 + entry.wireNames().get("embedded").length()
+                              : 0)
+                  .sum()
+              + inspection.entries().stream()
                       .filter(e -> ((EntryMetadata.VersionedBsa) e.facts()).compressed())
                       .count()
                   * 4;

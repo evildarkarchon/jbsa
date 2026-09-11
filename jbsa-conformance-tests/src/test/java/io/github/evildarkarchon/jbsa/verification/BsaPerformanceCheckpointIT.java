@@ -15,9 +15,10 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.Random;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Explicit local development measurements; these are not the normative PV1 qualification. */
 @Tag("bsa")
@@ -25,9 +26,10 @@ import org.junit.jupiter.api.io.TempDir;
 final class BsaPerformanceCheckpointIT {
   @TempDir Path directory;
 
-  /** Records three warm measurements per codec after a discarded round on the current machine. */
-  @Test
-  void recordsCurrentMachineCheckpoint() throws Exception {
+  /** Records matched 0x67 and 0x68 workloads, discarding the first round of each codec. */
+  @ParameterizedTest
+  @ValueSource(ints = {0x67, 0x68})
+  void recordsCurrentMachineCheckpoint(int version) throws Exception {
     org.junit.jupiter.api.Assumptions.assumeFalse("true".equals(System.getenv("GITHUB_ACTIONS")));
     Path sources = Files.createDirectories(directory.resolve("sources/meshes"));
     Random random = new Random(38067);
@@ -39,7 +41,8 @@ final class BsaPerformanceCheckpointIT {
     }
     Path evidence =
         Path.of(System.getProperty("jbsa.reactor.root"))
-            .resolve("target/bsa-performance-checkpoint/" + directory.getFileName());
+            .resolve(
+                "target/bsa-performance-checkpoint/" + version + "-" + directory.getFileName());
     Files.createDirectories(evidence);
     StringBuilder rows =
         new StringBuilder(
@@ -52,7 +55,9 @@ final class BsaPerformanceCheckpointIT {
         Path archive = directory.resolve(compression + "-" + round + ".bsa");
         long before = System.nanoTime();
         BethesdaArchives.standard()
-            .pack(request(sources.getParent(), archive, compression), OperationControl.standard());
+            .pack(
+                request(sources.getParent(), archive, compression, version),
+                OperationControl.standard());
         double packSeconds = (System.nanoTime() - before) / 1e9;
         Path extracted = directory.resolve("extracted-" + compression + "-" + round);
         before = System.nanoTime();
@@ -107,7 +112,10 @@ final class BsaPerformanceCheckpointIT {
     Files.writeString(
         evidence.resolve("conditions.txt"),
         "Development checkpoint; NOT formal PV1 qualification.\n"
-            + "User authorized current-machine measurement without idle or reboot gating.\n"
+            + "Requested issue regression measurement; no idle or reboot attestation.\n"
+            + "wire_version="
+            + version
+            + "\n"
             + "Concurrent development work may affect timings.\n"
             + "One warmup and three measured rounds; sequential library calls; 16 MiB mixed corpus.\n"
             + "Random access measures 64 entry opens with 4 KiB prefix reads, not seeking.\n"
@@ -131,13 +139,13 @@ final class BsaPerformanceCheckpointIT {
    * Uses an explicit sequential, unshared plan and a bounded scratch ceiling for the checkpoint.
    */
   private static PackRequest request(
-      Path source, Path archive, PackOptions.Compression compression) {
+      Path source, Path archive, PackOptions.Compression compression, int version) {
     var limits = ResourceLimits.standard();
     return new PackRequest(
         archive,
-        ArchiveFamily.TES4_BSA,
+        version == 0x67 ? ArchiveFamily.TES4_BSA : ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA,
         new ArchiveEncoding(
-            Optional.of(new WireVersion(103)), Optional.empty(), OptionalLong.empty()),
+            Optional.of(new WireVersion(version)), Optional.empty(), OptionalLong.empty()),
         Optional.empty(),
         List.of(new PackSource.DetectedPath(source)),
         TargetPolicy.FAIL,

@@ -103,7 +103,10 @@ public final class Main {
                                                     || invocation.family()
                                                         == ArchiveFamily.FO4_DDS_BA2
                                                 ? 1
-                                                : 0x67)),
+                                                : invocation.family()
+                                                        == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
+                                                    ? 0x68
+                                                    : 0x67)),
                                     invocation.family() == ArchiveFamily.FO4_GENERAL_BA2
                                         ? Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.GNRL)
                                         : invocation.family() == ArchiveFamily.FO4_DDS_BA2
@@ -141,6 +144,9 @@ public final class Main {
                         .filter(artifact -> artifact.state() == ArtifactState.PUBLISHED)
                         .count());
           } else {
+            if (invocation.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA) {
+              output.println("Selector: " + invocation.familySelector());
+            }
             for (OperationReport.ArchivePart part : report.archiveParts()) {
               output.println(
                   "Archive part: "
@@ -354,6 +360,8 @@ public final class Main {
     output.println("TES3 pack: -tes3 -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println(
         "TES4 pack: -tes4 [-z|-z:zlib] [-af:hex] [-ff:hex] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
+    output.println(
+        "FO3/FNV/Skyrim LE pack: -fo3|-fnv|-tes5 [-z|-z:zlib] [-af:hex] [-ff:hex] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println("Mutations: --replace --no-progress; administration: --help --version");
   }
 

@@ -46,3 +46,12 @@ docs/reviews/issue43-lz4-runtime/** text eol=lf
 docs/reviews/issue43-lz4-runtime/**/*.ba2 -text
 docs/reviews/issue43-lz4-runtime/**/*.bin -text
 build/*lz4*.py text eol=lf
+
+# These fixtures and review inputs bind the authored bytes, including native JSON newlines.
+# Prevent checkout conversion from invalidating recorded digests or regeneration comparisons.
+# Retained CRLF is a line ending, while ordinary trailing-space checks still apply.
+build/bsa68-*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/fixtures/bsa068/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/reviews/issue42-cv1/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/development/evidence/issue42-build.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/development/evidence/issue42-performance/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "corpus_id": "jbsa-bsa-068-wire-vectors-v1",
+  "spdx_license": "CC0-1.0",
+  "creator": "JBSA project contributors",
+  "redistribution_class": "project-authored-redistributable",
+  "source": "docs/spec/formats/versioned-bsa.md; synthetic shared-family game-selector vectors",
+  "generators": [
+    {
+      "path": "build/generate-bsa068-fixtures.py",
+      "sha256": "1bef4c7a7ee2661ebe4acc0e78afddcd0e9392d1c131edf06ba9ab6809b57907"
+    },
+    {
+      "path": "build/generate-bsa-fixtures.py",
+      "sha256": "09526e38d6e19173bf3ced9e3b958bfcb2713b338514362671115d29b319902d"
+    }
+  ],
+  "payloads": [
+    {
+      "name": "meshes/a.nif",
+      "size": 1024,
+      "sha256": "6ab72eeb9e77b07540897e0c8d6d23ec8eef0f8c3a47e1b3f4e93443d9536bed"
+    },
+    {
+      "name": "meshes/b.nif",
+      "size": 4,
+      "sha256": "3d1f57c984978ef98a18378c8166c1cb8ede02c03eeb6aee7e2f121dfeee3e56"
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "fallout3-stored",
+      "path": "fallout3-stored.hex",
+      "game": "fallout3",
+      "cli_selector": "-fo3",
+      "compression": "stored",
+      "embedded_names": false,
+      "wire_size": 1132,
+      "wire_sha256": "696cd7ddc9c0b7e6cf353e3f8f278320af4670db3772e506d2b80b8df28858d4",
+      "file_sha256": "50e503625ac08c688a130eb4918297c5dbbe04ac1abf98a85d5024c0470314ee",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fallout3-stored-embedded",
+      "path": "fallout3-stored-embedded.hex",
+      "game": "fallout3",
+      "cli_selector": "-fo3",
+      "compression": "stored",
+      "embedded_names": true,
+      "wire_size": 1158,
+      "wire_sha256": "48ba817e91404a2701c15fe179bccd3a5126cc0c7fa7a6f8ed5466ec03a987e7",
+      "file_sha256": "b486e581d7d693da812019d5a990484f08aa8fd5367ab9279bb46cc19e0010b9",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fallout3-zlib",
+      "path": "fallout3-zlib.hex",
+      "game": "fallout3",
+      "cli_selector": "-fo3",
+      "compression": "zlib",
+      "embedded_names": false,
+      "wire_size": 141,
+      "wire_sha256": "1e065281756b619c3f06e621691a731cc32cbe72f6764d41dc9dcf476119c027",
+      "file_sha256": "cc17dec6fb3a681968d0f0e49c41dcc5bb22e81d5f0467d57f76e83622b11d56",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fallout3-zlib-embedded",
+      "path": "fallout3-zlib-embedded.hex",
+      "game": "fallout3",
+      "cli_selector": "-fo3",
+      "compression": "zlib",
+      "embedded_names": true,
+      "wire_size": 167,
+      "wire_sha256": "ba479ba01e85bf75d5ce5650deb8b5c5cd9416c260de9f4c683660c3ee4dc9aa",
+      "file_sha256": "d16de361490067b07ad4157d9d3aac00fa377d6cf600ab1092f529438de09d7e",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fallout3-mixed",
+      "path": "fallout3-mixed.hex",
+      "game": "fallout3",
+      "cli_selector": "-fo3",
+      "compression": "mixed",
+      "embedded_names": false,
+      "wire_size": 129,
+      "wire_sha256": "a07a8a3ee8763481c1fe5ba1def561aff11a3d347390ea026d12686e5fba3219",
+      "file_sha256": "953aaaf11c06e4d034323fa0fe13381edd2ca17b6b1d4fdff03070b7a0b6dd7c",
+      "oracle_sha256": null
+    },
+    {
+      "id": "fallout3-mixed-embedded",
+      "path": "fallout3-mixed-embedded.hex",
+      "game": "fallout3",
+      "cli_selector": "-fo3",
+      "compression": "mixed",
+      "embedded_names": true,
+      "wire_size": 155,
+      "wire_sha256": "23ce92a3013ef372ade7b02bb9db5c593272c75383d293e4dc46bad749af8d71",
+      "file_sha256": "6b4e8d6faa2b8bde50b7ae1802ce8014974cb36d5c653da45b52acfe3330a54f",
+      "oracle_sha256": null
+    },
+    {
+      "id": "new-vegas-stored",
+      "path": "new-vegas-stored.hex",
+      "game": "new-vegas",
+      "cli_selector": "-fnv",
+      "compression": "stored",
+      "embedded_names": false,
+      "wire_size": 1132,
+      "wire_sha256": "696cd7ddc9c0b7e6cf353e3f8f278320af4670db3772e506d2b80b8df28858d4",
+      "file_sha256": "50e503625ac08c688a130eb4918297c5dbbe04ac1abf98a85d5024c0470314ee",
+      "oracle_sha256": null
+    },
+    {
+      "id": "new-vegas-stored-embedded",
+      "path": "new-vegas-stored-embedded.hex",
+      "game": "new-vegas",
+      "cli_selector": "-fnv",
+      "compression": "stored",
+      "embedded_names": true,
+      "wire_size": 1158,
+      "wire_sha256": "48ba817e91404a2701c15fe179bccd3a5126cc0c7fa7a6f8ed5466ec03a987e7",
+      "file_sha256": "b486e581d7d693da812019d5a990484f08aa8fd5367ab9279bb46cc19e0010b9",
+      "oracle_sha256": null
+    },
+    {
+      "id": "new-vegas-zlib",
+      "path": "new-vegas-zlib.hex",
+      "game": "new-vegas",
+      "cli_selector": "-fnv",
+      "compression": "zlib",
+      "embedded_names": false,
+      "wire_size": 141,
+      "wire_sha256": "1e065281756b619c3f06e621691a731cc32cbe72f6764d41dc9dcf476119c027",
+      "file_sha256": "cc17dec6fb3a681968d0f0e49c41dcc5bb22e81d5f0467d57f76e83622b11d56",
+      "oracle_sha256": null
+    },
+    {
+      "id": "new-vegas-zlib-embedded",
+      "path": "new-vegas-zlib-embedded.hex",
+      "game": "new-vegas",
+      "cli_selector": "-fnv",
+      "compression": "zlib",
+      "embedded_names": true,
+      "wire_size": 167,
+      "wire_sha256": "ba479ba01e85bf75d5ce5650deb8b5c5cd9416c260de9f4c683660c3ee4dc9aa",
+      "file_sha256": "d16de361490067b07ad4157d9d3aac00fa377d6cf600ab1092f529438de09d7e",
+      "oracle_sha256": null
+    },
+    {
+      "id": "new-vegas-mixed",
+      "path": "new-vegas-mixed.hex",
+      "game": "new-vegas",
+      "cli_selector": "-fnv",
+      "compression": "mixed",
+      "embedded_names": false,
+      "wire_size": 129,
+      "wire_sha256": "a07a8a3ee8763481c1fe5ba1def561aff11a3d347390ea026d12686e5fba3219",
+      "file_sha256": "953aaaf11c06e4d034323fa0fe13381edd2ca17b6b1d4fdff03070b7a0b6dd7c",
+      "oracle_sha256": null
+    },
+    {
+      "id": "new-vegas-mixed-embedded",
+      "path": "new-vegas-mixed-embedded.hex",
+      "game": "new-vegas",
+      "cli_selector": "-fnv",
+      "compression": "mixed",
+      "embedded_names": true,
+      "wire_size": 155,
+      "wire_sha256": "23ce92a3013ef372ade7b02bb9db5c593272c75383d293e4dc46bad749af8d71",
+      "file_sha256": "6b4e8d6faa2b8bde50b7ae1802ce8014974cb36d5c653da45b52acfe3330a54f",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-le-stored",
+      "path": "skyrim-le-stored.hex",
+      "game": "skyrim-le",
+      "cli_selector": "-tes5",
+      "compression": "stored",
+      "embedded_names": false,
+      "wire_size": 1132,
+      "wire_sha256": "696cd7ddc9c0b7e6cf353e3f8f278320af4670db3772e506d2b80b8df28858d4",
+      "file_sha256": "50e503625ac08c688a130eb4918297c5dbbe04ac1abf98a85d5024c0470314ee",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-le-stored-embedded",
+      "path": "skyrim-le-stored-embedded.hex",
+      "game": "skyrim-le",
+      "cli_selector": "-tes5",
+      "compression": "stored",
+      "embedded_names": true,
+      "wire_size": 1158,
+      "wire_sha256": "48ba817e91404a2701c15fe179bccd3a5126cc0c7fa7a6f8ed5466ec03a987e7",
+      "file_sha256": "b486e581d7d693da812019d5a990484f08aa8fd5367ab9279bb46cc19e0010b9",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-le-zlib",
+      "path": "skyrim-le-zlib.hex",
+      "game": "skyrim-le",
+      "cli_selector": "-tes5",
+      "compression": "zlib",
+      "embedded_names": false,
+      "wire_size": 141,
+      "wire_sha256": "1e065281756b619c3f06e621691a731cc32cbe72f6764d41dc9dcf476119c027",
+      "file_sha256": "cc17dec6fb3a681968d0f0e49c41dcc5bb22e81d5f0467d57f76e83622b11d56",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-le-zlib-embedded",
+      "path": "skyrim-le-zlib-embedded.hex",
+      "game": "skyrim-le",
+      "cli_selector": "-tes5",
+      "compression": "zlib",
+      "embedded_names": true,
+      "wire_size": 167,
+      "wire_sha256": "ba479ba01e85bf75d5ce5650deb8b5c5cd9416c260de9f4c683660c3ee4dc9aa",
+      "file_sha256": "d16de361490067b07ad4157d9d3aac00fa377d6cf600ab1092f529438de09d7e",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-le-mixed",
+      "path": "skyrim-le-mixed.hex",
+      "game": "skyrim-le",
+      "cli_selector": "-tes5",
+      "compression": "mixed",
+      "embedded_names": false,
+      "wire_size": 129,
+      "wire_sha256": "a07a8a3ee8763481c1fe5ba1def561aff11a3d347390ea026d12686e5fba3219",
+      "file_sha256": "953aaaf11c06e4d034323fa0fe13381edd2ca17b6b1d4fdff03070b7a0b6dd7c",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-le-mixed-embedded",
+      "path": "skyrim-le-mixed-embedded.hex",
+      "game": "skyrim-le",
+      "cli_selector": "-tes5",
+      "compression": "mixed",
+      "embedded_names": true,
+      "wire_size": 155,
+      "wire_sha256": "23ce92a3013ef372ade7b02bb9db5c593272c75383d293e4dc46bad749af8d71",
+      "file_sha256": "6b4e8d6faa2b8bde50b7ae1802ce8014974cb36d5c653da45b52acfe3330a54f",
+      "oracle_sha256": null
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "algorithm": "repeat-sha256-counter-v1",
+  "split_target": 2147483647,
+  "reason": "Original near.bin length sets reserved BSA bit30. Three768MiB entries plus one2GiB entry are representable while crossing the default target.",
+  "entries": [
+    {
+      "name": "data/a.bin",
+      "seed": "jbsa-split-boundaries-v1/data/a.bin",
+      "size": 805306368,
+      "prefix64_hex": "a96b03131b6a693eee9e3268c01e565a6c45ffac0f0c702b23f6949348a22662eaf102e5f73138a1ec4714df8b0523d364986a7ed53b9fc417bda8e567d4e6ae"
+    },
+    {
+      "name": "data/b.bin",
+      "seed": "jbsa-split-boundaries-v1/data/b.bin",
+      "size": 805306368,
+      "prefix64_hex": "7b22a56974d68c0e150a3dd27499bf8607d365f4ead8b2471dba194016417ba940e76b0594f4b124fe3c4fcf0e9f7114f517a2a85b7bcc02abf6f79c0ce10af0"
+    },
+    {
+      "name": "data/c.bin",
+      "seed": "jbsa-split-boundaries-v1/data/c.bin",
+      "size": 805306368,
+      "prefix64_hex": "8fd3bfefe7c9621879522f5487774949714d9c50c8770defd7ddca00388d69df53652fd36008721bf015b092a060cc803ab32b2b6ded207695e928c225cf51a6"
+    },
+    {
+      "name": "data/z.bin",
+      "seed": "jbsa-split-boundaries-v1/data/z.bin",
+      "size": 2147483648,
+      "prefix64_hex": "5977f89bd1dc07497bdd9ee6d004a6d16bdfe996403cf38cc45e8c7084198b4f81a1dd9754f596e9984982f9ff81419e361fa2da8556de8a284d7e769a1a85d6"
+    }
+  ]
+}

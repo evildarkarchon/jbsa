@@ -21,6 +21,7 @@ public final class BsaPublicObservation {
     try {
       Path input = Path.of(arguments[0]);
       String operation = arguments.length > 1 ? arguments[1] : "decode";
+      boolean version104 = arguments.length > 3 && arguments[3].equals("bsa-068");
       if (operation.equals("encode")) {
         String codec = arguments[2];
         var compression =
@@ -40,9 +41,11 @@ public final class BsaPublicObservation {
             .pack(
                 new PackRequest(
                     output,
-                    ArchiveFamily.TES4_BSA,
+                    version104 ? ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA : ArchiveFamily.TES4_BSA,
                     new ArchiveEncoding(
-                        Optional.of(new WireVersion(103)), Optional.empty(), OptionalLong.empty()),
+                        Optional.of(new WireVersion(version104 ? 104 : 103)),
+                        Optional.empty(),
+                        OptionalLong.empty()),
                     Optional.empty(),
                     List.of(new PackSource.DetectedPath(input)),
                     TargetPolicy.FAIL,
@@ -152,13 +155,13 @@ public final class BsaPublicObservation {
                 "file_hash",
                 fileHash,
                 "embedded_name",
-                null));
+                wireName(metadata, "embedded")));
       }
       return fields(
           "archive_family",
-          "bsa-067",
+          header.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA ? "bsa-068" : "bsa-067",
           "wire_version",
-          103,
+          header.encoding().wireVersion().orElseThrow().value(),
           "disposition",
           inspection.assessment().disposition().name(),
           "entry_count",
@@ -224,7 +227,7 @@ public final class BsaPublicObservation {
   }
 
   /** Serializes only the adapter's JSON primitives, lists and string-keyed objects. */
-  private static String json(Object value) {
+  public static String json(Object value) {
     if (value == null) return "null";
     if (value instanceof String text) {
       StringBuilder quoted = new StringBuilder("\"");

@@ -1,6 +1,6 @@
 # Implement BSA for Fallout 3, New Vegas, and Skyrim LE
 
-Status: ready-for-agent
+Status: needs-info
 State: open
 GitHub issue: #42
 Source: https://github.com/evildarkarchon/jbsa/issues/42
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:04Z
 Source updated: 2026-09-03T06:54:04Z
 Closed: none
 Migrated: 2026-09-10
-Labels: ready-for-agent
+Labels: needs-info
 Assignees: none
 Blocked by: [#41](../issues/41-establish-the-interface-candidate-after-representative-archive-families.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
 Triage reviewed: 2026-09-10
-Triage rationale: All prerequisites are closed after the Interface Candidate passed in #41. Acceptance remains current under specification 0.13.0; ready for agent implementation.
+Triage rationale: Implementation and validation passed under specification 0.14.0. Awaiting explicit maintainer approval of the completed 52-case golden proposal under JBSA-CONF-007 before activation and closure.
 
 ## Original issue body
 
@@ -61,3 +61,30 @@ No comments at migration time.
 Reassessed on 2026-09-10: every listed prerequisite is closed. The acceptance
 criteria remain applicable under specification 0.13.0 and this agent-owned
 ticket is ready for implementation. No prerequisite link was removed.
+
+### Implementation and review, 2026-09-11
+
+Implemented 0x68 through the common reader/writer and JDK zlib, including mixed
+compression, explicit embedded prefixes, unsigned family hashing, flags,
+ordering, metadata limits and all three CLI aliases. The public model is unchanged.
+See the [implementation and requirement trace](../../../docs/development/bsa-068.md).
+
+The seven-module Java 25 clean build passed: 445 reported tests, zero failures
+or errors, seven optional skips. All new game vectors and pinned local oracle
+cross-decodes passed. The targeted performance investigation found identical
+output sizes and no version-specific heap increase in fresh bounded JVMs.
+
+The complete [CV1 review packet](../../../docs/reviews/issue42-cv1/README.md)
+passed all 52 proposed cases, including real 4.25-GiB splitting and cleanup.
+The proposal catalog SHA-256 is
+`ef912247053ac719165b1c6e9af90db3b4c3d714245061eed87683791f70aa2d`.
+Its final execution report SHA-256 is
+`07835137b2a83d413b8c861ebf12ff4385fbacea8d4f5fe0d1cb589f41aac776`.
+Standards and Spec review findings were resolved. No proprietary assets or
+Reference Snapshot files were modified.
+
+The active conformance catalog and approval records remain unchanged. This
+ticket stays open until the maintainer explicitly approves the packet and its
+goldens are activated and checked. Stored-byte candidates do not claim Binary
+Conformance, and no game, ACP-932, or formal PV1 qualification is inferred.
+Dependent #44 remains blocked while this ticket is open.

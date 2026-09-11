@@ -237,14 +237,21 @@ public final class OwnedArchive implements OpenArchive {
 
     /** Validates a stored span without touching payload bytes, retaining archive-order metadata. */
     public void addStored(EntryMetadata metadata, long offset) throws ArchiveException {
+      addStored(metadata, offset, metadata.storedSize());
+    }
+
+    /** Admits stored content whose wire record may also include bounded framing bytes. */
+    public void addStored(EntryMetadata metadata, long offset, long contentSize)
+        throws ArchiveException {
       if (expected < 0
           || entries.size() >= expected
           || metadata.ordinal() != entries.size()
-          || metadata.storedSize() != metadata.decodedSize()) {
+          || contentSize != metadata.decodedSize()
+          || contentSize > metadata.storedSize()) {
         throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
       }
-      ExactIo.end(offset, metadata.storedSize(), input.size(), context);
-      entries.add(new StoredEntry(metadata, offset, metadata.storedSize(), false));
+      ExactIo.end(offset, contentSize, input.size(), context);
+      entries.add(new StoredEntry(metadata, offset, contentSize, false));
     }
 
     /**

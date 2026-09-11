@@ -25,8 +25,13 @@ public final class ArchiveReaders {
                   builder.readSelectors((int) Math.min(36, builder.size())).array());
           if (detection.family().filter(ArchiveFamily.TES3_BSA::equals).isPresent())
             return Tes3Reader.load(builder, path, options, operation, policy);
-          if (detection.family().filter(ArchiveFamily.TES4_BSA::equals).isPresent())
-            return BsaReader.load(builder, path, options, operation, policy);
+          if (detection
+              .family()
+              .filter(
+                  family ->
+                      family == ArchiveFamily.TES4_BSA
+                          || family == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA)
+              .isPresent()) return BsaReader.load(builder, path, options, operation, policy);
           if (detection.family().filter(ArchiveFamily.FO4_GENERAL_BA2::equals).isPresent()
               && detection.wireVersion().orElseThrow().value() == 1)
             return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Reader.load(

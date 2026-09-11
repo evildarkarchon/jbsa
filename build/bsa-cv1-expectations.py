@@ -34,7 +34,7 @@ def identity(name):
 
 
 def projection(raw):
-    """Parse bounded named/unnamed 0x67 inputs; enforce the normative structural constraints."""
+    """Parse bounded named/unnamed 0x67 and 0x68 inputs with normative structural constraints."""
     try:
         return _projection(raw)
     except (ValueError, IndexError, struct.error, zlib.error):
@@ -44,7 +44,7 @@ def projection(raw):
 def _projection(raw):
     """Implement independent wire interpretation for the proposed synthetic case family."""
     magic, version, start, flags, folders, files, folder_names, file_names, file_flags = struct.unpack_from("<4s8I", raw)
-    if magic != b"BSA\0" or version != 103 or folders > 1000 or files > 1000:
+    if magic != b"BSA\0" or version not in (103, 104) or folders > 1000 or files > 1000:
         raise ValueError("Unsupported selector or count")
     if start < 36 or (not flags & 1 and folder_names) or (not flags & 2 and file_names):
         raise ValueError("Name-section mismatch")
@@ -126,6 +126,19 @@ def _projection(raw):
             raise ValueError("Payload outside input")
         spans.append((offset, offset + size))
         payload = raw[offset:offset + size]
+        embedded_name = None
+        if version == 104 and flags & 0x100:
+            if not payload or 1 + payload[0] > len(payload):
+                raise ValueError("Embedded prefix exceeds payload span")
+            embedded = payload[1:1 + payload[0]]
+            embedded_name = embedded.hex()
+            payload = payload[1 + payload[0]:]
+            if folder is not None and basename is not None and embedded != folder + b"\\" + basename:
+                diagnostics.append(diagnostic("bsa.embedded-name-mismatch", ordinal, name,
+                    "embedded", offset + 1, len(embedded), {}))
+            if texts[1] is not None and not texts[1].lower().endswith(".dds"):
+                diagnostics.append(diagnostic("bsa.nontexture-with-embedded-name", ordinal, name,
+                    "embedded", offset + 1, len(embedded), {}))
         compressed = bool(flags & 4) != bool(size_flags & 0x40000000)
         decoded_size = len(payload)
         if compressed:
@@ -145,14 +158,14 @@ def _projection(raw):
                         "compression_state": "zlib" if compressed else "stored",
                         "flags": {"compression_toggle": bool(size_flags & 0x40000000)},
                         "payload_sha256": hashlib.sha256(payload).hexdigest(),
-                        "folder_hash": f"{folder_hash:016x}", "file_hash": f"{name_hash:016x}", "embedded_name": None})
+                        "folder_hash": f"{folder_hash:016x}", "file_hash": f"{name_hash:016x}", "embedded_name": embedded_name})
     if position != data_start:
         raise ValueError("File name extent")
     spans.sort()
     if any(right[0] < left[1] and left != right for left, right in zip(spans, spans[1:])):
         raise ValueError("Partial overlap")
-    return {"archive_family": "bsa-067", "wire_version": 103, "entry_count": files,
-            "disposition": "TOLERATED_NONCANONICAL" if any(warning["identifier"] not in ("archive-name.absolute-path", "archive-name.traversal-segment") for warning in diagnostics) else "CONFORMING",
+    return {"archive_family": "bsa-068" if version == 104 else "bsa-067", "wire_version": version, "entry_count": files,
+            "disposition": "TOLERATED_NONCANONICAL" if any(warning["identifier"] not in ("archive-name.absolute-path", "archive-name.traversal-segment", "bsa.nontexture-with-embedded-name") for warning in diagnostics) else "CONFORMING",
             "archive_flags": flags, "file_flags": file_flags, "folder_order": folder_order,
             "entries": entries, "diagnostics": diagnostics}
 

@@ -1,4 +1,4 @@
-<# .SYNOPSIS Runs a bounded, digest-pinned local TES4 differential observation. #>
+<# .SYNOPSIS Runs a bounded, digest-pinned local 0x67/0x68 differential observation. #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidateSet('pack', 'unpack')][string]$Operation,
@@ -6,15 +6,21 @@ param(
     [Parameter(Mandatory)][string]$OutputPath,
     [Parameter(Mandatory)][string]$WorkingDirectory,
     [Parameter(Mandatory)][string]$EvidenceDirectory,
-    [ValidateSet('stored', 'zlib')][string]$Compression = 'stored'
+    [ValidateSet('stored', 'zlib')][string]$Compression = 'stored',
+    [ValidateSet('tes4', 'fo3', 'fnv', 'tes5')][string]$Selector = 'tes4',
+    [switch]$EmbeddedNames
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'conformance-adapters.ps1')
 $repositoryRoot = Split-Path $PSScriptRoot -Parent
 $oracleArguments = @($Operation, $InputPath, $OutputPath, '-mt:no')
 if ($Operation -eq 'pack') {
-    $oracleArguments += @('-tes4', '-split:0', '-share:no')
+    $oracleArguments += @("-$Selector", '-split:0', '-share:no')
     if ($Compression -eq 'zlib') { $oracleArguments += '-z:zlib' }
+    if ($EmbeddedNames) {
+        if ($Selector -eq 'tes4') { throw 'Embedded framing requires a version 0x68 selector' }
+        $oracleArguments += $(if ($Compression -eq 'zlib') { '-af:187' } else { '-af:183' })
+    }
 }
 # Default oracle 0x67 flags contain the known embedded-name contradiction. These are
 # semantic cross-decodes: no comparison below treats those flags as canonical JBSA bytes.

@@ -16,6 +16,102 @@ import org.junit.jupiter.api.io.TempDir;
 class MainTest {
   @TempDir Path temporary;
 
+  /** Each legacy game spelling selects version 104 and survives as a pack observation. */
+  @Test
+  void packsAndUnpacksVersion104Aliases() throws Exception {
+    for (String selector : List.of("-fo3", "-FNV", "-tes5")) {
+      for (boolean compressed : List.of(false, true)) {
+        Path source = Files.createTempDirectory(temporary, "bsa68-source");
+        Files.createDirectory(source.resolve("meshes"));
+        Files.writeString(source.resolve("meshes/a.nif"), "payload".repeat(100));
+        Path archive = temporary.resolve(source.getFileName() + ".bsa");
+        var args =
+            new ArrayList<>(
+                List.of(
+                    "pack",
+                    source.toString(),
+                    archive.toString(),
+                    selector,
+                    "-af:103",
+                    "-ff:1",
+                    "--no-progress"));
+        if (compressed) args.add("-z:zlib");
+        Result packed = run(args.toArray(String[]::new));
+        assertEquals(0, packed.status(), packed.error());
+        assertTrue(packed.output().contains("Selector: " + selector), packed.output());
+        Result dumped = run(archive.toString(), "-dump");
+        assertEquals(0, dumped.status(), dumped.error());
+        assertTrue(dumped.output().contains("Family: FO3_FNV_SKYRIM_LE_BSA"));
+        assertTrue(dumped.output().contains("Version: 104"));
+        assertTrue(dumped.output().contains("Codec: " + (compressed ? "ZLIB" : "STORED")));
+        Path destination = Files.createTempDirectory(temporary, "bsa68-output");
+        Result unpacked =
+            run("unpack", archive.toString(), destination.toString(), "--no-progress");
+        assertEquals(0, unpacked.status(), unpacked.error());
+        assertEquals("payload".repeat(100), Files.readString(destination.resolve("meshes/a.nif")));
+      }
+    }
+  }
+
+  /** Profile family priority must include version 104 and select its earliest-priority alias. */
+  @Test
+  void profileSelectsVersion104BetweenTes4AndFallout4() throws Exception {
+    for (String[] order :
+        List.of(
+            new String[] {"-fo4", "-tes5", "-FNV", "-fo3"},
+            new String[] {"-fo3", "-FNV", "-tes5", "-fo4"},
+            new String[] {"-fo4", "-tes5", "-FNV"},
+            new String[] {"-FNV", "-tes5", "-fo4"},
+            new String[] {"-fo3", "-tes4"},
+            new String[] {"-tes4", "-fo3"})) {
+      Path source = Files.createTempDirectory(temporary, "priority-source");
+      Files.createDirectories(source.resolve("meshes"));
+      Files.writeString(source.resolve("meshes/a.nif"), "one");
+      Path archive = temporary.resolve(source.getFileName() + ".bsa");
+      var args =
+          new ArrayList<>(
+              List.of(
+                  "--compatibility-profile=bsarch-1.0/v1",
+                  "pack",
+                  source.toString(),
+                  archive.toString()));
+      args.addAll(List.of(order));
+      Result result = run(args.toArray(String[]::new));
+      assertEquals(0, result.status(), result.error());
+      boolean tes4 = List.of(order).contains("-tes4");
+      assertTrue(
+          run(archive.toString())
+              .output()
+              .contains("Family: " + (tes4 ? "TES4_BSA" : "FO3_FNV_SKYRIM_LE_BSA")));
+      if (!tes4)
+        assertTrue(
+            result
+                .output()
+                .contains("Selector: " + (List.of(order).contains("-fo3") ? "-fo3" : "-FNV")));
+    }
+  }
+
+  /**
+   * Aliases are still family switches, so safe syntax rejects repetition and incompatible codecs.
+   */
+  @Test
+  void rejectsConflictingVersion104Aliases() throws Exception {
+    for (String[] options :
+        List.of(
+            new String[] {"-fo3", "-fnv"},
+            new String[] {"-tes5", "-tes5"},
+            new String[] {"-fnv", "-tes4"},
+            new String[] {"-fo3", "-z:lz4"},
+            new String[] {"-tes5", "-z:lz4f"})) {
+      var args =
+          new ArrayList<>(List.of("pack", "missing", temporary.resolve("absent.bsa").toString()));
+      args.addAll(List.of(options));
+      Result result = run(args.toArray(String[]::new));
+      assertEquals(2, result.status(), result.error());
+      assertEquals("", result.output());
+    }
+  }
+
   /** DDS family selection defaults to compressed PC output and exposes texture chunk facts. */
   @Test
   void packsDdsWithMandatoryDefaultCompression() throws Exception {

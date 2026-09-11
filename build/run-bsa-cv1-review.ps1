@@ -1,6 +1,7 @@
 <# .SYNOPSIS Runs all proposed TES4 successor cases as untrusted evidence pending maintainer review. #>
 [CmdletBinding()]
-param([Parameter(Mandatory)][string]$OutputDirectory)
+param([Parameter(Mandatory)][string]$OutputDirectory,
+    [ValidateSet('bsa-067', 'bsa-068')][string]$Family = 'bsa-067')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 . (Join-Path $PSScriptRoot 'conformance-catalog.ps1')
@@ -12,15 +13,18 @@ if (-not $output.StartsWith((Join-Path $root 'target') + [IO.Path]::DirectorySep
     throw 'Review evidence requires a new directory beneath repository target.'
 }
 [IO.Directory]::CreateDirectory($output) | Out-Null
-$proposal = Join-Path $root 'docs/reviews/issue38-cv1/catalog.json'
+$proposalDirectory = if ($Family -eq 'bsa-068') { 'docs/reviews/issue42-cv1' } else { 'docs/reviews/issue38-cv1' }
+$proposal = Join-Path $root "$proposalDirectory/catalog.json"
 $catalog = Read-ConformanceCatalog -Path $proposal -RepositoryRoot $root
-$cases = @($catalog.cases | Where-Object { $_.identity.archive_family -eq 'bsa-067' })
-if ($cases.Count -ne 32) { throw 'The proposal must retain every one of the 32 TES4 cells.' }
-$oracleInputs = Join-Path $root 'target/bsa-cv1-review-inputs'
+$successors = (Get-Content -Raw -LiteralPath (Join-Path $root "$proposalDirectory/review.json") | ConvertFrom-Json).supersessions.proposed_case_id
+$cases = @($catalog.cases | Where-Object { $_.identity.archive_family -eq $Family -and $_.identity.case_id -in $successors })
+if ($Family -eq 'bsa-067' -and $cases.Count -ne 32) { throw 'The proposal must retain every one of the 32 TES4 cells.' }
+if ($cases.Count -eq 0) { throw 'The proposal has no successor cases to execute.' }
+$oracleInputs = Join-Path $root $(if ($Family -eq 'bsa-068') { 'target/bsa068-cv1-review-inputs' } else { 'target/bsa-cv1-review-inputs' })
 [IO.Directory]::CreateDirectory($oracleInputs) | Out-Null
 foreach ($mode in @('stored', 'zlib')) {
     [IO.File]::WriteAllBytes((Join-Path $oracleInputs "$mode.bsa"),
-        [Convert]::FromHexString([IO.File]::ReadAllText((Join-Path $root "docs/reviews/issue38-cv1/oracle/$mode.hex")).Trim()))
+        [Convert]::FromHexString([IO.File]::ReadAllText((Join-Path $root "$proposalDirectory/oracle/$mode.hex")).Trim()))
 }
 $artifacts = @(foreach ($module in @('jbsa', 'jbsa-cli')) {
     $jar = @(Get-ChildItem -LiteralPath (Join-Path $root "$module/target") -Filter "$module-*.jar" |
@@ -43,7 +47,9 @@ $runtimeVersion = (& $java --version) -join "`n"
 $inputs = @($adapter, $scanner, (Join-Path $PSScriptRoot 'validate-bsa-wire.py'),
     (Join-Path $PSScriptRoot 'bsa-cv1-review-evidence.ps1'), (Join-Path $PSScriptRoot 'conformance-evidence.ps1'),
     (Join-Path $PSScriptRoot 'conformance-adapters.ps1'), $java) +
-    @(Get-ChildItem -LiteralPath (Join-Path $root 'jbsa-conformance-tests/target/test-classes/io/github/evildarkarchon/jbsa/verification') -Filter 'BsaPublicObservation*.class' | ForEach-Object FullName)
+    @(Get-ChildItem -LiteralPath (Join-Path $root 'jbsa-conformance-tests/target/test-classes/io/github/evildarkarchon/jbsa/verification') -Filter 'Bsa*.class' | ForEach-Object FullName) +
+    @(Get-ChildItem -LiteralPath (Join-Path $root 'jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification') -Filter 'Bsa68*.java' | ForEach-Object FullName)
+if ($Family -eq 'bsa-068') { $inputs += Join-Path $PSScriptRoot 'bsa68-valid-split-recipe.json' }
 $boundInputs = @($inputs | ForEach-Object { @{ path = $_; sha256 = Get-ConformanceFileDigest $_ } })
 $results = @()
 $registrations = @()
@@ -53,7 +59,11 @@ foreach ($case in $cases) {
         command = @{ executable = $pwsh; sha256 = Get-ConformanceFileDigest $pwsh;
             arguments = @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', $adapter); inputs = $boundInputs };
         validators = @(); oracle_input_role = 'archive'; oracle_arguments = @('unpack', '{input}', '{output}', '-mt:no') }
-    if ($case.metadata.expected_behavior -eq 'accept') {
+    if ($case.identity.fixture -eq 'bsa-068-scenario-source-splitting-v1') {
+        # The real family split limit requires streaming several GiB; retain a bounded recorded deadline.
+        $registration.command.timeout_seconds = 1200
+    }
+    if ($case.metadata.expected_behavior -eq 'accept' -and $case.identity.fixture -notlike 'bsa-068-scenario-*') {
         $assertion = if ($case.identity.operation -eq 'encode') { 'jbsa-to-oracle' } else { 'decode-semantic-projection' }
         $registration.validators = @(@{ input_role = 'archive'; assertion_id = $assertion;
             tool = @{ identity = 'jbsa-independent-specification-bsa-scanner'; path = $python;

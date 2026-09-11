@@ -23,6 +23,19 @@ $registration = @{ case_id = $id; command = @{ executable = (Get-Command pwsh).S
 $parameters = @{ Case = $case; Registration = $registration; RepositoryRoot = $root; Mode = 'Hosted'; ConfigurationSha256 = $configDigest; SpecificationSha256 = $specDigest; CandidateArtifacts = @(); CodecProfileSha256 = ('c' * 64) }
 $result = Invoke-ConformanceRegisteredCase @parameters -EvidenceDirectory (Join-Path $temporary 'pass')
 if ($result.result -cne 'PASS') { throw "Expected pass from independently specified exit observation: $($result.reason)" }
+# The per-case deadline must govern the real child process, including extended large-wire cases.
+$timedAdapter = [IO.File]::ReadAllText($adapter)
+[IO.File]::WriteAllText($adapter, $timedAdapter.Replace('param([string] $Request)', 'param([string] $Request) Start-Sleep -Milliseconds 1800;'))
+$registration.command.inputs[0].sha256 = (Get-FileHash $adapter).Hash.ToLowerInvariant()
+$registration.command.timeout_seconds = 1
+$result = Invoke-ConformanceRegisteredCase @parameters -EvidenceDirectory (Join-Path $temporary 'short-deadline')
+if ($result.result -cne 'INVALID' -or -not $result.evidence[0].timed_out) { throw 'A declared one-second deadline must stop the delayed adapter.' }
+$registration.command.timeout_seconds = 5
+$result = Invoke-ConformanceRegisteredCase @parameters -EvidenceDirectory (Join-Path $temporary 'extended-deadline')
+if ($result.result -cne 'PASS') { throw 'An explicitly extended deadline must allow the same delayed adapter to settle.' }
+$registration.command.Remove('timeout_seconds')
+[IO.File]::WriteAllText($adapter, $timedAdapter)
+$registration.command.inputs[0].sha256 = (Get-FileHash $adapter).Hash.ToLowerInvariant()
 $sharedGolden = Join-Path $temporary 'shared-fixture-other-case.json'
 $otherGolden = Get-Content -Raw -LiteralPath $golden | ConvertFrom-Json -AsHashtable -Depth 30
 $otherGolden.case_id = 'CV1-global.command.other.none.default'

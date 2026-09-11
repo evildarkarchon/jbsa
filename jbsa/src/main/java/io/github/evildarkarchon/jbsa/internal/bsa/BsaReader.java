@@ -11,16 +11,16 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.*;
 
-/** Bounded Oblivion metadata reader; the parent archive owns lazy payload access. */
+/** Bounded common 0x67/0x68 BSA reader; the parent archive owns lazy payload access. */
 public final class BsaReader {
   private final OwnedArchive.IndexBuilder builder;
   private final IoContext context;
   private final Charset encoding;
   private final FailureRetention retention;
   private boolean noncanonical;
-  private static final ArchiveEncoding ENCODING =
-      new ArchiveEncoding(
-          Optional.of(new WireVersion(0x67)), Optional.empty(), OptionalLong.empty());
+  private int version;
+  private ArchiveFamily family;
+  private ArchiveEncoding archiveEncoding;
 
   private BsaReader(
       OwnedArchive.IndexBuilder builder,
@@ -72,8 +72,13 @@ public final class BsaReader {
   /** Checks section arithmetic before allocation and preserves serialized name association. */
   private ArchiveInspection parse() throws IOException {
     ByteBuffer header = builder.readMetadata(0, 36);
-    if (header.getInt() != 0x00415342 || header.getInt() != 0x67)
-      throw malformed("bsa.invalid-selector");
+    if (header.getInt() != 0x00415342) throw malformed("bsa.invalid-selector");
+    version = header.getInt();
+    if (version != 0x67 && version != 0x68) throw malformed("bsa.invalid-selector");
+    family = version == 0x67 ? ArchiveFamily.TES4_BSA : ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA;
+    archiveEncoding =
+        new ArchiveEncoding(
+            Optional.of(new WireVersion(version)), Optional.empty(), OptionalLong.empty());
     long recordsOffset = u32(header),
         flags = u32(header),
         folderCount = u32(header),
@@ -173,15 +178,67 @@ public final class BsaReader {
         if (size > 0) spans.add(new Span(offset, end));
         boolean compressed = ((flags & 4) != 0) ^ ((sizeToggle & 0x40000000L) != 0);
         // Oblivion's 0x0100 and XMem markers do not introduce embedded names or change zlib.
-        if (compressed && size < 4) throw malformed("bsa.invalid-compressed-framing");
-        long decodedSize = compressed ? u32(builder.readMetadata(offset, 4)) : size;
-        if (basenameText != null
+        boolean embedded = version != 0x67 && (flags & 0x100) != 0;
+        long contentOffset = offset, contentSize = size;
+        if (embedded) {
+          if (contentSize == 0) throw malformed("bsa.invalid-embedded-name-framing");
+          int length = Byte.toUnsignedInt(builder.readMetadata(contentOffset++, 1).get());
+          ExactIo.end(contentOffset, length, end, context);
+          WireName embeddedName = builder.readName(contentOffset, length);
+          wire.put("embedded", embeddedName);
+          if (folderName != null && basename != null) {
+            // Compare the bounded prefix directly; a long index name must not allocate a joined
+            // copy.
+            byte[] embeddedBytes = embeddedName.bytes();
+            byte[] folderBytesForName = folderName.bytes(), basenameBytes = basename.bytes();
+            boolean matches = folderName.length() + 1 + basename.length() == length;
+            if (matches) {
+              int folderLength = folderBytesForName.length;
+              matches =
+                  Arrays.equals(folderBytesForName, 0, folderLength, embeddedBytes, 0, folderLength)
+                      && embeddedBytes[folderLength] == '\\'
+                      && Arrays.equals(
+                          basenameBytes,
+                          0,
+                          basenameBytes.length,
+                          embeddedBytes,
+                          folderLength + 1,
+                          length);
+            }
+            if (!matches)
+              warning(
+                  "bsa.embedded-name-mismatch",
+                  ordinal,
+                  display,
+                  "embedded",
+                  contentOffset,
+                  length,
+                  Map.of(),
+                  true);
+          }
+          if (basenameText != null && !basenameText.toLowerCase(Locale.ROOT).endsWith(".dds"))
+            warning(
+                "bsa.nontexture-with-embedded-name",
+                ordinal,
+                display,
+                "embedded",
+                contentOffset,
+                length,
+                Map.of(),
+                false);
+          contentOffset += length;
+          contentSize -= 1L + length;
+        }
+        if (compressed && contentSize < 4) throw malformed("bsa.invalid-compressed-framing");
+        long decodedSize = compressed ? u32(builder.readMetadata(contentOffset, 4)) : contentSize;
+        if (!embedded
+            && basenameText != null
             && basenameText.toLowerCase(Locale.ROOT).endsWith(".dds")
             && decodedSize >= 128) {
           ByteBuffer dds =
               builder.readPayloadPrefix(
-                  offset + (compressed ? 4 : 0),
-                  size - (compressed ? 4 : 0),
+                  contentOffset + (compressed ? 4 : 0),
+                  contentSize - (compressed ? 4 : 0),
                   decodedSize,
                   compressed,
                   128);
@@ -202,8 +259,8 @@ public final class BsaReader {
         }
         EntryMetadata metadata =
             new EntryMetadata(
-                ArchiveFamily.TES4_BSA,
-                ENCODING,
+                family,
+                archiveEncoding,
                 ordinal,
                 display,
                 identity,
@@ -221,8 +278,8 @@ public final class BsaReader {
                     sizeToggle,
                     offset,
                     compressed));
-        if (compressed) builder.addZlib(metadata, offset + 4, size - 4);
-        else builder.addStored(metadata, offset);
+        if (compressed) builder.addZlib(metadata, contentOffset + 4, contentSize - 4);
+        else builder.addStored(metadata, contentOffset, contentSize);
         entries.add(metadata);
       }
     }
@@ -249,15 +306,15 @@ public final class BsaReader {
         new ArchiveDetection(
             DetectionStatus.SUPPORTED_FAMILY,
             new WireName(new byte[] {66, 83, 65, 0}),
-            Optional.of(ArchiveFamily.TES4_BSA),
-            ENCODING.wireVersion(),
+            Optional.of(family),
+            archiveEncoding.wireVersion(),
             Optional.empty(),
             OptionalLong.empty());
     return new ArchiveInspection(
         detection,
         new ArchiveMetadata.VersionedBsa(
-            ArchiveFamily.TES4_BSA,
-            ENCODING,
+            family,
+            archiveEncoding,
             count,
             recordsOffset,
             flags,
@@ -301,7 +358,7 @@ public final class BsaReader {
     if (name == null
         || !BsaNames.ascii(name.bytes())
         || (basename && !BsaNames.hasStem(name.bytes()))) return;
-    long expected = BsaNames.hash(BsaNames.canonicalize(name.bytes()), basename);
+    long expected = BsaNames.hash(BsaNames.canonicalize(name.bytes()), basename, version);
     if (hash != expected)
       warning(
           basename ? "bsa.file-hash-mismatch" : "bsa.folder-hash-mismatch",

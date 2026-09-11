@@ -30,6 +30,8 @@ function Invoke-ConformanceRegisteredCase {
     The adapter receives -Request <JSON path> and emits {case_id, assertions:[{assertion_id, observed}]}.
     Nonzero adapter exit, unknown assertions, missing evidence, and changed inputs are INVALID. A
     conclusive candidate mismatch is FAIL; validator contradictions take precedence and are INVALID.
+    command.timeout_seconds optionally selects a recorded 1..3600-second adapter deadline; default30
+    applies when omitted. It governs both public observation phases, leaving validator limits intact.
     #>
     [CmdletBinding()]
     param(
@@ -44,6 +46,8 @@ function Invoke-ConformanceRegisteredCase {
     $result = [ordered]@{ result = 'INVALID'; reason = $null; assertions = @(); oracle = $null; validators = @(); evidence = @() }
     try {
         if ($Registration.case_id -cne $Case.identity.case_id) { throw 'Adapter registration belongs to a different case.' }
+        $timeoutSeconds = if ($Registration.command.Contains('timeout_seconds')) { [int]$Registration.command.timeout_seconds } else { 30 }
+        if ($timeoutSeconds -lt 1 -or $timeoutSeconds -gt 3600) { throw 'Registered adapter deadline must be 1 through 3600 seconds.' }
         if ($Case.metadata.fixture_binding.state -cne 'available') { throw 'Fixture bytes are not available.' }
         $bindings = @($Case.metadata.fixture_binding.files) + @($Case.metadata.golden_bindings) + @($CandidateArtifacts) + @($Registration.command.inputs)
         foreach ($binding in $bindings) {
@@ -94,11 +98,12 @@ function Invoke-ConformanceRegisteredCase {
             contract = 'conformance-v1'; case = $Case; candidate_artifacts = $CandidateArtifacts
             codec_profile_sha256 = $CodecProfileSha256; configuration_sha256 = $ConfigurationSha256
             repository_root = $RepositoryRoot; mode = $Mode; phase = 'observe'
+            timeout_seconds = $timeoutSeconds
         }
         $requestPath = Join-Path $EvidenceDirectory 'request.json'
         [IO.File]::WriteAllText($requestPath, (ConvertTo-ConformanceCanonicalJson $request))
         $arguments = @($Registration.command.arguments) + @('-Request', $requestPath)
-        $observation = Invoke-ConformanceProcess -Executable $executable -Arguments $arguments -WorkingDirectory $work -EvidenceDirectory (Join-Path $EvidenceDirectory 'streams')
+        $observation = Invoke-ConformanceProcess -Executable $executable -Arguments $arguments -WorkingDirectory $work -EvidenceDirectory (Join-Path $EvidenceDirectory 'streams') -TimeoutSeconds $timeoutSeconds
         $result.evidence += $observation
         if ($observation.result -cne 'PASS' -or $observation.exit_status -ne 0) { throw 'Public adapter failed to produce a complete observation.' }
         $actual = Get-Content -Raw -LiteralPath $observation.stdout.path | ConvertFrom-Json -AsHashtable -Depth 100
@@ -116,7 +121,7 @@ function Invoke-ConformanceRegisteredCase {
             $decodeRequest.input_archive = @{ path = $oracleArchive; sha256 = $golden.oracle_archive.sha256 }
             $decodeRequestPath = Join-Path $EvidenceDirectory 'oracle-to-jbsa-request.json'
             [IO.File]::WriteAllText($decodeRequestPath, (ConvertTo-ConformanceCanonicalJson $decodeRequest))
-            $decodeObservation = Invoke-ConformanceProcess -Executable $executable -Arguments (@($Registration.command.arguments) + @('-Request', $decodeRequestPath)) -WorkingDirectory $decodeWork -EvidenceDirectory (Join-Path $EvidenceDirectory 'oracle-to-jbsa-streams')
+            $decodeObservation = Invoke-ConformanceProcess -Executable $executable -Arguments (@($Registration.command.arguments) + @('-Request', $decodeRequestPath)) -WorkingDirectory $decodeWork -EvidenceDirectory (Join-Path $EvidenceDirectory 'oracle-to-jbsa-streams') -TimeoutSeconds $timeoutSeconds
             $result.evidence += $decodeObservation
             if ($decodeObservation.result -cne 'PASS' -or $decodeObservation.exit_status -ne 0) { throw 'Oracle-to-JBSA decode process did not complete.' }
             $decoded = Get-Content -Raw -LiteralPath $decodeObservation.stdout.path | ConvertFrom-Json -AsHashtable -Depth 100

@@ -1,4 +1,4 @@
-"""Independently corroborate small ASCII TES4 archives using the written wire contract.
+"""Independently corroborate small ASCII 0x67/0x68 archives using the written wire contract.
 
 This build-only scanner does not import the fixture generator, JBSA, or xEdit.
 Its bounded scope is complete name tables and unshared contiguous payloads.
@@ -40,7 +40,7 @@ def inspect(path):
         raise ValueError("Independent slice scanner input exceeds 16 MiB")
     raw = path.read_bytes()
     magic, version, start, flags, folders, files, folder_length, names_length, _ = struct.unpack_from("<4s8I", raw)
-    if (magic, version, start) != (b"BSA\0", 103, 36) or flags & 3 != 3:
+    if magic != b"BSA\0" or version not in (103, 104) or start != 36 or flags & 3 != 3:
         raise ValueError("Unsupported header or absent name tables")
     if folders > 10000 or files > 10000:
         raise ValueError("Independent slice scanner count limit")
@@ -81,6 +81,14 @@ def inspect(path):
             raise ValueError("Payload span mismatch")
         payload_position += size
         content = raw[offset:offset + size]
+        if version == 104 and flags & 0x100:
+            if not content or content[0] > len(content) - 1:
+                raise ValueError("Embedded name exceeds record bounds")
+            name_size = content[0]
+            if content[1:1 + name_size] != folder + b"\\" + basename:
+                raise ValueError("Embedded name disagrees with index")
+            # Prefix bytes belong to record size, but never to decoded-size or codec input.
+            content = content[1 + name_size:]
         if bool(flags & 4) != bool(size_flags & 0x40000000):
             decoded_size, = struct.unpack_from("<I", content)
             if decoded_size > 16 * 1024 * 1024:
@@ -94,7 +102,7 @@ def inspect(path):
                         "size": len(content), "payload_sha256": hashlib.sha256(content).hexdigest()})
     if position != names_end or payload_position != len(raw):
         raise ValueError("Noncanonical section extent")
-    return {"family": "bsa-067", "entries": entries}
+    return {"family": "bsa-067" if version == 103 else "bsa-068", "entries": entries}
 
 
 if __name__ == "__main__":

@@ -1,12 +1,15 @@
 """Prepare new-identity, explicitly untrusted CV1 review artifacts; never activate the catalog."""
 
 import copy
+import argparse
 import hashlib
 import importlib.util
 import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
+import shutil
 
 ROOT = Path(__file__).resolve().parent.parent
 PROPOSAL = ROOT / "docs/reviews/issue38-cv1"
@@ -55,8 +58,17 @@ def failure(kind, identifier, operation="OPEN", ordinal=None, name=None, values=
                                                    "field": None, "byte_span": None}, "values": values or {}}]}
 
 
-def prepare():
-    """Build successor descriptors and independently authored proposed goldens for all 32 cases."""
+def prepare(family="bsa-067"):
+    """Prepare available successor recipes, preserving bound shared cases and listing coverage gaps."""
+    global PROPOSAL, CORPUS
+    if family == "bsa-068":
+        PROPOSAL = ROOT / "docs/reviews/issue42-cv1"
+        CORPUS = PROPOSAL / "generated-corpus"
+        with tempfile.TemporaryDirectory(dir=ROOT / "target") as temporary:
+            generated = Path(temporary) / "corpus"
+            subprocess.run([sys.executable, str(ROOT / "build/generate-bsa68-cv1-fixtures.py"),
+                "--output", str(generated)], check=True)
+            shutil.copytree(generated, CORPUS, dirs_exist_ok=True)
     PROPOSAL.mkdir(parents=True, exist_ok=True)
     expectation = load_module("bsa_review_expectation", "bsa-cv1-expectations.py")
     wire_generator = load_module("bsa_wire_generator", "generate-bsa-fixtures.py")
@@ -64,26 +76,37 @@ def prepare():
     catalog = copy.deepcopy(active)
     manifest = json.loads((CORPUS / "manifest.json").read_text())
     fixtures = {fixture["id"]: fixture for fixture in manifest["fixtures"]}
+    scenario_expectations = {}
+    if family == "bsa-068":
+        for name in ("bsa68-format-expectations.json", "bsa68-framing-expectations.json", "bsa68-shared-expectations.json"):
+            path = ROOT / "build" / name
+            if path.exists():
+                for token, value in json.loads(path.read_text()).items():
+                    scenario_expectations[token] = value if "scenario" in value else {"scenario": token, "checks": value}
     configuration = next(value for value in catalog["tokens"]["configuration"] if value["token"] == "standard-v1")
     specification_digest = hashlib.sha256(canonical(catalog["specification_set"])).hexdigest()
-    successors, goldens, tokens = [], [], {}
-    oracle_inputs = ROOT / "target/bsa-cv1-review-inputs"
+    codec_profile = (json.loads((ROOT / "jbsa/src/main/resources/META-INF/jbsa-codec-profile.json").read_text())["profile_id"]
+                     if family == "bsa-068" else "jbsa-jdk-zlib-v1")
+    successors, goldens, tokens, uncovered = [], [], {}, []
+    oracle_inputs = ROOT / "target" / ("bsa068-cv1-review-inputs" if family == "bsa-068" else "bsa-cv1-review-inputs")
     oracle_inputs.mkdir(parents=True, exist_ok=True)
     oracle_projections = {}
     for codec in ("stored", "zlib"):
         oracle_hex = PROPOSAL / "oracle" / (codec + ".hex")
         if not oracle_hex.exists():
             oracle_hex.parent.mkdir(parents=True, exist_ok=True)
-            work = ROOT / "target" / ("bsa-cv1-oracle-" + codec)
+            work = ROOT / "target" / ((family if family == "bsa-068" else "bsa") + "-cv1-oracle-" + codec)
             sources = work / "sources/meshes"
             sources.mkdir(parents=True, exist_ok=True)
             (sources / "a.nif").write_bytes(b"A" * 1024)
             (sources / "b.nif").write_bytes(bytes.fromhex("000102ff"))
             archive = work / "oracle.bsa"
-            evidence = ROOT / "target" / ("bsa-cv1-oracle-evidence-" + codec)
+            evidence = ROOT / "target" / ((family if family == "bsa-068" else "bsa") + "-cv1-oracle-evidence-" + codec)
             command = ["pwsh", "-NoProfile", "-File", str(ROOT / "build/run-bsa-oracle.ps1"),
                        "-Operation", "pack", "-InputPath", str(sources.parent), "-OutputPath", str(archive),
                        "-Compression", codec, "-WorkingDirectory", str(work), "-EvidenceDirectory", str(evidence)]
+            if family == "bsa-068":
+                command += ["-Selector", "fo3"]
             result = subprocess.run(command, check=True, capture_output=True, text=True)
             observation = json.loads(result.stdout)
             oracle_hex.write_text(archive.read_bytes().hex() + "\n", encoding="ascii", newline="\n")
@@ -106,25 +129,42 @@ def prepare():
         oracle_projections[codec] = (bind(oracle_path), expectation.projection(raw))
     for case in catalog["cases"]:
         identity = case["identity"]
-        if identity["archive_family"] != "bsa-067":
+        if identity["archive_family"] != family:
+            continue
+        if (family == "bsa-068" and case["metadata"]["fixture_binding"]["state"] == "available"
+                and case["metadata"]["golden_bindings"]):
             continue
         old_id = identity["case_id"]
         old_fixture = identity["fixture"]
-        is_base = old_fixture.startswith("base-bsa-067-")
-        fixture_id = ("bsa-067-" + identity["codec"] if is_base else
-                      "bsa-067-xml" if old_fixture == "bsa-xml-067" else "bsa-067-" + old_fixture)
+        is_base = old_fixture.startswith("base-" + family + "-")
+        fixture_id = (family + "-" + identity["codec"] if is_base else
+                      family + "-xml" if old_fixture == "bsa-xml-067" else
+                      family + "-stored" if old_fixture == "bsa-automatic-flags" else family + "-" + old_fixture)
+        scenario_token = next((value.removeprefix("coverage-") for value in case["metadata"]["assertions"]
+                               if value.startswith("coverage-") and value.removeprefix("coverage-") in scenario_expectations), old_fixture)
+        scenario_details = scenario_expectations.get(scenario_token)
+        if scenario_details is not None:
+            source_codec = ("mixed" if scenario_token == "compression-mixed" else "zlib"
+                            if scenario_token in ("compression-consumption", "compression-size-mismatch") else "stored")
+            fixture_id = (family + "-scenario-" + scenario_token if scenario_token in
+                ("compression-boundaries", "names-wire-encodings", "source-splitting") else family + "-" + source_codec)
+        if fixture_id not in fixtures:
+            uncovered.append(old_id)
+            continue
         fixture = fixtures[fixture_id]
-        token = fixture_id + "-v1"
+        token = (family + "-scenario-" + scenario_token if scenario_details is not None else fixture_id) + "-v1"
         identity["fixture"] = token
         identity["case_id"] = "CV1-" + ".".join(identity[key] for key in ("archive_family", "operation", "fixture", "codec", "configuration"))
         if is_base:
             case["metadata"]["base_matrix_cell"] = True
-        successors.append({"previous_case_id": old_id, "proposed_case_id": identity["case_id"]})
-        raw = bytes.fromhex((CORPUS / fixture["output"]["path"]).read_text())
-        observed = expectation.projection(raw)
+        successors.append({"previous_case_id": old_id, "proposed_case_id": identity["case_id"],
+                           "previous_fixture_binding": copy.deepcopy(case["metadata"]["fixture_binding"])})
+        fixture_path = CORPUS / fixture["output"]["path"]
+        raw = fixture_path.read_bytes() if fixture_path.suffix == ".json" else bytes.fromhex(fixture_path.read_text())
+        observed = scenario_details if scenario_details is not None else expectation.projection(raw)
         if identity["operation"] == "decode" and identity["codec"] in ("raw-deflate", "raw-lz4", "lz4-frame"):
             observed = failure("FORMAT", "codec.invalid-data", "READ_CONTENT", 0, "meshes\\a.nif",
-                               {"codec": "zlib", "direction": "decode", "expected": "1024", "actual": "0", "profile": "jbsa-jdk-zlib-v1"})
+                               {"codec": "zlib", "direction": "decode", "expected": "1024", "actual": "0", "profile": codec_profile})
         rejected_recipes = {"malformed-arithmetic-overflow": "io.invalid-span",
                             "malformed-equal-name-identities": "bsa.duplicate-name",
                             "malformed-impossible-counts": "bsa.unterminated-basename",
@@ -135,14 +175,19 @@ def prepare():
             observed = failure("FORMAT", rejected_recipes[old_fixture])
         if old_fixture == "malformed-decompression-mismatch":
             observed = failure("FORMAT", "codec.size-mismatch", "READ_CONTENT", 0, "meshes\\a.nif",
-                               {"codec": "zlib", "direction": "decode", "expected": "1025", "actual": "1024", "profile": "jbsa-jdk-zlib-v1"})
+                               {"codec": "zlib", "direction": "decode", "expected": "1025", "actual": "1024", "profile": codec_profile})
         if identity["operation"] == "encode":
             if identity["codec"] == "raw-deflate":
                 observed = {"exit_status": 2, "artifact_exists": False}
             elif identity["codec"] in ("raw-lz4", "lz4-frame"):
                 observed = failure("UNSUPPORTED", "bsa.unsupported-codec", "PACK")
             else:
-                observed = expectation.projection(wire_generator.archive(identity["codec"]))
+                raw_expected = bytearray(wire_generator.archive(identity["codec"]))
+                if family == "bsa-068":
+                    import struct
+                    struct.pack_into("<I", raw_expected, 4, 104)
+                    struct.pack_into("<I", raw_expected, 12, struct.unpack_from("<I", raw_expected, 12)[0] & ~0x600)
+                observed = expectation.projection(raw_expected)
         elif identity["operation"] == "extract":
             observed = failure("POLICY", "extract.ineligible-name", "EXTRACT", 0)
             warnings = [{"identifier": "archive-name.traversal-segment", "severity": "WARNING", "operation": "EXTRACT",
@@ -153,7 +198,13 @@ def prepare():
         elif old_fixture == "malformed-illegal-tuples":
             observed = failure("UNSUPPORTED", "archive.unsupported-variant")
         elif identity["operation"] == "scenario":
-            observed["entries"].sort(key=lambda entry: (entry["folder_hash"], entry["file_hash"]))
+            if scenario_details is not None:
+                observed = scenario_details
+            elif old_fixture == "bsa-automatic-flags":
+                # This scenario repacks the source archive and checks automatic family flags.
+                observed = expectation.projection(raw)
+            if "entries" in observed:
+                observed["entries"].sort(key=lambda entry: (entry["folder_hash"], entry["file_hash"]))
         if identity["operation"] in ("encode", "extract") and ("failure_kind" in observed or "exit_status" in observed):
             before = [{"path": "input.bsa", "kind": "file", "size": len(raw),
                        "sha256": hashlib.sha256(raw).hexdigest()}]
@@ -199,9 +250,9 @@ def prepare():
                                  "recipe_sha256": fixture["input_sha256"], "configuration": fixture["generation"]},
                    "provenance": {"manifest": bind(proposal_manifest), "fixture_id": fixture["id"],
                                   "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
-                                  if fixture["id"] in ("bsa-067-stored", "bsa-067-zlib", "bsa-067-mixed") else None}}
+                                  if fixture["id"] in (family + "-stored", family + "-zlib", family + "-mixed") else None}}
         binding = json.loads(canonical(binding))
-        description = "Proposed independently authored TES4 " + fixture["id"] + " fixture, revision 1"
+        description = "Proposed independently authored " + ("TES4" if family == "bsa-067" else family) + " " + fixture["id"] + " fixture, revision 1"
         descriptor = {"kind": "fixture-or-scenario-descriptor", "token": token, "description": description,
                       "binding": binding, "provenance": {"creator": "JBSA project contributors", "spdx_license": "CC0-1.0"}}
         descriptor_path = write_object(descriptor, ROOT / "tests/conformance/objects/sha256")
@@ -218,12 +269,19 @@ def prepare():
     review = {"status": "UNTRUSTED_PENDING_MAINTAINER_APPROVAL", "requirement": "JBSA-CONF-007",
               "active_catalog": bind(ROOT / "tests/conformance/catalog.json"), "proposed_catalog": bind(catalog_path),
               "fixture_manifest": bind(proposal_manifest), "supersessions": successors,
+              "uncovered_case_ids": uncovered,
               "goldens": goldens, "approval": None,
               "authoring_inputs": [bind(ROOT / "build" / name) for name in
                                    ("prepare-bsa-cv1-review.py", "bsa-cv1-expectations.py",
                                     "validate-bsa-wire.py", "generate-bsa-fixtures.py")]
                                   + [bind(path) for path in sorted((PROPOSAL / "oracle").iterdir())],
               "rationale": "Materialize immutable missing assignments as new case identities with independent wire evidence; preserve old descriptor objects unchanged."}
+    if family == "bsa-068":
+        review["authoring_inputs"] += [bind(ROOT / "build/generate-bsa68-cv1-fixtures.py")]
+        review["authoring_inputs"] += [bind(ROOT / "jbsa/src/main/resources/META-INF/jbsa-codec-profile.json")]
+        review["authoring_inputs"] += [bind(ROOT / "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java")]
+        review["authoring_inputs"] += [bind(ROOT / "build/bsa68-valid-split-recipe.json")]
+        review["authoring_inputs"] += [bind(path) for path in sorted((ROOT / "build").glob("bsa68-*-expectations.json"))]
     (PROPOSAL / "review.json").write_bytes(canonical(review))
     pending_records = []
     for golden in goldens:
@@ -248,4 +306,6 @@ def prepare():
 
 
 if __name__ == "__main__":
-    prepare()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--family", choices=("bsa-067", "bsa-068"), default="bsa-067")
+    prepare(parser.parse_args().family)
