@@ -1,6 +1,6 @@
 schema_version: 1
 specification:
-  version: 0.13.0
+  version: 0.14.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -2237,10 +2237,14 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/27
+      - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md#accepted-sequencing-and-completion
     lifecycle_state: active
     verification_class: release-qualification
     implementing_issue: 32
-    test_evidence: []
+    test_evidence:
+      - docs/reviews/issue43-lz4-runtime/targeted-qualification.md
+      - docs/reviews/issue43-lz4-runtime/performance-impact.json
+      - docs/reviews/issue43-lz4-runtime/validation.md
   - id: JBSA-PERF-004
     owner:
       document: docs/spec/performance-v1.md

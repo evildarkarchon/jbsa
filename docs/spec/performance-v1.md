@@ -73,7 +73,30 @@ same provider identity, or the public random-access path; its impact manifest
 A short developer smoke suite **MAY** run elsewhere but **MUST NOT** supply
 acceptance evidence.
 
-_Source decisions: [accepted local execution and requalification triggers](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706), [issue 27 targeted/full qualification acceptance](https://github.com/evildarkarchon/jbsa/issues/27)._
+Before Interface Freeze and the first release, initial integration of a required
+internal codec runtime that adds no Archive Family codec consumer **MAY** close
+its runtime implementation ticket and enable dependent implementation tickets
+after passing local Windows x64 adapter qualification. This exception applies
+only when previously implemented codec algorithms and archive behavior remain
+unchanged apart from required immutable profile-identity rebinding. Adapter
+qualification **MUST** cover an identified codec corpus, malformed data,
+deterministic output, complete resource admission and return, cancellation-delay
+measurements, throughput, memory, output size, native loading, launch policy,
+and notices for the exact provider configuration and qualified dispatch range.
+
+For that initial runtime-only integration, the otherwise required full and
+targeted archive qualifications **MAY** remain `OPEN` while their required
+Archive Family consumers are unimplemented. The integration **MUST** retain its
+exact codec-profile identity and an impact manifest identifying every affected
+Performance Case and required comparator. Unavailable family cases **MUST NOT**
+be relabelled `N/A`, omitted, counted as passed, or satisfied by adapter
+measurements. Applicable formal targeted qualification **MUST** pass before an
+affected Archive Family is qualified; the pre-merge targeted rule continues to
+apply to changes that introduce or modify its consumer. Full qualification
+**MUST** pass before release. This sequencing exception **MUST NOT** establish
+Performance-v1 success, a Final Profile Gate pass, or release eligibility.
+
+_Source decisions: [accepted local execution and requalification triggers](https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706), [issue 27 targeted/full qualification acceptance](https://github.com/evildarkarchon/jbsa/issues/27), [initial runtime integration sequencing](../../.scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md#accepted-sequencing-and-completion)._
 
 ## JBSA-PERF-004
 

@@ -1,22 +1,22 @@
 # Integrate and qualify the Windows x64 LZ4 runtime
 
-Status: needs-info
-State: open
+Status: none
+State: closed
 GitHub issue: #43
 Source: https://github.com/evildarkarchon/jbsa/issues/43
 Author: evildarkarchon
 Created: 2026-09-03T06:54:06Z
 Source updated: 2026-09-03T06:54:06Z
-Closed: none
+Closed: 2026-09-10
 Migrated: 2026-09-10
-Labels: needs-info
+Labels: none
 Assignees: none
 Blocked by: [#32](../issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md), [#29](../issues/29-establish-licensing-and-dependency-provenance-gates.md), [#41](../issues/41-establish-the-interface-candidate-after-representative-archive-families.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
 Triage reviewed: 2026-09-10
-Triage rationale: Implementation is prepared, but review found a sequencing conflict in JBSA-PERF-003: formal qualification requires 336 LZ4 Archive Family cases implemented by later tickets. Maintainer decision on the proposed sequencing clarification is pending; supplemental adapter measurements do not clear that permanent gate.
+Triage rationale: Completed after the accepted specification 0.14.0 sequencing amendment and explicitly approved diagnostic-profile rebaseline. Full clean verification and all 109 admitted archive regression cases pass. Runtime readiness is established; formal family/release performance gates remain open on their owning tickets.
 
 ## Original issue body
 
@@ -84,3 +84,48 @@ The [verification record](../../../docs/reviews/issue43-lz4-runtime/validation.m
 records full-suite execution, corrected failures, successful final reactor
 verification and staged launch/audit results. The implementation is saved on
 the current branch without claiming completion of the unresolved formal gate.
+
+### Accepted sequencing and completion
+
+On 2026-09-10 the maintainer resumed the implementation after the proposed
+sequencing clarification was presented. Specification 0.14.0 materializes that
+decision in JBSA-PERF-003: initial required-runtime integration before Interface
+Freeze and the first release may finish after the named local adapter gates,
+provided it introduces no Archive Family codec consumer and leaves existing
+codec algorithms and archive behavior unchanged apart from profile identity.
+
+The retained 39 observations and 14 focused tests establish this runtime-only
+readiness. They do not establish Performance-v1 success. The 336 affected LZ4
+cases and 1,384-case full-profile trigger remain not qualified. Affected family
+consumers still require formal targeted qualification before merge and family
+qualification; full qualification remains mandatory before release. This
+exception does not promote the Final Profile Gate or authorize publication.
+
+Affected implementation tickets are #43 (runtime integration), #44–#46
+(family consumers), and #55 (full performance qualification). #44 also remains
+blocked by open #42. The public interface and codec-profile bytes are unchanged
+by this sequencing update, so the historical Interface Candidate record is not
+rewritten. Specification-bound CV1 identities receive separately reviewed,
+assertion-preserving successors; historical observations remain historical.
+
+The maintainer subsequently explicitly approved golden packet SHA-256
+`353e3843a95874f21a971d503f3e14fbc66179db067c17f721c4c0eafd125e0c`.
+Its only expected-value change updates 27 diagnostic profile fields across 12
+goldens to the independently pinned current profile. Independent review found
+no other observation changes. The strict rebaseline chain audit passed; fresh
+conformance is rerun after activation rather than copying historical passes.
+
+### Completed outcome
+
+The final seven-module `clean verify` passed, and fresh execution passed all
+109 admitted BSA 067, Fallout 4 General BA2 and PC DDS BA2 cases with no failed
+or invalid comparisons. The [current CV1 report](../../../docs/reviews/issue43-lz4-runtime/current-cv1.json)
+binds the actual runtime artifacts, profile, specification and active catalog.
+The [activation record](../../../docs/reviews/issue43-lz4-runtime/activation.json)
+preserves the exact approved packets and approval-record digests. Independent
+Standards and Spec reviews found no remaining blocking finding.
+
+Ticket #43 is closed as an internal-runtime implementation under JBSA-PERF-003.
+No all-family Automated Conformance, formal Performance-v1, Final Profile or
+release pass is claimed. #44 was reassessed and remains blocked by open #42;
+#45, #46 and #55 retain their formal qualification obligations.

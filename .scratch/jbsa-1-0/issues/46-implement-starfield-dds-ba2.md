@@ -58,3 +58,12 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+### LZ4 performance gate carried forward from #43
+
+Specification 0.14.0 permits the initial internal runtime to enable family
+implementation; it does not qualify this consumer. The
+[runtime impact manifest](../../../docs/reviews/issue43-lz4-runtime/performance-impact.json)
+retains 84 Starfield DDS method-3 raw-LZ4 assignments. This ticket's formal
+targeted conformance/performance evidence remains required before merge. #45
+remains its prerequisite.

@@ -54,3 +54,14 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+### Full qualification retained after #43
+
+The initial runtime-only exception in specification 0.14.0 does not change this
+release gate. The
+[runtime impact manifest](../../../docs/reviews/issue43-lz4-runtime/performance-impact.json)
+records the 1,384-case full-profile qualification trigger as not qualified.
+Reconcile that inventory with the final corpus, configuration and applicability
+rules, bind the exact candidate and comparators, and pass every required case
+before release. Supplemental adapter measurements and historical results from
+another identity cannot satisfy this ticket.

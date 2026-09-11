@@ -4,10 +4,17 @@ Ticket #43 owns the internal codec runtime and its launch inputs. Final linked
 JRE, jpackage image, ZIP, and complete application-image acceptance remain #53.
 The staging directory is a developer qualification bundle, not a release image.
 
+Ticket #43 is complete under specification 0.14.0's initial runtime-only
+sequencing rule. The [completion record](../reviews/issue43-lz4-runtime/validation.md)
+includes the successful full clean build and 109 freshly passing admitted CV1
+cases. Formal performance qualification for the new family consumers and the
+full release matrix remains required.
+
 ## Permanent requirements and evidence
 
 This implementation traces to `docs/spec/requirements.yaml` in specification
-0.13.0. It does not change that registry's accepted specification-set identity.
+0.14.0. The initial implementation used 0.13.0; the minor revision materializes
+the accepted runtime-only sequencing exception in JBSA-PERF-003.
 
 | Requirements | Ticket #43 evidence |
 | --- | --- |
@@ -15,7 +22,7 @@ This implementation traces to `docs/spec/requirements.yaml` in specification
 | JBSA-CODEC-008, 010 | Streaming frame windows, checked raw provider/dispatch limits, complete pre-allocation resource reservations, confined per-call arenas and closed native contexts |
 | JBSA-CODEC-009, 011, 012 | Lazy capability preflight, Java 25 launch subprocesses, stable failure fields, runtime artifact and launch-policy staging |
 | JBSA-CODEC-013 | Independent wire vectors, malformed data, deterministic output and exact round trips; targeted measured qualification packet |
-| JBSA-PERF-001–003, 005–013 | Supplemental provider dispatch measurements and retained profile/corpus identities; full archive Performance-v1 cases remain owned by their Archive Family and release qualification tickets |
+| JBSA-PERF-001–003, 005–013 | Local adapter qualification establishes runtime-only readiness under PERF-003; retained impact/profile/corpus identities preserve formal archive cases for the family and release qualification tickets |
 | JBSA-LIC-004–011 | Exact JAR/DLL inventories, upstream revisions and full BSD texts, notices, SBOM reconciliation, staging and compliance regression gates |
 
 The [targeted qualification packet](../reviews/issue43-lz4-runtime/targeted-qualification.md)

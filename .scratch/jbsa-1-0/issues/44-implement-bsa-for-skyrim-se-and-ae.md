@@ -16,7 +16,7 @@ Parent: [#23](../map.md)
 
 Intended owner: agent
 Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #42, #43.
+Triage rationale: #43 supplies the qualified internal runtime under specification 0.14.0; #42 remains open. Do not start until #42 closes. The family consumer still requires formal targeted performance qualification before merge.
 
 ## Original issue body
 
@@ -57,3 +57,12 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+### Runtime prerequisite reassessment — 2026-09-10
+
+Ticket #43's runtime-only sequencing exception does not waive this ticket's
+family conformance or pre-merge performance gates. Its
+[impact manifest](../../../docs/reviews/issue43-lz4-runtime/performance-impact.json)
+retains 126 BSA 0x69 LZ4-frame assignments for qualification with the implemented
+consumer. Acceptance remains current under specification 0.14.0. The ticket
+remains `needs-triage` while #42 is open.

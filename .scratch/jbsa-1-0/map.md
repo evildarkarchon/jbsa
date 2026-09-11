@@ -73,7 +73,7 @@ Implement and qualify the Windows-first Java 25 Bethesda archive library and thi
 | [#40 — Implement the Fallout 4 DDS BA2 vertical slice](issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md) | closed |
 | [#41 — Establish the Interface Candidate after representative Archive Families](issues/41-establish-the-interface-candidate-after-representative-archive-families.md) | open |
 | [#42 — Implement BSA for Fallout 3, New Vegas, and Skyrim LE](issues/42-implement-bsa-for-fallout-3-new-vegas-and-skyrim-le.md) | open |
-| [#43 — Integrate and qualify the Windows x64 LZ4 runtime](issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md) | open |
+| [#43 — Integrate and qualify the Windows x64 LZ4 runtime](issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md) | closed |
 | [#44 — Implement BSA for Skyrim SE and AE](issues/44-implement-bsa-for-skyrim-se-and-ae.md) | open |
 | [#45 — Implement Starfield General BA2](issues/45-implement-starfield-general-ba2.md) | open |
 | [#46 — Implement Starfield DDS BA2](issues/46-implement-starfield-dds-ba2.md) | open |

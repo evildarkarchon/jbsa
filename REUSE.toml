@@ -64,6 +64,12 @@ SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
 SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
+path = ["docs/reviews/issue43-lz4-runtime/specification-rebinding/corpora/**/artifacts/**", "docs/reviews/issue43-lz4-runtime/profile-rebinding/corpora/**/artifacts/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
 path = "tests/performance/**"
 precedence = "override"
 SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"

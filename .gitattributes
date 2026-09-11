@@ -43,3 +43,6 @@ tests/performance/**/*.json text eol=lf
 tests/performance/**/*.gz -text
 jbsa/src/main/resources/META-INF/jbsa-codec-profile.* text eol=lf
 docs/reviews/issue43-lz4-runtime/** text eol=lf
+docs/reviews/issue43-lz4-runtime/**/*.ba2 -text
+docs/reviews/issue43-lz4-runtime/**/*.bin -text
+build/*lz4*.py text eol=lf
