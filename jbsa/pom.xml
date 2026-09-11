@@ -18,6 +18,30 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.lwjgl</groupId>
+      <artifactId>lwjgl</artifactId>
+      <version>3.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lwjgl</groupId>
+      <artifactId>lwjgl-lz4</artifactId>
+      <version>3.4.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lwjgl</groupId>
+      <artifactId>lwjgl</artifactId>
+      <version>3.4.3</version>
+      <classifier>natives-windows</classifier>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.lwjgl</groupId>
+      <artifactId>lwjgl-lz4</artifactId>
+      <version>3.4.3</version>
+      <classifier>natives-windows</classifier>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
@@ -30,8 +54,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <!-- Only the internal Windows filesystem qualification tests need native access. -->
-          <argLine>-Dfile.encoding=UTF-8 --enable-native-access=io.github.evildarkarchon.jbsa</argLine>
+          <!-- Windows filesystem and internal LZ4 qualification require explicit Java 25 grants. -->
+          <argLine>-Dfile.encoding=UTF-8 --enable-native-access=io.github.evildarkarchon.jbsa,org.lwjgl,org.lwjgl.lz4</argLine>
         </configuration>
       </plugin>
       <plugin>

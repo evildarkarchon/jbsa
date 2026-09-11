@@ -46,6 +46,18 @@ SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
 SPDX-License-Identifier = "CC0-1.0"
 
 [[annotations]]
+path = "compliance/licenses/LWJGL-3.4.3.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2012-present Lightweight Java Game Library"
+SPDX-License-Identifier = "BSD-3-Clause"
+
+[[annotations]]
+path = "compliance/licenses/LZ4-1.10.0.txt"
+precedence = "override"
+SPDX-FileCopyrightText = "Copyright (c) 2011-2020, Yann Collet"
+SPDX-License-Identifier = "BSD-2-Clause"
+
+[[annotations]]
 path = "tests/conformance/**"
 precedence = "override"
 SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"

@@ -1,6 +1,6 @@
 # Integrate and qualify the Windows x64 LZ4 runtime
 
-Status: ready-for-agent
+Status: needs-info
 State: open
 GitHub issue: #43
 Source: https://github.com/evildarkarchon/jbsa/issues/43
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:06Z
 Source updated: 2026-09-03T06:54:06Z
 Closed: none
 Migrated: 2026-09-10
-Labels: ready-for-agent
+Labels: needs-info
 Assignees: none
 Blocked by: [#32](../issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md), [#29](../issues/29-establish-licensing-and-dependency-provenance-gates.md), [#41](../issues/41-establish-the-interface-candidate-after-representative-archive-families.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
 Triage reviewed: 2026-09-10
-Triage rationale: All prerequisites are closed after the Interface Candidate passed in #41. Acceptance remains current under specification 0.13.0; ready for agent implementation.
+Triage rationale: Implementation is prepared, but review found a sequencing conflict in JBSA-PERF-003: formal qualification requires 336 LZ4 Archive Family cases implemented by later tickets. Maintainer decision on the proposed sequencing clarification is pending; supplemental adapter measurements do not clear that permanent gate.
 
 ## Original issue body
 
@@ -61,3 +61,26 @@ No comments at migration time.
 Reassessed on 2026-09-10: every listed prerequisite is closed. The acceptance
 criteria remain applicable under specification 0.13.0 and this agent-owned
 ticket is ready for implementation. No prerequisite link was removed.
+
+### Implementation and qualification review — 2026-09-10
+
+Prepared separate bounded raw-HC and streaming-frame adapters, lazy native
+preflight, exact provider/profile pins, Windows launch inputs, dependency and
+license evidence, and the corresponding test/harness integration. Fourteen
+focused codec and fresh-process launch tests pass. Thirty-nine supplemental
+measurements cover output identity/size, throughput, resource admission and
+cancellation delays; all 73 performance harness checks pass.
+
+The [review](../../../docs/reviews/issue43-lz4-runtime/review.md) records corrected
+standards findings and the unresolved specification gate. The
+[impact manifest](../../../docs/reviews/issue43-lz4-runtime/performance-impact.json)
+retains all 336 affected LZ4 cases plus the 1,384-case full-profile trigger as
+not qualified. Existing evidence cannot be silently rebound to the new profile.
+The proposed sequencing amendment is documented for a maintainer decision and
+has not been applied to the permanent specification. This ticket remains open;
+dependent tickets remain blocked.
+
+The [verification record](../../../docs/reviews/issue43-lz4-runtime/validation.md)
+records full-suite execution, corrected failures, successful final reactor
+verification and staged launch/audit results. The implementation is saved on
+the current branch without claiming completion of the unresolved formal gate.

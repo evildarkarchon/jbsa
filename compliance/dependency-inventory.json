@@ -89,15 +89,13 @@
         "buildProvenance": "Maven Central 3.4.3 core JAR from the LWJGL 3.4.3 release."
       },
       "redistribution": {
-        "approved": false,
-        "evidence": "BSD-3-Clause permits redistribution, but the LZ4 provider gates have not passed.",
-        "releaseArtifacts": []
+        "approved": true,
+        "evidence": "docs/reviews/issue43-lz4-runtime: Windows x64 codec corpus, bounded memory, deterministic output, native-access subprocess qualification, pinned-byte and license audit; profile jbsa-lz4-v1.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
       },
-      "blockedBy": [
-        "Windows x64 LZ4 provider implementation",
-        "conformance and native-loading qualification",
-        "notice and final-byte audit"
-      ]
+      "blockedBy": []
     },
     {
       "groupId": "org.lwjgl",
@@ -121,15 +119,13 @@
         "buildProvenance": "Maven Central 3.4.3 LZ4 binding JAR generated from LWJGL 3.4.3 against LZ4 1.10.0."
       },
       "redistribution": {
-        "approved": false,
-        "evidence": "The applicable BSD terms permit redistribution, but the LZ4 provider gates have not passed.",
-        "releaseArtifacts": []
+        "approved": true,
+        "evidence": "docs/reviews/issue43-lz4-runtime: Windows x64 codec corpus, bounded memory, deterministic output, native-access subprocess qualification, pinned-byte and license audit; profile jbsa-lz4-v1.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
       },
-      "blockedBy": [
-        "Windows x64 LZ4 provider implementation",
-        "conformance and native-loading qualification",
-        "notice and final-byte audit"
-      ]
+      "blockedBy": []
     },
     {
       "groupId": "org.lwjgl",
@@ -153,15 +149,13 @@
         "buildProvenance": "Maven Central 3.4.3 natives-windows classifier built by the LWJGL 3.4.3 release process."
       },
       "redistribution": {
-        "approved": false,
-        "evidence": "BSD-3-Clause permits redistribution, but the Windows native provider gates have not passed.",
-        "releaseArtifacts": []
+        "approved": true,
+        "evidence": "docs/reviews/issue43-lz4-runtime: Windows x64 codec corpus, bounded memory, deterministic output, native-access subprocess qualification, pinned-byte and license audit; profile jbsa-lz4-v1.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
       },
-      "blockedBy": [
-        "Windows x64 LZ4 provider implementation",
-        "native-loading and packaging qualification",
-        "notice and final-byte audit"
-      ]
+      "blockedBy": []
     },
     {
       "groupId": "org.lwjgl",
@@ -185,15 +179,13 @@
         "buildProvenance": "Maven Central 3.4.3 natives-windows classifier built from LWJGL 3.4.3 with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
       },
       "redistribution": {
-        "approved": false,
-        "evidence": "The applicable BSD terms permit redistribution, but the LZ4 native provider gates have not passed.",
-        "releaseArtifacts": []
+        "approved": true,
+        "evidence": "docs/reviews/issue43-lz4-runtime: Windows x64 codec corpus, bounded memory, deterministic output, native-access subprocess qualification, pinned-byte and license audit; profile jbsa-lz4-v1.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
       },
-      "blockedBy": [
-        "Windows x64 LZ4 provider implementation",
-        "conformance and native-loading qualification",
-        "notice and final-byte audit"
-      ]
+      "blockedBy": []
     }
   ]
 }

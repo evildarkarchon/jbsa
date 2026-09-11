@@ -9,7 +9,7 @@ import java.util.zip.*;
 
 /** Release-pinned RFC 1950 streaming adapter; every call owns independent bounded codec state. */
 public final class JdkZlib {
-  public static final String PROFILE = "jbsa-jdk-zlib-v1";
+  public static final String PROFILE = Lz4Runtime.PROFILE;
   public static final long ENCODE_HEAP_BYTES = 132096;
   public static final long ENCODE_NATIVE_BYTES = 524288;
   public static final long DECODE_HEAP_BYTES = 66560;

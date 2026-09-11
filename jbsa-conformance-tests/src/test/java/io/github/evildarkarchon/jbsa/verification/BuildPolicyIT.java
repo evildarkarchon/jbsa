@@ -142,6 +142,38 @@ final class BuildPolicyIT {
     return Path.of(System.getProperty("jbsa.reactor.root"));
   }
 
+  /** Verifies the complete product dependency set, including classifier and scope, stays pinned. */
+  private static void assertQualifiedRuntimeDependencies(List<Element> dependencies) {
+    List<String> coordinates = new ArrayList<>();
+    for (Element dependency : dependencies) {
+      String scope = directText(dependency, "scope");
+      String type = directText(dependency, "type");
+      assertTrue(type.isEmpty() || type.equals("jar"), "Runtime artifacts must be JARs");
+      assertNotEquals(
+          "true", directText(dependency, "optional"), "Required codecs are not optional");
+      assertNull(
+          directChild(dependency, "exclusions"), "Runtime transitives must remain auditable");
+      coordinates.add(
+          directText(dependency, "groupId")
+              + ":"
+              + directText(dependency, "artifactId")
+              + ":"
+              + directText(dependency, "version")
+              + ":"
+              + directText(dependency, "classifier")
+              + ":"
+              + (scope.isEmpty() ? "compile" : scope));
+    }
+    assertEquals(
+        List.of(
+            "org.lwjgl:lwjgl-lz4:3.4.3::compile",
+            "org.lwjgl:lwjgl-lz4:3.4.3:natives-windows:runtime",
+            "org.lwjgl:lwjgl:3.4.3::compile",
+            "org.lwjgl:lwjgl:3.4.3:natives-windows:runtime"),
+        coordinates.stream().sorted().toList(),
+        "Only the four qualified LWJGL runtime artifacts may enter the product graph");
+  }
+
   /**
    * Verifies JBSA-BUILD-001 and JBSA-BUILD-002 at the source reactor seam.
    *
@@ -178,10 +210,10 @@ final class BuildPolicyIT {
   @Test
   void productionPomsKeepBuildSupportOutsideTheProductGraph() throws Exception {
     Element library = parse(reactorRoot().resolve("jbsa/pom.xml")).getDocumentElement();
-    assertTrue(
+    assertQualifiedRuntimeDependencies(
         dependencies(library).stream()
-            .allMatch(dependency -> "test".equals(directText(dependency, "scope"))),
-        "Library-local tests must not introduce product runtime dependencies");
+            .filter(dependency -> !"test".equals(directText(dependency, "scope")))
+            .toList());
 
     Element cli = parse(reactorRoot().resolve("jbsa-cli/pom.xml")).getDocumentElement();
     List<Element> cliDependencies =
@@ -234,9 +266,7 @@ final class BuildPolicyIT {
     assertNull(directChild(project, "modules"));
     assertNull(directChild(project, "profiles"));
     assertNull(directChild(project, "repositories"));
-    assertTrue(
-        dependencies(project).isEmpty(),
-        "Consumer dependency metadata must match the dependency-free skeleton");
+    assertQualifiedRuntimeDependencies(dependencies(project));
   }
 
   /**

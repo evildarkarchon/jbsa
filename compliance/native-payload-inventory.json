@@ -67,9 +67,11 @@
         "buildProvenance": "Bundled in the Maven Central org.lwjgl:lwjgl:3.4.3:natives-windows classifier built by the LWJGL release process."
       },
       "redistribution": {
-        "approved": false,
-        "evidence": "BSD-3-Clause permits redistribution, but the Windows native provider gates have not passed.",
-        "releaseArtifacts": []
+        "approved": true,
+        "evidence": "docs/reviews/issue43-lz4-runtime: Windows x64 native loading and bounded codec qualification; exact container and DLL SHA-256 verified; full BSD notices preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
       }
     },
     {
@@ -102,9 +104,11 @@
         "buildProvenance": "Bundled in the Maven Central org.lwjgl:lwjgl-lz4:3.4.3:natives-windows classifier from LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
       },
       "redistribution": {
-        "approved": false,
-        "evidence": "The BSD terms permit redistribution, but the LZ4 provider gates have not passed.",
-        "releaseArtifacts": []
+        "approved": true,
+        "evidence": "docs/reviews/issue43-lz4-runtime: Windows x64 native loading and bounded codec qualification; exact container and DLL SHA-256 verified; full BSD notices preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
       }
     }
   ]

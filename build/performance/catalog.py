@@ -45,20 +45,25 @@ def validate_profiles(profiles):
 
 
 def shipping_codec_mappings(profiles):
-    """Read the shipped JDK profile without rewriting its CV1-bound identity.
+    """Read shipped JDK and LZ4 profiles without rewriting their CV1-bound identities.
 
     The older inventory schema describes every future provider. The actual release
-    profile instead records available providers and explicitly unavailable LZ4.
+    profile instead records available providers and any explicitly unavailable LZ4.
     Only declared implementations get a bound lane; unavailable lanes remain in
     the inventory so a full run cannot silently claim a reduced matrix.
     """
     required = {"profile_id", "providers", "size_dispatch", "resources", "native_configuration", "qualification"}
     if (set(profiles) != required or not isinstance(profiles["profile_id"], str)
-            or not profiles["profile_id"] or set(profiles["providers"]) != {"zlib"}
+            or not profiles["profile_id"] or not isinstance(profiles["providers"], dict)
+            or set(profiles["providers"]) not in ({"zlib"}, {"zlib", "raw-lz4", "lz4-frame"})
             or any(not isinstance(profiles[key], dict) for key in
-                   ("size_dispatch", "resources", "native_configuration"))
-            or profiles["native_configuration"].get("lz4") != "unavailable"):
+                   ("size_dispatch", "resources", "native_configuration"))):
         raise ValueError("Unsupported shipping runtime-profile schema")
+    lz4_available = "raw-lz4" in profiles["providers"]
+    if lz4_available:
+        validate_shipping_lz4(profiles)
+    elif profiles["native_configuration"].get("lz4") != "unavailable":
+        raise ValueError("Undeclared shipping LZ4 provider")
     zlib = profiles["providers"]["zlib"]
     if (set(zlib) != {"implementation", "runtime", "format", "level", "strategy", "nowrap"}
             or zlib["implementation"] != "java.util.zip.Deflater/Inflater"
@@ -67,13 +72,48 @@ def shipping_codec_mappings(profiles):
             or not 0 <= zlib["level"] <= 9 or zlib["strategy"] != "DEFAULT_STRATEGY"
             or zlib["nowrap"] is not False):
         raise ValueError("Unsupported shipping zlib-provider declaration")
-    return {
+    mappings = {
         "stored": {"provider": "none", "version": "none", "configuration": {
             "parameters": {}, "size_dispatch": {}, "native_configuration": {}}},
         "zlib": {"provider": "jdk", "version": zlib["runtime"], "configuration": {
             "parameters": {**zlib, "resources": profiles["resources"]},
             "size_dispatch": profiles["size_dispatch"],
             "native_configuration": profiles["native_configuration"]}}}
+    if lz4_available:
+        for codec in ("raw-lz4", "lz4-frame"):
+            provider = profiles["providers"][codec]
+            mappings[codec] = {"provider": "lwjgl", "version": provider["version"] + "-lz4-1.10.0",
+                "configuration": {"parameters": provider,
+                    "size_dispatch": {"dispatch": profiles["size_dispatch"][codec],
+                                      "resources": profiles["resources"][codec]},
+                    "native_configuration": profiles["native_configuration"]["lz4"]}}
+    return mappings
+
+
+def validate_shipping_lz4(profiles):
+    """Admit only the pinned LZ4 release declaration; changes need explicit harness support.
+
+    A provider mapping establishes identity, not conformance. The runner still requires
+    passed family evidence, runtime registrations and all normative measurements.
+    """
+    common = {"implementation": "LWJGL", "version": "3.4.3", "upstream": "LZ4 1.10.0", "level": 9}
+    expected = {
+        "raw-lz4": {**common, "format": "raw-block", "state_bytes": 524288},
+        "lz4-frame": {**common, "block_bytes": 65536, "block_mode": "linked", "auto_flush": True,
+                      "content_checksum": True, "block_checksum": False, "content_size": True,
+                      "dictionary": False}}
+    native = {"platform": "windows-x64", "classifier": "natives-windows",
+              "loading": "lazy-jar-resource-extraction; process-lifetime",
+              "native_access_modules": ["org.lwjgl", "org.lwjgl.lz4"],
+              "classpath_native_access": "ALL-UNNAMED"}
+    if profiles["native_configuration"].get("lz4") != native:
+        raise ValueError("Unsupported shipping LZ4 native configuration")
+    for codec, declaration in expected.items():
+        if (profiles["providers"][codec] != declaration
+                or not profiles["size_dispatch"].get(codec)
+                or not isinstance(profiles["resources"].get(codec), dict)
+                or not profiles["resources"][codec]):
+            raise ValueError("Incomplete or unsupported shipping LZ4 declaration")
 
 
 def codec_mappings(profiles):

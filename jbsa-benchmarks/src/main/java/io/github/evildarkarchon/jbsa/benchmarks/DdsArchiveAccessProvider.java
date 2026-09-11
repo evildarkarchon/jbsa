@@ -19,7 +19,7 @@ import java.util.Map;
 /** Build-only JMH adapter for the qualified DDS public archive and entry-content capabilities. */
 public final class DdsArchiveAccessProvider implements ArchiveAccessProvider {
   private static final String PROFILE_SHA256 =
-      "b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda";
+      "f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e";
 
   /** Returns this adapter's exact shipped profile token; it never impersonates another profile. */
   @Override

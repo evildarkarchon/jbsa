@@ -32,11 +32,11 @@ final class BsaConformanceIT {
       assertNotNull(stream);
       byte[] manifest = stream.readAllBytes();
       assertEquals(
-          "b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda",
+          "f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e",
           HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(manifest)));
       assertTrue(
           new String(manifest, java.nio.charset.StandardCharsets.UTF_8)
-              .contains("\"profile_id\":\"jbsa-jdk-zlib-v1\""));
+              .contains("\"profile_id\":\"jbsa-lz4-v1\""));
     }
   }
 

@@ -6,6 +6,8 @@
  */
 module io.github.evildarkarchon.jbsa {
   requires jdk.unsupported;
+  requires static org.lwjgl;
+  requires static org.lwjgl.lz4;
 
   exports io.github.evildarkarchon.jbsa;
 }

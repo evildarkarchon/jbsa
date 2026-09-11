@@ -1,0 +1,8 @@
+timestamp=2026-09-11T02:56:06.096078600Z
+java=25.0.4.1+1-LTS
+vm=OpenJDK 64-Bit Server VM
+os=Windows 11
+arch=amd64
+processors=16
+profile=jbsa-lz4-v1
+profile_sha256=f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e

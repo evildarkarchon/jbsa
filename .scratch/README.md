@@ -25,7 +25,7 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | [#40](https://github.com/evildarkarchon/jbsa/issues/40) | [Implement the Fallout 4 DDS BA2 vertical slice](jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md) | closed | none |
 | [#41](https://github.com/evildarkarchon/jbsa/issues/41) | [Establish the Interface Candidate after representative Archive Families](jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md) | closed | none |
 | [#42](https://github.com/evildarkarchon/jbsa/issues/42) | [Implement BSA for Fallout 3, New Vegas, and Skyrim LE](jbsa-1-0/issues/42-implement-bsa-for-fallout-3-new-vegas-and-skyrim-le.md) | open | ready-for-agent |
-| [#43](https://github.com/evildarkarchon/jbsa/issues/43) | [Integrate and qualify the Windows x64 LZ4 runtime](jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md) | open | ready-for-agent |
+| [#43](https://github.com/evildarkarchon/jbsa/issues/43) | [Integrate and qualify the Windows x64 LZ4 runtime](jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md) | open | needs-info |
 | [#44](https://github.com/evildarkarchon/jbsa/issues/44) | [Implement BSA for Skyrim SE and AE](jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md) | open | needs-triage |
 | [#45](https://github.com/evildarkarchon/jbsa/issues/45) | [Implement Starfield General BA2](jbsa-1-0/issues/45-implement-starfield-general-ba2.md) | open | needs-triage |
 | [#46](https://github.com/evildarkarchon/jbsa/issues/46) | [Implement Starfield DDS BA2](jbsa-1-0/issues/46-implement-starfield-dds-ba2.md) | open | needs-triage |

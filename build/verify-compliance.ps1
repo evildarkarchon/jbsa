@@ -583,7 +583,7 @@ function New-ThirdPartyNoticesText {
         }
         $lines += ''
     }
-    return ($lines -join "`n") + "`n"
+    return ($lines -join "`n").TrimEnd() + "`n"
 }
 
 <#

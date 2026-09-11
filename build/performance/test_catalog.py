@@ -69,9 +69,11 @@ class CatalogTest(unittest.TestCase):
             with self.assertRaises(ValueError): catalog.create_catalog(profile)
 
     def test_shipping_development_profile_binds_supported_lanes_without_rewriting_identity(self):
-        """Use the actual immutable release profile; unavailable providers remain unbound."""
+        """Keep legacy unavailable providers unbound without shrinking the inventory."""
         profile = json.loads((Path(__file__).resolve().parents[2] /
             'jbsa/src/main/resources/META-INF/jbsa-codec-profile.json').read_text())
+        profile['providers'] = {'zlib': profile['providers']['zlib']}
+        profile['native_configuration']['lz4'] = 'unavailable'
         document = catalog.create_catalog(profile)
         dds = [c for c in document['cases'] if c['identity']['archive_family_or_layout'] == 'fo4-dx10-v1']
         self.assertEqual(84, len(dds))
@@ -83,6 +85,36 @@ class CatalogTest(unittest.TestCase):
         self.assertTrue(unavailable)
         self.assertTrue(all(not c['configuration']['profile_bound'] for c in unavailable))
         self.assertEqual(len(catalog.create_catalog()['cases']), len(document['cases']))
+
+    def test_shipping_lz4_profile_binds_complete_lanes_to_exact_runtime_bytes(self):
+        """Bound providers do not imply passed family conformance or shrink affected lanes."""
+        text = (Path(__file__).resolve().parents[2] /
+            'jbsa/src/main/resources/META-INF/jbsa-codec-profile.json').read_bytes().decode('utf-8')
+        profile = json.loads(text)
+        document = catalog.create_catalog(profile, profile_document=text)
+        expected = catalog.hashlib.sha256(text.encode('utf-8')).hexdigest()
+        affected = [c for c in document['cases'] if c['mapping']['codec'] in ('raw-lz4', 'lz4-frame')]
+        self.assertEqual(336, len(affected))
+        self.assertEqual(1384, len(document['cases']))
+        for case in affected:
+            mapping = case['mapping']
+            self.assertTrue(case['configuration']['profile_bound'])
+            self.assertEqual(expected, mapping['codec_profile_sha256'])
+            self.assertEqual('lwjgl', mapping['provider'])
+            self.assertEqual(profile['providers'][mapping['codec']],
+                             mapping['provider_configuration']['configuration']['parameters'])
+            self.assertEqual([], case['prerequisites'])
+        impact = {'reason': 'LZ4 implementation',
+                  'selectors': [{'codec': 'raw-lz4'}, {'codec': 'lz4-frame'}],
+                  'case_ids': [c['identity']['case_id'] for c in affected]}
+        self.assertEqual(affected, catalog.select_cases(document, 'targeted', impact, 16))
+        for mutation in ('missing-provider', 'native-path', 'missing-dispatch', 'missing-resources'):
+            changed = copy.deepcopy(profile)
+            if mutation == 'missing-provider': del changed['providers']['raw-lz4']
+            elif mutation == 'native-path': changed['native_configuration']['lz4']['loading'] = 'custom-path'
+            elif mutation == 'missing-dispatch': del changed['size_dispatch']['raw-lz4']
+            else: del changed['resources']['lz4-frame']
+            with self.assertRaises(ValueError): catalog.create_catalog(changed)
 
     def test_exact_profile_document_keeps_cv1_byte_identity(self):
         """Whitespace and key order belong to the packaged profile's exact artifact digest."""

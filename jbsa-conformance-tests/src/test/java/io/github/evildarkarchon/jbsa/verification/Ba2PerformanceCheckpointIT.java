@@ -194,8 +194,8 @@ final class Ba2PerformanceCheckpointIT {
             + "Heap is the sum of memory-pool peaks, not simultaneous live heap or process memory.\n"
             + "Scratch is the enforced request ceiling; no observed peak is claimed.\n"
             + "No oracle timing comparison, JMH, confidence interval, or release qualification.\n"
-            + "codec_profile_id=jbsa-jdk-zlib-v1\n"
-            + "codec_profile_sha256=b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda\n"
+            + "codec_profile_id=jbsa-lz4-v1\n"
+            + "codec_profile_sha256=f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e\n"
             + "java.version="
             + System.getProperty("java.version")
             + "\n"

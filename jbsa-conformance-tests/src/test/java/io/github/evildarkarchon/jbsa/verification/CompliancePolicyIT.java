@@ -25,6 +25,8 @@ final class CompliancePolicyIT {
           "LICENSE",
           "LICENSES/Apache-2.0.txt",
           "LICENSES/CC0-1.0.txt",
+          "LICENSES/BSD-2-Clause.txt",
+          "LICENSES/BSD-3-Clause.txt",
           "NOTICE",
           "RELEASE-NOTES.md",
           "THIRD-PARTY-NOTICES.md",
@@ -899,22 +901,37 @@ final class CompliancePolicyIT {
   void sbomAuditRejectsUninventoriedTransitiveDependencies() throws Exception {
     Path sbom = Files.createTempFile("jbsa-uninventoried-transitive-", ".json");
     try {
-      Files.writeString(
-          sbom,
-          """
-                            {
-                              "bomFormat": "CycloneDX",
-                              "specVersion": "1.6",
-                              "components": [
-                                {
-                                  "group": "example.uninventoried",
-                                  "name": "transitive-runtime",
-                                  "version": "1.0.0",
-                                  "purl": "pkg:maven/example.uninventoried/transitive-runtime@1.0.0?type=jar"
-                                }
-                              ]
-                            }
-                            """);
+      Path approvedSbom = reactorRoot().resolve("target/compliance/jbsa.cdx.json");
+      assertEquals(
+          0,
+          runComplianceAuditAgainstSbom(approvedSbom).exitCode(),
+          "The baseline SBOM must pass before testing an unexpected transitive");
+      // Modify the root collection: metadata.tools can have its own earlier components property.
+      AuditResult mutation =
+          runAuditProcess(
+              List.of(
+                  "pwsh",
+                  "-NoLogo",
+                  "-NoProfile",
+                  "-NonInteractive",
+                  "-Command",
+                  """
+                  $ErrorActionPreference = 'Stop'
+                  $bom = Get-Content -Raw -LiteralPath $env:JBSA_TEST_SBOM_INPUT | ConvertFrom-Json
+                  $bom.components = @($bom.components) + @([pscustomobject]@{
+                    group = 'example.uninventoried'
+                    name = 'transitive-runtime'
+                    version = '1.0.0'
+                    purl = 'pkg:maven/example.uninventoried/transitive-runtime@1.0.0?type=jar'
+                  })
+                  $bom | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $env:JBSA_TEST_SBOM_OUTPUT
+                  """),
+              reactorRoot(),
+              Map.of(
+                  "JBSA_TEST_SBOM_INPUT", approvedSbom.toString(),
+                  "JBSA_TEST_SBOM_OUTPUT", sbom.toString()),
+              "SBOM fixture mutation");
+      assertEquals(0, mutation.exitCode(), mutation.output());
       AuditResult result = runComplianceAuditAgainstSbom(sbom);
       assertNotEquals(0, result.exitCode(), result.output());
       assertTrue(result.output().contains("uninventoried external component"), result.output());

@@ -31,8 +31,26 @@ $inputs = @(
     @{ path = 'NOTICE'; source = 'NOTICE'; kind = 'notice' },
     @{ path = 'THIRD-PARTY-NOTICES.md'; source = 'target/compliance/THIRD-PARTY-NOTICES.md'; kind = 'notice' },
     @{ path = 'RELEASE-NOTES.md'; source = 'target/compliance/RELEASE-NOTES.md'; kind = 'release-notes' },
-    @{ path = 'jbsa.cdx.json'; source = 'target/compliance/jbsa.cdx.json'; kind = 'sbom' }
+    @{ path = 'jbsa.cdx.json'; source = 'target/compliance/jbsa.cdx.json'; kind = 'sbom' },
+    @{ path = 'licenses/LWJGL-3.4.3.txt'; source = 'compliance/licenses/LWJGL-3.4.3.txt'; kind = 'license' },
+    @{ path = 'licenses/LZ4-1.10.0.txt'; source = 'compliance/licenses/LZ4-1.10.0.txt'; kind = 'license' },
+    @{ path = 'jbsa.ps1'; source = 'build/windows-runtime/jbsa.ps1'; kind = 'provenance' },
+    @{ path = 'launch-policy.json'; source = 'build/windows-runtime/launch-policy.json'; kind = 'provenance' }
 )
+$inventory = Get-Content -Raw -LiteralPath (Join-Path $reactorRoot 'compliance/dependency-inventory.json') | ConvertFrom-Json
+foreach ($dependency in @($inventory.entries | Where-Object { $_.groupId -eq 'org.lwjgl' })) {
+    if (-not $dependency.redistribution.approved) { throw "Runtime dependency is not qualified: $($dependency.artifactId)" }
+    $classifierSuffix = if ($null -eq $dependency.classifier) { '' } else { "-$($dependency.classifier)" }
+    $filename = "$($dependency.artifactId)-$($dependency.version)$classifierSuffix.jar"
+    $source = "jbsa-dist/target/runtime-dependencies/$filename"
+    $sourcePath = Join-Path $reactorRoot $source
+    if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) { throw "Missing release input source: $source" }
+    # Validate reactor-resolved bytes before replacing prior staging; the local Maven cache is not an assembly input.
+    if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $dependency.sha256) {
+        throw "Runtime checksum mismatch: $filename"
+    }
+    $inputs += @{ path = "lib/$filename"; source = $source; kind = $(if ($dependency.containsNativeBytes) { 'native-container' } else { 'dependency' }); identity = ('{0}:{1}:{2}:{3}:{4}' -f $dependency.groupId, $dependency.artifactId, $dependency.packaging, $dependency.classifier, $dependency.version) }
+}
 foreach ($stagedInput in $inputs) {
     if (-not (Test-Path -LiteralPath (Join-Path $reactorRoot $stagedInput.source) -PathType Leaf)) {
         throw "Missing release input source: $($stagedInput.source)"
@@ -59,10 +77,12 @@ if (Test-Path -LiteralPath $manifestPath) { Remove-Item -LiteralPath $manifestPa
 New-Item -ItemType Directory -Path $resolvedStage -Force | Out-Null
 $entries = foreach ($stagedInput in $inputs) {
     $destination = Join-Path $resolvedStage $stagedInput.path
+    New-Item -ItemType Directory -Path (Split-Path $destination) -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $reactorRoot $stagedInput.source) -Destination $destination
     $sourceIdentity = if ($stagedInput.kind -eq 'project-artifact') {
         "io.github.evildarkarchon:$($stagedInput.artifact):$ReactorVersion"
-    } else { $stagedInput.source }
+    } elseif ($stagedInput.ContainsKey('identity')) { $stagedInput.identity }
+    else { $stagedInput.source }
     [ordered]@{
         path = $stagedInput.path
         sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $destination).Hash.ToLowerInvariant()
