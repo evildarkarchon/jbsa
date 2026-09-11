@@ -1,6 +1,6 @@
 # Implement BSA for Skyrim SE and AE
 
-Status: needs-triage
+Status: ready-for-agent
 State: open
 GitHub issue: #44
 Source: https://github.com/evildarkarchon/jbsa/issues/44
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:08Z
 Source updated: 2026-09-03T06:54:08Z
 Closed: none
 Migrated: 2026-09-10
-Labels: needs-triage
+Labels: ready-for-agent
 Assignees: none
 Blocked by: [#42](../issues/42-implement-bsa-for-fallout-3-new-vegas-and-skyrim-le.md), [#43](../issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: #43 supplies the qualified internal runtime under specification 0.14.0; #42 remains open. Do not start until #42 closes. The family consumer still requires formal targeted performance qualification before merge.
+Triage reviewed: 2026-09-11
+Triage rationale: Both #42 and #43 are closed. Acceptance remains current under specification 0.14.0; ready for agent implementation. The family consumer still requires its conformance and targeted performance qualification before merge.
 
 ## Original issue body
 
@@ -66,3 +66,10 @@ family conformance or pre-merge performance gates. Its
 retains 126 BSA 0x69 LZ4-frame assignments for qualification with the implemented
 consumer. Acceptance remains current under specification 0.14.0. The ticket
 remains `needs-triage` while #42 is open.
+
+### Readiness after #42 — 2026-09-11
+
+Issue #42's approved 52-case catalog is activated and all 52 active cases pass.
+Both listed prerequisites are now closed; this unassigned, agent-owned issue is
+ready. The existing acceptance criteria and 126 LZ4-frame performance assignments
+remain required. No prerequisite or qualification gate was removed.

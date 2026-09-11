@@ -5,10 +5,12 @@ Set-StrictMode -Version Latest
 
 function ConvertTo-ConformanceCanonicalJson {
     <# .SYNOPSIS
-    Serializes structured observations with ordinal object keys, preserving array order and explicit nulls.
+    Serializes structured observations with ordinal keys, preserving scalar strings, array order and nulls.
     #>
     param([AllowNull()] $Value)
     if ($null -eq $Value) { return 'null' }
+    # Pipeline strings can also satisfy PSCustomObject; their adapted Length is not evidence.
+    if ($Value -is [string]) { return ConvertTo-Json -InputObject ([string]$Value) -Compress }
     if ($Value -is [System.Collections.IDictionary] -or $Value -is [pscustomobject]) {
         if ($Value -is [System.Collections.IDictionary]) { [string[]]$keys = @($Value.Keys) }
         else { [string[]]$keys = @($Value.PSObject.Properties | ForEach-Object Name) }

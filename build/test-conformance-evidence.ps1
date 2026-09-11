@@ -6,6 +6,13 @@ param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'conformance-evidence.ps1')
+
+# Pipeline-adapted strings must remain scalar evidence paths, not PSObject property bags.
+$wrappedPath = 'evidence/observation.json' | ForEach-Object { $_ }
+$wrappedObservation = @{ path = $wrappedPath; ids = @($wrappedPath) }
+if ((ConvertTo-ConformanceCanonicalJson $wrappedObservation) -cne '{"ids":["evidence/observation.json"],"path":"evidence/observation.json"}') {
+    throw 'Wrapped evidence strings were serialized as object properties.'
+}
 if ((ConvertTo-ConformanceCanonicalJson @{ z = @($null, 1); A = @{ b = 2; a = 1 } }) -cne '{"A":{"a":1,"b":2},"z":[null,1]}') {
     throw 'Canonical JSON must sort keys ordinally, preserving arrays and null.'
 }

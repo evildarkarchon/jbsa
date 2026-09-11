@@ -1,22 +1,22 @@
 # Implement BSA for Fallout 3, New Vegas, and Skyrim LE
 
-Status: needs-info
-State: open
+Status: none
+State: closed
 GitHub issue: #42
 Source: https://github.com/evildarkarchon/jbsa/issues/42
 Author: evildarkarchon
 Created: 2026-09-03T06:54:04Z
 Source updated: 2026-09-03T06:54:04Z
-Closed: none
+Closed: 2026-09-11
 Migrated: 2026-09-10
-Labels: needs-info
+Labels: none
 Assignees: none
 Blocked by: [#41](../issues/41-establish-the-interface-candidate-after-representative-archive-families.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
 Triage reviewed: 2026-09-10
-Triage rationale: Implementation and validation passed under specification 0.14.0. Awaiting explicit maintainer approval of the completed 52-case golden proposal under JBSA-CONF-007 before activation and closure.
+Triage rationale: Explicit maintainer approval recorded; all 52 goldens activated and all 52 active-catalog cases passed under specification 0.14.0.
 
 ## Original issue body
 
@@ -88,3 +88,19 @@ ticket stays open until the maintainer explicitly approves the packet and its
 goldens are activated and checked. Stored-byte candidates do not claim Binary
 Conformance, and no game, ACP-932, or formal PV1 qualification is inferred.
 Dependent #44 remains blocked while this ticket is open.
+
+### Completion — 2026-09-11
+
+The maintainer explicitly approved the exact packet above. The immutable
+rebaseline verifier passed before all 52 approval records and the reviewed
+catalog were activated. A fresh ordinary runner passed all 52 BSA 0x68 cases,
+including real large splitting; see the [active summary](../../../docs/reviews/issue42-cv1/evidence/active-summary.json)
+and [approval record](../../../docs/reviews/issue42-cv1/activation.json).
+
+Activation exposed a reporting-only defect where PowerShell-wrapped strings
+became property objects. A failing regression preceded the fix, evidence and
+execution regressions passed, and fresh registrations bind the corrected
+reporting helper. Approved golden bytes are unchanged. The scoped run does not
+claim whole-release Automated Conformance or additional platform qualification.
+Issue #44 was reassessed and is now ready for an agent; its qualification gates
+remain in force.
