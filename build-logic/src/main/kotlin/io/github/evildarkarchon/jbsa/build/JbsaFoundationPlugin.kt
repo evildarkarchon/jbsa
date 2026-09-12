@@ -78,6 +78,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
             JbsaProjectRole.PUBLIC_LIBRARY -> project.pluginManager.apply("jbsa.public-library")
             JbsaProjectRole.THIN_APPLICATION -> project.pluginManager.apply("jbsa.thin-application")
             JbsaProjectRole.BUILD_ONLY_TEST_SUPPORT -> project.pluginManager.apply("jbsa.test-support")
+            JbsaProjectRole.BUILD_ONLY_CONFORMANCE -> project.pluginManager.apply("jbsa.build-only-conformance")
             JbsaProjectRole.NON_JAVA_STAGING_AUDIT -> project.pluginManager.apply("jbsa.runtime-inputs")
             else -> Unit
         }
@@ -158,6 +159,14 @@ class JbsaFoundationPlugin : Plugin<Project> {
                     .project(JbsaThinApplicationIdentity.DISTRIBUTION_PROJECT_PATH)
                     .tasks
                     .named(JbsaThinApplicationIdentity.VERIFY_RUNTIME_DEPENDENCIES_TASK),
+                project
+                    .project(JbsaConformanceIdentity.PROJECT_PATH)
+                    .tasks
+                    .named(JbsaConformanceIdentity.AUTOMATED_TASK),
+                project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named("check"),
+                JbsaConformanceIdentity.ARCHIVE_FAMILY_TASKS.map { taskName ->
+                    project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named(taskName)
+                },
             )
         }
         project.tasks.named(LifecycleBasePlugin.CLEAN_TASK_NAME) {

@@ -95,5 +95,6 @@ jobs:
           path: |
             target/conformance/**
             target/conformance-check-*.log
-            jbsa-conformance-tests/target/failsafe-reports/**
+            jbsa-conformance-tests/target/test-results/conformanceHarnessTest/**
+            jbsa-conformance-tests/target/reports/tests/conformanceHarnessTest/**
           if-no-files-found: error

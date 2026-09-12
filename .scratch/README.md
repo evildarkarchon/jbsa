@@ -9,7 +9,7 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | local | [Gradle 02: Establish the verified Gradle build foundation](migrate-maven-to-gradle/issues/02-establish-verified-gradle-foundation.md) | closed | none |
 | local | [Gradle 03: Build and test the public library with Gradle](migrate-maven-to-gradle/issues/03-build-test-public-library.md) | closed | none |
 | local | [Gradle 04: Build and exercise the thin CLI with Gradle](migrate-maven-to-gradle/issues/04-build-exercise-thin-cli.md) | closed | none |
-| local | [Gradle 05: Run Automated Conformance through Gradle](migrate-maven-to-gradle/issues/05-run-automated-conformance.md) | open | ready-for-agent |
+| local | [Gradle 05: Run Automated Conformance through Gradle](migrate-maven-to-gradle/issues/05-run-automated-conformance.md) | closed | none |
 | local | [Gradle 06: Preserve the standalone benchmark workflow](migrate-maven-to-gradle/issues/06-preserve-standalone-benchmarks.md) | open | needs-triage |
 | local | [Gradle 07: Generate and audit production compliance inputs](migrate-maven-to-gradle/issues/07-generate-audit-compliance-inputs.md) | open | ready-for-agent |
 | local | [Gradle 08: Complete release staging through clean verify](migrate-maven-to-gradle/issues/08-complete-release-staging-verify.md) | open | needs-triage |

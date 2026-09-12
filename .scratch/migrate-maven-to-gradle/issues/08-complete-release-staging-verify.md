@@ -7,7 +7,7 @@ Status: needs-triage
 State: open
 Assignees: none
 Intended owner: agent
-Triage rationale: Approved scope; prerequisites remain open. Reassess readiness when all blockers close.
+Triage rationale: Approved scope; ticket 05 is closed, while tickets 06 and 07 remain open. Reassess readiness when both remaining blockers close.
 
 ## Acceptance criteria
 
@@ -21,4 +21,3 @@ Triage rationale: Approved scope; prerequisites remain open. Reassess readiness 
 ## Context
 
 Follow the [approved migration spec](../spec.md) and [ADR-0001](../../../docs/adr/0001-migrate-maven-build-to-gradle-kotlin-dsl.md). Work on the shared migration branch; preserve Java sources, project boundaries, unrelated dependency versions, historical evidence, and the read-only Reference Snapshot.
-

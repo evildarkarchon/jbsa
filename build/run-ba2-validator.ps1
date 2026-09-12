@@ -38,10 +38,21 @@ if ((Get-FileHash -LiteralPath $implementation -Algorithm SHA256).Hash.ToLowerIn
 # complete public metadata projection with independent parsing of this exact archive instead.
 if ($result.result -eq 'PASS') {
     $root = Split-Path $PSScriptRoot -Parent
-    $library = @(Get-ChildItem -LiteralPath (Join-Path $root 'jbsa/target') -Filter 'jbsa-*.jar' |
-        Where-Object { $_.Name -notmatch '-(sources|javadoc)\.jar$' })
+    $library = @(if ($env:JBSA_LIBRARY_JAR) {
+        Get-Item -LiteralPath $env:JBSA_LIBRARY_JAR -ErrorAction SilentlyContinue
+    }
+    else {
+        Get-ChildItem -LiteralPath (Join-Path $root 'jbsa/target') -Filter 'jbsa-*.jar' |
+            Where-Object { $_.Name -notmatch '-(sources|javadoc)\.jar$' }
+    })
     if ($library.Count -ne 1) { throw 'Exactly one packaged library is required for metadata corroboration.' }
-    $classes = Join-Path $root 'jbsa-conformance-tests/target/test-classes'
+    $classes = if ($env:JBSA_CONFORMANCE_TEST_CLASSES) {
+        [IO.Path]::GetFullPath($env:JBSA_CONFORMANCE_TEST_CLASSES, $root)
+    }
+    else {
+        Join-Path $root 'jbsa-conformance-tests/target/test-classes'
+    }
+    if (-not [IO.Directory]::Exists($classes)) { throw 'Compiled conformance observers are required for metadata corroboration.' }
     $observerClass = Join-Path $classes 'io/github/evildarkarchon/jbsa/verification/Ba2PublicObservation.class'
     $java = if ($env:JAVA_HOME) { Join-Path $env:JAVA_HOME 'bin/java.exe' } else { (Get-Command java).Source }
     $classpath = @($library[0].FullName, $classes) -join [IO.Path]::PathSeparator

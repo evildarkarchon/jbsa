@@ -360,10 +360,7 @@ class MainTest {
   void versionReportsArtifactAndProfileAndOperationalFailuresUseStderr() throws Exception {
     Result version = run("--VERSION");
     assertEquals(0, version.status());
-    assertTrue(
-        version
-            .output()
-            .startsWith("JBSA " + System.getProperty("jbsa.version")));
+    assertTrue(version.output().startsWith("JBSA " + System.getProperty("jbsa.version")));
     assertTrue(version.output().contains("bsarch-1.0/v1 SHA-256 9577D821"));
     assertEquals("", version.error());
     Result missing = run(temporary.resolve("missing.bsa").toString());
@@ -373,7 +370,9 @@ class MainTest {
     assertTrue(missing.error().contains("phase=PREFLIGHT"));
   }
 
-  /** Launches the modular entry point from Gradle JARs or Maven parity classes and captures UTF-8. */
+  /**
+   * Launches the modular entry point from Gradle JARs or Maven parity classes and captures UTF-8.
+   */
   private Result run(String... arguments) throws Exception {
     List<String> command = new ArrayList<>();
     String executable = System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java";

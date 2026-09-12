@@ -11,6 +11,10 @@ Hosted forbids the local oracle and corpus. Local enables explicitly registered 
 Optional digest-bound public-interface adapter registrations; absence makes product cases INVALID.
 .PARAMETER CodecProfilePath
 Exact codec/provider profile used by the candidate; its digest is part of every result.
+.PARAMETER LibraryArtifactPath
+Optional exact Gradle-produced library candidate. Omit with CliArtifactPath to retain legacy discovery.
+.PARAMETER CliArtifactPath
+Optional exact Gradle-produced CLI candidate. Omit with LibraryArtifactPath to retain legacy discovery.
 .NOTES
 Exit 0 means every hosted case passed; 1 means at least one case did not pass; 2 means the
 catalog or report could not be trusted. Harness self-tests never award Automated Conformance.
@@ -21,7 +25,9 @@ param(
     [string] $OutputDirectory = 'target/conformance',
     [ValidateSet('Hosted', 'Local')] [string] $Mode = 'Hosted',
     [string] $RegistrationPath,
-    [string] $CodecProfilePath
+    [string] $CodecProfilePath,
+    [string] $LibraryArtifactPath,
+    [string] $CliArtifactPath
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -73,13 +79,25 @@ try {
     }
     catch { $prerequisiteErrors.Add('Fixture provenance audit: ' + $_.Exception.Message) }
     $candidateArtifacts = @()
-    foreach ($module in @('jbsa', 'jbsa-cli')) {
-        $jars = @(Get-ChildItem -LiteralPath (Join-Path $RepositoryRoot "$module/target") -Filter "$module-*.jar" -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -notmatch '-(sources|javadoc)\.jar$' })
-        if ($jars.Count -eq 1) {
-            $candidateArtifacts += @{ path = [IO.Path]::GetRelativePath($RepositoryRoot, $jars[0].FullName).Replace('\', '/'); sha256 = Get-ConformanceFileDigest $jars[0].FullName }
+    $providedCandidates = [ordered]@{ 'jbsa' = $LibraryArtifactPath; 'jbsa-cli' = $CliArtifactPath }
+    if ($LibraryArtifactPath -or $CliArtifactPath) {
+        foreach ($module in $providedCandidates.Keys) {
+            $candidate = $providedCandidates[$module]
+            if (-not $candidate) { $prerequisiteErrors.Add("The exact packaged $module candidate path is required."); continue }
+            $candidate = [IO.Path]::GetFullPath($candidate, $RepositoryRoot)
+            if (-not [IO.File]::Exists($candidate)) { $prerequisiteErrors.Add("The packaged $module candidate does not exist: $candidate"); continue }
+            $candidateArtifacts += @{ path = [IO.Path]::GetRelativePath($RepositoryRoot, $candidate).Replace('\', '/'); sha256 = Get-ConformanceFileDigest $candidate }
         }
-        else { $prerequisiteErrors.Add("Exactly one packaged $module candidate is required.") }
+    }
+    else {
+        foreach ($module in @('jbsa', 'jbsa-cli')) {
+            $jars = @(Get-ChildItem -LiteralPath (Join-Path $RepositoryRoot "$module/target") -Filter "$module-*.jar" -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -notmatch '-(sources|javadoc)\.jar$' })
+            if ($jars.Count -eq 1) {
+                $candidateArtifacts += @{ path = [IO.Path]::GetRelativePath($RepositoryRoot, $jars[0].FullName).Replace('\', '/'); sha256 = Get-ConformanceFileDigest $jars[0].FullName }
+            }
+            else { $prerequisiteErrors.Add("Exactly one packaged $module candidate is required.") }
+        }
     }
     $codecDigest = $null
     if ($CodecProfilePath) { $codecDigest = Get-ConformanceFileDigest ([IO.Path]::GetFullPath($CodecProfilePath, $RepositoryRoot)) }

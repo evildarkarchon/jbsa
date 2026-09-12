@@ -85,6 +85,10 @@ gradlePlugin {
             id = "jbsa.runtime-inputs"
             implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaRuntimeInputsPlugin"
         }
+        create("jbsaBuildOnlyConformance") {
+            id = "jbsa.build-only-conformance"
+            implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaConformancePlugin"
+        }
     }
 }
 

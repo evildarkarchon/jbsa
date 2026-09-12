@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Runs one deterministic JBSA build gate with the checked-in Maven wrapper.
+Runs one deterministic JBSA build gate through its migration-stage build implementation.
 
 .PARAMETER Gate
 The compile, unit, architecture, formatting, policy, or conformance harness gate to run.
@@ -20,6 +20,21 @@ $ErrorActionPreference = 'Stop'
 
 $reactorRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $mavenWrapper = Join-Path $reactorRoot 'mvnw.cmd'
+$gradleWrapper = Join-Path $reactorRoot 'gradlew.bat'
+
+if ($Gate -eq 'conformance') {
+    Push-Location $reactorRoot
+    try {
+        & $gradleWrapper --no-daemon ':jbsa-conformance-tests:automatedConformance'
+        if ($LASTEXITCODE -ne 0) {
+            throw "The conformance Gradle gate failed with exit code $LASTEXITCODE."
+        }
+    }
+    finally {
+        Pop-Location
+    }
+    return
+}
 
 $mavenArguments = switch ($Gate) {
     'compile' { @('-B', '-ntp', '-C', '-DskipTests', 'compile') }
@@ -27,7 +42,7 @@ $mavenArguments = switch ($Gate) {
     'architecture' { @('-B', '-ntp', '-C', '-Dgroups=architecture', 'verify') }
     'formatting' { @('-B', '-ntp', '-C', 'spotless:check') }
     'policy' { @('-B', '-ntp', '-C', '-Dgroups=build-policy', 'verify') }
-    'conformance' { @('-B', '-ntp', '-C', '-Dgroups=conformance-harness', 'verify') }
+    'conformance' { throw 'The conformance gate must use the Gradle workflow.' }
 }
 
 Push-Location $reactorRoot
@@ -35,13 +50,6 @@ try {
     & $mavenWrapper @mavenArguments
     if ($LASTEXITCODE -ne 0) {
         throw "The $Gate Maven gate failed with exit code $LASTEXITCODE."
-    }
-
-    if ($Gate -eq 'conformance') {
-        & pwsh -NoLogo -NoProfile -NonInteractive -File (Join-Path $PSScriptRoot 'run-conformance.ps1') -RepositoryRoot $reactorRoot -OutputDirectory 'target/conformance'
-        # Issue #31 verifies the harness; #50 enables the product claim gate after the archive slices.
-        # Exit 1 still publishes every blocked case, and never becomes an Automated Conformance claim.
-        if ($LASTEXITCODE -notin @(0, 1)) { throw 'Conformance inventory or evidence reporting is invalid.' }
     }
 
     if ($Gate -eq 'policy') {
