@@ -1,0 +1,683 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] JBSA reactor                                                       [pom]
+[INFO] JBSA archive library                                               [jar]
+[INFO] JBSA command-line interface                                        [jar]
+[INFO] JBSA build-only test support                                       [jar]
+[INFO] JBSA build-only conformance tests                                  [jar]
+[INFO] JBSA build-only benchmarks                                         [jar]
+[INFO] JBSA build-only distribution assembly                              [pom]
+[INFO] 
+[INFO] ----------------< io.github.evildarkarchon:jbsa-parent >----------------
+[INFO] Building JBSA reactor 0.1.0-SNAPSHOT                               [1/7]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ jbsa-parent ---
+[INFO] Deleting C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\target
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-parent ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireMavenVersion passed
+[INFO] Rule 1: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 3: org.apache.maven.enforcer.rules.ReactorModuleConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa-parent ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-parent ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-parent ---
+[INFO] Index file does not exist. Fallback to an empty index
+[INFO] 
+[INFO] --- cyclonedx:2.9.3:makeAggregateBom (generate-aggregate-sbom) @ jbsa-parent ---
+[INFO] CycloneDX: Resolving Aggregated Dependencies
+[INFO] Excluding jbsa-benchmarks
+[INFO] Excluding jbsa-conformance-tests
+[INFO] Excluding jbsa-dist
+[INFO] Excluding jbsa-test-support
+[INFO] CycloneDX: Creating BOM version 1.6 with 6 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\target\compliance\jbsa.cdx.json
+[WARNING] Unknown keyword meta:enum - you should define your own Meta Schema. If the keyword is irrelevant for validation, just use a NonValidationKeyword or if it should generate annotations AnnotationKeyword
+[WARNING] Unknown keyword deprecated - you should define your own Meta Schema. If the keyword is irrelevant for validation, just use a NonValidationKeyword or if it should generate annotations AnnotationKeyword
+[INFO] 
+[INFO] --- exec:3.6.2:exec (verify-compliance-evidence) @ jbsa-parent ---
+Compliance verification passed: policy, inventories, notices, tracked bytes, and release inputs are authorized.
+[INFO] 
+[INFO] -------------------< io.github.evildarkarchon:jbsa >--------------------
+[INFO] Building JBSA archive library 0.1.0-SNAPSHOT                       [2/7]
+[INFO]   from jbsa\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ jbsa ---
+[INFO] Deleting C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\target
+[INFO] 
+[INFO] --- flatten:1.8.0:clean (clean-flattened-pom) @ jbsa ---
+[INFO] Deleting C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\.flattened-pom.xml
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- flatten:1.8.0:flatten (flatten-consumer-pom) @ jbsa ---
+[INFO] Generating flattened POM of project io.github.evildarkarchon:jbsa:jar:0.1.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 81 source files with javac [debug parameters release 25 module-path] to target\classes
+[INFO] JDK-8318913 workaround: patched module-info.class requires version from [25] to [25] on 2 JDK modules [java.base, jdk.unsupported]
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/ArchiveInput.java:[3,24] com.sun.nio.file.ExtendedOpenOption is internal proprietary API and may be removed in a future release
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/ba2/Ba2Packer.java:[126,16] auto-closeable resource codecCredits is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/ba2/Ba2Packer.java:[269,26] auto-closeable resource validationCredits is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/ba2/Ba2Packer.java:[305,16] auto-closeable resource replayCredits is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/PublicationTransaction.java:[497,16] auto-closeable resource handle is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/OperationSession.java:[283,36] java.lang.ThreadDeath in java.lang has been deprecated and marked for removal
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/WindowsPathIdentity.java:[203,41] java.lang.foreign.SymbolLookup.libraryLookup(java.lang.String,java.lang.foreign.Arena) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/WindowsPathIdentity.java:[207,17] java.lang.foreign.Linker.downcallHandle(java.lang.foreign.MemorySegment,java.lang.foreign.FunctionDescriptor,java.lang.foreign.Linker.Option...) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/WindowsPathIdentity.java:[213,17] java.lang.foreign.Linker.downcallHandle(java.lang.foreign.MemorySegment,java.lang.foreign.FunctionDescriptor,java.lang.foreign.Linker.Option...) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/WindowsPathIdentity.java:[218,17] java.lang.foreign.Linker.downcallHandle(java.lang.foreign.MemorySegment,java.lang.foreign.FunctionDescriptor,java.lang.foreign.Linker.Option...) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/WindowsPathIdentity.java:[223,17] java.lang.foreign.Linker.downcallHandle(java.lang.foreign.MemorySegment,java.lang.foreign.FunctionDescriptor,java.lang.foreign.Linker.Option...) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/OwnedArchive.java:[212,16] auto-closeable resource credit is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/ArchiveInput.java:[68,17] com.sun.nio.file.ExtendedOpenOption is internal proprietary API and may be removed in a future release
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/ArchiveInput.java:[69,17] com.sun.nio.file.ExtendedOpenOption is internal proprietary API and may be removed in a future release
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/bsa/BsaPacker.java:[120,16] auto-closeable resource codecCredits is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/bsa/BsaPacker.java:[189,16] auto-closeable resource replayCredits is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/Lz4Frame.java:[37,14] auto-closeable resource lease is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/Lz4Frame.java:[100,14] auto-closeable resource lease is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/Lz4Raw.java:[35,14] auto-closeable resource lease is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/io/Lz4Raw.java:[96,14] auto-closeable resource lease is never referenced in body of corresponding try statement
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/tes3/Tes3Names.java:[23,50] java.lang.foreign.SymbolLookup.libraryLookup(java.lang.String,java.lang.foreign.Arena) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/tes3/Tes3Names.java:[26,15] java.lang.foreign.Linker.downcallHandle(java.lang.foreign.MemorySegment,java.lang.foreign.FunctionDescriptor,java.lang.foreign.Linker.Option...) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/tes3/Tes3Names.java:[41,36] java.lang.ThreadDeath in java.lang has been deprecated and marked for removal
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 37 source files with javac [debug parameters release 25 module-path] to target\test-classes
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java:[240,50] java.lang.foreign.SymbolLookup.libraryLookup(java.lang.String,java.lang.foreign.Arena) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java:[243,15] java.lang.foreign.Linker.downcallHandle(java.lang.foreign.MemorySegment,java.lang.foreign.FunctionDescriptor,java.lang.foreign.Linker.Option...) is a restricted method.
+  (Restricted methods are unsafe and, if used incorrectly, might crash the Java runtime or corrupt memory)
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/OwnedArchiveRaceTest.java:[88,15] explicit call to close() on an auto-closeable resource
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/OwnedArchiveRaceTest.java:[89,15] explicit call to close() on an auto-closeable resource
+[WARNING] /C:/Users/evild/AppData/Local/Temp/jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b/source/jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/OwnedArchiveRaceTest.java:[154,15] explicit call to close() on an auto-closeable resource
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.1:jar (default-jar) @ jbsa ---
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\target\jbsa-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- source:3.4.0:jar-no-fork (attach-sources) @ jbsa ---
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\target\jbsa-0.1.0-SNAPSHOT-sources.jar
+[INFO] 
+[INFO] --- javadoc:3.12.0:jar (attach-javadocs) @ jbsa ---
+[WARNING] Javadoc Warnings
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\internal\io\ArchiveInput.java:3: warning: ExtendedOpenOption is internal proprietary API and may be removed in a future release
+[WARNING] import com.sun.nio.file.ExtendedOpenOption;
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveDetection.java:8: warning: no @param for status
+[WARNING] public record ArchiveDetection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveDetection.java:8: warning: no @param for observedPrefix
+[WARNING] public record ArchiveDetection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveDetection.java:8: warning: no @param for family
+[WARNING] public record ArchiveDetection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveDetection.java:8: warning: no @param for wireVersion
+[WARNING] public record ArchiveDetection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveDetection.java:8: warning: no @param for ba2Subtype
+[WARNING] public record ArchiveDetection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveDetection.java:8: warning: no @param for compressionMethod
+[WARNING] public record ArchiveDetection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveEncoding.java:8: warning: no @param for wireVersion
+[WARNING] public record ArchiveEncoding(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveEncoding.java:8: warning: no @param for ba2Subtype
+[WARNING] public record ArchiveEncoding(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveEncoding.java:8: warning: no @param for compressionMethod
+[WARNING] public record ArchiveEncoding(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveInspection.java:7: warning: no @param for detection
+[WARNING] public record ArchiveInspection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveInspection.java:7: warning: no @param for metadata
+[WARNING] public record ArchiveInspection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveInspection.java:7: warning: no @param for assessment
+[WARNING] public record ArchiveInspection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveInspection.java:7: warning: no @param for entries
+[WARNING] public record ArchiveInspection(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:91: warning: no @param for family
+[WARNING] record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:91: warning: no @param for encoding
+[WARNING] record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:91: warning: no @param for entryCount
+[WARNING] record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:91: warning: no @param for fileNameTableOffset
+[WARNING] record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:91: warning: no @param for unknownValueAt24
+[WARNING] record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:70: warning: no @param for family
+[WARNING] record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:70: warning: no @param for encoding
+[WARNING] record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:70: warning: no @param for entryCount
+[WARNING] record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:70: warning: no @param for fileNameTableOffset
+[WARNING] record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:70: warning: no @param for unknownValueAt24
+[WARNING] record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for family
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for encoding
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for entryCount
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for folderRecordsOffset
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for archiveFlags
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for folderCount
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for folderNamesLength
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for fileNamesLength
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:36: warning: no @param for fileFlags
+[WARNING] record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:18: warning: no @param for entryCount
+[WARNING] record Tes3(long entryCount, long hashOffset, long dataBaseOffset) implements ArchiveMetadata {
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:18: warning: no @param for hashOffset
+[WARNING] record Tes3(long entryCount, long hashOffset, long dataBaseOffset) implements ArchiveMetadata {
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ArchiveMetadata.java:18: warning: no @param for dataBaseOffset
+[WARNING] record Tes3(long entryCount, long hashOffset, long dataBaseOffset) implements ArchiveMetadata {
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\Ba2Subtype.java:8: warning: no @param for value
+[WARNING] public record Ba2Subtype(String value) {
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for family
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for encoding
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for ordinal
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for displayName
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for normalizedNameIdentity
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for wireNames
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for decodedSize
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for storedSize
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:11: warning: no @param for facts
+[WARNING] public record EntryMetadata(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:123: warning: no @param for payloadOffset
+[WARNING] public record DdsChunk(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:123: warning: no @param for packedSize
+[WARNING] public record DdsChunk(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:123: warning: no @param for unpackedSize
+[WARNING] public record DdsChunk(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:123: warning: no @param for startMip
+[WARNING] public record DdsChunk(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:123: warning: no @param for endMip
+[WARNING] public record DdsChunk(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:123: warning: no @param for sentinel
+[WARNING] public record DdsChunk(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:104: warning: no @param for identity
+[WARNING] public record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:104: warning: no @param for height
+[WARNING] public record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:104: warning: no @param for width
+[WARNING] public record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:104: warning: no @param for mipCount
+[WARNING] public record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:104: warning: no @param for dxgiFormat
+[WARNING] public record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:104: warning: no @param for flags
+[WARNING] public record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:104: warning: no @param for tileMode
+[WARNING] public record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:104: warning: no @param for chunks
+[WARNING] public record DdsBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:93: warning: no @param for identity
+[WARNING] public record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:93: warning: no @param for payloadOffset
+[WARNING] public record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:93: warning: no @param for packedSize
+[WARNING] public record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:93: warning: no @param for unpackedSize
+[WARNING] public record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:93: warning: no @param for sentinel
+[WARNING] public record GeneralBa2(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:75: warning: no @param for baseNameHash
+[WARNING] public record Ba2Identity(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:75: warning: no @param for extension
+[WARNING] public record Ba2Identity(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:75: warning: no @param for directoryHash
+[WARNING] public record Ba2Identity(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:75: warning: no @param for modIndex
+[WARNING] public record Ba2Identity(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:75: warning: no @param for chunkCount
+[WARNING] public record Ba2Identity(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:75: warning: no @param for chunkHeaderSize
+[WARNING] public record Ba2Identity(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for folderHash
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for nameHash
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for folderOrdinal
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for folderFileCount
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for folderOffset
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for folderPaddingBeforeOffset
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for folderPaddingAfterOffset
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for sizeAndCompressionToggle
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for dataOffset
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:49: warning: no @param for compressed
+[WARNING] public record VersionedBsa(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:40: warning: no @param for nameHash
+[WARNING] public record Tes3(long nameHash, long nameOffset, long relativeDataOffset, long dataOffset)
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:40: warning: no @param for nameOffset
+[WARNING] public record Tes3(long nameHash, long nameOffset, long relativeDataOffset, long dataOffset)
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:40: warning: no @param for relativeDataOffset
+[WARNING] public record Tes3(long nameHash, long nameOffset, long relativeDataOffset, long dataOffset)
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntryMetadata.java:40: warning: no @param for dataOffset
+[WARNING] public record Tes3(long nameHash, long nameOffset, long relativeDataOffset, long dataOffset)
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\EntrySelection.java:16: warning: no @param for ordinals
+[WARNING] record Ordinals(List<Long> ordinals) implements EntrySelection {
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ExtractRequest.java:12: warning: no @param for source
+[WARNING] public record ExtractRequest(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ExtractRequest.java:12: warning: no @param for destination
+[WARNING] public record ExtractRequest(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ExtractRequest.java:12: warning: no @param for entries
+[WARNING] public record ExtractRequest(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ExtractRequest.java:12: warning: no @param for targetPolicy
+[WARNING] public record ExtractRequest(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ExtractRequest.java:12: warning: no @param for diagnosticPolicy
+[WARNING] public record ExtractRequest(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ExtractRequest.java:12: warning: no @param for workerSelection
+[WARNING] public record ExtractRequest(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\ExtractRequest.java:12: warning: no @param for openOptions
+[WARNING] public record ExtractRequest(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\FlagSelection.java:12: warning: no @param for value
+[WARNING] record Explicit(long value) implements FlagSelection {
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\NormalizedNameIdentity.java:8: warning: no @param for value
+[WARNING] public record NormalizedNameIdentity(String value) {
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\OpenOptions.java:7: warning: no @param for compatibilityProfile
+[WARNING] public record OpenOptions(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\OpenOptions.java:7: warning: no @param for resourceLimits
+[WARNING] public record OpenOptions(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\OpenOptions.java:7: warning: no @param for ddsTarget
+[WARNING] public record OpenOptions(
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\OperationReport.java:48: warning: no @param for path
+[WARNING] public record ArchivePart(Path path, long byteSize, long entryCount) {
+[WARNING] ^
+[WARNING] C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\main\java\io\github\evildarkarchon\jbsa\OperationReport.java:48: warning: no @param for byteSize
+[WARNING] public record ArchivePart(Path path, long byteSize, long entryCount) {
+[WARNING] ^
+[WARNING] 100 warnings
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\target\jbsa-0.1.0-SNAPSHOT-javadoc.jar
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa ---
+[INFO] Index file does not exist. Fallback to an empty index
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::staticFieldBase has been called by com.diffplug.spotless.java.ModuleHelper (file:/C:/Users/evild/.m2/repository/com/diffplug/spotless/spotless-lib/4.10.1/spotless-lib-4.10.1.jar)
+WARNING: Please consider reporting this to the maintainers of class com.diffplug.spotless.java.ModuleHelper
+WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
+[INFO] Spotless.Java is keeping 118 files clean - 0 needs changes to be clean, 118 were already clean, 0 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-cli >------------------
+[INFO] Building JBSA command-line interface 0.1.0-SNAPSHOT                [3/7]
+[INFO]   from jbsa-cli\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ jbsa-cli ---
+[INFO] Deleting C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\target
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-cli ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-cli ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-cli ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 4 source files with javac [debug parameters release 25 module-path] to target\classes
+[INFO] JDK-8318913 workaround: patched module-info.class requires version from [25] to [25] on 1 JDK modules [java.base]
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-cli ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-cli ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 25 module-path] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-cli ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.1:jar (default-jar) @ jbsa-cli ---
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\target\jbsa-cli-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa-cli ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-cli ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-cli ---
+[INFO] Index file does not exist. Fallback to an empty index
+[INFO] Spotless.Java is keeping 5 files clean - 0 needs changes to be clean, 5 were already clean, 0 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] -------------< io.github.evildarkarchon:jbsa-test-support >-------------
+[INFO] Building JBSA build-only test support 0.1.0-SNAPSHOT               [4/7]
+[INFO]   from jbsa-test-support\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ jbsa-test-support ---
+[INFO] Deleting C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\target
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-test-support ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-test-support ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-test-support ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 3 source files with javac [debug parameters release 25] to target\classes
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-test-support ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-test-support ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-test-support ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.1:jar (default-jar) @ jbsa-test-support ---
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\target\jbsa-test-support-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa-test-support ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-test-support ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-test-support ---
+[INFO] Index file does not exist. Fallback to an empty index
+[INFO] Spotless.Java is keeping 3 files clean - 0 needs changes to be clean, 3 were already clean, 0 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] ----------< io.github.evildarkarchon:jbsa-conformance-tests >-----------
+[INFO] Building JBSA build-only conformance tests 0.1.0-SNAPSHOT          [5/7]
+[INFO]   from jbsa-conformance-tests\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ jbsa-conformance-tests ---
+[INFO] Deleting C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-conformance-tests ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-conformance-tests ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-conformance-tests ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-conformance-tests ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-conformance-tests ---
+[WARNING] I/O error reading dependency state: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\classes: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\classes
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 30 source files with javac [debug parameters release 25] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-conformance-tests ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.1:jar (default-jar) @ jbsa-conformance-tests ---
+[WARNING] JAR will be empty - no content was marked for inclusion!
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\jbsa-conformance-tests-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa-conformance-tests ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-conformance-tests ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-conformance-tests ---
+[INFO] Index file does not exist. Fallback to an empty index
+[INFO] Spotless.Java is keeping 30 files clean - 0 needs changes to be clean, 30 were already clean, 0 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] --------------< io.github.evildarkarchon:jbsa-benchmarks >--------------
+[INFO] Building JBSA build-only benchmarks 0.1.0-SNAPSHOT                 [6/7]
+[INFO]   from jbsa-benchmarks\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ jbsa-benchmarks ---
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-benchmarks ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-benchmarks ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-benchmarks ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 5 source files with javac [debug parameters release 25] to target\classes
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-benchmarks ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-benchmarks\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-benchmarks ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug parameters release 25] to target\test-classes
+[WARNING] No processor claimed any of these annotations: /org.junit.jupiter.api.io.TempDir,/org.junit.jupiter.api.Test
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-benchmarks ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- jar:3.5.1:jar (default-jar) @ jbsa-benchmarks ---
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-benchmarks\target\jbsa-benchmarks-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- shade:3.6.1:shade (default) @ jbsa-benchmarks ---
+[WARNING] lwjgl-3.4.3-natives-windows.jar, lwjgl-3.4.3.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/windows/x64/org/lwjgl/lwjgl.dll.sha1
+[WARNING] commons-math3-3.6.1.jar, jbsa-0.1.0-SNAPSHOT.jar, jbsa-benchmarks-0.1.0-SNAPSHOT.jar, jbsa-test-support-0.1.0-SNAPSHOT.jar, jmh-core-1.37.jar, jopt-simple-5.0.4.jar, lwjgl-3.4.3-natives-windows.jar, lwjgl-3.4.3.jar, lwjgl-lz4-3.4.3-natives-windows.jar, lwjgl-lz4-3.4.3.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/MANIFEST.MF
+[WARNING] lwjgl-lz4-3.4.3-natives-windows.jar, lwjgl-lz4-3.4.3.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/windows/x64/org/lwjgl/lz4/lwjgl_lz4.dll.sha1
+[WARNING] maven-shade-plugin has detected that some files are
+[WARNING] present in two or more JARs. When this happens, only one
+[WARNING] single version of the file is copied to the uber jar.
+[WARNING] Usually this is not harmful and you can skip these warnings,
+[WARNING] otherwise try to manually exclude artifacts based on
+[WARNING] mvn dependency:tree -Ddetail=true and the above output.
+[WARNING] See https://maven.apache.org/plugins/maven-shade-plugin/
+[INFO] Attaching shaded artifact.
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa-benchmarks ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-benchmarks ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-benchmarks ---
+[INFO] Index file does not exist. Fallback to an empty index
+[INFO] Spotless.Java is keeping 8 files clean - 0 needs changes to be clean, 8 were already clean, 0 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-dist >-----------------
+[INFO] Building JBSA build-only distribution assembly 0.1.0-SNAPSHOT      [7/7]
+[INFO]   from jbsa-dist\pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ jbsa-dist ---
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-dist ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- dependency:3.11.0:copy-dependencies (stage-runtime-dependencies) @ jbsa-dist ---
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa-dist ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-dist ---
+[INFO] Tests are skipped.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-dist ---
+[INFO] Index file does not exist. Fallback to an empty index
+[INFO] 
+[INFO] --- exec:3.6.2:exec (stage-release-inputs) @ jbsa-dist ---
+Staged 18 current release inputs for 0.1.0-SNAPSHOT.
+[INFO] 
+[INFO] --- exec:3.6.2:exec (verify-assembled-release-inputs) @ jbsa-dist ---
+Compliance verification passed: policy, inventories, notices, tracked bytes, and release inputs are authorized.
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for JBSA reactor 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] JBSA reactor ....................................... SUCCESS [  7.656 s]
+[INFO] JBSA archive library ............................... SUCCESS [  8.833 s]
+[INFO] JBSA command-line interface ........................ SUCCESS [  0.562 s]
+[INFO] JBSA build-only test support ....................... SUCCESS [  0.236 s]
+[INFO] JBSA build-only conformance tests .................. SUCCESS [  0.837 s]
+[INFO] JBSA build-only benchmarks ......................... SUCCESS [  1.144 s]
+[INFO] JBSA build-only distribution assembly .............. SUCCESS [  7.126 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  26.502 s
+[INFO] Finished at: 2026-09-11T23:58:06-07:00
+[INFO] ------------------------------------------------------------------------
