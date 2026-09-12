@@ -4,6 +4,21 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 
 | GitHub source | Local ticket | State | Triage status |
 | --- | --- | --- | --- |
+| local | [Migrate the Maven build to Gradle with Kotlin DSL](migrate-maven-to-gradle/spec.md) | open | ready-for-agent |
+| local | [Gradle 01: Capture the Maven parity baseline](migrate-maven-to-gradle/issues/01-capture-maven-parity-baseline.md) | open | ready-for-agent |
+| local | [Gradle 02: Establish the verified Gradle build foundation](migrate-maven-to-gradle/issues/02-establish-verified-gradle-foundation.md) | open | needs-triage |
+| local | [Gradle 03: Build and test the public library with Gradle](migrate-maven-to-gradle/issues/03-build-test-public-library.md) | open | needs-triage |
+| local | [Gradle 04: Build and exercise the thin CLI with Gradle](migrate-maven-to-gradle/issues/04-build-exercise-thin-cli.md) | open | needs-triage |
+| local | [Gradle 05: Run Automated Conformance through Gradle](migrate-maven-to-gradle/issues/05-run-automated-conformance.md) | open | needs-triage |
+| local | [Gradle 06: Preserve the standalone benchmark workflow](migrate-maven-to-gradle/issues/06-preserve-standalone-benchmarks.md) | open | needs-triage |
+| local | [Gradle 07: Generate and audit production compliance inputs](migrate-maven-to-gradle/issues/07-generate-audit-compliance-inputs.md) | open | needs-triage |
+| local | [Gradle 08: Complete release staging through clean verify](migrate-maven-to-gradle/issues/08-complete-release-staging-verify.md) | open | needs-triage |
+| local | [Gradle 09: Run stable CI gates on Windows and Linux](migrate-maven-to-gradle/issues/09-run-stable-ci-gates.md) | open | needs-triage |
+| local | [Gradle 10: Prove artifact parity, reproducibility, and offline operation](migrate-maven-to-gradle/issues/10-prove-parity-reproducibility-offline.md) | open | needs-triage |
+| local | [Gradle 11: Migrate active instructions and enforce reference hygiene](migrate-maven-to-gradle/issues/11-migrate-active-instructions.md) | open | needs-triage |
+| local | [Gradle 12: Regenerate the Gradle acceptance evidence](migrate-maven-to-gradle/issues/12-regenerate-gradle-acceptance-evidence.md) | open | needs-triage |
+| local | [Gradle 13: Complete Windows Release Qualification](migrate-maven-to-gradle/issues/13-complete-windows-release-qualification.md) | open | needs-triage |
+| local | [Gradle 14: Remove Maven and verify the atomic cutover](migrate-maven-to-gradle/issues/14-remove-maven-atomic-cutover.md) | open | needs-triage |
 | [#62](https://github.com/evildarkarchon/jbsa/issues/62) | [Retire external contributor verification gate](retire-external-contributor-verification/issues/01-retire-external-contributor-verification-gate.md) | open | ready-for-agent |
 | [#23](https://github.com/evildarkarchon/jbsa/issues/23) | [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](jbsa-1-0/map.md) | open | none |
 | [#24](https://github.com/evildarkarchon/jbsa/issues/24) | [Publish the specification framework and requirement registry](jbsa-1-0/issues/24-publish-the-specification-framework-and-requirement-registry.md) | closed | none |
