@@ -36,6 +36,63 @@ function Assert-CatalogRejected {
 }
 
 try {
+    # Indexed property access must preserve the JSON contract, including null and array shape.
+    $propertyProbe = [pscustomobject]@{ exact = $null; empty = @(); single = @(1) }
+    if ($null -ne (Get-ConformanceProperty $propertyProbe 'exact' 'Probe')) { throw 'Explicit null changed.' }
+    foreach ($name in @('empty', 'single')) {
+        $value = Get-ConformanceProperty $propertyProbe $name 'Probe'
+        if ($value -isnot [array] -or $value.Count -ne $propertyProbe.$name.Count) { throw 'Property array shape changed.' }
+    }
+    foreach ($name in @('Exact', 'missing')) {
+        $rejected = $false
+        try { $null = Get-ConformanceProperty $propertyProbe $name 'Probe' }
+        catch { $rejected = $_.Exception.Message -like '*requires property*' }
+        if (-not $rejected) { throw "Non-exact property was accepted: $name" }
+    }
+    foreach ($json in @('{"nested":{"a":1,"a":2}}', '{"nested":[{"a":1,"a":2}]}')) {
+        [IO.File]::WriteAllText($temporaryPath, $json)
+        $rejected = $false
+        try { $null = Read-ConformanceJson $temporaryPath }
+        catch { $rejected = $_.Exception.Message -like '*Duplicate JSON property*' }
+        if (-not $rejected) { throw 'Nested duplicate JSON member was accepted.' }
+    }
+    # Fresh digest reads must notice mutation even when a binding was just validated successfully.
+    $bindingProbe = Join-Path $repositoryRoot ('target/catalog-binding-' + [Guid]::NewGuid().ToString('N'))
+    try {
+        [IO.File]::WriteAllText($bindingProbe, 'original')
+        $binding = [pscustomobject]@{ path = [IO.Path]::GetRelativePath($repositoryRoot, $bindingProbe); sha256 = Get-ConformanceFileDigest $bindingProbe }
+        $null = Resolve-ConformanceBinding $binding $repositoryRoot
+        [IO.File]::WriteAllText($bindingProbe, 'modified')
+        $rejected = $false
+        try { $null = Resolve-ConformanceBinding $binding $repositoryRoot }
+        catch { $rejected = $_.Exception.Message -like '*digest mismatch*' }
+        if (-not $rejected) { throw 'A previously checked binding concealed changed bytes.' }
+        Remove-Item -LiteralPath $bindingProbe
+        $rejected = $false
+        try { $null = Resolve-ConformanceBinding $binding $repositoryRoot }
+        catch { $rejected = $true }
+        if (-not $rejected) { throw 'A previously checked binding concealed a missing file.' }
+    }
+    finally {
+        if (Test-Path -LiteralPath $bindingProbe) { Remove-Item -LiteralPath $bindingProbe }
+    }
+    if ($IsWindows) {
+        $bindingLink = $bindingProbe + '-junction'
+        $null = New-Item -ItemType Junction -Path $bindingLink -Target (Join-Path $repositoryRoot 'target')
+        try {
+            # Even a missing leaf must not hide a reparse point in its ancestor chain.
+            $binding = [pscustomobject]@{ path = [IO.Path]::GetRelativePath($repositoryRoot, (Join-Path $bindingLink 'missing-binding.bin')); sha256 = '0' * 64 }
+            $rejected = $false
+            try { $null = Resolve-ConformanceBinding $binding $repositoryRoot }
+            catch { $rejected = $_.Exception.Message -like '*reparse point*' }
+            if (-not $rejected) { throw 'A junction ancestor was accepted.' }
+        }
+        finally {
+            # Non-recursive deletion removes the junction itself without traversing its target.
+            [IO.Directory]::Delete($bindingLink)
+        }
+    }
+    Write-Host 'PASS: exact properties, duplicate members, and fresh binding reads'
     Assert-CatalogRejected 'duplicate case' { param($c) $c.cases += $c.cases[0] }
     Assert-CatalogRejected 'identity serialization' { param($c) $c.cases[0].identity.case_id += '-changed' }
     Assert-CatalogRejected 'extra identity field' { param($c) $c.cases[0].identity | Add-Member unexpected 'value' }

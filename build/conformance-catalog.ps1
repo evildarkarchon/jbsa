@@ -20,9 +20,10 @@ Requires a case-sensitive JSON property and returns its value, preserving an exp
 #>
 function Get-ConformanceProperty {
     param([object] $Object, [string] $Name, [string] $Context)
-    $property = @($Object.PSObject.Properties | Where-Object { $_.Name -ceq $Name })
-    if ($property.Count -ne 1) { throw "$Context requires property '$Name'." }
-    return ,$property[0].Value
+    $property = $Object.PSObject.Properties[$Name]
+    # PowerShell's indexed lookup ignores case; JSON member names must still match exactly.
+    if ($null -eq $property -or $property.Name -cne $Name) { throw "$Context requires property '$Name'." }
+    return ,$property.Value
 }
 
 <#
@@ -92,11 +93,17 @@ function Resolve-ConformanceBinding {
     # committed-evidence binding into a local oracle, proprietary corpus, or an external directory.
     $component = $resolved
     while ($component.Length -ge $root.Length) {
-        if (Test-Path -LiteralPath $component) {
-            $item = Get-Item -LiteralPath $component -Force -ErrorAction Stop
-            if (($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+        try {
+            # Direct attribute reads avoid provider/pipeline setup for every ancestor of every binding.
+            if (([IO.File]::GetAttributes($component) -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
                 throw "Conformance catalog binding through a reparse point is excluded: '$path'."
             }
+        }
+        catch [IO.FileNotFoundException] {
+            # Check existing ancestors too; the digest read below rejects the missing file.
+        }
+        catch [IO.DirectoryNotFoundException] {
+            # A missing intermediate directory must not bypass checks on existing ancestors.
         }
         if ($component -ceq $root) { break }
         $component = [IO.Path]::GetDirectoryName($component)
@@ -213,6 +220,7 @@ function Read-ConformanceCatalog {
     $seenCoverage = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     $caseIds = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     $cells = [Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
+    $provenanceDocuments = [Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
     $identityFields = @('case_id', 'contract', 'archive_family', 'operation', 'fixture', 'codec', 'configuration')
     foreach ($case in (Get-ConformanceProperty $catalog 'cases' 'Catalog')) {
         $identity = Get-ConformanceProperty $case 'identity' 'Case'
@@ -274,7 +282,13 @@ function Read-ConformanceCatalog {
             $null = Resolve-ConformanceBinding $binding.generator.descriptor $RepositoryRoot
             $null = Resolve-ConformanceBinding $binding.generator.implementation $RepositoryRoot
             $provenancePath = Resolve-ConformanceBinding $binding.provenance.manifest $RepositoryRoot
-            $provenance = Read-ConformanceJson -Path $provenancePath
+            # Shared manifests are parsed once per load, but every reference still checks fresh
+            # path attributes and bytes above. Include the digest so a different binding cannot reuse it.
+            $provenanceKey = $provenancePath + ':' + $binding.provenance.manifest.sha256
+            if (-not $provenanceDocuments.ContainsKey($provenanceKey)) {
+                $provenanceDocuments.Add($provenanceKey, (Read-ConformanceJson -Path $provenancePath))
+            }
+            $provenance = $provenanceDocuments[$provenanceKey]
             # Independently generated corpora retain paths relative to their own pinned manifest.
             $corpusPrefix = [IO.Path]::GetRelativePath($RepositoryRoot, (Split-Path $provenancePath -Parent)).Replace('\', '/') + '/'
             $sourceFixture = @($provenance.fixtures | Where-Object { $_.id -ceq $binding.provenance.fixture_id })
