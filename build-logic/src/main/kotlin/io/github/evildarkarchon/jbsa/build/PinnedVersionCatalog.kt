@@ -23,6 +23,14 @@ internal class PinnedVersionCatalog private constructor(
     /** Returns the catalog-pinned version for an external plugin, or `null` when it is undeclared. */
     fun pluginVersion(pluginId: String): String? = plugins[pluginId]
 
+    /** Returns the sole catalog-pinned version for a dependency required by convention build logic. */
+    fun dependencyVersion(group: String, name: String): String {
+        val module = "$group:$name"
+        val approved = requireNotNull(dependencies[module]) { "Missing catalog dependency '$module'." }
+        require(approved.size == 1) { "Convention dependency '$module' must have one pinned version; found $approved." }
+        return approved.single()
+    }
+
     companion object {
         private val assignment = Regex("([A-Za-z0-9_.-]+)\\s*=\\s*\"([^\"]+)\"")
         private val module = Regex(".*module\\s*=\\s*\"([^\"]+)\".*version\\.ref\\s*=\\s*\"([^\"]+)\".*")

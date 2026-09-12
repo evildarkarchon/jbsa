@@ -311,11 +311,17 @@ class FoundationPluginFunctionalTest {
             """
             [versions]
             junit = "6.1.3"
+            lwjgl = "3.4.3"
             spotless = "8.10.2"
             $conflictVersion
 
             [libraries]
             junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+            junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+            junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+            junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
+            lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
+            lwjgl-lz4 = { module = "org.lwjgl:lwjgl-lz4", version.ref = "lwjgl" }
             $conflictLibrary
 
             [plugins]

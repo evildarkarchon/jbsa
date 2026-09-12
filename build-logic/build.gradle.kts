@@ -65,6 +65,18 @@ gradlePlugin {
             id = "jbsa.settings"
             implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaSettingsPlugin"
         }
+        create("jbsaJava") {
+            id = "jbsa.java"
+            implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaJavaPlugin"
+        }
+        create("jbsaPublicLibrary") {
+            id = "jbsa.public-library"
+            implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaPublicLibraryPlugin"
+        }
+        create("jbsaTestSupport") {
+            id = "jbsa.test-support"
+            implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaTestSupportPlugin"
+        }
     }
 }
 

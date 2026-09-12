@@ -13,7 +13,7 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin
 class JbsaFoundationPlugin : Plugin<Project> {
     private val expectedRoles =
         linkedMapOf(
-            ":jbsa" to JbsaProjectRole.PUBLIC_LIBRARY,
+            JbsaPublicLibraryIdentity.PROJECT_PATH to JbsaProjectRole.PUBLIC_LIBRARY,
             ":jbsa-cli" to JbsaProjectRole.THIN_APPLICATION,
             ":jbsa-test-support" to JbsaProjectRole.BUILD_ONLY_TEST_SUPPORT,
             ":jbsa-conformance-tests" to JbsaProjectRole.BUILD_ONLY_CONFORMANCE,
@@ -74,6 +74,12 @@ class JbsaFoundationPlugin : Plugin<Project> {
         project.layout.buildDirectory.set(project.layout.projectDirectory.dir("target"))
         project.extensions.extraProperties.set("jbsaRole", role.id)
 
+        when (role) {
+            JbsaProjectRole.PUBLIC_LIBRARY -> project.pluginManager.apply("jbsa.public-library")
+            JbsaProjectRole.BUILD_ONLY_TEST_SUPPORT -> project.pluginManager.apply("jbsa.test-support")
+            else -> Unit
+        }
+
         project.dependencyLocking.lockAllConfigurations()
         project.dependencyLocking.lockMode.set(LockMode.STRICT)
         project.configurations.configureEach {
@@ -117,10 +123,27 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 }
             }
         }
+        val verifyPublicationPolicy =
+            project.tasks.register("verifyPublicationPolicy") {
+                group = LifecycleBasePlugin.VERIFICATION_GROUP
+                description = "Verifies that publication remains local-only and library-only."
+                doLast { PublicationPolicy.verify(project) }
+            }
         project.tasks.register("verify") {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description = "Runs the complete verification available at the current migration stage."
-            dependsOn(verifyFoundation)
+            dependsOn(
+                verifyFoundation,
+                verifyPublicationPolicy,
+                project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named("check"),
+                project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named(
+                    JbsaPublicLibraryIdentity.ASSEMBLE_PUBLICATION_TASK
+                ),
+                project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named(
+                    JbsaPublicLibraryIdentity.VERIFY_ARTIFACT_TASK
+                ),
+                project.project(":jbsa-test-support").tasks.named("build"),
+            )
         }
         project.tasks.named(LifecycleBasePlugin.CLEAN_TASK_NAME) {
             dependsOn(project.subprojects.map { child -> child.tasks.named(LifecycleBasePlugin.CLEAN_TASK_NAME) })
