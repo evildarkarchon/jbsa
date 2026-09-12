@@ -12,7 +12,7 @@ must extend both lock and verification metadata when they introduce new resolvab
 | `gradle/verification-metadata.xml` | `feaabac15a60f85de3a5176cc899168e82f189ba98a1842bcad69308ed325e53` |
 | `build-logic/gradle/verification-metadata.xml` | `3e37e914928f57fab6c516257a2b4251904c5c746fa88a437d4156c3149d5580` |
 | `build-logic/gradle.lockfile` | `6b8e3006c0362eb5adca9e86af8d25a72e2bfab5834586be29b0255241a617d2` |
-| `gradle/libs.versions.toml` | `6d2f976b436633f65d947a18556741593baf33568b3e5351ddd218c45718f87f` |
+| `gradle/libs.versions.toml` | `378e8c836e7a5e7bd577ad298755cf9a5832bc3490a9ec3217bd3a47cb9bd37c` |
 | `gradle/wrapper/gradle-wrapper.jar` | `7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d` |
 
 ## Review procedure and result

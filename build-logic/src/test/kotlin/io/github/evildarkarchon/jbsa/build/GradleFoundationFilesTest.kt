@@ -86,6 +86,9 @@ class GradleFoundationFilesTest {
         assertFalse(catalog.contains("+\""))
         listOf("org.cyclonedx.bom", "com.gradleup.shadow", "com.diffplug.spotless")
             .forEach { pluginId -> assertTrue(catalog.contains("id = \"$pluginId\"")) }
+        val includedBuild = Files.readString(repositoryRoot.resolve("build-logic/build.gradle.kts"))
+        assertTrue(includedBuild.contains("testRuntimeOnly(libs.junit.platform.launcher)"))
+        assertTrue(includedBuild.contains("requested in catalogDependencyPins"))
 
         listOf(repositoryRoot.resolve("gradle.properties"), repositoryRoot.resolve("build-logic/gradle.properties"))
             .forEach { path ->
@@ -113,6 +116,8 @@ class GradleFoundationFilesTest {
             Files.readString(repositoryRoot.resolve(".scratch/migrate-maven-to-gradle/dependency-verification-review.md"))
         assertTrue(review.contains(sha256(repositoryRoot.resolve("gradle/verification-metadata.xml"))))
         assertTrue(review.contains(sha256(repositoryRoot.resolve("build-logic/gradle/verification-metadata.xml"))))
+        assertTrue(review.contains(sha256(repositoryRoot.resolve("build-logic/gradle.lockfile"))))
+        assertTrue(review.contains(sha256(repositoryRoot.resolve("gradle/libs.versions.toml"))))
         assertTrue(review.contains("All 124 values matched; failures: 0."))
     }
 
