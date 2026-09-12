@@ -3,7 +3,7 @@
   "migrationBranch": "initial-implementation",
   "candidateVersion": "0.1.0-SNAPSHOT",
   "qualificationJdk": {
-    "implementorVersion": "Temurin-25.0.4.1+1"
+    "implementorVersion": "Temurin-25.0.4+7"
   },
   "comparison": {
     "sameRevision": true,

@@ -6,7 +6,7 @@ ADR remain authoritative when they disagree with observed Maven behavior.
 
 Run every Maven and Gradle candidate from a clean, detached Git worktree created at the same full
 commit, on the single `initial-implementation` migration branch, with candidate version
-`0.1.0-SNAPSHOT` and Eclipse Temurin `25.0.4.1+1`. Give each build tool a different worktree and copy
+`0.1.0-SNAPSHOT` and Eclipse Temurin `25.0.4+7`. Give each build tool a different worktree and copy
 its outputs into a new evidence directory before starting the other build. Never compare mutable
 files in either live output tree, never reuse one tool's generated outputs, and never overwrite a
 prior evidence directory.
@@ -15,7 +15,7 @@ For the Maven baseline on Windows:
 
 ```powershell
 .\build\capture-maven-parity-baseline.ps1 `
-  -QualificationJavaHome 'C:\Program Files\jdk' `
+  -QualificationJavaHome 'C:\path\to\temurin-25.0.4+7' `
   -OutputDirectory .\.scratch\migrate-maven-to-gradle\baseline\<full-commit>
 ```
 
