@@ -5,8 +5,8 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | GitHub source | Local ticket | State | Triage status |
 | --- | --- | --- | --- |
 | local | [Migrate the Maven build to Gradle with Kotlin DSL](migrate-maven-to-gradle/spec.md) | open | ready-for-agent |
-| local | [Gradle 01: Capture the Maven parity baseline](migrate-maven-to-gradle/issues/01-capture-maven-parity-baseline.md) | open | ready-for-agent |
-| local | [Gradle 02: Establish the verified Gradle build foundation](migrate-maven-to-gradle/issues/02-establish-verified-gradle-foundation.md) | open | needs-triage |
+| local | [Gradle 01: Capture the Maven parity baseline](migrate-maven-to-gradle/issues/01-capture-maven-parity-baseline.md) | closed | none |
+| local | [Gradle 02: Establish the verified Gradle build foundation](migrate-maven-to-gradle/issues/02-establish-verified-gradle-foundation.md) | open | ready-for-agent |
 | local | [Gradle 03: Build and test the public library with Gradle](migrate-maven-to-gradle/issues/03-build-test-public-library.md) | open | needs-triage |
 | local | [Gradle 04: Build and exercise the thin CLI with Gradle](migrate-maven-to-gradle/issues/04-build-exercise-thin-cli.md) | open | needs-triage |
 | local | [Gradle 05: Run Automated Conformance through Gradle](migrate-maven-to-gradle/issues/05-run-automated-conformance.md) | open | needs-triage |

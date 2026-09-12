@@ -3,11 +3,11 @@
 **What to build:** Let maintainers launch a verified Gradle build with the existing six project roles and safe, deterministic shared policy.
 
 Blocked by: [01: Capture the Maven parity baseline](01-capture-maven-parity-baseline.md)
-Status: needs-triage
+Status: ready-for-agent
 State: open
 Assignees: none
 Intended owner: agent
-Triage rationale: Approved scope; prerequisites remain open. Reassess readiness when all blockers close.
+Triage rationale: Approved and fully specified; its sole prerequisite, ticket 01, is closed.
 
 ## Acceptance criteria
 
@@ -22,4 +22,3 @@ Triage rationale: Approved scope; prerequisites remain open. Reassess readiness 
 ## Context
 
 Follow the [approved migration spec](../spec.md) and [ADR-0001](../../../docs/adr/0001-migrate-maven-build-to-gradle-kotlin-dsl.md). Work on the shared migration branch; preserve Java sources, project boundaries, unrelated dependency versions, historical evidence, and the read-only Reference Snapshot.
-
