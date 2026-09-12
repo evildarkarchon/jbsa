@@ -265,7 +265,6 @@ finally {
         }
         Remove-Item -LiteralPath $resolvedScratch -Recurse -Force
     }
-    if (Test-Path -LiteralPath $pendingRoot) {
-        Remove-Item -LiteralPath $pendingRoot -Recurse -Force
-    }
+    # A failed capture keeps its pending directory so the exception's retained-log path remains
+    # truthful and a migration reviewer can diagnose the exact command output.
 }
