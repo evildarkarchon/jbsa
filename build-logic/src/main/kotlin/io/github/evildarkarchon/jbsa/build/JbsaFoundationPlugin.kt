@@ -76,7 +76,9 @@ class JbsaFoundationPlugin : Plugin<Project> {
 
         when (role) {
             JbsaProjectRole.PUBLIC_LIBRARY -> project.pluginManager.apply("jbsa.public-library")
+            JbsaProjectRole.THIN_APPLICATION -> project.pluginManager.apply("jbsa.thin-application")
             JbsaProjectRole.BUILD_ONLY_TEST_SUPPORT -> project.pluginManager.apply("jbsa.test-support")
+            JbsaProjectRole.NON_JAVA_STAGING_AUDIT -> project.pluginManager.apply("jbsa.runtime-inputs")
             else -> Unit
         }
 
@@ -143,6 +145,19 @@ class JbsaFoundationPlugin : Plugin<Project> {
                     JbsaPublicLibraryIdentity.VERIFY_ARTIFACT_TASK
                 ),
                 project.project(":jbsa-test-support").tasks.named("build"),
+                project.project(JbsaThinApplicationIdentity.PROJECT_PATH).tasks.named("check"),
+                project
+                    .project(JbsaThinApplicationIdentity.PROJECT_PATH)
+                    .tasks
+                    .named(JbsaThinApplicationIdentity.VERIFY_ARTIFACT_TASK),
+                project
+                    .project(JbsaThinApplicationIdentity.PROJECT_PATH)
+                    .tasks
+                    .named(JbsaThinApplicationIdentity.SMOKE_TEST_TASK),
+                project
+                    .project(JbsaThinApplicationIdentity.DISTRIBUTION_PROJECT_PATH)
+                    .tasks
+                    .named(JbsaThinApplicationIdentity.VERIFY_RUNTIME_DEPENDENCIES_TASK),
             )
         }
         project.tasks.named(LifecycleBasePlugin.CLEAN_TASK_NAME) {

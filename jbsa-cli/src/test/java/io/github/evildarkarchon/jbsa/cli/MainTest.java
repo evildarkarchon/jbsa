@@ -363,8 +363,7 @@ class MainTest {
     assertTrue(
         version
             .output()
-            .startsWith(
-                "JBSA " + Main.class.getModule().getDescriptor().rawVersion().orElseThrow()));
+            .startsWith("JBSA " + System.getProperty("jbsa.version")));
     assertTrue(version.output().contains("bsarch-1.0/v1 SHA-256 9577D821"));
     assertEquals("", version.error());
     Result missing = run(temporary.resolve("missing.bsa").toString());
@@ -374,18 +373,33 @@ class MainTest {
     assertTrue(missing.error().contains("phase=PREFLIGHT"));
   }
 
-  /**
-   * Launches the actual modular entry point and captures independently redirected UTF-8 streams.
-   */
+  /** Launches the modular entry point from Gradle JARs or Maven parity classes and captures UTF-8. */
   private Result run(String... arguments) throws Exception {
     List<String> command = new ArrayList<>();
-    command.add(Path.of(System.getProperty("java.home"), "bin", "java.exe").toString());
-    command.add("--enable-native-access=io.github.evildarkarchon.jbsa");
+    String executable = System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java";
+    command.add(Path.of(System.getProperty("java.home"), "bin", executable).toString());
+    String cliJar = System.getProperty("jbsa.cli.jar");
+    String modulePath;
+    if (cliJar == null) {
+      command.add("--enable-native-access=io.github.evildarkarchon.jbsa");
+      modulePath =
+          Path.of("target/classes").toAbsolutePath()
+              + java.io.File.pathSeparator
+              + Path.of("../jbsa/target/classes").toAbsolutePath();
+    } else {
+      int argumentCount = Integer.parseInt(System.getProperty("jbsa.cli.jvmArgument.count"));
+      for (int index = 0; index < argumentCount; index++) {
+        command.add(System.getProperty("jbsa.cli.jvmArgument." + index));
+      }
+      modulePath =
+          Path.of(cliJar).toAbsolutePath()
+              + java.io.File.pathSeparator
+              + Path.of(System.getProperty("jbsa.library.jar")).toAbsolutePath()
+              + java.io.File.pathSeparator
+              + System.getProperty("jbsa.cli.runtimeClasspath");
+    }
     command.add("--module-path");
-    command.add(
-        Path.of("target/classes").toAbsolutePath()
-            + java.io.File.pathSeparator
-            + Path.of("../jbsa/target/classes").toAbsolutePath());
+    command.add(modulePath);
     command.add("--module");
     command.add("io.github.evildarkarchon.jbsa.cli/io.github.evildarkarchon.jbsa.cli.Main");
     command.addAll(List.of(arguments));

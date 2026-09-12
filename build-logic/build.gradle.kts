@@ -77,6 +77,14 @@ gradlePlugin {
             id = "jbsa.test-support"
             implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaTestSupportPlugin"
         }
+        create("jbsaThinApplication") {
+            id = "jbsa.thin-application"
+            implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaThinApplicationPlugin"
+        }
+        create("jbsaRuntimeInputs") {
+            id = "jbsa.runtime-inputs"
+            implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaRuntimeInputsPlugin"
+        }
     }
 }
 

@@ -3,11 +3,11 @@
 **What to build:** Let compliance reviewers audit actual Gradle resolution and production artifacts using deterministic model data.
 
 Blocked by: [04: Build and exercise the thin CLI with Gradle](04-build-exercise-thin-cli.md)
-Status: needs-triage
+Status: ready-for-agent
 State: open
 Assignees: none
 Intended owner: agent
-Triage rationale: Approved scope; prerequisites remain open. Reassess readiness when all blockers close.
+Triage rationale: Approved and fully specified; its sole prerequisite, ticket 04, is closed.
 
 ## Acceptance criteria
 
@@ -21,4 +21,3 @@ Triage rationale: Approved scope; prerequisites remain open. Reassess readiness 
 ## Context
 
 Follow the [approved migration spec](../spec.md) and [ADR-0001](../../../docs/adr/0001-migrate-maven-build-to-gradle-kotlin-dsl.md). Work on the shared migration branch; preserve Java sources, project boundaries, unrelated dependency versions, historical evidence, and the read-only Reference Snapshot.
-
