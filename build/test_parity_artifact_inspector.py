@@ -106,6 +106,32 @@ class ArtifactInspectorTests(unittest.TestCase):
                 ["entries[1].sha256"],
             )
 
+    def test_benchmark_contract_records_launch_services_classes_and_module_absence(self):
+        """A shaded benchmark must expose its launch and service shape without becoming modular."""
+        with tempfile.TemporaryDirectory() as temporary:
+            jar = Path(temporary) / "benchmarks-standalone.jar"
+            with zipfile.ZipFile(jar, "w") as archive:
+                archive.writestr(
+                    "META-INF/MANIFEST.MF",
+                    b"Manifest-Version: 1.0\nMain-Class: org.openjdk.jmh.Main\n\n",
+                )
+                archive.writestr(
+                    "META-INF/services/example.Service",
+                    b"example.Second\nexample.First\n",
+                )
+                archive.writestr("example/ArchiveBenchmark.class", b"benchmark")
+                archive.writestr("org/openjdk/jmh/Main.class", b"runner")
+
+            contract = parity_artifact_inspector.inspect_benchmark_contract(jar)
+
+            self.assertEqual(contract["main_class"], "org.openjdk.jmh.Main")
+            self.assertEqual(contract["module_descriptors"], [])
+            self.assertEqual(contract["benchmark_classes"], ["example/ArchiveBenchmark.class"])
+            self.assertEqual(
+                contract["service_descriptors"],
+                [{"path": "META-INF/services/example.Service", "providers": ["example.First", "example.Second"]}],
+            )
+
     def test_consumer_pom_normalization_retains_publication_semantics(self):
         """Dependency order may vary, but classifier and scope changes must remain observable."""
         first = """<project xmlns="http://maven.apache.org/POM/4.0.0">

@@ -2,8 +2,10 @@
   "schemaVersion": 1,
   "migrationBranch": "initial-implementation",
   "candidateVersion": "0.1.0-SNAPSHOT",
+  "mavenVersion": "3.9.16",
   "qualificationJdk": {
-    "implementorVersion": "Temurin-25.0.4+7"
+    "implementorVersion": "Temurin-25.0.4+7",
+    "distributionSha256": "7caab7db43bf4b94a2e6252c699e70d90084f9aa7c943cd3414761fd540937ae"
   },
   "comparison": {
     "sameRevision": true,

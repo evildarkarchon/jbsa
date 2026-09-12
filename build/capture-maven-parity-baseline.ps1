@@ -5,8 +5,9 @@ Captures the temporary Maven oracle for the Gradle migration in an isolated work
 .PARAMETER OutputDirectory
 New, previously nonexistent directory that will receive logs, dependency graphs, and baseline JSON.
 
-.PARAMETER QualificationJavaHome
-Exact JDK installation required by the migration parity protocol.
+.PARAMETER QualificationJdkArchive
+Exact JDK distribution archive required by the migration parity protocol. The archive is verified
+by SHA-256 and extracted into the isolated scratch root for this capture.
 
 .PARAMETER MavenExecutable
 Maven launcher to invoke. Defaults to the checked-in wrapper; an absolute Maven 3.9.16 executable
@@ -24,7 +25,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $OutputDirectory,
     [Parameter(Mandatory = $true)]
-    [string] $QualificationJavaHome,
+    [string] $QualificationJdkArchive,
     [string] $MavenExecutable,
     [string] $SourceRevision = 'HEAD'
 )
@@ -35,7 +36,6 @@ $PSNativeCommandUseErrorActionPreference = $false
 
 $reactorRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $protocolPath = Join-Path $reactorRoot '.scratch/migrate-maven-to-gradle/baseline-protocol.json'
-$inspectorPath = Join-Path $reactorRoot 'build/parity_artifact_inspector.py'
 $protocol = Get-Content -Raw -LiteralPath $protocolPath | ConvertFrom-Json -Depth 100
 $branch = (& git -C $reactorRoot branch --show-current).Trim()
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($branch)) {
@@ -54,14 +54,13 @@ if ($LASTEXITCODE -ne 0 -or $revision -cnotmatch '^[0-9a-f]{40}$') {
 }
 
 $candidateVersion = [string] $protocol.candidateVersion
-$javaHome = [IO.Path]::GetFullPath($QualificationJavaHome)
-$java = Join-Path $javaHome 'bin/java.exe'
-if (-not (Test-Path -LiteralPath $java -PathType Leaf)) {
-    throw "Qualification Java executable is missing: $java"
+$jdkArchive = [IO.Path]::GetFullPath($QualificationJdkArchive)
+if (-not (Test-Path -LiteralPath $jdkArchive -PathType Leaf)) {
+    throw "Qualification JDK archive is missing: $jdkArchive"
 }
-$javaOutput = @(& $java -version 2>&1) -join "`n"
-if ($LASTEXITCODE -ne 0 -or $javaOutput -notmatch [regex]::Escape([string] $protocol.qualificationJdk.implementorVersion)) {
-    throw "Qualification JDK must be $($protocol.qualificationJdk.implementorVersion); observed: $javaOutput"
+$jdkArchiveSha256 = (Get-FileHash -LiteralPath $jdkArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($jdkArchiveSha256 -cne [string] $protocol.qualificationJdk.distributionSha256) {
+    throw "Qualification JDK archive SHA-256 mismatch: $jdkArchiveSha256"
 }
 
 $mavenOverride = if ([string]::IsNullOrWhiteSpace($MavenExecutable)) {
@@ -97,8 +96,8 @@ Arguments passed without shell reparsing.
 .PARAMETER WorkingDirectory
 Directory in which the command observes and produces files.
 
-.PARAMETER SuccessExitCodes
-Exit statuses that represent a valid observed outcome for this command.
+.PARAMETER OutcomeByExitCode
+Maps recognized exit statuses to their machine-readable PASS, BLOCKED, or other evidence outcome.
 
 .PARAMETER RequireSuccess
 Stops capture when the outcome is not successful. Omit this for gates whose failures are evidence.
@@ -109,7 +108,7 @@ function Invoke-BaselineCommand {
         [Parameter(Mandatory = $true)] [string] $Executable,
         [Parameter(Mandatory = $true)] [string[]] $Arguments,
         [Parameter(Mandatory = $true)] [string] $WorkingDirectory,
-        [int[]] $SuccessExitCodes = @(0),
+        [hashtable] $OutcomeByExitCode = @{ 0 = 'PASS' },
         [switch] $RequireSuccess
     )
 
@@ -130,7 +129,7 @@ function Invoke-BaselineCommand {
         name = $Name
         command = @($Executable) + $Arguments
         exitCode = $exitCode
-        outcome = if ($exitCode -in $SuccessExitCodes) { 'PASS' } else { 'FAIL' }
+        outcome = if ($OutcomeByExitCode.ContainsKey($exitCode)) { $OutcomeByExitCode[$exitCode] } else { 'FAIL' }
         startedAt = $startedAt.ToString('O')
         completedAt = $completedAt.ToString('O')
         log = [ordered]@{
@@ -146,19 +145,41 @@ function Invoke-BaselineCommand {
 
 $scratchRoot = Join-Path ([IO.Path]::GetTempPath()) "jbsa-maven-parity-$([guid]::NewGuid().ToString('N'))"
 $isolatedRoot = Join-Path $scratchRoot 'source'
+$jdkExtractRoot = Join-Path $scratchRoot 'qualification-jdk'
 $pendingRoot = "$outputRoot.pending-$([guid]::NewGuid().ToString('N'))"
 $oldJavaHome = $env:JAVA_HOME
 $oldPath = $env:PATH
 $worktreeRegistered = $false
 try {
     New-Item -ItemType Directory -Path (Join-Path $pendingRoot 'logs'), (Join-Path $pendingRoot 'resolved-graphs') -Force | Out-Null
+    Expand-Archive -LiteralPath $jdkArchive -DestinationPath $jdkExtractRoot
+    $jdkReleases = @(Get-ChildItem -LiteralPath $jdkExtractRoot -Recurse -Filter 'release' -File | Where-Object {
+            Test-Path -LiteralPath (Join-Path $_.Directory.FullName 'bin/java.exe') -PathType Leaf
+        })
+    if ($jdkReleases.Count -ne 1) {
+        throw "Qualification archive must contain exactly one JDK root; found $($jdkReleases.Count)."
+    }
+    $javaHome = $jdkReleases[0].Directory.FullName
+    $java = Join-Path $javaHome 'bin/java.exe'
+    $javaOutput = @(& $java -version 2>&1) -join "`n"
+    if ($LASTEXITCODE -ne 0 -or $javaOutput -notmatch [regex]::Escape([string] $protocol.qualificationJdk.implementorVersion)) {
+        throw "Qualification JDK must be $($protocol.qualificationJdk.implementorVersion); observed: $javaOutput"
+    }
     & git -C $reactorRoot worktree add --detach $isolatedRoot $revision
     if ($LASTEXITCODE -ne 0) { throw 'Could not create the isolated Maven worktree.' }
     $worktreeRegistered = $true
     $maven = if ($null -eq $mavenOverride) { Join-Path $isolatedRoot 'mvnw.cmd' } else { $mavenOverride }
+    $inspectorPath = Join-Path $isolatedRoot 'build/parity_artifact_inspector.py'
     $env:JAVA_HOME = $javaHome
     $env:PATH = (Join-Path $javaHome 'bin') + [IO.Path]::PathSeparator + $oldPath
     $mavenIdentity = Invoke-BaselineCommand -Name 'maven-version' -Executable $maven -Arguments @('-version') -WorkingDirectory $isolatedRoot -RequireSuccess
+    $mavenVersionOutput = Get-Content -Raw -LiteralPath (Join-Path $pendingRoot $mavenIdentity.log.path)
+    if ($mavenVersionOutput -notmatch "(?m)^Apache Maven $([regex]::Escape([string] $protocol.mavenVersion)) ") {
+        throw "Maven must be version $($protocol.mavenVersion); observed: $mavenVersionOutput"
+    }
+    $inspectorTests = Invoke-BaselineCommand -Name 'artifact-inspector-tests' -Executable 'python' -Arguments @(
+        (Join-Path $isolatedRoot 'build/test_parity_artifact_inspector.py')
+    ) -WorkingDirectory $isolatedRoot -RequireSuccess
     $build = Invoke-BaselineCommand -Name 'clean-verify' -Executable $maven -Arguments @(
         '-B', '-ntp', '-C', "-Drevision=$candidateVersion", 'clean', 'verify'
     ) -WorkingDirectory $isolatedRoot
@@ -205,7 +226,7 @@ try {
     $gates += Invoke-BaselineCommand -Name 'gate-conformance-observation' -Executable 'pwsh' -Arguments @(
         '-NoLogo', '-NoProfile', '-NonInteractive', '-File', (Join-Path $isolatedRoot 'build/run-conformance.ps1'),
         '-RepositoryRoot', $isolatedRoot, '-OutputDirectory', 'target/conformance'
-    ) -WorkingDirectory $isolatedRoot -SuccessExitCodes @(0, 1)
+    ) -WorkingDirectory $isolatedRoot -OutcomeByExitCode @{ 0 = 'PASS'; 1 = 'BLOCKED' }
 
     $inspectionPath = Join-Path $pendingRoot 'artifact-inspection.json'
     & python $inspectorPath inspect-build --build-root $isolatedRoot --java-home $javaHome --version $candidateVersion --output $inspectionPath
@@ -229,6 +250,8 @@ try {
         candidateVersion = $candidateVersion
         qualificationJdk = [ordered]@{
             implementorVersion = $protocol.qualificationJdk.implementorVersion
+            distributionArchive = [IO.Path]::GetFileName($jdkArchive)
+            distributionSha256 = $jdkArchiveSha256
             releaseSha256 = (Get-FileHash -LiteralPath (Join-Path $javaHome 'release') -Algorithm SHA256).Hash.ToLowerInvariant()
             javaExecutableSha256 = (Get-FileHash -LiteralPath $java -Algorithm SHA256).Hash.ToLowerInvariant()
             versionOutput = $javaOutput.Replace("`r`n", "`n")
@@ -244,6 +267,7 @@ try {
             generatedOutputsComparedOnlyAfterCapture = $true
             archiveEnvelopeEqualityRequiredAcrossBuildTools = $false
         }
+        artifactInspectorTests = $inspectorTests
         build = $build
         outputMaterialization = $materialization
         dependencyGraphCommand = $dependencyGraph

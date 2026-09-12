@@ -50,6 +50,45 @@ def inspect_archive(path: Path) -> dict[str, Any]:
     }
 
 
+def _manifest_main_attributes(payload: bytes) -> dict[str, str]:
+    """Parse the main section of a JAR manifest, including continuation lines."""
+    unfolded: list[str] = []
+    for line in payload.decode("utf-8").replace("\r\n", "\n").splitlines():
+        if not line:
+            break
+        if line.startswith(" ") and unfolded:
+            unfolded[-1] += line[1:]
+        else:
+            unfolded.append(line)
+    return dict(line.split(": ", 1) for line in unfolded if ": " in line)
+
+
+def inspect_benchmark_contract(path: Path) -> dict[str, Any]:
+    """Inspect the standalone benchmark's launcher, services, classes, and JPMS exclusion."""
+    with zipfile.ZipFile(path) as archive:
+        names = sorted(entry.filename for entry in archive.infolist())
+        try:
+            manifest = _manifest_main_attributes(archive.read("META-INF/MANIFEST.MF"))
+        except KeyError as error:
+            raise ValueError(f"Standalone benchmark has no manifest: {path}") from error
+        services = []
+        for name in names:
+            if not name.startswith("META-INF/services/") or name.endswith("/"):
+                continue
+            providers = sorted(
+                line.strip()
+                for line in archive.read(name).decode("utf-8").replace("\r\n", "\n").splitlines()
+                if line.strip() and not line.lstrip().startswith("#")
+            )
+            services.append({"path": name, "providers": providers})
+    return {
+        "benchmark_classes": [name for name in names if name.endswith("Benchmark.class")],
+        "main_class": manifest.get("Main-Class"),
+        "module_descriptors": [name for name in names if name == "module-info.class" or name.endswith("/module-info.class")],
+        "service_descriptors": services,
+    }
+
+
 def inspect_tree(path: Path) -> dict[str, Any]:
     """Return a deterministic filename, size, and SHA-256 inventory for a directory tree."""
     if not path.is_dir():
@@ -338,6 +377,10 @@ def _file_record(path: Path) -> dict[str, Any]:
 def inspect_build(build_root: Path, version: str, java_home: Path) -> dict[str, Any]:
     """Inspect all canonical Maven/Gradle parity outputs beneath one isolated build root."""
     artifacts = {
+        "benchmark_standalone": build_root
+        / "jbsa-benchmarks"
+        / "target"
+        / f"jbsa-benchmarks-{version}-standalone.jar",
         "library": build_root / "jbsa" / "target" / f"jbsa-{version}.jar",
         "library_sources": build_root / "jbsa" / "target" / f"jbsa-{version}-sources.jar",
         "library_javadocs": build_root / "jbsa" / "target" / f"jbsa-{version}-javadoc.jar",
@@ -353,19 +396,33 @@ def inspect_build(build_root: Path, version: str, java_home: Path) -> dict[str, 
         if not required.is_file():
             raise ValueError(f"Required parity evidence is missing: {required}")
     inspected_artifacts = {name: inspect_archive(path) for name, path in artifacts.items()}
+    inspected_artifacts["benchmark_standalone"]["benchmark_contract"] = inspect_benchmark_contract(
+        artifacts["benchmark_standalone"]
+    )
     for name in ("library", "thin_cli"):
         inspected_artifacts[name]["java_contract"] = inspect_java_contract(artifacts[name], java_home)
     notice_paths = {
         "release_notes": build_root / "target" / "compliance" / "RELEASE-NOTES.md",
         "third_party_notices": build_root / "target" / "compliance" / "THIRD-PARTY-NOTICES.md",
     }
+    normalized_sbom = normalize_sbom(sbom)
+    staged_files = inspect_tree(build_root / "jbsa-dist" / "target" / "release-inputs")
+    benchmark_name = artifacts["benchmark_standalone"].name
     return {
         "artifacts": inspected_artifacts,
+        "benchmark_exclusions": {
+            "present_in_sbom": any(
+                component.get("name") == "jbsa-benchmarks"
+                for component in normalized_sbom["components"]
+                if component is not None
+            ),
+            "present_in_staging": any(file["path"] == benchmark_name for file in staged_files["files"]),
+        },
         "consumer_pom": normalize_consumer_pom(consumer_pom),
         "notices": {name: _file_record(path) for name, path in notice_paths.items()},
         "runtime_dependencies": inspect_tree(build_root / "jbsa-dist" / "target" / "runtime-dependencies"),
-        "sbom": normalize_sbom(sbom),
-        "staged_files": inspect_tree(build_root / "jbsa-dist" / "target" / "release-inputs"),
+        "sbom": normalized_sbom,
+        "staged_files": staged_files,
         "staging_manifest": normalize_staging_manifest(staging_manifest),
     }
 
