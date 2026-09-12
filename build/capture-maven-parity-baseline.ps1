@@ -99,6 +99,9 @@ Directory in which the command observes and produces files.
 
 .PARAMETER SuccessExitCodes
 Exit statuses that represent a valid observed outcome for this command.
+
+.PARAMETER RequireSuccess
+Stops capture when the outcome is not successful. Omit this for gates whose failures are evidence.
 #>
 function Invoke-BaselineCommand {
     param(
@@ -106,7 +109,8 @@ function Invoke-BaselineCommand {
         [Parameter(Mandatory = $true)] [string] $Executable,
         [Parameter(Mandatory = $true)] [string[]] $Arguments,
         [Parameter(Mandatory = $true)] [string] $WorkingDirectory,
-        [int[]] $SuccessExitCodes = @(0)
+        [int[]] $SuccessExitCodes = @(0),
+        [switch] $RequireSuccess
     )
 
     $logPath = Join-Path $script:pendingRoot "logs/$Name.log"
@@ -134,7 +138,7 @@ function Invoke-BaselineCommand {
             sha256 = (Get-FileHash -LiteralPath $logPath -Algorithm SHA256).Hash.ToLowerInvariant()
         }
     }
-    if ($record.outcome -eq 'FAIL') {
+    if ($RequireSuccess -and $record.outcome -eq 'FAIL') {
         throw "$Name failed with exit code $exitCode; retained log: $logPath"
     }
     return $record
@@ -154,16 +158,22 @@ try {
     $maven = if ($null -eq $mavenOverride) { Join-Path $isolatedRoot 'mvnw.cmd' } else { $mavenOverride }
     $env:JAVA_HOME = $javaHome
     $env:PATH = (Join-Path $javaHome 'bin') + [IO.Path]::PathSeparator + $oldPath
-    $mavenIdentity = Invoke-BaselineCommand -Name 'maven-version' -Executable $maven -Arguments @('-version') -WorkingDirectory $isolatedRoot
+    $mavenIdentity = Invoke-BaselineCommand -Name 'maven-version' -Executable $maven -Arguments @('-version') -WorkingDirectory $isolatedRoot -RequireSuccess
     $build = Invoke-BaselineCommand -Name 'clean-verify' -Executable $maven -Arguments @(
         '-B', '-ntp', '-C', "-Drevision=$candidateVersion", 'clean', 'verify'
     ) -WorkingDirectory $isolatedRoot
+
+    # A failing real gate is part of the baseline. Re-materialize the complete canonical output set
+    # without tests so later inventory does not accidentally describe a partially built reactor.
+    $materialization = Invoke-BaselineCommand -Name 'materialize-outputs' -Executable $maven -Arguments @(
+        '-B', '-ntp', '-C', "-Drevision=$candidateVersion", '-DskipTests', 'clean', 'verify'
+    ) -WorkingDirectory $isolatedRoot -RequireSuccess
 
     $dependencyGraph = Invoke-BaselineCommand -Name 'resolved-dependencies' -Executable $maven -Arguments @(
         '-B', '-ntp', '-C', "-Drevision=$candidateVersion",
         'org.apache.maven.plugins:maven-dependency-plugin:3.11.0:tree',
         '-DoutputType=json', '-DoutputFile=target/parity-resolved-dependencies.json', '-DappendOutput=false'
-    ) -WorkingDirectory $isolatedRoot
+    ) -WorkingDirectory $isolatedRoot -RequireSuccess
     $graphRecords = @()
     foreach ($project in @('.', 'jbsa', 'jbsa-cli', 'jbsa-test-support', 'jbsa-conformance-tests', 'jbsa-benchmarks', 'jbsa-dist')) {
         $graph = Join-Path (Join-Path $isolatedRoot $project) 'target/parity-resolved-dependencies.json'
@@ -235,6 +245,7 @@ try {
             archiveEnvelopeEqualityRequiredAcrossBuildTools = $false
         }
         build = $build
+        outputMaterialization = $materialization
         dependencyGraphCommand = $dependencyGraph
         resolvedGraphs = $graphRecords
         gates = $gates
