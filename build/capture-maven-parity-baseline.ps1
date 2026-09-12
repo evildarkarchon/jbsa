@@ -259,7 +259,7 @@ try {
         maven = [ordered]@{
             executable = $maven
             executableSha256 = (Get-FileHash -LiteralPath $maven -Algorithm SHA256).Hash.ToLowerInvariant()
-            wrapperPropertiesSha256 = (Get-FileHash -LiteralPath (Join-Path $reactorRoot '.mvn/wrapper/maven-wrapper.properties') -Algorithm SHA256).Hash.ToLowerInvariant()
+            wrapperPropertiesSha256 = (Get-FileHash -LiteralPath (Join-Path $isolatedRoot '.mvn/wrapper/maven-wrapper.properties') -Algorithm SHA256).Hash.ToLowerInvariant()
             identity = $mavenIdentity
         }
         isolation = [ordered]@{
