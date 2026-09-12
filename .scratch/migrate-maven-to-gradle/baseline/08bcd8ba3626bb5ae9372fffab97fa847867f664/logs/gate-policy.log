@@ -38,7 +38,7 @@
 [INFO] Excluding jbsa-dist
 [INFO] Excluding jbsa-test-support
 [INFO] CycloneDX: Creating BOM version 1.6 with 6 component(s)
-[INFO] CycloneDX: Writing and validating BOM (JSON): C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\target\compliance\jbsa.cdx.json
+[INFO] CycloneDX: Writing and validating BOM (JSON): C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\target\compliance\jbsa.cdx.json
 [WARNING] Unknown keyword meta:enum - you should define your own Meta Schema. If the keyword is irrelevant for validation, just use a NonValidationKeyword or if it should generate annotations AnnotationKeyword
 [WARNING] Unknown keyword deprecated - you should define your own Meta Schema. If the keyword is irrelevant for validation, just use a NonValidationKeyword or if it should generate annotations AnnotationKeyword
 [INFO] 
@@ -65,7 +65,7 @@ Compliance verification passed: policy, inventories, notices, tracked bytes, and
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa ---
 [INFO] Nothing to compile - all classes are up to date.
@@ -87,7 +87,7 @@ Compliance verification passed: policy, inventories, notices, tracked bytes, and
 [INFO] --- source:3.4.0:jar-no-fork (attach-sources) @ jbsa ---
 [INFO] 
 [INFO] --- javadoc:3.12.0:jar (attach-javadocs) @ jbsa ---
-[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\target\jbsa-0.1.0-SNAPSHOT-javadoc.jar
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa\target\jbsa-0.1.0-SNAPSHOT-javadoc.jar
 [INFO] 
 [INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa ---
 [INFO] 
@@ -108,13 +108,13 @@ Compliance verification passed: policy, inventories, notices, tracked bytes, and
 [INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
 [INFO] 
 [INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-cli ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\src\main\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-cli\src\main\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-cli ---
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-cli ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-cli\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-cli ---
 [INFO] Nothing to compile - all classes are up to date.
@@ -152,13 +152,13 @@ Compliance verification passed: policy, inventories, notices, tracked bytes, and
 [INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
 [INFO] 
 [INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-test-support ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\src\main\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-test-support\src\main\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-test-support ---
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-test-support ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-test-support\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-test-support ---
 [INFO] No sources to compile
@@ -188,16 +188,16 @@ Compliance verification passed: policy, inventories, notices, tracked bytes, and
 [INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
 [INFO] 
 [INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-conformance-tests ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\src\main\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\src\main\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-conformance-tests ---
 [INFO] No sources to compile
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-conformance-tests ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-conformance-tests ---
-[WARNING] I/O error reading dependency state: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\classes: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\classes
+[WARNING] I/O error reading dependency state: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\target\classes: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\target\classes
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- surefire:3.5.6:test (default-test) @ jbsa-conformance-tests ---
@@ -211,58 +211,128 @@ Compliance verification passed: policy, inventories, notices, tracked bytes, and
 [INFO] -------------------------------------------------------
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
-[INFO] Running io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT
-[ERROR] Tests run: 6, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 295.2 s <<< FAILURE! -- in io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT
-[ERROR] io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT.publicHarnessCommands()[1] -- Time elapsed: 120.1 s <<< FAILURE!
-org.opentest4j.AssertionFailedError: tests/conformance/test-catalog.ps1 timed out; see C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\target\conformance-check-2757835752165993048.log ==> expected: <true> but was: <false>
-	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:199)
-	at io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT.runCheck(ConformanceHarnessIT.java:58)
-	at io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT.lambda$publicHarnessCommands$1(ConformanceHarnessIT.java:31)
-
-[ERROR] io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT.publicHarnessCommands()[2] -- Time elapsed: 120.1 s <<< FAILURE!
-org.opentest4j.AssertionFailedError: tests/conformance/test-rebaseline.ps1 timed out; see C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\target\conformance-check-7384040648810592274.log ==> expected: <true> but was: <false>
-	at org.junit.jupiter.api.Assertions.assertTrue(Assertions.java:199)
-	at io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT.runCheck(ConformanceHarnessIT.java:58)
-	at io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT.lambda$publicHarnessCommands$1(ConformanceHarnessIT.java:31)
-
+[INFO] Running io.github.evildarkarchon.jbsa.verification.BuildPolicyIT
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.096 s -- in io.github.evildarkarchon.jbsa.verification.BuildPolicyIT
+[INFO] Running io.github.evildarkarchon.jbsa.verification.CompliancePolicyIT
+[INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 108.9 s -- in io.github.evildarkarchon.jbsa.verification.CompliancePolicyIT
+[INFO] Running io.github.evildarkarchon.jbsa.verification.FixtureCorpusIT
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.536 s -- in io.github.evildarkarchon.jbsa.verification.FixtureCorpusIT
+[INFO] Running io.github.evildarkarchon.jbsa.verification.ReproducibilityPolicyIT
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.922 s -- in io.github.evildarkarchon.jbsa.verification.ReproducibilityPolicyIT
 [INFO] 
 [INFO] Results:
 [INFO] 
-[ERROR] Failures: 
-[ERROR]   ConformanceHarnessIT.lambda$publicHarnessCommands$1:31->runCheck:58 tests/conformance/test-catalog.ps1 timed out; see C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\target\conformance-check-2757835752165993048.log ==> expected: <true> but was: <false>
-[ERROR]   ConformanceHarnessIT.lambda$publicHarnessCommands$1:31->runCheck:58 tests/conformance/test-rebaseline.ps1 timed out; see C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\target\conformance-check-7384040648810592274.log ==> expected: <true> but was: <false>
-[INFO] 
-[ERROR] Tests run: 6, Failures: 2, Errors: 0, Skipped: 0
+[INFO] Tests run: 36, Failures: 0, Errors: 0, Skipped: 0
 [INFO] 
 [INFO] 
 [INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-conformance-tests ---
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-conformance-tests ---
+[INFO] Spotless.Java is keeping 30 files clean - 0 needs changes to be clean, 0 were already clean, 30 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] --------------< io.github.evildarkarchon:jbsa-benchmarks >--------------
+[INFO] Building JBSA build-only benchmarks 0.1.0-SNAPSHOT                 [6/7]
+[INFO]   from jbsa-benchmarks\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-benchmarks ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-benchmarks ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-benchmarks ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-benchmarks ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-benchmarks\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-benchmarks ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-benchmarks ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jar:3.5.1:jar (default-jar) @ jbsa-benchmarks ---
+[INFO] Building jar: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-benchmarks\target\jbsa-benchmarks-0.1.0-SNAPSHOT.jar
+[INFO] 
+[INFO] --- shade:3.6.1:shade (default) @ jbsa-benchmarks ---
+[WARNING] lwjgl-3.4.3-natives-windows.jar, lwjgl-3.4.3.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/windows/x64/org/lwjgl/lwjgl.dll.sha1
+[WARNING] commons-math3-3.6.1.jar, jbsa-0.1.0-SNAPSHOT.jar, jbsa-benchmarks-0.1.0-SNAPSHOT.jar, jbsa-test-support-0.1.0-SNAPSHOT.jar, jmh-core-1.37.jar, jopt-simple-5.0.4.jar, lwjgl-3.4.3-natives-windows.jar, lwjgl-3.4.3.jar, lwjgl-lz4-3.4.3-natives-windows.jar, lwjgl-lz4-3.4.3.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/MANIFEST.MF
+[WARNING] lwjgl-lz4-3.4.3-natives-windows.jar, lwjgl-lz4-3.4.3.jar define 1 overlapping resource: 
+[WARNING]   - META-INF/windows/x64/org/lwjgl/lz4/lwjgl_lz4.dll.sha1
+[WARNING] maven-shade-plugin has detected that some files are
+[WARNING] present in two or more JARs. When this happens, only one
+[WARNING] single version of the file is copied to the uber jar.
+[WARNING] Usually this is not harmful and you can skip these warnings,
+[WARNING] otherwise try to manually exclude artifacts based on
+[WARNING] mvn dependency:tree -Ddetail=true and the above output.
+[WARNING] See https://maven.apache.org/plugins/maven-shade-plugin/
+[INFO] Attaching shaded artifact.
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa-benchmarks ---
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-benchmarks ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-benchmarks ---
+[INFO] Spotless.Java is keeping 8 files clean - 0 needs changes to be clean, 0 were already clean, 8 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-dist >-----------------
+[INFO] Building JBSA build-only distribution assembly 0.1.0-SNAPSHOT      [7/7]
+[INFO]   from jbsa-dist\pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-dist ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- dependency:3.11.0:copy-dependencies (stage-runtime-dependencies) @ jbsa-dist ---
+[INFO] org.lwjgl:lwjgl:jar:3.4.3 already exists in destination.
+[INFO] org.lwjgl:lwjgl-lz4:jar:3.4.3 already exists in destination.
+[INFO] org.lwjgl:lwjgl:jar:natives-windows:3.4.3 already exists in destination.
+[INFO] org.lwjgl:lwjgl-lz4:jar:natives-windows:3.4.3 already exists in destination.
+[INFO] 
+[INFO] --- failsafe:3.5.6:integration-test (verify-packaged-artifacts) @ jbsa-dist ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- failsafe:3.5.6:verify (verify-packaged-artifacts) @ jbsa-dist ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- spotless:3.10.1:check (check-formatting) @ jbsa-dist ---
+[INFO] 
+[INFO] --- exec:3.6.2:exec (stage-release-inputs) @ jbsa-dist ---
+Staged 18 current release inputs for 0.1.0-SNAPSHOT.
+[INFO] 
+[INFO] --- exec:3.6.2:exec (verify-assembled-release-inputs) @ jbsa-dist ---
+Compliance verification passed: policy, inventories, notices, tracked bytes, and release inputs are authorized.
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary for JBSA reactor 0.1.0-SNAPSHOT:
 [INFO] 
-[INFO] JBSA reactor ....................................... SUCCESS [  6.096 s]
-[INFO] JBSA archive library ............................... SUCCESS [  3.485 s]
-[INFO] JBSA command-line interface ........................ SUCCESS [  0.710 s]
-[INFO] JBSA build-only test support ....................... SUCCESS [  0.069 s]
-[INFO] JBSA build-only conformance tests .................. FAILURE [04:55 min]
-[INFO] JBSA build-only benchmarks ......................... SKIPPED
-[INFO] JBSA build-only distribution assembly .............. SKIPPED
+[INFO] JBSA reactor ....................................... SUCCESS [  5.850 s]
+[INFO] JBSA archive library ............................... SUCCESS [  3.117 s]
+[INFO] JBSA command-line interface ........................ SUCCESS [  0.733 s]
+[INFO] JBSA build-only test support ....................... SUCCESS [  0.062 s]
+[INFO] JBSA build-only conformance tests .................. SUCCESS [02:00 min]
+[INFO] JBSA build-only benchmarks ......................... SUCCESS [  1.019 s]
+[INFO] JBSA build-only distribution assembly .............. SUCCESS [  6.145 s]
 [INFO] ------------------------------------------------------------------------
-[INFO] BUILD FAILURE
+[INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  05:06 min
-[INFO] Finished at: 2026-09-12T00:06:43-07:00
+[INFO] Total time:  02:17 min
+[INFO] Finished at: 2026-09-12T00:33:46-07:00
 [INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal org.apache.maven.plugins:maven-failsafe-plugin:3.5.6:verify (verify-packaged-artifacts) on project jbsa-conformance-tests: There are test failures.
-[ERROR] 
-[ERROR] See C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\failsafe-reports for the individual test results.
-[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
-[ERROR] -> [Help 1]
-[ERROR] 
-[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
-[ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR] 
-[ERROR] For more information about the errors and possible solutions, please read the following articles:
-[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
-[ERROR] 
-[ERROR] After correcting the problems, you can resume the build with the command
-[ERROR]   mvn <args> -rf :jbsa-conformance-tests

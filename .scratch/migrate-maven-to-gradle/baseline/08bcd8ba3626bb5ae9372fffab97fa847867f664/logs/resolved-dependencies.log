@@ -16,7 +16,7 @@
 [INFO] --------------------------------[ pom ]---------------------------------
 [INFO] 
 [INFO] --- dependency:3.11.0:tree (default-cli) @ jbsa-parent ---
-[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\target\parity-resolved-dependencies.json
+[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\target\parity-resolved-dependencies.json
 [INFO] 
 [INFO] -------------------< io.github.evildarkarchon:jbsa >--------------------
 [INFO] Building JBSA archive library 0.1.0-SNAPSHOT                       [2/7]
@@ -24,7 +24,7 @@
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
 [INFO] --- dependency:3.11.0:tree (default-cli) @ jbsa ---
-[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\target\parity-resolved-dependencies.json
+[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa\target\parity-resolved-dependencies.json
 [INFO] 
 [INFO] -----------------< io.github.evildarkarchon:jbsa-cli >------------------
 [INFO] Building JBSA command-line interface 0.1.0-SNAPSHOT                [3/7]
@@ -32,7 +32,7 @@
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
 [INFO] --- dependency:3.11.0:tree (default-cli) @ jbsa-cli ---
-[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\target\parity-resolved-dependencies.json
+[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-cli\target\parity-resolved-dependencies.json
 [INFO] 
 [INFO] -------------< io.github.evildarkarchon:jbsa-test-support >-------------
 [INFO] Building JBSA build-only test support 0.1.0-SNAPSHOT               [4/7]
@@ -40,7 +40,7 @@
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
 [INFO] --- dependency:3.11.0:tree (default-cli) @ jbsa-test-support ---
-[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\target\parity-resolved-dependencies.json
+[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-test-support\target\parity-resolved-dependencies.json
 [INFO] 
 [INFO] ----------< io.github.evildarkarchon:jbsa-conformance-tests >-----------
 [INFO] Building JBSA build-only conformance tests 0.1.0-SNAPSHOT          [5/7]
@@ -48,7 +48,7 @@
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
 [INFO] --- dependency:3.11.0:tree (default-cli) @ jbsa-conformance-tests ---
-[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\parity-resolved-dependencies.json
+[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\target\parity-resolved-dependencies.json
 [INFO] 
 [INFO] --------------< io.github.evildarkarchon:jbsa-benchmarks >--------------
 [INFO] Building JBSA build-only benchmarks 0.1.0-SNAPSHOT                 [6/7]
@@ -56,7 +56,7 @@
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO] 
 [INFO] --- dependency:3.11.0:tree (default-cli) @ jbsa-benchmarks ---
-[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-benchmarks\target\parity-resolved-dependencies.json
+[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-benchmarks\target\parity-resolved-dependencies.json
 [INFO] 
 [INFO] -----------------< io.github.evildarkarchon:jbsa-dist >-----------------
 [INFO] Building JBSA build-only distribution assembly 0.1.0-SNAPSHOT      [7/7]
@@ -64,20 +64,20 @@
 [INFO] --------------------------------[ pom ]---------------------------------
 [INFO] 
 [INFO] --- dependency:3.11.0:tree (default-cli) @ jbsa-dist ---
-[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-dist\target\parity-resolved-dependencies.json
+[INFO] Wrote dependency tree to: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-dist\target\parity-resolved-dependencies.json
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary for JBSA reactor 0.1.0-SNAPSHOT:
 [INFO] 
-[INFO] JBSA reactor ....................................... SUCCESS [  0.728 s]
-[INFO] JBSA archive library ............................... SUCCESS [  0.027 s]
-[INFO] JBSA command-line interface ........................ SUCCESS [  0.008 s]
+[INFO] JBSA reactor ....................................... SUCCESS [  0.739 s]
+[INFO] JBSA archive library ............................... SUCCESS [  0.028 s]
+[INFO] JBSA command-line interface ........................ SUCCESS [  0.007 s]
 [INFO] JBSA build-only test support ....................... SUCCESS [  0.002 s]
 [INFO] JBSA build-only conformance tests .................. SUCCESS [  0.005 s]
-[INFO] JBSA build-only benchmarks ......................... SUCCESS [  0.014 s]
+[INFO] JBSA build-only benchmarks ......................... SUCCESS [  0.015 s]
 [INFO] JBSA build-only distribution assembly .............. SUCCESS [  0.003 s]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  0.953 s
-[INFO] Finished at: 2026-09-11T23:58:08-07:00
+[INFO] Total time:  0.948 s
+[INFO] Finished at: 2026-09-12T00:30:32-07:00
 [INFO] ------------------------------------------------------------------------

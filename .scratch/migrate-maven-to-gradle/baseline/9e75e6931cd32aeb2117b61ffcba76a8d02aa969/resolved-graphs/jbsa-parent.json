@@ -1,9 +1,0 @@
-{
-  "groupId": "io.github.evildarkarchon",
-  "artifactId": "jbsa-parent",
-  "version": "0.1.0-SNAPSHOT",
-  "type": "pom",
-  "scope": "",
-  "classifier": "",
-  "optional": "false"
-}

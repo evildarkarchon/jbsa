@@ -25,8 +25,8 @@ Follow the [approved migration spec](../spec.md) and [ADR-0001](../../../docs/ad
 
 ### 2026-09-12 — Implemented
 
-Captured the retained [Maven parity baseline](../baseline/9e75e6931cd32aeb2117b61ffcba76a8d02aa969/README.md)
-from clean revision `9e75e6931cd32aeb2117b61ffcba76a8d02aa969`, candidate
+Captured the retained [Maven parity baseline](../baseline/08bcd8ba3626bb5ae9372fffab97fa847867f664/README.md)
+from clean revision `08bcd8ba3626bb5ae9372fffab97fa847867f664`, candidate
 `0.1.0-SNAPSHOT`, Apache Maven 3.9.16, and the exact hosted qualification pin, Eclipse Temurin
 `25.0.4+7`. The reusable build-tool-neutral inspector is separate from the temporary Maven
 orchestration and its fixture tests prove both semantic matches and deliberate archive, JPMS/API,

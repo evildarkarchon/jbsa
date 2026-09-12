@@ -66,16 +66,16 @@
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary for JBSA reactor 0.1.0-SNAPSHOT:
 [INFO] 
-[INFO] JBSA reactor ....................................... SUCCESS [  0.367 s]
-[INFO] JBSA archive library ............................... SUCCESS [  0.219 s]
-[INFO] JBSA command-line interface ........................ SUCCESS [  0.035 s]
-[INFO] JBSA build-only test support ....................... SUCCESS [  0.029 s]
-[INFO] JBSA build-only conformance tests .................. SUCCESS [  0.043 s]
-[INFO] JBSA build-only benchmarks ......................... SUCCESS [  0.037 s]
-[INFO] JBSA build-only distribution assembly .............. SUCCESS [  0.024 s]
+[INFO] JBSA reactor ....................................... SUCCESS [  0.355 s]
+[INFO] JBSA archive library ............................... SUCCESS [  0.208 s]
+[INFO] JBSA command-line interface ........................ SUCCESS [  0.034 s]
+[INFO] JBSA build-only test support ....................... SUCCESS [  0.027 s]
+[INFO] JBSA build-only conformance tests .................. SUCCESS [  0.041 s]
+[INFO] JBSA build-only benchmarks ......................... SUCCESS [  0.034 s]
+[INFO] JBSA build-only distribution assembly .............. SUCCESS [  0.020 s]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  0.879 s
-[INFO] Finished at: 2026-09-11T23:59:05-07:00
+[INFO] Total time:  0.842 s
+[INFO] Finished at: 2026-09-12T00:31:28-07:00
 [INFO] ------------------------------------------------------------------------

@@ -43,7 +43,7 @@
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa ---
 [INFO] Nothing to compile - all classes are up to date.
@@ -55,43 +55,43 @@
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
 [INFO] Running io.github.evildarkarchon.jbsa.Ba2PackTest
-[WARNING] Tests run: 7, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.300 s -- in io.github.evildarkarchon.jbsa.Ba2PackTest
+[WARNING] Tests run: 7, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.307 s -- in io.github.evildarkarchon.jbsa.Ba2PackTest
 [INFO] Running io.github.evildarkarchon.jbsa.Ba2ReaderTest
-[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.143 s -- in io.github.evildarkarchon.jbsa.Ba2ReaderTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.119 s -- in io.github.evildarkarchon.jbsa.Ba2ReaderTest
 [INFO] Running io.github.evildarkarchon.jbsa.Bsa68PackLimitsTest
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s -- in io.github.evildarkarchon.jbsa.Bsa68PackLimitsTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s -- in io.github.evildarkarchon.jbsa.Bsa68PackLimitsTest
 [INFO] Running io.github.evildarkarchon.jbsa.Bsa68PackTest
-[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 s -- in io.github.evildarkarchon.jbsa.Bsa68PackTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.048 s -- in io.github.evildarkarchon.jbsa.Bsa68PackTest
 [INFO] Running io.github.evildarkarchon.jbsa.Bsa68ReaderTest
-[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.048 s -- in io.github.evildarkarchon.jbsa.Bsa68ReaderTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in io.github.evildarkarchon.jbsa.Bsa68ReaderTest
 [INFO] Running io.github.evildarkarchon.jbsa.BsaPackTest
-[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.084 s -- in io.github.evildarkarchon.jbsa.BsaPackTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.079 s -- in io.github.evildarkarchon.jbsa.BsaPackTest
 [INFO] Running io.github.evildarkarchon.jbsa.BsaReaderTest
-[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.881 s -- in io.github.evildarkarchon.jbsa.BsaReaderTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.389 s -- in io.github.evildarkarchon.jbsa.BsaReaderTest
 [INFO] Running io.github.evildarkarchon.jbsa.DdsBa2PackTest
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.071 s -- in io.github.evildarkarchon.jbsa.DdsBa2PackTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.087 s -- in io.github.evildarkarchon.jbsa.DdsBa2PackTest
 [INFO] Running io.github.evildarkarchon.jbsa.DdsBa2ReaderTest
-[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.073 s -- in io.github.evildarkarchon.jbsa.DdsBa2ReaderTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s -- in io.github.evildarkarchon.jbsa.DdsBa2ReaderTest
 [INFO] Running io.github.evildarkarchon.jbsa.DdsEnvelopePackTest
-[INFO] Tests run: 32, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.273 s -- in io.github.evildarkarchon.jbsa.DdsEnvelopePackTest
+[INFO] Tests run: 32, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.264 s -- in io.github.evildarkarchon.jbsa.DdsEnvelopePackTest
 [INFO] Running io.github.evildarkarchon.jbsa.OperationSemanticsTest
-[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in io.github.evildarkarchon.jbsa.OperationSemanticsTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in io.github.evildarkarchon.jbsa.OperationSemanticsTest
 [INFO] Running io.github.evildarkarchon.jbsa.QueryValidationTest
-[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.023 s -- in io.github.evildarkarchon.jbsa.QueryValidationTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s -- in io.github.evildarkarchon.jbsa.QueryValidationTest
 [INFO] Running io.github.evildarkarchon.jbsa.Tes3ExtractTest
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in io.github.evildarkarchon.jbsa.Tes3ExtractTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.049 s -- in io.github.evildarkarchon.jbsa.Tes3ExtractTest
 [INFO] Running io.github.evildarkarchon.jbsa.Tes3PackTest
-[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.483 s -- in io.github.evildarkarchon.jbsa.Tes3PackTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.585 s -- in io.github.evildarkarchon.jbsa.Tes3PackTest
 [INFO] Running io.github.evildarkarchon.jbsa.Tes3ReadTest
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s -- in io.github.evildarkarchon.jbsa.Tes3ReadTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s -- in io.github.evildarkarchon.jbsa.Tes3ReadTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.ArchiveInputTest
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.572 s -- in io.github.evildarkarchon.jbsa.internal.io.ArchiveInputTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.584 s -- in io.github.evildarkarchon.jbsa.internal.io.ArchiveInputTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.ExactIoTest
-[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in io.github.evildarkarchon.jbsa.internal.io.ExactIoTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in io.github.evildarkarchon.jbsa.internal.io.ExactIoTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest
-[INFO] Tests run: 40, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.197 s -- in io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest
+[INFO] Tests run: 40, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.211 s -- in io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.FailureRetentionTest
-[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in io.github.evildarkarchon.jbsa.internal.io.FailureRetentionTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in io.github.evildarkarchon.jbsa.internal.io.FailureRetentionTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.InputSharingTest
 [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in io.github.evildarkarchon.jbsa.internal.io.InputSharingTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest
@@ -99,35 +99,35 @@ WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
 WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.lwjgl.system.MemoryBackendUnsafeLegacy (file:/C:/Users/evild/.m2/repository/org/lwjgl/lwjgl/3.4.3/lwjgl-3.4.3.jar)
 WARNING: Please consider reporting this to the maintainers of class org.lwjgl.system.MemoryBackendUnsafeLegacy
 WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.117 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.116 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.041 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.169 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest
-[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.692 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.690 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.OperationSessionTest
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in io.github.evildarkarchon.jbsa.internal.io.OperationSessionTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in io.github.evildarkarchon.jbsa.internal.io.OperationSessionTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveRaceTest
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.015 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveRaceTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveRaceTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveTest
-[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest
-[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.040 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.PublicationDriveRootTest
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.059 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationDriveRootTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationDriveRootTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.PublicationFailuresTest
-[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.061 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationFailuresTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationFailuresTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.PublicationProgressTest
-[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.037 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationProgressTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationProgressTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest
-[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.111 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.089 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.ResourceBudgetTest
-[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.008 s -- in io.github.evildarkarchon.jbsa.internal.io.ResourceBudgetTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in io.github.evildarkarchon.jbsa.internal.io.ResourceBudgetTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.SourceFileTest
-[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.052 s -- in io.github.evildarkarchon.jbsa.internal.io.SourceFileTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.054 s -- in io.github.evildarkarchon.jbsa.internal.io.SourceFileTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.SpillBufferTest
-[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.020 s -- in io.github.evildarkarchon.jbsa.internal.io.SpillBufferTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s -- in io.github.evildarkarchon.jbsa.internal.io.SpillBufferTest
 [INFO] Running io.github.evildarkarchon.jbsa.internal.io.WindowsPathIdentityTest
-[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.044 s -- in io.github.evildarkarchon.jbsa.internal.io.WindowsPathIdentityTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.142 s -- in io.github.evildarkarchon.jbsa.internal.io.WindowsPathIdentityTest
 [INFO] 
 [INFO] Results:
 [INFO] 
@@ -145,13 +145,13 @@ WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
 [INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
 [INFO] 
 [INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-cli ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\src\main\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-cli\src\main\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-cli ---
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-cli ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-cli\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-cli\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-cli ---
 [INFO] Recompiling the module because of changed dependency.
@@ -164,7 +164,7 @@ WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
 [INFO] Running io.github.evildarkarchon.jbsa.cli.MainTest
-[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.89 s -- in io.github.evildarkarchon.jbsa.cli.MainTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.10 s -- in io.github.evildarkarchon.jbsa.cli.MainTest
 [INFO] 
 [INFO] Results:
 [INFO] 
@@ -182,13 +182,13 @@ WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
 [INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
 [INFO] 
 [INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-test-support ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\src\main\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-test-support\src\main\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-test-support ---
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-test-support ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-test-support\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-test-support\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-test-support ---
 [INFO] No sources to compile
@@ -207,16 +207,16 @@ WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
 [INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
 [INFO] 
 [INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-conformance-tests ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\src\main\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\src\main\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-conformance-tests ---
 [INFO] No sources to compile
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-conformance-tests ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-conformance-tests ---
-[WARNING] I/O error reading dependency state: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\classes: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-conformance-tests\target\classes
+[WARNING] I/O error reading dependency state: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\target\classes: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\target\classes
 [INFO] Recompiling the module because of changed dependency.
 [INFO] Compiling 30 source files with javac [debug parameters release 25] to target\test-classes
 [INFO] 
@@ -239,7 +239,7 @@ WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
 [INFO] Nothing to compile - all classes are up to date.
 [INFO] 
 [INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-benchmarks ---
-[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-5171c6d1e46447239b505c7527fa8c7b\source\jbsa-benchmarks\src\test\resources
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-benchmarks\src\test\resources
 [INFO] 
 [INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-benchmarks ---
 [INFO] Recompiling the module because of changed dependency.
@@ -253,7 +253,7 @@ WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
 [INFO] Running io.github.evildarkarchon.jbsa.benchmarks.DdsArchiveAccessProviderTest
-[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.230 s -- in io.github.evildarkarchon.jbsa.benchmarks.DdsArchiveAccessProviderTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.220 s -- in io.github.evildarkarchon.jbsa.benchmarks.DdsArchiveAccessProviderTest
 [INFO] Running io.github.evildarkarchon.jbsa.benchmarks.PayloadReadTest
 [INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in io.github.evildarkarchon.jbsa.benchmarks.PayloadReadTest
 [INFO] Running io.github.evildarkarchon.jbsa.benchmarks.RandomAccessBenchmarkTest
@@ -276,16 +276,16 @@ WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary for JBSA reactor 0.1.0-SNAPSHOT:
 [INFO] 
-[INFO] JBSA reactor ....................................... SUCCESS [  0.252 s]
-[INFO] JBSA archive library ............................... SUCCESS [  7.802 s]
-[INFO] JBSA command-line interface ........................ SUCCESS [ 17.184 s]
-[INFO] JBSA build-only test support ....................... SUCCESS [  0.024 s]
-[INFO] JBSA build-only conformance tests .................. SUCCESS [  1.246 s]
-[INFO] JBSA build-only benchmarks ......................... SUCCESS [  1.147 s]
+[INFO] JBSA reactor ....................................... SUCCESS [  0.267 s]
+[INFO] JBSA archive library ............................... SUCCESS [  8.614 s]
+[INFO] JBSA command-line interface ........................ SUCCESS [ 17.408 s]
+[INFO] JBSA build-only test support ....................... SUCCESS [  0.014 s]
+[INFO] JBSA build-only conformance tests .................. SUCCESS [  0.964 s]
+[INFO] JBSA build-only benchmarks ......................... SUCCESS [  1.029 s]
 [INFO] JBSA build-only distribution assembly .............. SUCCESS [  0.003 s]
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  27.757 s
-[INFO] Finished at: 2026-09-11T23:58:40-07:00
+[INFO] Total time:  28.398 s
+[INFO] Finished at: 2026-09-12T00:31:05-07:00
 [INFO] ------------------------------------------------------------------------
