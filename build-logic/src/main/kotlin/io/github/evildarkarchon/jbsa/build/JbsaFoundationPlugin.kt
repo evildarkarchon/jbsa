@@ -1,5 +1,6 @@
 package io.github.evildarkarchon.jbsa.build
 
+import javax.tools.ToolProvider
 import org.gradle.api.GradleException
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
@@ -26,12 +27,18 @@ class JbsaFoundationPlugin : Plugin<Project> {
      * @throws GradleException when applied outside the root, on a non-Java-25 runtime, or to the wrong topology
      */
     override fun apply(project: Project) {
-        require(project == project.rootProject) { "The jbsa.foundation plugin must be applied to the root project." }
-        require(project.name == BuildIdentity.ROOT_NAME) {
-            "The Gradle root must retain the '${BuildIdentity.ROOT_NAME}' identity, not '${project.name}'."
+        if (project != project.rootProject) {
+            throw GradleException("The jbsa.foundation plugin must be applied to the root project.")
         }
-        require(JavaVersion.current().majorVersion == "25") {
-            "JBSA requires an installed Java 25 JDK and does not provision JDKs automatically; running ${JavaVersion.current()}."
+        if (project.name != BuildIdentity.ROOT_NAME) {
+            throw GradleException(
+                "The Gradle root must retain the '${BuildIdentity.ROOT_NAME}' identity, not '${project.name}'."
+            )
+        }
+        try {
+            JdkPolicy.validate(JavaVersion.current().majorVersion, ToolProvider.getSystemJavaCompiler() != null)
+        } catch (exception: IllegalArgumentException) {
+            throw GradleException(exception.message ?: "Invalid Java development kit.", exception)
         }
 
         val candidate =
@@ -47,12 +54,13 @@ class JbsaFoundationPlugin : Plugin<Project> {
             }
 
         verifyTopology(project)
-        project.allprojects { configureProject(this, candidate) }
+        val catalog = PinnedVersionCatalog.load(project.rootDir.toPath().resolve("gradle/libs.versions.toml"))
+        project.allprojects { configureProject(this, candidate, catalog) }
         configureLifecycle(project, candidate)
     }
 
     /** Applies identity, output ownership, locking, and resolution failure policy to one project. */
-    private fun configureProject(project: Project, candidate: String) {
+    private fun configureProject(project: Project, candidate: String, catalog: PinnedVersionCatalog) {
         val role =
             if (project == project.rootProject) {
                 JbsaProjectRole.ROOT_AGGREGATOR
@@ -79,6 +87,11 @@ class JbsaFoundationPlugin : Plugin<Project> {
                     .withType(ExternalModuleDependency::class.java)
                     .forEach { dependency ->
                         validateDependency(candidate, dependency.version, dependency.isChanging)
+                        catalog.requireDependency(
+                            requireNotNull(dependency.group),
+                            dependency.name,
+                            requireNotNull(dependency.version),
+                        )
                     }
             }
         }

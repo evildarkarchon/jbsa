@@ -57,6 +57,7 @@ class GradleFoundationFilesTest {
         assertTrue(attributes.contains("gradlew: eol: lf"))
         assertTrue(attributes.contains("gradlew.bat: eol: crlf"))
         assertTrue(attributes.contains("gradle/wrapper/gradle-wrapper.jar: text: unset"))
+        assertTrue(runCommand(listOf("git", "ls-files", "--stage", "--", "gradlew")).startsWith("100755 "))
     }
 
     /** Verifies each launcher supported by the current host starts the exact pinned Gradle release. */
@@ -107,6 +108,12 @@ class GradleFoundationFilesTest {
                 repositoryRoot.resolve("build-logic/gradle/verification-metadata.xml"),
             )
             .forEach { assertSingleChecksumPerArtifact(it) }
+
+        val review =
+            Files.readString(repositoryRoot.resolve(".scratch/migrate-maven-to-gradle/dependency-verification-review.md"))
+        assertTrue(review.contains(sha256(repositoryRoot.resolve("gradle/verification-metadata.xml"))))
+        assertTrue(review.contains(sha256(repositoryRoot.resolve("build-logic/gradle/verification-metadata.xml"))))
+        assertTrue(review.contains("All 124 values matched; failures: 0."))
     }
 
     /** Returns the lowercase SHA-256 digest of one committed wrapper artifact. */

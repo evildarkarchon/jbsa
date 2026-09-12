@@ -8,16 +8,22 @@ class PluginVersionPolicyTest {
     /** Verifies that core and included convention plugins remain versionless by Gradle design. */
     @Test
     fun `accepts core included and externally pinned plugins`() {
-        assertDoesNotThrow { PluginVersionPolicy.validate("base", null) }
-        assertDoesNotThrow { PluginVersionPolicy.validate("jbsa.foundation", null) }
-        assertDoesNotThrow { PluginVersionPolicy.validate("com.diffplug.spotless", "8.10.2") }
+        assertDoesNotThrow { PluginVersionPolicy.validate("base", null, null) }
+        assertDoesNotThrow { PluginVersionPolicy.validate("jbsa.foundation", null, null) }
+        assertDoesNotThrow { PluginVersionPolicy.validate("com.diffplug.spotless", "8.10.2", "8.10.2") }
     }
 
     /** Verifies that every external plugin request carries an explicit immutable version. */
     @Test
     fun `rejects unpinned external plugins`() {
         assertThrows(IllegalArgumentException::class.java) {
-            PluginVersionPolicy.validate("com.diffplug.spotless", null)
+            PluginVersionPolicy.validate("com.diffplug.spotless", null, "8.10.2")
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            PluginVersionPolicy.validate("com.diffplug.spotless", "1.+", "8.10.2")
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            PluginVersionPolicy.validate("example.undeclared", "1.0.0", null)
         }
     }
 }

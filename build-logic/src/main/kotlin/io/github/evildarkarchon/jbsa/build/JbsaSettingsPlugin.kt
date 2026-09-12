@@ -2,17 +2,18 @@ package io.github.evildarkarchon.jbsa.build
 
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.initialization.Settings
 import org.gradle.api.initialization.resolve.RepositoriesMode
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 
 /** Owns plugin and dependency repository policy before any JBSA project is configured. */
 class JbsaSettingsPlugin : Plugin<Settings> {
     /** Configures central repositories and rejects unpinned external plugin requests. */
     override fun apply(settings: Settings) {
+        val catalog = PinnedVersionCatalog.load(settings.settingsDir.toPath().resolve("gradle/libs.versions.toml"))
         settings.pluginManagement.resolutionStrategy.eachPlugin {
             try {
-                PluginVersionPolicy.validate(requested.id.id, requested.version)
+                PluginVersionPolicy.validate(requested.id.id, requested.version, catalog.pluginVersion(requested.id.id))
             } catch (exception: IllegalArgumentException) {
                 throw GradleException(exception.message ?: "Invalid plugin request.", exception)
             }
@@ -28,8 +29,10 @@ class JbsaSettingsPlugin : Plugin<Settings> {
     private fun verifyRepositories(settings: Settings) {
         val dependencyUrls =
             settings.dependencyResolutionManagement.repositories
-                .withType(MavenArtifactRepository::class.java)
-                .map { normalize(it.url.toString()) }
+                .map { repository ->
+                    if (repository is MavenArtifactRepository) normalize(repository.url.toString())
+                    else "${repository.javaClass.simpleName}:${repository.name}"
+                }
         if (dependencyUrls != listOf(MAVEN_CENTRAL)) {
             throw GradleException(
                 "Dependency repositories are central policy: expected only Maven Central, found $dependencyUrls."
@@ -38,8 +41,10 @@ class JbsaSettingsPlugin : Plugin<Settings> {
 
         val pluginUrls =
             settings.pluginManagement.repositories
-                .withType(MavenArtifactRepository::class.java)
-                .map { normalize(it.url.toString()) }
+                .map { repository ->
+                    if (repository is MavenArtifactRepository) normalize(repository.url.toString())
+                    else "${repository.javaClass.simpleName}:${repository.name}"
+                }
         if (pluginUrls != listOf(GRADLE_PLUGIN_PORTAL)) {
             throw GradleException(
                 "Plugin repositories are central policy: expected only the Gradle Plugin Portal, found $pluginUrls."

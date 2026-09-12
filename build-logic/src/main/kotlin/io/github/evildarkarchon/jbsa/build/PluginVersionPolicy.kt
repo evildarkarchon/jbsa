@@ -19,13 +19,22 @@ internal object PluginVersionPolicy {
      *
      * @param pluginId requested Gradle plugin identifier
      * @param version requested version, or `null` for core and included-build plugins
-     * @throws IllegalArgumentException when an external plugin omits its version
+     * @param catalogVersion centrally approved version, or `null` when the plugin is undeclared
+     * @throws IllegalArgumentException when an external plugin is unpinned, undeclared, or mismatched
      */
-    fun validate(pluginId: String, version: String?) {
+    fun validate(pluginId: String, version: String?, catalogVersion: String?) {
         val isVersionlessByDesign =
             pluginId in corePluginIds || pluginId.startsWith("org.gradle.") || pluginId.startsWith("jbsa.")
-        require(isVersionlessByDesign || !version.isNullOrBlank()) {
-            "External plugin '$pluginId' must use a pinned version from gradle/libs.versions.toml."
+        if (isVersionlessByDesign) return
+
+        require(!version.isNullOrBlank()) {
+            "External plugin '$pluginId' must use its pinned version from gradle/libs.versions.toml."
+        }
+        require(catalogVersion != null) {
+            "External plugin '$pluginId' is not declared in gradle/libs.versions.toml."
+        }
+        require(version == catalogVersion) {
+            "External plugin '$pluginId' requested '$version'; the catalog pins '$catalogVersion'."
         }
     }
 }

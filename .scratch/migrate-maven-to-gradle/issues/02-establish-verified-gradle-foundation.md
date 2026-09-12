@@ -30,7 +30,8 @@ Follow the [approved migration spec](../spec.md) and [ADR-0001](../../../docs/ad
 Established the Gradle 9.7.1 Kotlin DSL foundation with the approved distribution and wrapper-JAR
 checksums, the `jbsa-parent` root and six retained roles, an included `build-logic` convention build,
 central repositories and version catalog, installed-Java-25 enforcement, strict locks and SHA-256
-verification, deterministic dependency failure policy, and `target/` output ownership.
+verification with a [digest-bound independent review](../dependency-verification-review.md),
+deterministic dependency failure policy, and `target/` output ownership.
 
 Focused unit and TestKit coverage exercises defaults, overrides, invalid and inconsistent identity,
 repository/plugin restrictions, missing locks, strict verification failure, dynamic/changing/conflicting

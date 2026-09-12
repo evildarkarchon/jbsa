@@ -2,6 +2,7 @@ package io.github.evildarkarchon.jbsa.build
 
 import java.nio.file.Files
 import java.nio.file.Path
+import java.security.MessageDigest
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -27,6 +28,7 @@ class FoundationPluginFunctionalTest {
             """.trimIndent(),
         )
         write("gradle.properties", "version=0.1.0-SNAPSHOT\n")
+        writeCatalog()
         write("build.gradle.kts", "plugins { id(\"jbsa.foundation\") }\n")
         listOf(
                 "jbsa",
@@ -72,7 +74,25 @@ class FoundationPluginFunctionalTest {
 
         val result = runAndFail("help")
 
-        assertTrue(result.output.contains("External plugin 'com.diffplug.spotless' must use a pinned version"))
+        assertTrue(result.output.contains("External plugin 'com.diffplug.spotless' must use its pinned version"))
+    }
+
+    /** Verifies an external plugin cannot override the version owned by the central catalog. */
+    @Test
+    fun `rejects an external plugin version outside the catalog`() {
+        write(
+            "build.gradle.kts",
+            """
+            plugins {
+                id("jbsa.foundation")
+                id("com.diffplug.spotless") version "1.+"
+            }
+            """.trimIndent(),
+        )
+
+        val result = runAndFail("help")
+
+        assertTrue(result.output.contains("the catalog pins '8.10.2'"), result.output)
     }
 
     /** Verifies that an explicit candidate replaces the default for the entire build. */
@@ -125,6 +145,16 @@ class FoundationPluginFunctionalTest {
         val result = runAndFail("resolveProbe")
 
         assertTrue(result.output.contains("locked but does not have lock state"), result.output)
+    }
+
+    /** Verifies direct external dependency versions remain owned by the central catalog. */
+    @Test
+    fun `rejects a pinned dependency outside the catalog`() {
+        declareProbe("org.opentest4j:opentest4j:1.3.0")
+
+        val result = runAndFail("--write-locks", "resolveProbe")
+
+        assertTrue(result.output.contains("is not declared in gradle/libs.versions.toml"), result.output)
     }
 
     /** Verifies strict checksum metadata rejects an artifact before it can enter a resolved graph. */
@@ -183,6 +213,7 @@ class FoundationPluginFunctionalTest {
     /** Verifies a graph with two versions of the same module fails rather than selecting silently. */
     @Test
     fun `rejects dependency version conflicts`() {
+        writeCatalog(includeConflictPin = true)
         write(
             "build.gradle.kts",
             """
@@ -210,40 +241,42 @@ class FoundationPluginFunctionalTest {
     @Test
     fun `clean preserves tracked automation while removing owned output`() {
         val sentinel = "tracked automation sentinel\r\nwith byte-defined content\n"
+        val expectedDigest = sha256(sentinel.toByteArray())
         write("build/automation-sentinel.txt", sentinel)
+        write("build/automation-sentinel.sha256", "$expectedDigest\n")
         write("target/generated.txt", "generated")
         write("jbsa/target/generated.txt", "generated")
 
         run("clean")
 
         assertTrue(Files.readString(projectDir.resolve("build/automation-sentinel.txt")) == sentinel)
+        assertTrue(Files.readString(projectDir.resolve("build/automation-sentinel.sha256")) == "$expectedDigest\n")
+        assertTrue(sha256(Files.readAllBytes(projectDir.resolve("build/automation-sentinel.txt"))) == expectedDigest)
         assertFalse(Files.exists(projectDir.resolve("target")))
         assertFalse(Files.exists(projectDir.resolve("jbsa/target")))
     }
 
     /** Runs the fixture with the plugin-under-test classpath and strict command-line diagnostics. */
-    private fun run(vararg arguments: String) =
-        GradleRunner.create()
-            .withProjectDir(projectDir.toFile())
-            .withPluginClasspath()
-            .withArguments("--dependency-verification=off", "--stacktrace", *arguments)
-            .build()
+    private fun run(vararg arguments: String) = runner(arguments, verificationOff = true).build()
 
     /** Runs a fixture expected to fail while retaining its actionable Gradle diagnostic. */
-    private fun runAndFail(vararg arguments: String) =
-        GradleRunner.create()
-            .withProjectDir(projectDir.toFile())
-            .withPluginClasspath()
-            .withArguments("--dependency-verification=off", "--stacktrace", *arguments)
-            .buildAndFail()
+    private fun runAndFail(vararg arguments: String) = runner(arguments, verificationOff = true).buildAndFail()
 
     /** Runs a failing fixture with Gradle's default strict dependency verification enabled. */
-    private fun runStrictAndFail(vararg arguments: String) =
-        GradleRunner.create()
+    private fun runStrictAndFail(vararg arguments: String) = runner(arguments, verificationOff = false).buildAndFail()
+
+    /** Creates one consistently configured runner while allowing strict-verification negative coverage. */
+    private fun runner(arguments: Array<out String>, verificationOff: Boolean): GradleRunner {
+        val options = buildList {
+            if (verificationOff) add("--dependency-verification=off")
+            add("--stacktrace")
+            addAll(arguments)
+        }
+        return GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments("--stacktrace", *arguments)
-            .buildAndFail()
+            .withArguments(options)
+    }
 
     /** Declares a single resolvable dependency graph for negative resolution-policy tests. */
     private fun declareProbe(coordinate: String, changing: Boolean = false) {
@@ -263,6 +296,37 @@ class FoundationPluginFunctionalTest {
             """.trimIndent(),
         )
     }
+
+    /** Writes the fixture's centralized catalog, optionally approving both versions used by conflict coverage. */
+    private fun writeCatalog(includeConflictPin: Boolean = false) {
+        val conflictVersion = if (includeConflictPin) "junit-old = \"6.0.0\"" else ""
+        val conflictLibrary =
+            if (includeConflictPin) {
+                "junit-api-old = { module = \"org.junit.jupiter:junit-jupiter-api\", version.ref = \"junit-old\" }"
+            } else {
+                ""
+            }
+        write(
+            "gradle/libs.versions.toml",
+            """
+            [versions]
+            junit = "6.1.3"
+            spotless = "8.10.2"
+            $conflictVersion
+
+            [libraries]
+            junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+            $conflictLibrary
+
+            [plugins]
+            spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+            """.trimIndent(),
+        )
+    }
+
+    /** Returns a lowercase SHA-256 digest for the clean sentinel's exact bytes. */
+    private fun sha256(bytes: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
     /** Writes one UTF-8 fixture file, creating its parent directory when necessary. */
     private fun write(relativePath: String, content: String) {
