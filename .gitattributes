@@ -57,5 +57,5 @@ docs/development/evidence/issue42-build.json -text whitespace=blank-at-eol,blank
 docs/development/evidence/issue42-performance/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 # Maven-to-Gradle parity reports bind retained command and graph bytes by SHA-256.
-.scratch/migrate-maven-to-gradle/baseline/**/*.json -text
-.scratch/migrate-maven-to-gradle/baseline/**/*.log -text
+.scratch/migrate-maven-to-gradle/baseline/**/*.json -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+.scratch/migrate-maven-to-gradle/baseline/**/*.log -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
