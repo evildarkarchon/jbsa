@@ -1086,7 +1086,9 @@ try {
             duplicateGateExecutionsAfter = 0
         }
         gradle = [ordered]@{
-            wrapperSha256 = (Get-FileHash -LiteralPath $gradleWrapper -Algorithm SHA256).Hash.ToLowerInvariant()
+            launcherSha256 = (Get-FileHash -LiteralPath $gradleWrapper -Algorithm SHA256).Hash.ToLowerInvariant()
+            wrapperJarSha256 = (Get-FileHash -LiteralPath (Join-Path $isolatedRoot 'gradle/wrapper/gradle-wrapper.jar') -Algorithm SHA256).Hash.ToLowerInvariant()
+            wrapperPropertiesSha256 = (Get-FileHash -LiteralPath (Join-Path $isolatedRoot 'gradle/wrapper/gradle-wrapper.properties') -Algorithm SHA256).Hash.ToLowerInvariant()
             identity = $gradleIdentity
         }
         artifactInspectorTests = $inspectorTests

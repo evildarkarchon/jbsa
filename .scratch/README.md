@@ -16,11 +16,10 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | local | [Gradle 09: Run stable CI gates on Windows and Linux](migrate-maven-to-gradle/issues/09-run-stable-ci-gates.md) | closed | none |
 | local | [Gradle 10: Prove artifact parity, reproducibility, and offline operation](migrate-maven-to-gradle/issues/10-prove-parity-reproducibility-offline.md) | closed | none |
 | local | [Gradle 11: Migrate active instructions and enforce reference hygiene](migrate-maven-to-gradle/issues/11-migrate-active-instructions.md) | closed | none |
-| local | [Gradle 12: Regenerate the Gradle acceptance evidence](migrate-maven-to-gradle/issues/12-regenerate-gradle-acceptance-evidence.md) | open | ready-for-agent |
-| local | [Gradle 13: Complete Windows Release Qualification](migrate-maven-to-gradle/issues/13-complete-windows-release-qualification.md) | open | needs-triage |
-| local | [Gradle 14: Remove Maven and verify the atomic cutover](migrate-maven-to-gradle/issues/14-remove-maven-atomic-cutover.md) | open | needs-triage |
+| local | [Gradle 12: Regenerate the Gradle acceptance evidence](migrate-maven-to-gradle/issues/12-regenerate-gradle-acceptance-evidence.md) | closed | none |
+| local | [Gradle 14: Remove Maven and verify the atomic cutover](migrate-maven-to-gradle/issues/14-remove-maven-atomic-cutover.md) | open | ready-for-agent |
 | local | [Gradle 15: Evaluate Gradle-managed JDK provisioning after cutover](migrate-maven-to-gradle/issues/15-enable-gradle-managed-jdk-provisioning.md) | open | needs-triage |
-| local | [Gradle 16: Measure and optimize the qualification harness](migrate-maven-to-gradle/issues/16-optimize-qualification-harness.md) | open | needs-triage |
+| local | [Gradle 16: Measure and optimize the qualification harness](migrate-maven-to-gradle/issues/16-optimize-qualification-harness.md) | closed | none |
 | [#62](https://github.com/evildarkarchon/jbsa/issues/62) | [Retire external contributor verification gate](retire-external-contributor-verification/issues/01-retire-external-contributor-verification-gate.md) | open | ready-for-agent |
 | [#23](https://github.com/evildarkarchon/jbsa/issues/23) | [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](jbsa-1-0/map.md) | open | none |
 | [#24](https://github.com/evildarkarchon/jbsa/issues/24) | [Publish the specification framework and requirement registry](jbsa-1-0/issues/24-publish-the-specification-framework-and-requirement-registry.md) | closed | none |

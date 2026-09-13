@@ -15,7 +15,7 @@ $jdkStaging = Join-Path $fixtureRoot 'jdk-staging/jdk'
 $jdkArchive = Join-Path $fixtureRoot 'qualification-jdk.zip'
 
 try {
-    New-Item -ItemType Directory -Path (Join-Path $repository 'build'), (Join-Path $repository '.scratch/migrate-maven-to-gradle'), (Join-Path $repository 'gradle'), (Join-Path $repository 'jbsa'), (Join-Path $evidence 'resolved-graphs'), (Join-Path $jdkStaging 'bin') -Force | Out-Null
+    New-Item -ItemType Directory -Path (Join-Path $repository 'build'), (Join-Path $repository '.scratch/migrate-maven-to-gradle'), (Join-Path $repository 'gradle/wrapper'), (Join-Path $repository 'jbsa'), (Join-Path $evidence 'resolved-graphs'), (Join-Path $jdkStaging 'bin') -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'verify-gradle-qualification.ps1') -Destination (Join-Path $repository 'build')
     [IO.File]::WriteAllText((Join-Path $jdkStaging 'release'), "IMPLEMENTOR_VERSION=`"Temurin-25.0.4+7`"`n", [Text.UTF8Encoding]::new($false))
     [IO.File]::WriteAllBytes((Join-Path $jdkStaging 'bin/java.exe'), [byte[]](1, 2, 3, 4))
@@ -97,6 +97,11 @@ Write-Output 'jbsa/target/libs/jbsa-0.1.0-SNAPSHOT-javadoc.jar reproducible'
 Write-Output 'jbsa-cli/target/libs/jbsa-cli-0.1.0-SNAPSHOT.jar reproducible'
 '@
     Set-Content -LiteralPath (Join-Path $repository 'gradlew.bat') -Value '@pwsh -NoLogo -NoProfile -NonInteractive -File "%~dp0fixture-gradle.ps1" %*'
+    [IO.File]::WriteAllBytes((Join-Path $repository 'gradle/wrapper/gradle-wrapper.jar'), [byte[]](9, 10, 11, 12))
+    Set-Content -LiteralPath (Join-Path $repository 'gradle/wrapper/gradle-wrapper.properties') -Value 'distributionUrl=fixture'
+    $launcherHash = (Get-FileHash -LiteralPath (Join-Path $repository 'gradlew.bat') -Algorithm SHA256).Hash.ToLowerInvariant()
+    $wrapperJarHash = (Get-FileHash -LiteralPath (Join-Path $repository 'gradle/wrapper/gradle-wrapper.jar') -Algorithm SHA256).Hash.ToLowerInvariant()
+    $wrapperPropertiesHash = (Get-FileHash -LiteralPath (Join-Path $repository 'gradle/wrapper/gradle-wrapper.properties') -Algorithm SHA256).Hash.ToLowerInvariant()
     Set-Content -LiteralPath (Join-Path $repository 'fixture-gradle.ps1') -Value @'
 $joined = $args -join ' '
 Add-Content -LiteralPath (Join-Path $PSScriptRoot 'fixture-calls.log') -Value $joined
@@ -252,6 +257,10 @@ exit 0
     $result = Get-Content -Raw -LiteralPath (Join-Path $qualification 'gradle-qualification.json') | ConvertFrom-Json -Depth 100
     if ($result.source.revision -cne $revision -or -not $result.source.clean) { throw 'Qualification did not bind the clean source revision.' }
     if ($result.qualificationJdk.distributionSha256 -cne $archiveHash -or [string]::IsNullOrWhiteSpace($result.qualificationJdk.extractedSha256) -or -not $result.qualificationJdk.matchesMaven) { throw 'Qualification did not bind the exact JDK archive and complete extracted identity.' }
+    if ($result.gradle.launcherSha256 -cne $launcherHash -or $result.gradle.wrapperJarSha256 -cne $wrapperJarHash -or
+        $result.gradle.wrapperPropertiesSha256 -cne $wrapperPropertiesHash) {
+        throw 'Qualification did not distinguish the Gradle launcher, wrapper JAR, and wrapper properties identities.'
+    }
     if (-not $result.parity.matches -or -not $result.parity.archiveEnvelopeDifferencesIgnored) { throw 'Normalized cross-tool parity did not ignore only archive envelopes.' }
     if (-not $result.reproducibility.matches -or $result.reproducibility.artifactCount -ne 5) { throw 'The complete five-artifact reproducibility workflow was not retained.' }
     if (-not $result.offline.verifiedCacheBuildPassed -or -not $result.offline.strictVerificationFailureObserved) { throw 'Verified-cache offline and strict-verification evidence is incomplete.' }
