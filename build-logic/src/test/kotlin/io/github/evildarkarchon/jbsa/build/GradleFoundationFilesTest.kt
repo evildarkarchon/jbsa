@@ -87,9 +87,11 @@ class GradleFoundationFilesTest {
         listOf("org.cyclonedx.bom", "com.gradleup.shadow", "com.diffplug.spotless")
             .forEach { pluginId -> assertTrue(catalog.contains("id = \"$pluginId\"")) }
         val includedBuild = Files.readString(repositoryRoot.resolve("build-logic/build.gradle.kts"))
+        val rootBuild = Files.readString(repositoryRoot.resolve("build.gradle.kts"))
         val includedSettings = Files.readString(repositoryRoot.resolve("build-logic/settings.gradle.kts"))
         assertTrue(catalog.contains("shadow-gradle-plugin = { module = \"com.gradleup.shadow:shadow-gradle-plugin\""))
         assertTrue(includedBuild.contains("implementation(libs.shadow.gradle.plugin)"))
+        assertTrue(rootBuild.contains("alias(libs.plugins.cyclonedx)"))
         assertTrue(includedSettings.contains("forRepository { gradlePluginPortal() }"))
         assertTrue(includedSettings.contains("includeModule(\"com.gradleup.shadow\", \"shadow-gradle-plugin\")"))
         assertTrue(includedBuild.contains("testRuntimeOnly(libs.junit.platform.launcher)"))
@@ -108,6 +110,10 @@ class GradleFoundationFilesTest {
             }
 
         val includedLock = Files.readString(repositoryRoot.resolve("build-logic/gradle.lockfile"))
+        val rootLock = Files.readString(repositoryRoot.resolve("gradle.lockfile"))
+        val verificationMetadata = Files.readString(repositoryRoot.resolve("gradle/verification-metadata.xml"))
+        assertTrue(rootLock.contains("empty=cyclonedxBom"))
+        assertTrue(verificationMetadata.contains("cyclonedx-gradle-plugin-3.4.1.jar"))
         assertTrue(includedLock.contains("junit-jupiter:6.1.3"))
         assertTrue(includedLock.contains("shadow-gradle-plugin:9.6.1"))
         val benchmarkLock = Files.readString(repositoryRoot.resolve("jbsa-benchmarks/gradle.lockfile"))

@@ -73,3 +73,41 @@ Central. Seventeen also matched published `.sha256` sidecars, all five JMH artif
 captured Maven-local inputs, and no checksum failed. The benchmark lock retains JMH 1.37, JOpt Simple
 5.0.4, Commons Math 3.6.1, JUnit 6.1.3, and the existing LWJGL 3.4.3 graph. The included-build lock
 retains the complete Shadow 9.6.1 implementation graph without changing any pre-existing direct pin.
+
+## Ticket 07 extension: production compliance inputs and CycloneDX
+
+The compliance-input work applied the already-pinned CycloneDX 3.4.1 plugin at the root, added its
+strictly verified plugin classpath, and locked the plugin-created root `cyclonedxBom` configuration.
+No production dependency version or byte changed.
+
+| Input | SHA-256 |
+| --- | --- |
+| `gradle/verification-metadata.xml` | `8e6a514d956b9bc5cc89a81a6546aa42ef14f6971c61e6ed4d00ef211cf3d897` |
+| `build-logic/gradle/verification-metadata.xml` | `d18ae4bcc9928956777d4d0878232a8bc20b64b827c5a9a754f1e36132fd0df6` |
+| `gradle.lockfile` | `02fb9e3bcf140253f6e2a33a8b4e1cfd382c34bc98310169fda93cec8f8ee45c` |
+| `settings-gradle.lockfile` | `5e2d075903b5cd264613e7538c7c51b1484fe2ed489d4ead3e6b4ba0cf3911c4` |
+| `jbsa/gradle.lockfile` | `4f6d6cfb349f043b532a7401a139e39418b3c93a29d30303431c844faf376b91` |
+| `jbsa-cli/gradle.lockfile` | `a43ea8e6e8a7bd129f7b6c82787562bbf09cebc12c26851ffb8ffda246a89574` |
+| `jbsa-test-support/gradle.lockfile` | `598dd3039dce57b059ab4cde2b5c095b61a7421f59f7142089afc055b006d277` |
+| `jbsa-conformance-tests/gradle.lockfile` | `8ca275cdf91fa4e0860500c690707eee2da5fba4e9b94ebaffbc0cfb1ef3b4b8` |
+| `jbsa-benchmarks/gradle.lockfile` | `3fa5961f988c859148b37627c461deb74ae6435bc2227f2ae82848547c1844cf` |
+| `jbsa-dist/gradle.lockfile` | `33a78098febc19aa9452f530914e8d71324fd2fec61d8f62abd8fc466e647e96` |
+| `build-logic/gradle.lockfile` | `cf0cf31fe42732a70f08ec2342c4fd8b8a77307d24370385acf5f9216ed4d354` |
+| `build-logic/settings-gradle.lockfile` | `5e2d075903b5cd264613e7538c7c51b1484fe2ed489d4ead3e6b4ba0cf3911c4` |
+| `gradle/libs.versions.toml` | `18e7fd37aaea1d5ebd6ee2a08e62c5ebdd13c291faad0b61a8dbf45cb2642694` |
+
+The metadata union now contains 345 distinct artifacts. This extension added 153 plugin,
+transitive, POM, and Gradle-module artifacts across 98 components. Every added artifact was freshly
+downloaded from Maven Central or the Gradle Plugin Portal outside Gradle's dependency cache and its
+SHA-256 recomputed; all 153 matched the generated metadata and no checksum failed. The CycloneDX
+plugin marker, implementation JAR and module metadata were included in that independent check.
+
+The resolved-production manifest still identifies exactly the four approved LWJGL 3.4.3 JARs and
+classifiers captured by the Maven baseline and compliance inventory, with the same four SHA-256
+values recorded in the ticket-03 review. The supported compliance, publication, sources, Javadoc,
+and verification tasks resolve no external `-sources.jar` or `-javadoc.jar` artifacts; the metadata
+union therefore contains zero of each. JBSA's own sources and Javadoc JARs are locally generated
+canonical outputs covered by artifact and reproducibility tests rather than dependency verification.
+A primed-cache `generateProductionSbom verifyCompliance --offline --no-daemon` run then completed
+with strict verification and locks enabled, proving that the new compliance closure needs no
+undeclared network input.

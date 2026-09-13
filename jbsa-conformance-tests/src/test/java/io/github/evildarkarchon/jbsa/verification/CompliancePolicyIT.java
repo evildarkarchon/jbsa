@@ -72,6 +72,7 @@ final class CompliancePolicyIT {
                 reactorRoot().resolve("build/verify-compliance.ps1").toString(),
                 "-ReactorVersion",
                 System.getProperty("jbsa.version")));
+    addGradleModelArguments(command);
     if (releaseInputRoot != null) {
       command.add("-ReleaseInputRoot");
       command.add(releaseInputRoot.toString());
@@ -93,7 +94,7 @@ final class CompliancePolicyIT {
    */
   private static AuditResult runComplianceAuditAgainstSbom(Path sbom) throws Exception {
     List<String> command =
-        List.of(
+        new java.util.ArrayList<>(List.of(
             "pwsh",
             "-NoLogo",
             "-NoProfile",
@@ -104,8 +105,24 @@ final class CompliancePolicyIT {
             System.getProperty("jbsa.version"),
             "-RequireGeneratedArtifacts",
             "-GeneratedSbomPath",
-            sbom.toString());
+            sbom.toString()));
+    addGradleModelArguments(command);
     return runAuditProcess(command, reactorRoot(), Map.of(), "Compliance verifier");
+  }
+
+  /**
+   * Adds the generated Gradle model, production locks, and strict verification metadata to an audit.
+   *
+   * @param command mutable compliance-verifier command
+   */
+  private static void addGradleModelArguments(List<String> command) {
+    command.add("-BuildLayoutManifest");
+    command.add(reactorRoot().resolve("target/compliance/build-layout.json").toString());
+    command.add("-ResolvedProductionDependencies");
+    command.add(
+        reactorRoot().resolve("target/compliance/resolved-production-dependencies.json").toString());
+    command.add("-ConsumerPomPath");
+    command.add(System.getProperty("jbsa.library.consumerPom"));
   }
 
   /**
@@ -516,6 +533,57 @@ final class CompliancePolicyIT {
   }
 
   /**
+   * Verifies an unapproved coordinate cannot enter through a forged resolved-production manifest.
+   *
+   * @throws Exception if the owned model fixtures or verifier process cannot be managed
+   */
+  @Test
+  void gradleModelAuditRejectsUnapprovedResolvedDependencies() throws Exception {
+    Path complianceOutput = reactorRoot().resolve("target/compliance");
+    String suffix = "-rejected-" + java.util.UUID.randomUUID();
+    Path resolvedFixture = complianceOutput.resolve("resolved-production-dependencies" + suffix + ".json");
+    Path layoutFixture = complianceOutput.resolve("build-layout" + suffix + ".json");
+    try {
+      Path resolved = complianceOutput.resolve("resolved-production-dependencies.json");
+      Files.writeString(
+          resolvedFixture,
+          Files.readString(resolved)
+              .replace("\"groupId\": \"org.lwjgl\"", "\"groupId\": \"example.unapproved\""));
+      Files.writeString(
+          layoutFixture,
+          Files.readString(complianceOutput.resolve("build-layout.json"))
+              .replace(
+                  "target/compliance/resolved-production-dependencies.json",
+                  "target/compliance/" + resolvedFixture.getFileName()));
+
+      List<String> command =
+          new java.util.ArrayList<>(
+              List.of(
+                  "pwsh",
+                  "-NoLogo",
+                  "-NoProfile",
+                  "-NonInteractive",
+                  "-File",
+                  reactorRoot().resolve("build/verify-compliance.ps1").toString(),
+                  "-ReactorVersion",
+                  System.getProperty("jbsa.version"),
+                  "-BuildLayoutManifest",
+                  layoutFixture.toString(),
+                  "-ResolvedProductionDependencies",
+                  resolvedFixture.toString(),
+                  "-ConsumerPomPath",
+                  System.getProperty("jbsa.library.consumerPom")));
+      AuditResult result = runAuditProcess(command, reactorRoot(), Map.of(), "Compliance verifier");
+
+      assertNotEquals(0, result.exitCode(), result.output());
+      assertTrue(result.output().contains("absent from the approved inventory"), result.output());
+    } finally {
+      Files.deleteIfExists(layoutFixture);
+      Files.deleteIfExists(resolvedFixture);
+    }
+  }
+
+  /**
    * Verifies the build emits the production-only SBOM and notice input required by JBSA-LIC-011.
    *
    * @throws IOException if a generated compliance artifact cannot be read
@@ -526,17 +594,21 @@ final class CompliancePolicyIT {
     Path sbom = complianceOutput.resolve("jbsa.cdx.json");
     Path notices = complianceOutput.resolve("THIRD-PARTY-NOTICES.md");
     Path releaseNotes = complianceOutput.resolve("RELEASE-NOTES.md");
+    Path buildLayout = complianceOutput.resolve("build-layout.json");
+    Path resolvedDependencies = complianceOutput.resolve("resolved-production-dependencies.json");
 
     assertTrue(Files.isRegularFile(sbom), () -> "Missing aggregate CycloneDX SBOM: " + sbom);
     String sbomText = Files.readString(sbom);
-    assertTrue(sbomText.contains("\"bomFormat\" : \"CycloneDX\""), sbomText);
-    assertTrue(sbomText.contains("\"specVersion\" : \"1.6\""), sbomText);
-    assertTrue(sbomText.contains("\"name\" : \"jbsa\""), sbomText);
-    assertTrue(sbomText.contains("\"name\" : \"jbsa-cli\""), sbomText);
-    assertFalse(sbomText.contains("\"name\" : \"jbsa-test-support\""), sbomText);
-    assertFalse(sbomText.contains("\"name\" : \"jbsa-conformance-tests\""), sbomText);
-    assertFalse(sbomText.contains("\"name\" : \"jbsa-benchmarks\""), sbomText);
-    assertFalse(sbomText.contains("\"name\" : \"jbsa-dist\""), sbomText);
+    assertTrue(sbomText.contains("\"bomFormat\": \"CycloneDX\""), sbomText);
+    assertTrue(sbomText.contains("\"specVersion\": \"1.6\""), sbomText);
+    assertTrue(sbomText.contains("\"name\": \"jbsa-parent\""), sbomText);
+    assertTrue(sbomText.contains("\"name\": \"jbsa\""), sbomText);
+    assertTrue(sbomText.contains("\"name\": \"jbsa-cli\""), sbomText);
+    assertFalse(sbomText.contains("\"serialNumber\""), sbomText);
+    assertFalse(sbomText.contains("\"name\": \"jbsa-test-support\""), sbomText);
+    assertFalse(sbomText.contains("\"name\": \"jbsa-conformance-tests\""), sbomText);
+    assertFalse(sbomText.contains("\"name\": \"jbsa-benchmarks\""), sbomText);
+    assertFalse(sbomText.contains("\"name\": \"jbsa-dist\""), sbomText);
     assertTrue(Files.isRegularFile(notices), () -> "Missing generated notices: " + notices);
     assertEquals(
         normalizeNewlines(Files.readString(reactorRoot().resolve("THIRD-PARTY-NOTICES.md"))),
@@ -544,6 +616,15 @@ final class CompliancePolicyIT {
     assertTrue(Files.isRegularFile(releaseNotes), () -> "Missing release notices: " + releaseNotes);
     assertFileContains(
         "target/compliance/RELEASE-NOTES.md", "fd1e36020b2b5b6217e553dc0038983146a2e2dd");
+    assertTrue(Files.isRegularFile(buildLayout), () -> "Missing build-layout manifest: " + buildLayout);
+    assertTrue(
+        Files.isRegularFile(resolvedDependencies),
+        () -> "Missing resolved-production manifest: " + resolvedDependencies);
+    String stagingScript = Files.readString(reactorRoot().resolve("build/stage-release-inputs.ps1"));
+    assertFalse(stagingScript.contains("build-layout.json"), "Internal layout manifest became a release input");
+    assertFalse(
+        stagingScript.contains("resolved-production-dependencies.json"),
+        "Internal dependency manifest became a release input");
   }
 
   /**
@@ -923,6 +1004,7 @@ final class CompliancePolicyIT {
                     name = 'transitive-runtime'
                     version = '1.0.0'
                     purl = 'pkg:maven/example.uninventoried/transitive-runtime@1.0.0?type=jar'
+                    'bom-ref' = 'pkg:maven/example.uninventoried/transitive-runtime@1.0.0?type=jar'
                   })
                   $bom | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $env:JBSA_TEST_SBOM_OUTPUT
                   """),

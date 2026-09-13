@@ -3,7 +3,9 @@ package io.github.evildarkarchon.jbsa.build
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
+import groovy.json.JsonSlurper
 import org.gradle.testkit.runner.GradleRunner
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -29,7 +31,22 @@ class FoundationPluginFunctionalTest {
         )
         write("gradle.properties", "version=0.1.0-SNAPSHOT\n")
         writeCatalog()
-        write("build.gradle.kts", "plugins { id(\"jbsa.foundation\") }\n")
+        write(
+            "build.gradle.kts",
+            """
+            import org.cyclonedx.gradle.CyclonedxDirectTask
+
+            plugins { id("jbsa.foundation"); alias(libs.plugins.cyclonedx) }
+
+            project(":jbsa").tasks.named<CyclonedxDirectTask>("cyclonedxDirectBom") {
+                includeConfigs = listOf("runtimeClasspath")
+                includeMetadataResolution = false
+                includeBomSerialNumber = false
+                includeBuildSystem = false
+                xmlOutput.unsetConvention()
+            }
+            """.trimIndent(),
+        )
         listOf(
                 "jbsa",
                 "jbsa-cli",
@@ -256,6 +273,240 @@ class FoundationPluginFunctionalTest {
         assertFalse(Files.exists(projectDir.resolve("jbsa/target")))
     }
 
+    /** Verifies the public task emits the versioned, contained output contract consumed by automation. */
+    @Test
+    fun `generates the deterministic build layout manifest`() {
+        run("generateBuildLayoutManifest")
+
+        val manifestPath = projectDir.resolve("target/compliance/build-layout.json")
+        val firstBytes = Files.readAllBytes(manifestPath)
+        val manifest = JsonSlurper().parse(manifestPath.toFile()) as Map<*, *>
+        assertEquals(1, manifest["schemaVersion"])
+        assertEquals("jbsa-parent", manifest["rootProject"])
+        assertEquals(
+            listOf(
+                "jbsa-benchmarks/target",
+                "jbsa-cli/target",
+                "jbsa-conformance-tests/target",
+                "jbsa-dist/target",
+                "jbsa-test-support/target",
+                "jbsa/target",
+                "target",
+            ),
+            manifest["ownedOutputRoots"],
+        )
+        @Suppress("UNCHECKED_CAST")
+        val outputs = manifest["outputs"] as List<Map<String, String>>
+        assertEquals(outputs.sortedBy { it.getValue("id") }, outputs)
+        assertTrue(
+            outputs.any {
+                it["id"] == "library-consumer-pom" &&
+                    it["path"] == "jbsa/target/publications/library/pom-default.xml"
+            }
+        )
+        assertTrue(outputs.all { output ->
+            val path = Path.of(output.getValue("path"))
+            !path.isAbsolute && path.none { segment -> segment.toString() == ".." }
+        })
+
+        Files.delete(manifestPath)
+        run("generateBuildLayoutManifest")
+        assertTrue(firstBytes.contentEquals(Files.readAllBytes(manifestPath)))
+    }
+
+    /** Verifies generated compliance contracts cannot escape into tracked automation or outside the repository. */
+    @Test
+    fun `rejects an uncontained build layout manifest output`() {
+        write(
+            "build.gradle.kts",
+            """
+            plugins { id("jbsa.foundation") }
+            layout.buildDirectory = layout.projectDirectory.dir("build")
+            """.trimIndent(),
+        )
+
+        val result = runAndFail("generateBuildLayoutManifest")
+
+        assertTrue(result.output.contains("Build-layout output must be a contained generated path"), result.output)
+    }
+
+    /** Verifies a contained tracked repository path cannot be declared as generated output. */
+    @Test
+    fun `rejects a build layout entry outside owned target roots`() {
+        write(
+            "build.gradle.kts",
+            """
+            plugins { id("jbsa.foundation") }
+            tasks.named<io.github.evildarkarchon.jbsa.build.GenerateBuildLayoutManifest>(
+                "generateBuildLayoutManifest"
+            ) {
+                outputEntries.add(
+                    io.github.evildarkarchon.jbsa.build.BuildLayoutEntry(
+                        "forged-doc-output", "documentation", "docs/target/forged.json", ":unsafeProducer"
+                    )
+                )
+            }
+            """.trimIndent(),
+        )
+
+        val result = runAndFail("generateBuildLayoutManifest")
+
+        assertTrue(result.output.contains("Build-layout output must be a contained generated path"), result.output)
+    }
+
+    /** Verifies the public task records only resolved production artifacts and serializes them reproducibly. */
+    @Test
+    fun `generates the deterministic resolved production dependency manifest`() {
+        run("--write-locks", "generateResolvedProductionDependencies")
+
+        val manifestPath = projectDir.resolve("target/compliance/resolved-production-dependencies.json")
+        val firstBytes = Files.readAllBytes(manifestPath)
+        val manifest = JsonSlurper().parse(manifestPath.toFile()) as Map<*, *>
+        assertEquals(1, manifest["schemaVersion"])
+        @Suppress("UNCHECKED_CAST")
+        val dependencies = manifest["dependencies"] as List<Map<String, Any?>>
+        assertTrue(dependencies.isNotEmpty())
+        assertTrue(dependencies.all { it["sourceProject"] in setOf(":jbsa", ":jbsa-cli", ":jbsa-dist") })
+        assertTrue(dependencies.all { it["configuration"] in setOf("runtimeClasspath", "runtimeInputs") })
+        assertTrue(dependencies.all { dependency ->
+            @Suppress("UNCHECKED_CAST")
+            val resolved = dependency.getValue("resolved") as Map<String, String>
+            resolved["groupId"] == "org.lwjgl" && resolved["artifactId"] in setOf("lwjgl", "lwjgl-lz4")
+        })
+        assertEquals(
+            mapOf(
+                "org.lwjgl:lwjgl:3.4.3:" to
+                    "46eeca5471833c3cf5da3c1da015b41e3bb3eb16dd3da03f366886da10096751",
+                "org.lwjgl:lwjgl:3.4.3:natives-windows" to
+                    "19949bca7b780f55e5d2db12ac061a7657a4c1b7c860c30607f5406e7017aa2b",
+                "org.lwjgl:lwjgl-lz4:3.4.3:" to
+                    "fd81606cbfdd7084cdbf576f6260087a2ae68bcfb53ca1ccbec0707ae603f876",
+                "org.lwjgl:lwjgl-lz4:3.4.3:natives-windows" to
+                    "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc",
+            ),
+            dependencies.associate { dependency ->
+                @Suppress("UNCHECKED_CAST")
+                val resolved = dependency.getValue("resolved") as Map<String, String>
+                @Suppress("UNCHECKED_CAST")
+                val artifact = dependency.getValue("artifact") as Map<String, String>
+                "${resolved["groupId"]}:${resolved["artifactId"]}:${resolved["version"]}:${dependency["classifier"] ?: ""}" to
+                    artifact.getValue("sha256")
+            },
+        )
+        assertTrue(dependencies.all { dependency ->
+            @Suppress("UNCHECKED_CAST")
+            val requested = dependency.getValue("requested") as Map<String, String>
+            @Suppress("UNCHECKED_CAST")
+            val variant = dependency.getValue("selectedVariant") as Map<String, Map<String, String>>
+            @Suppress("UNCHECKED_CAST")
+            val artifact = dependency.getValue("artifact") as Map<String, String>
+            requested.keys == setOf("groupId", "artifactId", "version") &&
+                variant.getValue("attributes").isNotEmpty() &&
+                artifact.getValue("sha256").matches(Regex("[0-9a-f]{64}"))
+        })
+        val dependencyComparator =
+            compareBy<Map<String, Any?>>(
+                { it.getValue("sourceProject") as String },
+                { it.getValue("configuration") as String },
+                { (it.getValue("resolved") as Map<*, *>)["groupId"] as String },
+                { (it.getValue("resolved") as Map<*, *>)["artifactId"] as String },
+                { (it.getValue("resolved") as Map<*, *>)["version"] as String },
+                { it["classifier"] as? String ?: "" },
+                { (it.getValue("artifact") as Map<*, *>)["fileName"] as String },
+                { (it.getValue("requested") as Map<*, *>)["groupId"] as String },
+                { (it.getValue("requested") as Map<*, *>)["artifactId"] as String },
+                { (it.getValue("requested") as Map<*, *>)["version"] as String },
+            )
+        assertEquals(dependencies.sortedWith(dependencyComparator), dependencies)
+
+        Files.delete(manifestPath)
+        run("generateResolvedProductionDependencies")
+        assertTrue(firstBytes.contentEquals(Files.readAllBytes(manifestPath)))
+    }
+
+    /** Verifies the production SBOM is deterministic CycloneDX 1.6 with only the shipped graph. */
+    @Test
+    fun `generates the deterministic production CycloneDX SBOM`() {
+        run("--write-locks", "generateProductionSbom")
+
+        val sbomPath = projectDir.resolve("target/compliance/jbsa.cdx.json")
+        val firstBytes = Files.readAllBytes(sbomPath)
+        @Suppress("UNCHECKED_CAST")
+        val sbom = JsonSlurper().parse(sbomPath.toFile()) as Map<String, Any?>
+        assertEquals("CycloneDX", sbom["bomFormat"])
+        assertEquals("1.6", sbom["specVersion"])
+        assertFalse(sbom.containsKey("serialNumber"))
+        @Suppress("UNCHECKED_CAST")
+        val metadata = sbom.getValue("metadata") as Map<String, Any?>
+        assertFalse(metadata.containsKey("timestamp"))
+        @Suppress("UNCHECKED_CAST")
+        val root = metadata.getValue("component") as Map<String, String>
+        assertEquals("jbsa-parent", root["name"])
+        @Suppress("UNCHECKED_CAST")
+        val components = sbom.getValue("components") as List<Map<String, Any?>>
+        assertEquals(
+            setOf("jbsa", "jbsa-cli", "lwjgl", "lwjgl-lz4"),
+            components.map { it.getValue("name") }.toSet(),
+        )
+        assertFalse(
+            components.any {
+                it["name"] in setOf("jbsa-test-support", "jbsa-conformance-tests", "jbsa-benchmarks", "jbsa-dist")
+            }
+        )
+        @Suppress("UNCHECKED_CAST")
+        val relationships = sbom.getValue("dependencies") as List<Map<String, Any?>>
+        assertTrue(relationships.any { it["ref"] == root["bom-ref"] })
+
+        Files.delete(sbomPath)
+        Files.delete(projectDir.resolve("jbsa/target/reports/cyclonedx-direct/bom.json"))
+        run("generateProductionSbom")
+        assertTrue(firstBytes.contentEquals(Files.readAllBytes(sbomPath)))
+    }
+
+    /** Verifies a structurally valid but empty plugin graph cannot qualify resolved production bytes. */
+    @Test
+    fun `rejects a CycloneDX graph that omits production components`() {
+        write(
+            "empty-cyclonedx.json",
+            """
+            {
+              "bomFormat": "CycloneDX",
+              "specVersion": "1.6",
+              "metadata": {
+                "tools": {"components": [{"name": "cyclonedx-gradle-plugin", "version": "3.4.1"}]},
+                "component": {
+                  "group": "io.github.evildarkarchon",
+                  "name": "jbsa",
+                  "version": "0.1.0-SNAPSHOT",
+                  "bom-ref": "fixture-root"
+                }
+              },
+              "components": [],
+              "dependencies": []
+            }
+            """.trimIndent(),
+        )
+        write(
+            "build.gradle.kts",
+            Files.readString(projectDir.resolve("build.gradle.kts")) +
+                """
+
+                tasks.named<io.github.evildarkarchon.jbsa.build.GenerateProductionSbom>(
+                    "generateProductionSbom"
+                ) {
+                    rawCycloneDx.set(layout.projectDirectory.file("empty-cyclonedx.json"))
+                }
+                """.trimIndent(),
+        )
+
+        val result = runAndFail("--write-locks", "generateProductionSbom")
+
+        assertTrue(
+            result.output.contains("CycloneDX components differ from unclassified production resolution"),
+            result.output,
+        )
+    }
+
     /** Runs the fixture with the plugin-under-test classpath and strict command-line diagnostics. */
     private fun run(vararg arguments: String) = runner(arguments, verificationOff = true).build()
 
@@ -305,6 +556,7 @@ class FoundationPluginFunctionalTest {
             "gradle/libs.versions.toml",
             """
             [versions]
+            cyclonedx = "3.4.1"
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
@@ -323,6 +575,7 @@ class FoundationPluginFunctionalTest {
             $conflictLibrary
 
             [plugins]
+            cyclonedx = { id = "org.cyclonedx.bom", version.ref = "cyclonedx" }
             spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
             """.trimIndent(),
         )

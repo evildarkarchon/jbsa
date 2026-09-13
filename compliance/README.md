@@ -68,3 +68,19 @@ requires `jbsa-dist/target/release-inputs` and `jbsa-dist/target/release-inputs.
 Missing assembly inputs fail rather than skipping this audit. Standalone callers supply both
 paths explicitly for any staging location; the root repository audit does not consume stale
 staging from an earlier build.
+
+## Gradle compliance model
+
+The Gradle build writes two internal, schema-version-1 contracts below `target/compliance`:
+`build-layout.json` names contained generated outputs, while
+`resolved-production-dependencies.json` records each production configuration's requested and
+resolved coordinates, selected variant, classifier, artifact filename, and exact SHA-256. Their
+arrays and object keys are serialized deterministically. These contracts are audit inputs only and
+are deliberately absent from the release-input staging list.
+
+`gradlew verifyCompliance` reconciles those contracts with the generated parent-free consumer POM,
+the production lockfiles, both strict dependency-verification metadata files, and this maintained
+licensing inventory. Gradle resolution proves which bytes were selected; it never grants licensing
+or redistribution approval. The task also creates the deterministic CycloneDX 1.6 release SBOM and
+the existing notice outputs. The SBOM has no serial number, retains `jbsa-parent` as the logical
+root, and excludes tests, build-only projects, and build plugins.

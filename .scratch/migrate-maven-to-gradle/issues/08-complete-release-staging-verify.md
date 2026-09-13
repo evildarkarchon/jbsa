@@ -3,11 +3,11 @@
 **What to build:** Give maintainers one complete Gradle verification command that produces and audits the unchanged canonical staging set.
 
 Blocked by: [05: Run Automated Conformance through Gradle](05-run-automated-conformance.md), [06: Preserve the standalone benchmark workflow](06-preserve-standalone-benchmarks.md), [07: Generate and audit production compliance inputs](07-generate-audit-compliance-inputs.md)
-Status: needs-triage
+Status: ready-for-agent
 State: open
 Assignees: none
 Intended owner: agent
-Triage rationale: Approved scope; tickets 05 and 06 are closed, while ticket 07 remains open. Reassess readiness when the remaining blocker closes.
+Triage rationale: Approved and fully specified; all prerequisites, tickets 05, 06, and 07, are closed.
 
 ## Acceptance criteria
 

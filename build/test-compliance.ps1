@@ -78,18 +78,79 @@ function Write-TestZip {
 <# .SYNOPSIS Writes a synthetic CycloneDX component carrying a caller-selected artifact hash. #>
 function Write-TestSbom {
     param([object] $Entry, [string] $Hash)
+    $rootRef = 'pkg:maven/io.github.evildarkarchon/jbsa-parent@1.0?type=pom'
+    $libraryRef = 'pkg:maven/io.github.evildarkarchon/jbsa@1.0?type=jar'
+    $cliRef = 'pkg:maven/io.github.evildarkarchon/jbsa-cli@1.0?type=jar'
     $component = @{
         group = $Entry.groupId; name = $Entry.artifactId; version = $Entry.version
         purl = "pkg:maven/$($Entry.groupId)/$($Entry.artifactId)@$($Entry.version)?type=jar"
+        'bom-ref' = "pkg:maven/$($Entry.groupId)/$($Entry.artifactId)@$($Entry.version)?type=jar"
         hashes = @(@{ alg = 'SHA-256'; content = $Hash })
     }
+    $projectComponents = @(
+        @{ type='library'; group='io.github.evildarkarchon'; name='jbsa'; version='1.0'; purl=$libraryRef; 'bom-ref'=$libraryRef },
+        @{ type='library'; group='io.github.evildarkarchon'; name='jbsa-cli'; version='1.0'; purl=$cliRef; 'bom-ref'=$cliRef }
+    )
+    $components = @($projectComponents)
+    if ($component.'bom-ref' -ceq $libraryRef) {
+        $components[0] = $component
+    } elseif ($component.'bom-ref' -ceq $cliRef) {
+        $components[1] = $component
+    } else {
+        $components += $component
+    }
+    $externalRef = @()
+    if ($component.group -cne 'io.github.evildarkarchon') {
+        $externalRef = @($component.'bom-ref')
+    }
+    $dependencies = @(
+        @{ ref=$rootRef; dependsOn=@($cliRef, $libraryRef) },
+        @{ ref=$cliRef; dependsOn=@($libraryRef) },
+        @{ ref=$libraryRef; dependsOn=$externalRef }
+    )
+    if ($externalRef.Count -eq 1) {
+        $dependencies += @{ ref=$externalRef[0]; dependsOn=@() }
+    }
     $path = Join-Path $reactorRoot 'sbom.json'
-    @{ bomFormat = 'CycloneDX'; specVersion = '1.6'; components = @($component) } |
+    @{
+        bomFormat = 'CycloneDX'; specVersion = '1.6'
+        metadata = @{ component = @{
+            type='library'; group='io.github.evildarkarchon'; name='jbsa-parent'; version='1.0'
+            purl=$rootRef; 'bom-ref'=$rootRef
+        } }
+        components = $components
+        dependencies = $dependencies
+    } |
         ConvertTo-Json -Depth 10 | Set-Content $path
     return $path
 }
 
 try {
+    Test-PolicyCase 'build layout rejects unsupported schema' {
+        $path = Join-Path $reactorRoot 'layout.json'
+        @{ schemaVersion=2; rootProject='jbsa-parent'; ownedOutputRoots=@(); outputs=@() } |
+            ConvertTo-Json -Depth 10 | Set-Content $path
+        Get-ValidatedBuildLayoutLookup $path
+    } 'schema 1'
+    foreach ($invalidPath in @('../outside.json', 'README.md', 'docs/target/forged.json', ([IO.Path]::GetFullPath((Join-Path $reactorRoot 'target/absolute.json'))))) {
+        Test-PolicyCase "build layout rejects unowned path $invalidPath" {
+            $path = Join-Path $reactorRoot 'layout.json'
+            @{
+                schemaVersion=1; rootProject='jbsa-parent'; ownedOutputRoots=@(
+                    'jbsa-benchmarks/target','jbsa-cli/target','jbsa-conformance-tests/target',
+                    'jbsa-dist/target','jbsa-test-support/target','jbsa/target','target'
+                ); outputs=@(@{
+                    id='invalid'; kind='internal-manifest'; path=$invalidPath; producerTask=':invalid'
+                })
+            } | ConvertTo-Json -Depth 10 | Set-Content $path
+            Get-ValidatedBuildLayoutLookup $path
+        } 'contained generated path'
+    }
+    Test-PolicyCase 'resolved production manifest rejects unsupported schema' {
+        $path = Join-Path $reactorRoot 'resolved.json'
+        @{ schemaVersion=2; dependencies=@() } | ConvertTo-Json -Depth 10 | Set-Content $path
+        Read-ResolvedProductionDependencyManifest $path
+    } 'schema 1'
     Test-PolicyCase 'approved dependency clears blockers' {
         Get-ValidatedDependencyLookup ([pscustomobject]@{ entries = @((New-ApprovedDependency)) })
     }

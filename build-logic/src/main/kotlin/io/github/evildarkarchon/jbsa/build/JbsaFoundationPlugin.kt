@@ -7,6 +7,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.dsl.LockMode
+import org.gradle.api.tasks.Exec
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 /** Establishes the single-version, six-project JBSA build and its deterministic resolution policy. */
@@ -107,8 +108,215 @@ class JbsaFoundationPlugin : Plugin<Project> {
         }
     }
 
-    /** Registers the foundation report, verification gate, and clean aggregation tasks. */
+    /** Registers compliance generation/audit, foundation reporting, verification, and clean aggregation. */
     private fun configureLifecycle(project: Project, candidate: String) {
+        val generateBuildLayout =
+            project.tasks.register("generateBuildLayoutManifest", GenerateBuildLayoutManifest::class.java) {
+                group = "build"
+                description = "Generates the internal build-output contract consumed by repository automation."
+                rootProjectName.set(project.name)
+                repositoryRoot.set(project.layout.projectDirectory)
+                manifestFile.set(project.layout.buildDirectory.file("compliance/build-layout.json"))
+                outputEntries.set(
+                    listOf(
+                        BuildLayoutEntry(
+                            "aggregate-sbom",
+                            "compliance-evidence",
+                            "target/compliance/jbsa.cdx.json",
+                            ":generateProductionSbom",
+                        ),
+                        BuildLayoutEntry(
+                            "build-layout-manifest",
+                            "internal-manifest",
+                            "target/compliance/build-layout.json",
+                            ":generateBuildLayoutManifest",
+                        ),
+                        BuildLayoutEntry(
+                            "cli-binary",
+                            "project-artifact",
+                            "jbsa-cli/target/libs/jbsa-cli-$candidate.jar",
+                            ":jbsa-cli:jar",
+                        ),
+                        BuildLayoutEntry(
+                            "generated-release-notes",
+                            "compliance-evidence",
+                            "target/compliance/RELEASE-NOTES.md",
+                            ":verifyCompliance",
+                        ),
+                        BuildLayoutEntry(
+                            "generated-third-party-notices",
+                            "compliance-evidence",
+                            "target/compliance/THIRD-PARTY-NOTICES.md",
+                            ":verifyCompliance",
+                        ),
+                        BuildLayoutEntry(
+                            "library-binary",
+                            "project-artifact",
+                            "jbsa/target/libs/jbsa-$candidate.jar",
+                            ":jbsa:jar",
+                        ),
+                        BuildLayoutEntry(
+                            "library-consumer-pom",
+                            "consumer-metadata",
+                            "jbsa/target/${JbsaPublicLibraryIdentity.publicationPath("pom-default.xml")}",
+                            ":jbsa:${JbsaPublicLibraryIdentity.generatePomTaskName()}",
+                        ),
+                        BuildLayoutEntry(
+                            "library-javadoc",
+                            "project-artifact",
+                            "jbsa/target/libs/jbsa-$candidate-javadoc.jar",
+                            ":jbsa:javadocJar",
+                        ),
+                        BuildLayoutEntry(
+                            "library-sources",
+                            "project-artifact",
+                            "jbsa/target/libs/jbsa-$candidate-sources.jar",
+                            ":jbsa:sourcesJar",
+                        ),
+                        BuildLayoutEntry(
+                            "resolved-production-dependencies",
+                            "internal-manifest",
+                            "target/compliance/resolved-production-dependencies.json",
+                            ":generateResolvedProductionDependencies",
+                        ),
+                        BuildLayoutEntry(
+                            "runtime-dependencies",
+                            "runtime-input-directory",
+                            "jbsa-dist/target/runtime-dependencies",
+                            ":jbsa-dist:${JbsaThinApplicationIdentity.STAGE_RUNTIME_DEPENDENCIES_TASK}",
+                        ),
+                    )
+                )
+            }
+        val productionScopes =
+            listOf(
+                JbsaPublicLibraryIdentity.PROJECT_PATH to "runtimeClasspath",
+                JbsaThinApplicationIdentity.PROJECT_PATH to "runtimeClasspath",
+                JbsaThinApplicationIdentity.DISTRIBUTION_PROJECT_PATH to
+                    JbsaThinApplicationIdentity.RUNTIME_CONFIGURATION,
+            )
+        val generateResolvedDependencies =
+            project.tasks.register(
+                "generateResolvedProductionDependencies",
+                GenerateResolvedProductionDependencies::class.java,
+            ) {
+                group = "build"
+                description = "Generates exact checksummed dependency selections for production compliance."
+                scopeNames.set(productionScopes.map { (projectPath, configuration) -> "$projectPath:$configuration" })
+                manifestFile.set(
+                    project.layout.buildDirectory.file("compliance/resolved-production-dependencies.json")
+                )
+                // Resolution edge metadata is not fully represented by Gradle's normalized file inputs.
+                outputs.upToDateWhen { false }
+                productionScopes.forEach { (projectPath, configurationName) ->
+                    productionScope(
+                        projectPath,
+                        project.project(projectPath).configurations.getByName(configurationName),
+                    )
+                }
+            }
+        val generateProductionSbom =
+            project.tasks.register("generateProductionSbom", GenerateProductionSbom::class.java) {
+                group = "build"
+                description = "Generates the deterministic production-only CycloneDX 1.6 SBOM."
+                dependsOn(generateResolvedDependencies, ":jbsa:cyclonedxDirectBom")
+                componentGroup.set(BuildIdentity.GROUP)
+                componentVersion.set(candidate)
+                rawCycloneDx.set(
+                    project.layout.projectDirectory.file("jbsa/target/reports/cyclonedx-direct/bom.json")
+                )
+                resolvedDependencies.set(generateResolvedDependencies.flatMap { it.manifestFile })
+                sbomFile.set(project.layout.buildDirectory.file("compliance/jbsa.cdx.json"))
+            }
+        project.pluginManager.withPlugin("org.cyclonedx.bom") {
+            project.allprojects.forEach { current ->
+                val role = current.extensions.extraProperties["jbsaRole"] as String
+                current.tasks.named("cyclonedxDirectBom") {
+                    enabled =
+                        role in
+                            setOf(
+                                JbsaProjectRole.ROOT_AGGREGATOR.id,
+                                JbsaProjectRole.PUBLIC_LIBRARY.id,
+                                JbsaProjectRole.THIN_APPLICATION.id,
+                            )
+                }
+            }
+        }
+        val library = project.project(JbsaPublicLibraryIdentity.PROJECT_PATH)
+        val generateConsumerPom = library.tasks.named(JbsaPublicLibraryIdentity.generatePomTaskName())
+        val consumerPom = library.layout.buildDirectory.file(JbsaPublicLibraryIdentity.publicationPath("pom-default.xml"))
+        val lockFiles =
+            listOf(
+                project.layout.projectDirectory.file("gradle.lockfile"),
+                project.layout.projectDirectory.file("jbsa/gradle.lockfile"),
+                project.layout.projectDirectory.file("jbsa-cli/gradle.lockfile"),
+                project.layout.projectDirectory.file("jbsa-dist/gradle.lockfile"),
+            )
+        val verificationFiles =
+            listOf(
+                project.layout.projectDirectory.file("gradle/verification-metadata.xml"),
+                project.layout.projectDirectory.file("build-logic/gradle/verification-metadata.xml"),
+            )
+        val verifyCompliance =
+            project.tasks.register("verifyCompliance", Exec::class.java) {
+                group = LifecycleBasePlugin.VERIFICATION_GROUP
+                description = "Audits Gradle production resolution, licensing, notices, and the generated SBOM."
+                dependsOn(generateBuildLayout, generateResolvedDependencies, generateProductionSbom, generateConsumerPom)
+                workingDir(project.rootDir)
+                val script = project.layout.projectDirectory.file("build/verify-compliance.ps1")
+                inputs.files(
+                    script,
+                    project.layout.projectDirectory.file("compliance/dependency-inventory.json"),
+                    project.layout.projectDirectory.file("compliance/native-payload-inventory.json"),
+                    project.layout.projectDirectory.file("THIRD-PARTY-NOTICES.md"),
+                    project.layout.projectDirectory.file("RELEASE-NOTES.md"),
+                    generateBuildLayout.flatMap { it.manifestFile },
+                    generateResolvedDependencies.flatMap { it.manifestFile },
+                    generateProductionSbom.flatMap { it.sbomFile },
+                    consumerPom,
+                )
+                inputs.files(lockFiles, verificationFiles)
+                outputs.files(
+                    project.layout.buildDirectory.file("compliance/THIRD-PARTY-NOTICES.md"),
+                    project.layout.buildDirectory.file("compliance/RELEASE-NOTES.md"),
+                )
+                // The script audits every tracked byte, including paths outside its explicit model inputs.
+                outputs.upToDateWhen { false }
+                doFirst {
+                    commandLine(
+                        buildList {
+                            addAll(
+                                listOf(
+                                    "pwsh",
+                                    "-NoLogo",
+                                    "-NoProfile",
+                                    "-NonInteractive",
+                                    "-File",
+                                    script.asFile.absolutePath,
+                                    "-ReactorVersion",
+                                    candidate,
+                                    "-BuildLayoutManifest",
+                                    generateBuildLayout.get().manifestFile.get().asFile.absolutePath,
+                                    "-ResolvedProductionDependencies",
+                                    generateResolvedDependencies.get().manifestFile.get().asFile.absolutePath,
+                                    "-ConsumerPomPath",
+                                    consumerPom.get().asFile.absolutePath,
+                                )
+                            )
+                            addAll(
+                                listOf(
+                                    "-RequireGeneratedArtifacts",
+                                    "-GeneratedSbomPath",
+                                    generateProductionSbom.get().sbomFile.get().asFile.absolutePath,
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+        project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named("buildPolicyTest") {
+            dependsOn(verifyCompliance)
+        }
         val verifyFoundation =
             project.tasks.register("verifyBuildFoundation") {
                 group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -140,6 +348,10 @@ class JbsaFoundationPlugin : Plugin<Project> {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description = "Runs the complete verification available at the current migration stage."
             dependsOn(
+                generateBuildLayout,
+                generateResolvedDependencies,
+                generateProductionSbom,
+                verifyCompliance,
                 verifyFoundation,
                 verifyPublicationPolicy,
                 project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named("check"),

@@ -23,6 +23,22 @@ fixture; normal builds use target/compliance/jbsa.cdx.json.
 Optional effective Maven reactor version. Maven supplies this explicitly so command-line revision
 overrides resolve the matching build outputs; standalone callers use the root POM revision.
 
+.PARAMETER BuildLayoutManifest
+Optional Gradle-produced build-layout contract. Supplying it enables Gradle model validation and
+requires the resolved-production manifest and explicit reactor version.
+
+.PARAMETER ResolvedProductionDependencies
+Gradle-produced schema-version-1 resolved production dependency manifest.
+
+.PARAMETER ConsumerPomPath
+Optional generated consumer POM path. Gradle callers normally let the build-layout manifest select it.
+
+.PARAMETER DependencyLockPaths
+Optional exact lockfiles. Gradle mode defaults to the CycloneDX root lock plus the three production locks.
+
+.PARAMETER VerificationMetadataPaths
+Optional strict Gradle verification metadata. Gradle mode defaults to both build verification files.
+
 .NOTES
 This engineering gate does not make a legal determination. Unclear rights or provenance remain a
 stop condition even when the mechanical checks pass.
@@ -33,7 +49,12 @@ param(
     [string] $ReleaseInputManifest,
     [switch] $RequireGeneratedArtifacts,
     [string] $GeneratedSbomPath,
-    [string] $ReactorVersion
+    [string] $ReactorVersion,
+    [string] $BuildLayoutManifest,
+    [string] $ResolvedProductionDependencies,
+    [string] $ConsumerPomPath,
+    [string[]] $DependencyLockPaths,
+    [string[]] $VerificationMetadataPaths
 )
 
 Set-StrictMode -Version Latest
@@ -117,6 +138,86 @@ function Get-DeclaredReactorVersion {
         throw 'The root POM does not declare the reactor revision.'
     }
     return $revisionNode.InnerText.Trim()
+}
+
+<#
+.SYNOPSIS
+Validates the Gradle build-layout contract and resolves its contained output paths.
+
+.PARAMETER Path
+Exact schema-version-1 build-layout manifest.
+
+.OUTPUTS
+A case-sensitive hashtable keyed by stable output identifier.
+
+.NOTES
+Rejects unsorted, duplicate, absolute, traversing, root-automation, or repository-escaping paths.
+#>
+function Get-ValidatedBuildLayoutLookup {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Missing build-layout manifest: $Path"
+    }
+    $manifest = Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json -Depth 100
+    if ($manifest.schemaVersion -ne 1 -or $manifest.rootProject -cne 'jbsa-parent' -or
+        $null -eq $manifest.ownedOutputRoots -or $null -eq $manifest.outputs) {
+        throw 'The build-layout manifest must use schema 1 and the jbsa-parent root.'
+    }
+    $expectedOwnedRoots = @(
+        'jbsa-benchmarks/target',
+        'jbsa-cli/target',
+        'jbsa-conformance-tests/target',
+        'jbsa-dist/target',
+        'jbsa-test-support/target',
+        'jbsa/target',
+        'target'
+    )
+    if ((@($manifest.ownedOutputRoots) -join "`n") -cne ($expectedOwnedRoots -join "`n")) {
+        throw 'Build-layout owned output roots differ from the six-project Gradle contract.'
+    }
+    $ids = @($manifest.outputs | ForEach-Object { [string] $_.id })
+    $sortedIds = [string[]] $ids.Clone()
+    [Array]::Sort($sortedIds, [StringComparer]::Ordinal)
+    if (($ids -join "`n") -cne ($sortedIds -join "`n")) {
+        throw 'Build-layout outputs must be deterministically ordered by id.'
+    }
+    $lookup = @{}
+    $paths = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($entry in @($manifest.outputs)) {
+        foreach ($property in @('id', 'kind', 'path', 'producerTask')) {
+            Assert-StringProperty $entry $property 'Build-layout output'
+        }
+        $relativePath = $entry.path.Replace('\', '/')
+        $resolved = [IO.Path]::GetFullPath((Join-Path $reactorRoot $relativePath))
+        $isOwnedOutput = @($expectedOwnedRoots | Where-Object {
+                $relativePath -ceq $_ -or $relativePath.StartsWith("$_/", [StringComparison]::Ordinal)
+            }).Count -gt 0
+        if ([IO.Path]::IsPathRooted($relativePath) -or $relativePath.Split('/') -contains '..' -or
+            -not $isOwnedOutput -or -not $resolved.StartsWith(
+                $reactorRoot + [IO.Path]::DirectorySeparatorChar,
+                [StringComparison]::OrdinalIgnoreCase
+            )) {
+            throw "Build-layout output must be a contained generated path: $relativePath"
+        }
+        if ($lookup.ContainsKey($entry.id)) {
+            throw "Duplicate build-layout output id: $($entry.id)"
+        }
+        if (-not $paths.Add($relativePath)) {
+            throw "Duplicate build-layout output path: $relativePath"
+        }
+        $lookup[$entry.id] = [pscustomobject]@{
+            id = $entry.id
+            kind = $entry.kind
+            path = $relativePath
+            producerTask = $entry.producerTask
+            resolvedPath = $resolved
+        }
+    }
+    return $lookup
 }
 
 <#
@@ -518,6 +619,256 @@ function Test-ProductDependencies {
 
 <#
 .SYNOPSIS
+Reads the versioned Gradle resolved-production dependency contract.
+
+.PARAMETER Path
+Exact manifest path.
+
+.OUTPUTS
+The parsed schema-version-1 manifest.
+
+.NOTES
+Throws for an absent file, unsupported schema, or missing dependencies array.
+#>
+function Read-ResolvedProductionDependencyManifest {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Missing resolved-production-dependency manifest: $Path"
+    }
+    $manifest = Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json -Depth 100
+    if ($manifest.schemaVersion -ne 1 -or $null -eq $manifest.dependencies) {
+        throw 'The resolved-production-dependency manifest must use schema 1 with a dependencies array.'
+    }
+    return $manifest
+}
+
+<#
+.SYNOPSIS
+Reconciles Gradle production resolution, consumer metadata, locks, checksums, and licensing approval.
+
+.PARAMETER DependencyLookup
+Authoritative compliance inventory keyed by exact artifact identity.
+
+.PARAMETER BuildLayoutPath
+Exact schema-version-1 Gradle build-layout manifest.
+
+.PARAMETER ResolvedDependenciesPath
+Exact schema-version-1 Gradle resolved-production-dependency manifest.
+
+.PARAMETER ExplicitConsumerPomPath
+Optional exact generated consumer POM path; the layout path is authoritative when omitted.
+
+.PARAMETER LockPaths
+Exact Gradle production lockfiles to reconcile.
+
+.PARAMETER VerificationPaths
+Exact Gradle dependency-verification metadata files to reconcile.
+
+.OUTPUTS
+The validated build-layout lookup used later for project-artifact byte identity.
+
+.NOTES
+The licensing inventory remains authoritative: Gradle metadata proves selected bytes, not approval.
+#>
+function Test-GradleComplianceInputs {
+    param(
+        [Parameter(Mandatory = $true)]
+        [hashtable] $DependencyLookup,
+        [Parameter(Mandatory = $true)]
+        [string] $BuildLayoutPath,
+        [Parameter(Mandatory = $true)]
+        [string] $ResolvedDependenciesPath,
+        [string] $ExplicitConsumerPomPath,
+        [string[]] $LockPaths,
+        [string[]] $VerificationPaths
+    )
+
+    $layout = Get-ValidatedBuildLayoutLookup $BuildLayoutPath
+    foreach ($id in @(
+            'build-layout-manifest',
+            'resolved-production-dependencies',
+            'library-consumer-pom',
+            'library-binary',
+            'library-sources',
+            'library-javadoc',
+            'cli-binary',
+            'aggregate-sbom'
+        )) {
+        if (-not $layout.ContainsKey($id)) {
+            throw "Build-layout manifest is missing required output: $id"
+        }
+    }
+    $resolvedPath = [IO.Path]::GetFullPath($ResolvedDependenciesPath)
+    if ($resolvedPath -cne $layout['resolved-production-dependencies'].resolvedPath) {
+        throw 'Resolved-production manifest path disagrees with the build-layout contract.'
+    }
+    $manifest = Read-ResolvedProductionDependencyManifest $resolvedPath
+
+    if ($null -eq $LockPaths -or $LockPaths.Count -eq 0) {
+        $LockPaths = @(
+            (Join-Path $reactorRoot 'gradle.lockfile'),
+            (Join-Path $reactorRoot 'jbsa/gradle.lockfile'),
+            (Join-Path $reactorRoot 'jbsa-cli/gradle.lockfile'),
+            (Join-Path $reactorRoot 'jbsa-dist/gradle.lockfile')
+        )
+    }
+    if ($null -eq $VerificationPaths -or $VerificationPaths.Count -eq 0) {
+        $VerificationPaths = @(
+            (Join-Path $reactorRoot 'gradle/verification-metadata.xml'),
+            (Join-Path $reactorRoot 'build-logic/gradle/verification-metadata.xml')
+        )
+    }
+    foreach ($path in @($LockPaths) + @($VerificationPaths)) {
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+            throw "Missing Gradle compliance input: $path"
+        }
+    }
+
+    $verificationDocuments = @()
+    foreach ($path in $VerificationPaths) {
+        $document = [xml](Get-Content -Raw -LiteralPath $path)
+        $namespaces = [Xml.XmlNamespaceManager]::new($document.NameTable)
+        $namespaces.AddNamespace('v', 'https://schema.gradle.org/dependency-verification')
+        $verificationDocuments += [pscustomobject]@{ document = $document; namespaces = $namespaces; path = $path }
+    }
+    $approvedKeys = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($entry in @($DependencyLookup.Values | Where-Object { $_.redistribution.approved })) {
+        [void] $approvedKeys.Add((Get-DependencyKey $entry))
+    }
+    $selectedKeys = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    $recordKeys = [System.Collections.Generic.List[string]]::new()
+    foreach ($record in @($manifest.dependencies)) {
+        foreach ($property in @('sourceProject', 'configuration', 'usage')) {
+            Assert-StringProperty $record $property 'Resolved production dependency'
+        }
+        foreach ($coordinateName in @('requested', 'resolved')) {
+            foreach ($property in @('groupId', 'artifactId', 'version')) {
+                Assert-StringProperty $record.$coordinateName $property "Resolved production dependency $coordinateName"
+            }
+        }
+        foreach ($property in @('fileName', 'sha256')) {
+            Assert-StringProperty $record.artifact $property 'Resolved production dependency artifact'
+        }
+        if ($record.sourceProject -cnotin @(':jbsa', ':jbsa-cli', ':jbsa-dist') -or
+            $record.configuration -cnotin @('runtimeClasspath', 'runtimeInputs')) {
+            throw "Resolved dependency comes from a non-production scope: $($record.sourceProject):$($record.configuration)"
+        }
+        if ($record.artifact.fileName -cne [IO.Path]::GetFileName($record.artifact.fileName) -or
+            $record.artifact.sha256 -cnotmatch $sha256Pattern) {
+            throw "Resolved dependency has an unsafe artifact identity: $($record.artifact.fileName)"
+        }
+        $classifier = if ($null -eq $record.classifier) { '' } else { [string] $record.classifier }
+        if ([string]::IsNullOrWhiteSpace($classifier) -and $null -eq $record.selectedVariant) {
+            throw 'Resolved dependency must record a classifier or selected variant.'
+        }
+        $identity = [pscustomobject]@{
+            groupId = $record.resolved.groupId
+            artifactId = $record.resolved.artifactId
+            version = $record.resolved.version
+            packaging = 'jar'
+            classifier = if ($classifier) { $classifier } else { $null }
+        }
+        $key = Get-DependencyKey $identity
+        if (-not $DependencyLookup.ContainsKey($key) -or -not $DependencyLookup[$key].redistribution.approved) {
+            throw "Resolved production dependency is absent from the approved inventory: $key"
+        }
+        if ($DependencyLookup[$key].sha256 -cne $record.artifact.sha256) {
+            throw "Resolved production dependency checksum disagrees with the approved inventory: $key"
+        }
+        [void] $selectedKeys.Add($key)
+        $recordKey = '{0}|{1}|{2}:{3}:{4}|{5}|{6}' -f
+            $record.sourceProject, $record.configuration,
+            $record.resolved.groupId, $record.resolved.artifactId, $record.resolved.version,
+            $classifier, $record.artifact.fileName
+        if ($recordKeys.Contains($recordKey)) {
+            throw "Duplicate resolved production dependency record: $recordKey"
+        }
+        $recordKeys.Add($recordKey)
+
+        $expectedLockPath = [IO.Path]::GetFullPath((Join-Path $reactorRoot (
+            $record.sourceProject.TrimStart(':') + '/gradle.lockfile'
+        )))
+        $lockPath = @($LockPaths | Where-Object {
+                [IO.Path]::GetFullPath($_).Equals($expectedLockPath, [StringComparison]::OrdinalIgnoreCase)
+            })
+        if ($lockPath.Count -ne 1) {
+            throw "Resolved production scope has no unique Gradle lockfile: $($record.sourceProject)"
+        }
+        $lockText = Get-Content -Raw -LiteralPath $lockPath[0]
+        $lockedCoordinate = "$($record.resolved.groupId):$($record.resolved.artifactId):$($record.resolved.version)="
+        if ($lockText -cnotmatch "(?m)^$([regex]::Escape($lockedCoordinate)).*$([regex]::Escape($record.configuration))") {
+            throw "Resolved production dependency is absent from its lock: $recordKey"
+        }
+
+        $verified = $false
+        foreach ($verification in $verificationDocuments) {
+            $component = $verification.document.SelectSingleNode(
+                "/v:verification-metadata/v:components/v:component[@group='$($record.resolved.groupId)' and @name='$($record.resolved.artifactId)' and @version='$($record.resolved.version)']",
+                $verification.namespaces
+            )
+            if ($null -eq $component) { continue }
+            $artifact = $component.SelectSingleNode(
+                "v:artifact[@name='$($record.artifact.fileName)']/v:sha256[@value='$($record.artifact.sha256)']",
+                $verification.namespaces
+            )
+            if ($null -ne $artifact) { $verified = $true; break }
+        }
+        if (-not $verified) {
+            throw "Resolved production artifact is absent from strict verification metadata: $recordKey"
+        }
+    }
+    if (($selectedKeys.Count -ne $approvedKeys.Count) -or
+        @($selectedKeys | Where-Object { -not $approvedKeys.Contains($_) }).Count -ne 0) {
+        throw 'Resolved production dependency set differs from the authoritative approved inventory.'
+    }
+    $consumerPom = if ([string]::IsNullOrWhiteSpace($ExplicitConsumerPomPath)) {
+        $layout['library-consumer-pom'].resolvedPath
+    } else { [IO.Path]::GetFullPath($ExplicitConsumerPomPath) }
+    if ($consumerPom -cne $layout['library-consumer-pom'].resolvedPath -or
+        -not (Test-Path -LiteralPath $consumerPom -PathType Leaf)) {
+        throw 'Generated consumer POM disagrees with the build-layout contract.'
+    }
+    $pom = [xml](Get-Content -Raw -LiteralPath $consumerPom)
+    $pomNamespaces = [Xml.XmlNamespaceManager]::new($pom.NameTable)
+    $pomNamespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
+    if ($null -ne $pom.SelectSingleNode('/m:project/m:parent', $pomNamespaces)) {
+        throw 'Generated consumer POM must remain parent-free.'
+    }
+    $pomKeys = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($dependency in @($pom.SelectNodes('/m:project/m:dependencies/m:dependency', $pomNamespaces))) {
+        $classifierNode = $dependency.SelectSingleNode('m:classifier', $pomNamespaces)
+        $classifier = if ($null -eq $classifierNode) { $null } else { $classifierNode.InnerText.Trim() }
+        $identity = [pscustomobject]@{
+            groupId = $dependency.groupId.Trim()
+            artifactId = $dependency.artifactId.Trim()
+            version = $dependency.version.Trim()
+            packaging = 'jar'
+            classifier = $classifier
+        }
+        $key = Get-DependencyKey $identity
+        if (-not $selectedKeys.Contains($key)) {
+            throw "Generated consumer POM dependency differs from Gradle production resolution: $key"
+        }
+        $scopeNode = $dependency.SelectSingleNode('m:scope', $pomNamespaces)
+        $scope = if ($null -eq $scopeNode) { 'compile' } else { $scopeNode.InnerText.Trim() }
+        $expectedScope = if ($null -eq $classifier) { 'compile' } else { 'runtime' }
+        if ($scope -cne $expectedScope) {
+            throw "Generated consumer POM has the wrong scope for ${key}: $scope"
+        }
+        [void] $pomKeys.Add($key)
+    }
+    if ($pomKeys.Count -ne $selectedKeys.Count) {
+        throw 'Generated consumer POM omits a resolved production dependency.'
+    }
+    return $layout
+}
+
+<#
+.SYNOPSIS
 Produces the release notice file solely from currently approved inventory entries.
 
 .PARAMETER DependencyInventory
@@ -869,6 +1220,9 @@ Canonical release-input path whose filename identifies packaging and classifier.
 .PARAMETER ReactorVersion
 Effective Maven version of the current reactor build.
 
+.PARAMETER BuildLayoutLookup
+Validated Gradle output model; an empty lookup retains the temporary Maven parity fallback.
+
 .OUTPUTS
 The exact existing reactor artifact path for the coordinate and canonical release filename.
 
@@ -883,7 +1237,8 @@ function Resolve-ReactorProjectArtifact {
         [Parameter(Mandatory = $true)]
         [string] $ReleasePath,
         [Parameter(Mandatory = $true)]
-        [string] $ReactorVersion
+        [string] $ReactorVersion,
+        [hashtable] $BuildLayoutLookup = @{}
     )
 
     $coordinate = [regex]::Match(
@@ -903,6 +1258,7 @@ function Resolve-ReactorProjectArtifact {
     $artifactMap = [System.Collections.Generic.Dictionary[string, string]]::new(
         [System.StringComparer]::Ordinal
     )
+    $layoutId = $null
     if ($artifactId -ceq 'jbsa') {
         $artifactMap.Add("jbsa-$ReactorVersion.jar", "jbsa/target/jbsa-$ReactorVersion.jar")
         $artifactMap.Add("jbsa-$ReactorVersion.pom", 'jbsa/.flattened-pom.xml')
@@ -914,16 +1270,28 @@ function Resolve-ReactorProjectArtifact {
             "jbsa-$ReactorVersion-javadoc.jar",
             "jbsa/target/jbsa-$ReactorVersion-javadoc.jar"
         )
+        $layoutId = switch -CaseSensitive ($releaseName) {
+            "jbsa-$ReactorVersion.jar" { 'library-binary' }
+            "jbsa-$ReactorVersion.pom" { 'library-consumer-pom' }
+            "jbsa-$ReactorVersion-sources.jar" { 'library-sources' }
+            "jbsa-$ReactorVersion-javadoc.jar" { 'library-javadoc' }
+        }
     } else {
         $artifactMap.Add(
             "jbsa-cli-$ReactorVersion.jar",
             "jbsa-cli/target/jbsa-cli-$ReactorVersion.jar"
         )
+        if ($releaseName -ceq "jbsa-cli-$ReactorVersion.jar") { $layoutId = 'cli-binary' }
     }
     if (-not $artifactMap.ContainsKey($releaseName)) {
         throw "Release input project artifact has a noncanonical path for its source: $ReleasePath"
     }
-    $artifactPath = Join-Path $reactorRoot $artifactMap[$releaseName]
+    $artifactPath = if ($BuildLayoutLookup.Count -gt 0) {
+        if ([string]::IsNullOrWhiteSpace($layoutId) -or -not $BuildLayoutLookup.ContainsKey($layoutId)) {
+            throw "Release input project artifact is absent from the build-layout contract: $ReleasePath"
+        }
+        $BuildLayoutLookup[$layoutId].resolvedPath
+    } else { Join-Path $reactorRoot $artifactMap[$releaseName] }
     if (-not (Test-Path -LiteralPath $artifactPath -PathType Leaf)) {
         throw "Release input project artifact has no current reactor output: $Source"
     }
@@ -1176,6 +1544,9 @@ Release-approved dependency entries keyed by exact artifact SHA-256.
 .PARAMETER ReactorVersion
 Effective Maven version used to resolve the current reactor artifact paths.
 
+.PARAMETER BuildLayoutLookup
+Validated Gradle output model, or an empty lookup for temporary Maven parity callers.
+
 .OUTPUTS
 None.
 
@@ -1195,7 +1566,8 @@ function Test-ReleaseInputs {
         [Parameter(Mandatory = $true)]
         [hashtable] $ApprovedDependencyByHash,
         [Parameter(Mandatory = $true)]
-        [string] $ReactorVersion
+        [string] $ReactorVersion,
+        [hashtable] $BuildLayoutLookup = @{}
     )
 
     $resolvedRoot = [System.IO.Path]::GetFullPath($Root)
@@ -1294,7 +1666,7 @@ function Test-ReleaseInputs {
             }
         } elseif ($entry.kind -ceq 'project-artifact') {
             $reactorArtifact = Resolve-ReactorProjectArtifact `
-                $entry.source $normalizedPath $ReactorVersion
+                $entry.source $normalizedPath $ReactorVersion $BuildLayoutLookup
             $reactorArtifactHash = Get-LowercaseSha256 $reactorArtifact
             if ($entry.sha256 -cne $reactorArtifactHash) {
                 throw "Release input project artifact does not match the reactor output: $normalizedPath"
@@ -1402,10 +1774,35 @@ function Test-GeneratedSbom {
     if ($sbom.bomFormat -cne 'CycloneDX' -or $sbom.specVersion -cne '1.6') {
         throw 'The aggregate SBOM must be CycloneDX 1.6 JSON.'
     }
+    if ($null -ne $sbom.PSObject.Properties['serialNumber']) {
+        throw 'The deterministic aggregate SBOM must not contain a serial number.'
+    }
+    $rootRef = "pkg:maven/io.github.evildarkarchon/jbsa-parent@${ReactorVersion}?type=pom"
+    $libraryRef = "pkg:maven/io.github.evildarkarchon/jbsa@${ReactorVersion}?type=jar"
+    $cliRef = "pkg:maven/io.github.evildarkarchon/jbsa-cli@${ReactorVersion}?type=jar"
+    if ($sbom.metadata.component.group -cne 'io.github.evildarkarchon' -or
+        $sbom.metadata.component.name -cne 'jbsa-parent' -or
+        $sbom.metadata.component.version -cne $ReactorVersion -or
+        $sbom.metadata.component.purl -cne $rootRef -or
+        $sbom.metadata.component.'bom-ref' -cne $rootRef) {
+        throw 'The aggregate SBOM must retain jbsa-parent as its exact logical root component.'
+    }
     $approvedEntries = @($DependencyInventory.entries | Where-Object {
             $_.redistribution.approved
         })
     $components = @($sbom.components)
+    $componentRefs = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($component in $components) {
+        Assert-StringProperty $component 'bom-ref' 'Aggregate SBOM component'
+        if (-not $componentRefs.Add($component.'bom-ref')) {
+            throw "Aggregate SBOM contains a duplicate component identity: $($component.'bom-ref')"
+        }
+    }
+    foreach ($projectRef in @($libraryRef, $cliRef)) {
+        if (@($components | Where-Object { $_.'bom-ref' -ceq $projectRef }).Count -ne 1) {
+            throw "Aggregate SBOM must contain one production project component: $projectRef"
+        }
+    }
     foreach ($entry in $approvedEntries) {
         $matchingComponents = @($sbom.components | Where-Object {
                 Test-SbomComponentMatchesDependency $_ $entry
@@ -1437,6 +1834,51 @@ function Test-GeneratedSbom {
             throw "Aggregate SBOM contains an unapproved or uninventoried external component: $($component.group):$($component.name):$($component.version)"
         }
     }
+
+    $relationships = @{}
+    foreach ($relationship in @($sbom.dependencies)) {
+        Assert-StringProperty $relationship 'ref' 'Aggregate SBOM dependency relationship'
+        if ($relationships.ContainsKey($relationship.ref)) {
+            throw "Aggregate SBOM contains a duplicate dependency relationship: $($relationship.ref)"
+        }
+        $relationships[$relationship.ref] = @($relationship.dependsOn)
+    }
+    $externalRefs = @($components | Where-Object {
+            $_.group -cne 'io.github.evildarkarchon'
+        } | ForEach-Object { $_.'bom-ref' })
+    $expectedRelationships = @{
+        $rootRef = @($cliRef, $libraryRef)
+        $cliRef = @($libraryRef)
+        $libraryRef = @($externalRefs)
+    }
+    foreach ($externalRef in $externalRefs) {
+        $expectedRelationships[$externalRef] = @()
+    }
+    $lwjglCoreRef = @($externalRefs | Where-Object {
+            $_ -ceq 'pkg:maven/org.lwjgl/lwjgl@3.4.3?type=jar'
+        })
+    if ($lwjglCoreRef.Count -eq 1) {
+        foreach ($lz4Ref in @($externalRefs | Where-Object {
+                    $_ -like 'pkg:maven/org.lwjgl/lwjgl-lz4@3.4.3?*'
+                })) {
+            $expectedRelationships[$lz4Ref] = @($lwjglCoreRef[0])
+        }
+    }
+    if ($relationships.Count -ne $expectedRelationships.Count) {
+        throw 'Aggregate SBOM dependency relationship set differs from the production graph.'
+    }
+    foreach ($ref in $expectedRelationships.Keys) {
+        if (-not $relationships.ContainsKey($ref)) {
+            throw "Aggregate SBOM is missing a production dependency relationship: $ref"
+        }
+        $actual = [string[]] @($relationships[$ref])
+        $expected = [string[]] @($expectedRelationships[$ref])
+        [Array]::Sort($actual, [StringComparer]::Ordinal)
+        [Array]::Sort($expected, [StringComparer]::Ordinal)
+        if (($actual -join "`n") -cne ($expected -join "`n")) {
+            throw "Aggregate SBOM dependency relationship disagrees with the production graph: $ref"
+        }
+    }
 }
 
 $dependencyInventory = Read-ComplianceInventory $dependencyInventoryPath
@@ -1455,11 +1897,31 @@ foreach ($entry in @($dependencyInventory.entries | Where-Object {
         })) {
     $approvedDependencyByHash[$entry.sha256] = $entry
 }
+if ([string]::IsNullOrWhiteSpace($ReactorVersion) -and
+    -not [string]::IsNullOrWhiteSpace($BuildLayoutManifest)) {
+    throw 'Gradle compliance mode requires an explicit -ReactorVersion.'
+}
 if ([string]::IsNullOrWhiteSpace($ReactorVersion)) {
     $ReactorVersion = Get-DeclaredReactorVersion (Join-Path $reactorRoot 'pom.xml')
 }
 
-Test-ProductDependencies $dependencyLookup
+$buildLayoutLookup = @{}
+if (-not [string]::IsNullOrWhiteSpace($BuildLayoutManifest)) {
+    if ([string]::IsNullOrWhiteSpace($ResolvedProductionDependencies)) {
+        throw '-BuildLayoutManifest requires -ResolvedProductionDependencies.'
+    }
+    $buildLayoutLookup = Test-GradleComplianceInputs `
+        $dependencyLookup $BuildLayoutManifest $ResolvedProductionDependencies $ConsumerPomPath `
+        $DependencyLockPaths $VerificationMetadataPaths
+} elseif (-not [string]::IsNullOrWhiteSpace($ResolvedProductionDependencies) -or
+    -not [string]::IsNullOrWhiteSpace($ConsumerPomPath) -or
+    ($null -ne $DependencyLockPaths -and $DependencyLockPaths.Count -gt 0) -or
+    ($null -ne $VerificationMetadataPaths -and $VerificationMetadataPaths.Count -gt 0)) {
+    throw 'Gradle compliance inputs require -BuildLayoutManifest.'
+} else {
+    # Maven remains a parity oracle on the migration branch until the atomic cutover removes this fallback.
+    Test-ProductDependencies $dependencyLookup
+}
 Test-TrackedRepositoryBytes $nativeByHash $approvedNativeByHash
 
 $notices = New-ThirdPartyNoticesText $dependencyInventory $nativeInventory
@@ -1483,7 +1945,7 @@ if ($releaseNotes -cnotmatch 'fd1e36020b2b5b6217e553dc0038983146a2e2dd' -or
 if (-not [string]::IsNullOrWhiteSpace($ReleaseInputRoot)) {
     Test-ReleaseInputs `
         $ReleaseInputRoot $ReleaseInputManifest $nativeByHash $approvedNativeByHash `
-        $approvedDependencyByHash $ReactorVersion
+        $approvedDependencyByHash $ReactorVersion $buildLayoutLookup
 } elseif (-not [string]::IsNullOrWhiteSpace($ReleaseInputManifest)) {
     throw '-ReleaseInputManifest requires -ReleaseInputRoot.'
 }
