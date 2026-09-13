@@ -1,15 +1,24 @@
 package io.github.evildarkarchon.jbsa.build
 
+import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.configuration.BuildFeatures
 import org.gradle.api.initialization.Settings
 import org.gradle.api.initialization.resolve.RepositoriesMode
 
 /** Owns plugin and dependency repository policy before any JBSA project is configured. */
-class JbsaSettingsPlugin : Plugin<Settings> {
+class JbsaSettingsPlugin @Inject constructor(private val buildFeatures: BuildFeatures) : Plugin<Settings> {
     /** Configures central repositories and rejects unpinned external plugin requests. */
     override fun apply(settings: Settings) {
+        if (buildFeatures.configurationCache.requested.getOrElse(false)) {
+            try {
+                ConfigurationCachePolicy.validate(settings.gradle.startParameter.taskNames)
+            } catch (exception: IllegalArgumentException) {
+                throw GradleException(exception.message ?: "Invalid configuration-cache request.", exception)
+            }
+        }
         val catalog = PinnedVersionCatalog.load(settings.settingsDir.toPath().resolve("gradle/libs.versions.toml"))
         settings.pluginManagement.resolutionStrategy.eachPlugin {
             try {

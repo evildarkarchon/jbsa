@@ -197,6 +197,51 @@ class FoundationPluginFunctionalTest {
         assertTrue(result.output.contains("Dependency verification failed"), result.output)
     }
 
+    /** Verifies strict checksum metadata rejects an external plugin implementation before use. */
+    @Test
+    fun `rejects an unverified plugin artifact`() {
+        write(
+            "gradle/verification-metadata.xml",
+            """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <verification-metadata>
+               <configuration>
+                  <verify-metadata>true</verify-metadata>
+                  <verify-signatures>false</verify-signatures>
+               </configuration>
+               <components/>
+            </verification-metadata>
+            """.trimIndent(),
+        )
+        write(
+            "build.gradle.kts",
+            """
+            plugins {
+                id("jbsa.foundation")
+                id("com.diffplug.spotless") version "8.10.2"
+            }
+            """.trimIndent(),
+        )
+
+        val result = runStrictAndFail("help")
+
+        assertTrue(result.output.contains("Dependency verification failed"), result.output)
+        assertTrue(result.output.contains("spotless"), result.output)
+    }
+
+    /** Verifies process and evidence tasks reject configuration-cache mode at the settings seam. */
+    @Test
+    fun `rejects configuration cache for incompatible tasks`() {
+        val result = runAndFail("--configuration-cache", "verify")
+
+        assertTrue(
+            result.output.contains(
+                "Configuration cache is not supported for evidence, staging, or external-process tasks: verify"
+            ),
+            result.output,
+        )
+    }
+
     /** Verifies dynamic selectors fail with the build's actionable deterministic-resolution diagnostic. */
     @Test
     fun `rejects dynamic dependencies`() {

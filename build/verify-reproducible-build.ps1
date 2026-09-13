@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-Builds the public reactor artifacts twice and requires identical SHA-256 hashes.
+Builds the canonical Gradle artifacts twice and requires identical SHA-256 hashes.
 
 .PARAMETER ReactorVersion
-Effective Maven revision to rebuild and compare. Defaults to the root POM revision.
+Effective Gradle candidate version to rebuild and compare. Defaults to gradle.properties.
 
 .NOTES
-Only the library inputs and thin CLI JAR are compared. Test reports and other environmental output
-are intentionally outside this reproducibility check.
+The consumer POM, library binary, sources, Javadocs, and thin CLI are compared byte for byte. Test
+reports and other environmental output are intentionally outside this reproducibility check.
 #>
 [CmdletBinding()]
 param([string] $ReactorVersion)
@@ -16,27 +16,26 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $reactorRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$mavenWrapper = Join-Path $reactorRoot 'mvnw.cmd'
+$gradleWrapper = Join-Path $reactorRoot 'gradlew.bat'
 if ([string]::IsNullOrWhiteSpace($ReactorVersion)) {
-    $rootPom = [xml](Get-Content -Raw -LiteralPath (Join-Path $reactorRoot 'pom.xml'))
-    $pomNamespaces = New-Object System.Xml.XmlNamespaceManager($rootPom.NameTable)
-    $pomNamespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
-    $revisionNode = $rootPom.SelectSingleNode('/m:project/m:properties/m:revision', $pomNamespaces)
-    if ($null -eq $revisionNode -or [string]::IsNullOrWhiteSpace($revisionNode.InnerText)) {
-        throw 'The root POM does not declare the reactor revision.'
+    $versionLine = @(Get-Content -LiteralPath (Join-Path $reactorRoot 'gradle.properties') | Where-Object {
+            $_ -match '^version\s*='
+        })
+    if ($versionLine.Count -ne 1) {
+        throw 'gradle.properties must declare exactly one default version.'
     }
-    $ReactorVersion = $revisionNode.InnerText.Trim()
+    $ReactorVersion = ($versionLine[0] -split '=', 2)[1].Trim()
 }
 $scratchRoot = [System.IO.Path]::Combine(
     [System.IO.Path]::GetTempPath(),
     "jbsa-reproducibility-$([System.Guid]::NewGuid().ToString('N'))"
 )
 $artifactPaths = @(
-    'jbsa/.flattened-pom.xml',
-    "jbsa/target/jbsa-$reactorVersion.jar",
-    "jbsa/target/jbsa-$reactorVersion-sources.jar",
-    "jbsa/target/jbsa-$reactorVersion-javadoc.jar",
-    "jbsa-cli/target/jbsa-cli-$reactorVersion.jar"
+    'jbsa/target/publications/library/pom-default.xml',
+    "jbsa/target/libs/jbsa-$reactorVersion.jar",
+    "jbsa/target/libs/jbsa-$reactorVersion-sources.jar",
+    "jbsa/target/libs/jbsa-$reactorVersion-javadoc.jar",
+    "jbsa-cli/target/libs/jbsa-cli-$reactorVersion.jar"
 )
 
 try {
@@ -44,8 +43,8 @@ try {
     Push-Location $reactorRoot
     try {
         foreach ($pass in 1..2) {
-            # Both builds must produce the same candidate version that the caller is qualifying.
-            & $mavenWrapper -B -ntp -C -DskipTests "-Drevision=$ReactorVersion" clean package
+            # Both clean builds use only the exact canonical producers and the candidate under qualification.
+            & $gradleWrapper clean ':jbsa:assembleLibraryPublication' ':jbsa-cli:jar' "-Pversion=$ReactorVersion" --no-daemon
             if ($LASTEXITCODE -ne 0) {
                 throw "Reproducibility build $pass failed with exit code $LASTEXITCODE."
             }

@@ -15,6 +15,7 @@ from typing import Any
 
 
 ARCHIVE_ENVELOPE_KEYS = frozenset({"archive_sha256"})
+KEYED_COLLECTION_FIELDS = ("path", "bom_ref", "ref", "class", "file_name")
 
 
 def sha256_file(path: Path) -> str:
@@ -228,6 +229,7 @@ def _normalize_sbom_component(component: dict[str, Any] | None) -> dict[str, Any
         (
             {"algorithm": item.get("alg"), "content": item.get("content")}
             for item in component.get("hashes", [])
+            if item.get("alg") == "SHA-256"
         ),
         key=lambda item: (item["algorithm"] or "", item["content"] or ""),
     )
@@ -290,6 +292,10 @@ def inspect_java_contract(path: Path, java_home: Path) -> dict[str, Any]:
     # `jar --describe-module` prefixes the descriptor with the inspected file URI; that location is
     # not part of JPMS semantics and necessarily differs between isolated Maven and Gradle roots.
     descriptor = re.sub(r"^(\S+)\s+jar:file:.*!/module-info\.class$", r"\1", descriptor, count=1, flags=re.MULTILINE)
+    # Maven's JAR tooling materializes the optional ModulePackages attribute while Gradle leaves
+    # runtime module discovery to derive the same package set from class entries. Compare that set
+    # independently so the attribute's encoding does not masquerade as a JPMS contract change.
+    descriptor = "\n".join(line for line in descriptor.splitlines() if not line.startswith("contains "))
     with zipfile.ZipFile(path) as archive:
         classes = sorted(
             entry.filename[:-6].replace("/", ".")
@@ -307,7 +313,12 @@ def inspect_java_contract(path: Path, java_home: Path) -> dict[str, Any]:
             line.strip() for line in output.splitlines() if not line.startswith("Compiled from ")
         )
         signatures.append({"class": class_name, "signature": normalized})
-    return {"module_descriptor": descriptor, "public_signatures": signatures}
+    packages = sorted({class_name.rpartition(".")[0] for class_name in classes if "." in class_name})
+    return {
+        "module_descriptor": descriptor,
+        "packages": packages,
+        "public_signatures": signatures,
+    }
 
 
 def normalize_staging_manifest(path: Path) -> dict[str, Any]:
@@ -353,6 +364,23 @@ def compare_snapshots(
                     compare(left[key], right[key], child_path)
             return
         if isinstance(left, list) and isinstance(right, list):
+            key_field = _common_unique_key(left, right)
+            if key_field is not None:
+                left_by_key = {str(item[key_field]): item for item in left}
+                right_by_key = {str(item[key_field]): item for item in right}
+                for key in sorted(set(left_by_key) | set(right_by_key)):
+                    child_path = f"{path}[{key_field}={key}]"
+                    if key not in left_by_key:
+                        differences.append(
+                            {"actual": right_by_key[key], "expected": None, "path": child_path}
+                        )
+                    elif key not in right_by_key:
+                        differences.append(
+                            {"actual": None, "expected": left_by_key[key], "path": child_path}
+                        )
+                    else:
+                        compare(left_by_key[key], right_by_key[key], child_path)
+                return
             for index in range(max(len(left), len(right))):
                 child_path = f"{path}[{index}]"
                 if index >= len(left):
@@ -369,28 +397,78 @@ def compare_snapshots(
     return differences
 
 
+def _common_unique_key(left: list[Any], right: list[Any]) -> str | None:
+    """Return a stable identity shared by every mapping in both collections, when one exists."""
+    combined = left + right
+    if not combined or not all(isinstance(item, dict) for item in combined):
+        return None
+    for field in KEYED_COLLECTION_FIELDS:
+        if all(field in item and item[field] is not None for item in combined):
+            left_values = [str(item[field]) for item in left]
+            right_values = [str(item[field]) for item in right]
+            if len(left_values) == len(set(left_values)) and len(right_values) == len(set(right_values)):
+                return field
+    return None
+
+
+def load_build_layout(build_root: Path) -> dict[str, Path]:
+    """Load Gradle's declared output identities as absolute paths beneath one isolated build root."""
+    manifest_path = build_root / "target" / "compliance" / "build-layout.json"
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if document.get("schemaVersion") != 1:
+        raise ValueError(f"Unsupported build-layout schema: {document.get('schemaVersion')}")
+    outputs: dict[str, Path] = {}
+    for entry in document.get("outputs", []):
+        identifier = entry.get("id")
+        relative_path = entry.get("path")
+        if not identifier or not relative_path:
+            raise ValueError(f"Invalid build-layout output: {entry!r}")
+        path = (build_root / relative_path).resolve()
+        if not path.is_relative_to(build_root.resolve()):
+            raise ValueError(f"Build-layout output escapes the build root: {relative_path}")
+        outputs[str(identifier)] = path
+    return outputs
+
+
 def _file_record(path: Path) -> dict[str, Any]:
     """Record one ordinary evidence file by name, size, and content digest."""
     return {"file_name": path.name, "sha256": sha256_file(path), "size": path.stat().st_size}
 
 
-def inspect_build(build_root: Path, version: str, java_home: Path) -> dict[str, Any]:
+def inspect_build(build_root: Path, version: str, java_home: Path, build_tool: str = "maven") -> dict[str, Any]:
     """Inspect all canonical Maven/Gradle parity outputs beneath one isolated build root."""
-    artifacts = {
-        "benchmark_standalone": build_root
-        / "jbsa-benchmarks"
-        / "target"
-        / f"jbsa-benchmarks-{version}-standalone.jar",
-        "library": build_root / "jbsa" / "target" / f"jbsa-{version}.jar",
-        "library_sources": build_root / "jbsa" / "target" / f"jbsa-{version}-sources.jar",
-        "library_javadocs": build_root / "jbsa" / "target" / f"jbsa-{version}-javadoc.jar",
-        "thin_cli": build_root / "jbsa-cli" / "target" / f"jbsa-cli-{version}.jar",
-    }
+    if build_tool == "gradle":
+        layout = load_build_layout(build_root)
+        artifacts = {
+            "benchmark_standalone": build_root
+            / "jbsa-benchmarks"
+            / "target"
+            / f"jbsa-benchmarks-{version}-standalone.jar",
+            "library": layout["library-binary"],
+            "library_sources": layout["library-sources"],
+            "library_javadocs": layout["library-javadoc"],
+            "thin_cli": layout["cli-binary"],
+        }
+        consumer_pom = layout["library-consumer-pom"]
+        sbom = layout["aggregate-sbom"]
+    elif build_tool == "maven":
+        artifacts = {
+            "benchmark_standalone": build_root
+            / "jbsa-benchmarks"
+            / "target"
+            / f"jbsa-benchmarks-{version}-standalone.jar",
+            "library": build_root / "jbsa" / "target" / f"jbsa-{version}.jar",
+            "library_sources": build_root / "jbsa" / "target" / f"jbsa-{version}-sources.jar",
+            "library_javadocs": build_root / "jbsa" / "target" / f"jbsa-{version}-javadoc.jar",
+            "thin_cli": build_root / "jbsa-cli" / "target" / f"jbsa-cli-{version}.jar",
+        }
+        consumer_pom = build_root / "jbsa" / ".flattened-pom.xml"
+        sbom = build_root / "target" / "compliance" / "jbsa.cdx.json"
+    else:
+        raise ValueError(f"Unsupported build tool: {build_tool}")
     missing = [str(path) for path in artifacts.values() if not path.is_file()]
     if missing:
         raise ValueError(f"Canonical artifacts are missing: {', '.join(missing)}")
-    consumer_pom = build_root / "jbsa" / ".flattened-pom.xml"
-    sbom = build_root / "target" / "compliance" / "jbsa.cdx.json"
     staging_manifest = build_root / "jbsa-dist" / "target" / "release-inputs.json"
     for required in (consumer_pom, sbom, staging_manifest):
         if not required.is_file():
@@ -450,6 +528,7 @@ def main(arguments: list[str] | None = None) -> int:
     inspect_parser.add_argument("--build-root", type=Path, required=True)
     inspect_parser.add_argument("--java-home", type=Path, required=True)
     inspect_parser.add_argument("--version", required=True)
+    inspect_parser.add_argument("--build-tool", choices=("maven", "gradle"), default="maven")
     inspect_parser.add_argument("--output", type=Path, required=True)
     compare_parser = subparsers.add_parser("compare")
     compare_parser.add_argument("--expected", type=Path, required=True)
@@ -460,7 +539,12 @@ def main(arguments: list[str] | None = None) -> int:
     if options.command == "inspect-build":
         _write_json(
             options.output,
-            inspect_build(options.build_root.resolve(), options.version, options.java_home.resolve()),
+            inspect_build(
+                options.build_root.resolve(),
+                options.version,
+                options.java_home.resolve(),
+                options.build_tool,
+            ),
         )
         return 0
     differences = compare_snapshots(

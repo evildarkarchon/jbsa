@@ -113,6 +113,7 @@ class PublicLibraryPluginFunctionalTest {
         val descriptor = ModuleFinder.of(binary).find("io.github.evildarkarchon.jbsa").orElseThrow().descriptor()
         assertFalse(descriptor.isAutomatic)
         assertFalse(descriptor.isOpen)
+        assertEquals("0.1.0-SNAPSHOT", descriptor.rawVersion().orElseThrow())
         assertEquals(setOf("io.github.evildarkarchon.jbsa"), descriptor.exports().map { it.source() }.toSet())
         assertEquals(
             setOf("java.base", "jdk.unsupported", "org.lwjgl", "org.lwjgl.lz4"),
@@ -177,7 +178,7 @@ class PublicLibraryPluginFunctionalTest {
         assertEquals("scm:git:https://github.com/evildarkarchon/jbsa.git", directText(scm, "connection"))
         assertEquals("scm:git:ssh://git@github.com/evildarkarchon/jbsa.git", directText(scm, "developerConnection"))
         assertEquals("https://github.com/evildarkarchon/jbsa", directText(scm, "url"))
-        assertEquals("HEAD", directText(scm, "tag"))
+        assertEquals("", directText(scm, "tag"))
 
         val dependencies = root.getElementsByTagName("dependency")
         assertEquals(4, dependencies.length)

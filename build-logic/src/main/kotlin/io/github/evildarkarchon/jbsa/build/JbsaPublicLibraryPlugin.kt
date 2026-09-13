@@ -22,6 +22,9 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
         val java = project.extensions.getByType(JavaPluginExtension::class.java)
         java.withSourcesJar()
         java.withJavadocJar()
+        project.tasks.named("compileJava", JavaCompile::class.java) {
+            options.javaModuleVersion.set(project.provider { project.version.toString() })
+        }
         configureDependencies(project)
         configurePublication(project)
         configureWhiteboxModuleTesting(project)
@@ -136,15 +139,6 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
                         connection.set("scm:git:https://github.com/evildarkarchon/jbsa.git")
                         developerConnection.set("scm:git:ssh://git@github.com/evildarkarchon/jbsa.git")
                         url.set("https://github.com/evildarkarchon/jbsa")
-                        tag.set("HEAD")
-                    }
-                    withXml {
-                        // Gradle 9.7.1 does not serialize MavenPomScm.tag into the generated POM.
-                        val document = asElement().ownerDocument
-                        val scmElement = asElement().getElementsByTagName("scm").item(0)
-                        val tagElement = document.createElement("tag")
-                        tagElement.textContent = "HEAD"
-                        scmElement.appendChild(tagElement)
                     }
                 }
             }

@@ -69,7 +69,10 @@ class ArtifactInspectorTests(unittest.TestCase):
             paths = [difference["path"] for difference in parity_artifact_inspector.compare_snapshots(
                 baseline, parity_artifact_inspector.inspect_java_contract(changed, java_home)
             )]
-            self.assertEqual(paths, ["module_descriptor", "public_signatures[0].signature"])
+            self.assertEqual(
+                paths,
+                ["module_descriptor", "public_signatures[class=example.api.Api].signature"],
+            )
 
     def test_archive_comparison_ignores_envelope_but_detects_payload_changes(self):
         """A changed entry payload must fail even when ZIP timestamps and ordering are ignored."""
@@ -103,7 +106,7 @@ class ArtifactInspectorTests(unittest.TestCase):
             self.assertEqual(matching, [])
             self.assertEqual(
                 [difference["path"] for difference in mismatching],
-                ["entries[1].sha256"],
+                ["entries[path=example/Api.class].sha256"],
             )
 
     def test_benchmark_contract_records_launch_services_classes_and_module_absence(self):
@@ -185,8 +188,9 @@ class ArtifactInspectorTests(unittest.TestCase):
         reordered = json.loads(json.dumps(first))
         reordered["components"].reverse()
         reordered["dependencies"][0]["dependsOn"].reverse()
+        reordered["components"][0]["hashes"].insert(0, {"alg": "MD5", "content": "ignored"})
         changed = json.loads(json.dumps(reordered))
-        changed["components"][0]["hashes"][0]["content"] = "c" * 64
+        changed["components"][0]["hashes"][1]["content"] = "c" * 64
         changed["dependencies"][0]["dependsOn"].pop()
 
         normalized = parity_artifact_inspector.normalize_sbom(first)
@@ -194,7 +198,10 @@ class ArtifactInspectorTests(unittest.TestCase):
         paths = [difference["path"] for difference in parity_artifact_inspector.compare_snapshots(
             normalized, parity_artifact_inspector.normalize_sbom(changed)
         )]
-        self.assertEqual(paths, ["components[0].hashes[0].content", "dependencies[0].depends_on[1]"])
+        self.assertEqual(
+            paths,
+            ["components[bom_ref=a].hashes[0].content", "dependencies[ref=root].depends_on[1]"],
+        )
 
     def test_tree_inventory_and_generic_comparison_report_renamed_or_changed_bytes(self):
         """Runtime and staging inventories must retain relative names, sizes, and SHA-256 values."""
@@ -212,7 +219,63 @@ class ArtifactInspectorTests(unittest.TestCase):
                 parity_artifact_inspector.inspect_tree(second),
             )
 
-            self.assertEqual([difference["path"] for difference in differences], ["files[0].path"])
+            self.assertEqual(
+                [difference["path"] for difference in differences],
+                ["files[path=renamed.jar]", "files[path=runtime.jar]"],
+            )
+
+    def test_keyed_collection_comparison_does_not_shift_later_entries(self):
+        """One inserted archive entry must produce one difference rather than shifting its peers."""
+        expected = {
+            "entries": [
+                {"path": "a.txt", "size": 1, "sha256": "a"},
+                {"path": "c.txt", "size": 1, "sha256": "c"},
+            ]
+        }
+        actual = {
+            "entries": [
+                {"path": "a.txt", "size": 1, "sha256": "a"},
+                {"path": "b.txt", "size": 1, "sha256": "b"},
+                {"path": "c.txt", "size": 1, "sha256": "c"},
+            ]
+        }
+
+        differences = parity_artifact_inspector.compare_snapshots(expected, actual)
+
+        self.assertEqual(
+            differences,
+            [{"actual": actual["entries"][1], "expected": None, "path": "entries[path=b.txt]"}],
+        )
+
+    def test_gradle_build_layout_locates_canonical_outputs(self):
+        """The Gradle inspector must consume declared output identities instead of Maven paths."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = root / "target" / "compliance" / "build-layout.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": 1,
+                        "outputs": [
+                            {"id": "library-binary", "path": "jbsa/target/libs/jbsa-1.2.3.jar"},
+                            {
+                                "id": "library-consumer-pom",
+                                "path": "jbsa/target/publications/library/pom-default.xml",
+                            },
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            outputs = parity_artifact_inspector.load_build_layout(root)
+
+            self.assertEqual(outputs["library-binary"], root / "jbsa/target/libs/jbsa-1.2.3.jar")
+            self.assertEqual(
+                outputs["library-consumer-pom"],
+                root / "jbsa/target/publications/library/pom-default.xml",
+            )
 
 
 if __name__ == "__main__":
