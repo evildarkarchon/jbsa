@@ -92,6 +92,12 @@ Write-Output 'jbsa-cli/target/libs/jbsa-cli-0.1.0-SNAPSHOT.jar reproducible'
     Set-Content -LiteralPath (Join-Path $repository 'fixture-gradle.ps1') -Value @'
 $joined = $args -join ' '
 Add-Content -LiteralPath (Join-Path $PSScriptRoot 'fixture-calls.log') -Value $joined
+if ($args -contains 'clean') {
+    foreach ($relative in @('target/compliance', 'target/conformance', 'jbsa-dist/target')) {
+        $generated = Join-Path $PSScriptRoot $relative
+        if (Test-Path -LiteralPath $generated) { Remove-Item -LiteralPath $generated -Recurse -Force }
+    }
+}
 if ((Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'gradle/verification-metadata.xml')) -match '0000000000000000') {
     Write-Output 'Dependency verification failed for deliberately mismatched checksum.'
     exit 1
@@ -111,8 +117,17 @@ if ($args -contains ':jbsa-conformance-tests:automatedConformance') {
     Set-Content -LiteralPath (Join-Path $PSScriptRoot 'target/conformance-exit-code.txt') -Value '1'
 }
 if ($args -contains 'verify') {
-    New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'target') -Force | Out-Null
+    $compliance = Join-Path $PSScriptRoot 'target/compliance'
+    $conformance = Join-Path $PSScriptRoot 'target/conformance'
+    $stage = Join-Path $PSScriptRoot 'jbsa-dist/target/release-inputs'
+    New-Item -ItemType Directory -Path $compliance, $conformance, $stage -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $PSScriptRoot 'target/conformance-exit-code.txt') -Value '1'
+    Set-Content -LiteralPath (Join-Path $compliance 'resolved-production-dependencies.json') -Value '{"schemaVersion":1}'
+    Set-Content -LiteralPath (Join-Path $compliance 'jbsa.cdx.json') -Value '{"bomFormat":"CycloneDX"}'
+    Set-Content -LiteralPath (Join-Path $conformance 'matrix.json') -Value '{"contract":"conformance-v1"}'
+    Set-Content -LiteralPath (Join-Path $conformance 'report.json') -Value '{"automated_conformance":false}'
+    Set-Content -LiteralPath (Join-Path $stage 'jbsa.ps1') -Value 'param([string] $JavaHome, [switch] $ClassPath) Write-Output "jbsa 0.1.0-SNAPSHOT"'
+    Set-Content -LiteralPath (Join-Path $PSScriptRoot 'jbsa-dist/target/release-inputs.json') -Value '{"schemaVersion":1}'
 }
 if ($env:JBSA_QUALIFICATION_TEST_FAIL_ONCE -eq 'timing-clean' -and $args -contains 'clean' -and $args -contains '--offline' -and $args -notcontains 'verify') {
     $failureMarker = Join-Path $env:GRADLE_USER_HOME 'fixture-timing-clean-failed-once'
@@ -122,9 +137,6 @@ if ($env:JBSA_QUALIFICATION_TEST_FAIL_ONCE -eq 'timing-clean' -and $args -contai
         exit 23
     }
 }
-$stage = Join-Path $PSScriptRoot 'jbsa-dist/target/release-inputs'
-New-Item -ItemType Directory -Path $stage -Force | Out-Null
-Set-Content -LiteralPath (Join-Path $stage 'jbsa.ps1') -Value 'param([string] $JavaHome, [switch] $ClassPath) Write-Output "jbsa 0.1.0-SNAPSHOT"'
 exit 0
 '@
 
@@ -242,6 +254,22 @@ exit 0
     if (-not $result.resume.resumed -or @($result.resume.reusedCommands).Count -eq 0 -or 'verified-cache-offline-build' -notin @($result.resume.reusedCommands)) { throw 'Resume did not report reuse of completed full-suite evidence.' }
     if (@($result.gates | Where-Object { $_.command.reusedFrom -cne 'verified-cache-offline-build' }).Count -ne 0) { throw 'Duplicated gate executions were not derived from the qualifying offline full-suite run.' }
     if ($result.profiling.artifactInspector.jdkTools.launchCount -ne 2 -or $result.profiling.duplicateGateExecutionsAfter -ne 0) { throw 'Qualification profiling did not retain JDK launch and duplicate-gate evidence.' }
+    $handoff = $result.releaseQualificationHandoff
+    if ($handoff.status -cne 'prepared-not-qualified' -or $handoff.manualQualificationPerformed -or $handoff.fileCount -ne 6) {
+        throw 'The report did not preserve the unqualified manual Release Qualification handoff.'
+    }
+    foreach ($relative in @(
+        'release-qualification/release-inputs/jbsa.ps1',
+        'release-qualification/release-inputs.json',
+        'release-qualification/compliance/resolved-production-dependencies.json',
+        'release-qualification/compliance/jbsa.cdx.json',
+        'release-qualification/automated-conformance/matrix.json',
+        'release-qualification/automated-conformance/report.json'
+    )) {
+        if (-not (Test-Path -LiteralPath (Join-Path $qualification $relative) -PathType Leaf)) {
+            throw "Qualification omitted retained handoff evidence: $relative"
+        }
+    }
     Write-Output 'Gradle qualification regression checks passed.'
 }
 finally {

@@ -415,6 +415,123 @@ function Test-InventoryEquality {
 
 <#
 .SYNOPSIS
+Records every retained Release Qualification handoff file by path, length, and content hash.
+
+.PARAMETER HandoffRoot
+Evidence directory whose payload is inventoried. The manifest and its digest sidecar are excluded.
+
+.OUTPUTS
+Sorted evidence rows for every retained staged, compliance, and Automated Conformance file.
+#>
+function Get-ReleaseQualificationInventory {
+    param([Parameter(Mandatory = $true)] [string] $HandoffRoot)
+
+    $root = [IO.Path]::GetFullPath($HandoffRoot)
+    return @(Get-ChildItem -LiteralPath $root -Recurse -File | ForEach-Object {
+        $relative = [IO.Path]::GetRelativePath($root, $_.FullName).Replace('\', '/')
+        if ($relative -notin @('manifest.json', 'manifest.json.sha256')) {
+            [ordered]@{
+                path = $relative
+                size = $_.Length
+                sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+        }
+    } | Sort-Object -Property path)
+}
+
+<#
+.SYNOPSIS
+Preserves the actual staged release inputs and their qualifying generated evidence before clean tasks.
+
+.PARAMETER SourceRoot
+Detached candidate worktree containing the successfully verified Gradle outputs.
+
+.PARAMETER PendingRoot
+Qualification evidence directory that survives deletion of the detached worktree.
+
+.PARAMETER SourceRevision
+Exact committed candidate revision represented by the handoff.
+
+.PARAMETER CandidateVersion
+Validated candidate version shared by every staged artifact.
+
+.PARAMETER Resume
+Validates and reuses a previously captured digest-bound handoff after a later harness failure.
+
+.OUTPUTS
+The parsed or newly generated handoff manifest.
+#>
+function Save-ReleaseQualificationHandoff {
+    param(
+        [Parameter(Mandatory = $true)] [string] $SourceRoot,
+        [Parameter(Mandatory = $true)] [string] $PendingRoot,
+        [Parameter(Mandatory = $true)] [string] $SourceRevision,
+        [Parameter(Mandatory = $true)] [string] $CandidateVersion,
+        [switch] $Resume
+    )
+
+    $handoffRoot = Join-Path $PendingRoot 'release-qualification'
+    $manifestPath = Join-Path $handoffRoot 'manifest.json'
+    $manifestDigestPath = "$manifestPath.sha256"
+    if ($Resume) {
+        if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf) -or
+            -not (Test-Path -LiteralPath $manifestDigestPath -PathType Leaf)) {
+            throw 'Retained Release Qualification handoff is missing its manifest or digest.'
+        }
+        $manifestDigest = (Get-Content -Raw -LiteralPath $manifestDigestPath).Trim()
+        if ($manifestDigest -cne (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()) {
+            throw 'Retained Release Qualification handoff manifest digest is invalid.'
+        }
+        $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json -Depth 20
+        $actualInventory = @(Get-ReleaseQualificationInventory -HandoffRoot $handoffRoot)
+        if ([string] $manifest.sourceRevision -cne $SourceRevision -or
+            [string] $manifest.candidateVersion -cne $CandidateVersion -or
+            -not (Test-InventoryEquality -Before @($manifest.files) -After $actualInventory)) {
+            throw 'Retained Release Qualification handoff no longer matches its qualified inputs or file inventory.'
+        }
+        return $manifest
+    }
+
+    $sources = [ordered]@{
+        'release-inputs' = Join-Path $SourceRoot 'jbsa-dist/target/release-inputs'
+        'compliance' = Join-Path $SourceRoot 'target/compliance'
+        'automated-conformance' = Join-Path $SourceRoot 'target/conformance'
+    }
+    $releaseManifest = Join-Path $SourceRoot 'jbsa-dist/target/release-inputs.json'
+    foreach ($entry in $sources.GetEnumerator()) {
+        if (-not (Test-Path -LiteralPath $entry.Value -PathType Container)) {
+            throw "Qualification handoff source directory is missing: $($entry.Value)"
+        }
+    }
+    if (-not (Test-Path -LiteralPath $releaseManifest -PathType Leaf)) {
+        throw "Qualification handoff release manifest is missing: $releaseManifest"
+    }
+
+    New-Item -ItemType Directory -Path $handoffRoot -Force | Out-Null
+    foreach ($entry in $sources.GetEnumerator()) {
+        Copy-Item -LiteralPath $entry.Value -Destination (Join-Path $handoffRoot $entry.Key) -Recurse
+    }
+    Copy-Item -LiteralPath $releaseManifest -Destination (Join-Path $handoffRoot 'release-inputs.json')
+    $inventory = @(Get-ReleaseQualificationInventory -HandoffRoot $handoffRoot)
+    $manifest = [ordered]@{
+        schemaVersion = 1
+        status = 'prepared-not-qualified'
+        manualQualificationPerformed = $false
+        sourceRevision = $SourceRevision
+        candidateVersion = $CandidateVersion
+        files = $inventory
+    }
+    [IO.File]::WriteAllText($manifestPath, (($manifest | ConvertTo-Json -Depth 20) + "`n"), [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText(
+        $manifestDigestPath,
+        ((Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant() + "`n"),
+        [Text.UTF8Encoding]::new($false)
+    )
+    return $manifest
+}
+
+<#
+.SYNOPSIS
 Explains one measured cross-tool representation difference against the normative Gradle contracts.
 
 .PARAMETER Difference
@@ -867,6 +984,11 @@ try {
         throw 'Gradle CLI observations contain an unexplained difference from the same-revision Maven baseline.'
     }
 
+    # Later reproducibility and timing phases run clean tasks, so preserve the exact manual handoff
+    # only after the complete offline verify closure and CLI observations have accepted these bytes.
+    $releaseQualificationManifest = Save-ReleaseQualificationHandoff -SourceRoot $isolatedRoot `
+        -PendingRoot $pendingRoot -SourceRevision $revision -CandidateVersion $candidateVersion -Resume:$Resume
+
     # Reproducibility remains a distinct two-clean-build proof, but it runs after gates and CLI so its
     # cleanup cannot force those already-qualified suites to execute again.
     $reproducibility = Invoke-QualificationCommand -Name 'gradle-reproducibility' -Executable 'pwsh' -Arguments @(
@@ -1017,6 +1139,15 @@ try {
         }
         gates = $gateEvidence
         cli = $cliEvidence
+        releaseQualificationHandoff = [ordered]@{
+            status = [string] $releaseQualificationManifest.status
+            manualQualificationPerformed = [bool] $releaseQualificationManifest.manualQualificationPerformed
+            root = 'release-qualification'
+            manifest = 'release-qualification/manifest.json'
+            manifestSha256 = (Get-FileHash -LiteralPath (Join-Path $pendingRoot 'release-qualification/manifest.json') -Algorithm SHA256).Hash.ToLowerInvariant()
+            fileCount = @($releaseQualificationManifest.files).Count
+            files = @($releaseQualificationManifest.files)
+        }
         timings = [ordered]@{
             machine = [ordered]@{
                 operatingSystem = [Environment]::OSVersion.VersionString
