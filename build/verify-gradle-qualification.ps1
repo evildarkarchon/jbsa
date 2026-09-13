@@ -536,7 +536,13 @@ try {
     # The measured passes use identical arguments; only the first begins after an explicit clean.
     $timingClean = Invoke-QualificationCommand -Name 'timing-clean' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', 'clean')) -WorkingDirectory $isolatedRoot -RequireSuccess
     $commands.Add($timingClean)
-    $timingArguments = $commonArguments + @('--offline', '--rerun-tasks', 'verify')
+    $timingTasks = @(
+        ':jbsa:assembleLibraryPublication',
+        ':jbsa-cli:jar',
+        ':jbsa-benchmarks:shadowJar',
+        'spotlessCheck'
+    )
+    $timingArguments = $commonArguments + @('--offline', '--rerun-tasks') + $timingTasks
     $coldTiming = Invoke-QualificationCommand -Name 'timing-cold' -Executable $gradleWrapper -Arguments $timingArguments -WorkingDirectory $isolatedRoot -RequireSuccess
     $commands.Add($coldTiming)
     $warmTiming = Invoke-QualificationCommand -Name 'timing-warm' -Executable $gradleWrapper -Arguments $timingArguments -WorkingDirectory $isolatedRoot -RequireSuccess
@@ -631,7 +637,7 @@ try {
                 machineName = [Environment]::MachineName
                 processorCount = [Environment]::ProcessorCount
             }
-            methodology = 'identical offline --rerun-tasks verify commands; cold follows explicit clean; warm immediately follows cold; --no-daemon for both'
+            methodology = 'identical offline --rerun-tasks artifact, benchmark, and formatting commands; cold follows explicit clean; warm immediately follows cold; --no-daemon for both; policy and conformance tests are excluded'
             cold = $coldTiming
             warm = $warmTiming
             speedClaim = $null

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "236202b8203d35340fe364c669cf18be07a054e6",
+  "candidateVersion": "0.1.0-SNAPSHOT",
+  "qualificationJdk": {
+    "implementorVersion": "Temurin-25.0.4+7",
+    "distributionSha256": "7caab7db43bf4b94a2e6252c699e70d90084f9aa7c943cd3414761fd540937ae"
+  },
+  "rawEvidence": {
+    "location": "target/qualification-evidence/236202b",
+    "committed": false,
+    "mavenBaselineSha256": "e15ad9ee248a04ead4c479d94a5123f34710b88d337835c0b783744af02b8768",
+    "mavenSnapshotSha256": "2837a42c686e51e351cf210f24b166a8a0a8c8b8e0701eb337c63dc756609cb7",
+    "gradleSnapshotSha256": "5c1876505a3f52705a2057b55cd4a28b4997f12fa61774cdef97106bf75e2d02",
+    "rawParityReportSha256": "32b9272621a257ead0e6224ddb362f05279cd7939419b90cefb6d409e308fc03"
+  },
+  "parity": {
+    "unexplainedDifferenceCount": 0,
+    "rawDifferenceCount": 423,
+    "archiveEnvelopeDifferencesIgnored": true,
+    "differenceCategories": {
+      "javadocTaskPresentation": 360,
+      "mavenBuildProvenance": 25,
+      "manifestToolProvenance": 10,
+      "optionalPackageInfoBytecode": 4,
+      "moduleAttributeEncoding": 4,
+      "serviceFileSerialization": 2,
+      "derivedStagingBytes": 18
+    },
+    "matchingNormativeSeams": [
+      "artifact entry payloads outside assessed build-tool representations",
+      "JPMS identity and package set",
+      "public API signatures",
+      "source contents",
+      "normalized consumer POM",
+      "normalized production SBOM and SHA-256 identities",
+      "runtime dependency filenames and SHA-256 identities",
+      "notices",
+      "staging names and manifest semantics",
+      "CLI behavior",
+      "gate outcomes with Maven failures kept non-normative"
+    ]
+  },
+  "reproducibility": {
+    "matches": true,
+    "artifacts": {
+      "jbsa/target/publications/library/pom-default.xml": "30f84c26f373990e2af545f5b3df6bf2d8b21d9cddb32eb1fe9143ae5cbffb8b",
+      "jbsa/target/libs/jbsa-0.1.0-SNAPSHOT.jar": "e14394380bf90e6d3854c72b4d6b2e2899aca150593a49bb1f67e515c9008735",
+      "jbsa/target/libs/jbsa-0.1.0-SNAPSHOT-sources.jar": "e55f377ea370b0a186d3e4d7764d8f9a86122655f5cc2a24493792239db95bc2",
+      "jbsa/target/libs/jbsa-0.1.0-SNAPSHOT-javadoc.jar": "3f2c330134a73043f6a8593a5cf6caf6c1d4c78e1124894dde91dedd80dda43d",
+      "jbsa-cli/target/libs/jbsa-cli-0.1.0-SNAPSHOT.jar": "5e9eaa3a7f355cd6a4bbb77457b1e1d237248df525cec11e992fca3de8594b4c"
+    }
+  },
+  "offline": {
+    "strictVerification": true,
+    "productBuildPassed": true,
+    "includedBuildPassed": true,
+    "productBuildDuration": "3m49s",
+    "includedBuildDuration": "51s",
+    "strictVerificationFailureObserved": true,
+    "lockfilesByteConsistent": true,
+    "lockfileCount": 10
+  },
+  "configurationCache": {
+    "enabledByDefault": false,
+    "compatibleFirstRunStored": true,
+    "compatibleSecondRunReused": true,
+    "incompatibleTasksRejected": true
+  },
+  "gates": {
+    "compile": "PASS",
+    "unit": "PASS",
+    "architecture": "PASS",
+    "formatting": "PASS",
+    "policy": "PASS (Maven observation FAIL; Gradle normative improvement)",
+    "conformance": "PASS",
+    "conformanceObservation": "BLOCKED (matches Maven; no qualification claim)"
+  },
+  "timings": {
+    "machine": {
+      "operatingSystem": "Microsoft Windows NT 10.0.26200.0",
+      "machineName": "ENTERPRISE-J",
+      "processorCount": 8
+    },
+    "commandScope": "offline --rerun-tasks library publication, thin CLI, standalone benchmark, and formatting; no tests",
+    "coldOutputSeconds": 27.112,
+    "warmOutputSeconds": 26.764,
+    "speedClaim": null
+  },
+  "completion": {
+    "allRequiredTestPhasesPassed": true,
+    "atomicHarnessReportCompleted": false,
+    "note": "The operator stopped the harness after the final policy run and before duplicate policy-bearing timing runs. The compact report binds the completed phase logs and a replacement two-run non-test timing pair."
+  }
+}
