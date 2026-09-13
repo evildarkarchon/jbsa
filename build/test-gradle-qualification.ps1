@@ -57,6 +57,7 @@ inspect.add_argument("--java-home", required=True)
 inspect.add_argument("--version", required=True)
 inspect.add_argument("--build-tool", required=True)
 inspect.add_argument("--output", required=True)
+inspect.add_argument("--profile-output")
 compare = sub.add_parser("compare")
 compare.add_argument("--expected", required=True)
 compare.add_argument("--actual", required=True)
@@ -66,6 +67,8 @@ if args.command == "inspect-build":
     if args.build_tool != "gradle":
         raise SystemExit("qualification must select the Gradle layout")
     pathlib.Path(args.output).write_text(json.dumps({"artifacts": {"library": {"sha256": "gradle-envelope", "entries": [{"path": "A.class", "sha256": "payload"}]}}}), encoding="utf-8")
+    if args.profile_output:
+        pathlib.Path(args.profile_output).write_text(json.dumps({"schemaVersion": 1, "jdkTools": {"launchCount": 2, "milliseconds": 5, "byTool": {"jar": {"launchCount": 1, "milliseconds": 2}, "javap": {"launchCount": 1, "milliseconds": 3}}}}), encoding="utf-8")
 else:
     expected = json.loads(pathlib.Path(args.expected).read_text(encoding="utf-8"))
     actual = json.loads(pathlib.Path(args.actual).read_text(encoding="utf-8"))
@@ -106,6 +109,18 @@ if ($args -contains ':jbsa-conformance-tests:automatedConformance') {
     New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'target') -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $PSScriptRoot 'target/conformance-exit-code.txt') -Value '1'
 }
+if ($args -contains 'verify') {
+    New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'target') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $PSScriptRoot 'target/conformance-exit-code.txt') -Value '1'
+}
+if ($env:JBSA_QUALIFICATION_TEST_FAIL_ONCE -eq 'restage' -and $args -contains ':jbsa-dist:stageReleaseInputs') {
+    $failureMarker = Join-Path $env:GRADLE_USER_HOME 'fixture-restage-failed-once'
+    if (-not (Test-Path -LiteralPath $failureMarker)) {
+        Set-Content -LiteralPath $failureMarker -Value 'failed'
+        Write-Output 'Injected one-time harness-only restaging failure.'
+        exit 23
+    }
+}
 $stage = Join-Path $PSScriptRoot 'jbsa-dist/target/release-inputs'
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
 Set-Content -LiteralPath (Join-Path $stage 'jbsa.ps1') -Value 'param([string] $JavaHome, [switch] $ClassPath) Write-Output "jbsa 0.1.0-SNAPSHOT"'
@@ -138,6 +153,10 @@ exit 0
             releaseSha256 = $releaseHash
             javaExecutableSha256 = $javaHash
         }
+        build = [ordered]@{
+            startedAt = '2026-09-13T00:00:00.0000000+00:00'
+            completedAt = '2026-09-13T00:04:25.0000000+00:00'
+        }
         artifacts = [ordered]@{ artifacts = [ordered]@{ library = [ordered]@{ sha256 = 'maven-envelope'; entries = @([ordered]@{ path = 'A.class'; sha256 = 'payload' }) } } }
         gates = @('compile', 'unit', 'architecture', 'formatting', 'policy', 'conformance') | ForEach-Object {
             [ordered]@{ name = "gate-$_"; exitCode = 0; outcome = 'PASS' }
@@ -156,8 +175,42 @@ exit 0
     }
     [IO.File]::WriteAllText((Join-Path $evidence 'maven-baseline.json'), (($maven | ConvertTo-Json -Depth 30) + "`n"), [Text.UTF8Encoding]::new($false))
 
-    & (Join-Path $repository 'build/verify-gradle-qualification.ps1') -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision
-    if ($LASTEXITCODE -ne 0) { throw 'Gradle qualification fixture failed.' }
+    $qualificationScript = Join-Path $repository 'build/verify-gradle-qualification.ps1'
+    $env:JBSA_QUALIFICATION_TEST_FAIL_ONCE = 'restage'
+    & pwsh -NoLogo -NoProfile -NonInteractive -File $qualificationScript -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision 2>&1 | Out-Null
+    if ($LASTEXITCODE -eq 0) { throw 'The injected late harness failure did not stop qualification.' }
+    if (-not (Test-Path -LiteralPath "$qualification.pending/checkpoints/verified-cache-offline-build.json" -PathType Leaf)) {
+        throw 'The failed run did not retain its full-suite checkpoint.'
+    }
+
+    $baselineBytes = [IO.File]::ReadAllBytes((Join-Path $evidence 'maven-baseline.json'))
+    Add-Content -LiteralPath (Join-Path $evidence 'maven-baseline.json') -Value ' '
+    $resumeDiagnostic = @(& pwsh -NoLogo -NoProfile -NonInteractive -File $qualificationScript -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision -Resume 2>&1)
+    if ($LASTEXITCODE -eq 0 -or ($resumeDiagnostic -join "`n") -notmatch 'digest|binding') {
+        throw 'Resume accepted evidence whose digest no longer matched the checkpoint binding.'
+    }
+    [IO.File]::WriteAllBytes((Join-Path $evidence 'maven-baseline.json'), $baselineBytes)
+
+    $checkpointLog = "$qualification.pending/logs/gradle-version.log"
+    $checkpointLogBytes = [IO.File]::ReadAllBytes($checkpointLog)
+    Add-Content -LiteralPath $checkpointLog -Value 'tampered'
+    $logDiagnostic = @(& pwsh -NoLogo -NoProfile -NonInteractive -File $qualificationScript -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision -Resume 2>&1)
+    if ($LASTEXITCODE -eq 0 -or ($logDiagnostic -join "`n") -notmatch 'log digest') {
+        throw 'Resume accepted a completed phase whose retained log no longer matched its digest.'
+    }
+    [IO.File]::WriteAllBytes($checkpointLog, $checkpointLogBytes)
+
+    $checkpointOutput = "$qualification.pending/snapshots/artifact-inspector-profile.json"
+    $checkpointOutputBytes = [IO.File]::ReadAllBytes($checkpointOutput)
+    Add-Content -LiteralPath $checkpointOutput -Value 'tampered'
+    $outputDiagnostic = @(& pwsh -NoLogo -NoProfile -NonInteractive -File $qualificationScript -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision -Resume 2>&1)
+    if ($LASTEXITCODE -eq 0 -or ($outputDiagnostic -join "`n") -notmatch 'output digest') {
+        throw 'Resume accepted a completed phase whose retained output no longer matched its digest.'
+    }
+    [IO.File]::WriteAllBytes($checkpointOutput, $checkpointOutputBytes)
+
+    & pwsh -NoLogo -NoProfile -NonInteractive -File $qualificationScript -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision -Resume
+    if ($LASTEXITCODE -ne 0) { throw 'Resumed Gradle qualification fixture failed.' }
 
     $result = Get-Content -Raw -LiteralPath (Join-Path $qualification 'gradle-qualification.json') | ConvertFrom-Json -Depth 100
     if ($result.source.revision -cne $revision -or -not $result.source.clean) { throw 'Qualification did not bind the clean source revision.' }
@@ -169,9 +222,13 @@ exit 0
     if (-not $result.configurationCache.compatibleTasks.firstStored -or -not $result.configurationCache.compatibleTasks.secondReused -or -not $result.configurationCache.incompatibleTasks.rejected) { throw 'Configuration-cache proof is incomplete.' }
     if ($result.timings.cold.milliseconds -lt 0 -or $result.timings.warm.milliseconds -lt 0 -or $null -ne $result.timings.speedClaim) { throw 'Timing evidence must contain raw measurements and no speed claim.' }
     if (@($result.gates | Where-Object { -not $_.matchesMaven -and -not $_.acceptedDifference }).Count -ne 0 -or @($result.cli | Where-Object { -not $_.matchesMaven -and -not $_.acceptedDifference }).Count -ne 0) { throw 'Gate or CLI parity was not retained.' }
+    if (-not $result.resume.resumed -or @($result.resume.reusedCommands).Count -eq 0 -or 'verified-cache-offline-build' -notin @($result.resume.reusedCommands)) { throw 'Resume did not report reuse of completed full-suite evidence.' }
+    if (@($result.gates | Where-Object { $_.command.reusedFrom -cne 'verified-cache-offline-build' }).Count -ne 0) { throw 'Duplicated gate executions were not derived from the qualifying offline full-suite run.' }
+    if ($result.profiling.artifactInspector.jdkTools.launchCount -ne 2 -or $result.profiling.duplicateGateExecutionsAfter -ne 0) { throw 'Qualification profiling did not retain JDK launch and duplicate-gate evidence.' }
     Write-Output 'Gradle qualification regression checks passed.'
 }
 finally {
+    Remove-Item Env:JBSA_QUALIFICATION_TEST_FAIL_ONCE -ErrorAction SilentlyContinue
     if (Test-Path -LiteralPath $fixtureRoot) {
         $resolved = [IO.Path]::GetFullPath($fixtureRoot)
         $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar

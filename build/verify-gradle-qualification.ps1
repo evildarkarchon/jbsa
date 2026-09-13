@@ -14,6 +14,9 @@ Pinned qualification JDK archive. Its archive and extracted identities must matc
 .PARAMETER SourceRevision
 Committed source revision to qualify. Defaults to HEAD.
 
+.PARAMETER Resume
+Resume the checkpoint set retained beside OutputDirectory after a harness-only failure.
+
 .NOTES
 Cross-tool comparison ignores only whole-archive envelope fields through the reusable artifact
 inspector. Two clean Gradle builds retain the complete five-artifact byte comparison separately.
@@ -26,12 +29,68 @@ param(
     [string] $MavenEvidenceDirectory,
     [Parameter(Mandatory = $true)]
     [string] $QualificationJdkArchive,
-    [string] $SourceRevision = 'HEAD'
+    [string] $SourceRevision = 'HEAD',
+    [switch] $Resume
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
+
+<#
+.SYNOPSIS
+Returns the lowercase SHA-256 digest of a UTF-8 string.
+
+.PARAMETER Value
+Text whose exact UTF-8 bytes define a checkpoint identity.
+
+.OUTPUTS
+Lowercase hexadecimal SHA-256.
+#>
+function Get-TextSha256 {
+    param([Parameter(Mandatory = $true)] [string] $Value)
+
+    $bytes = [Text.UTF8Encoding]::new($false).GetBytes($Value)
+    $hash = [Security.Cryptography.SHA256]::HashData($bytes)
+    return [Convert]::ToHexString($hash).ToLowerInvariant()
+}
+
+<#
+.SYNOPSIS
+Normalizes a fresh or JSON-deserialized timestamp for checkpoint hashing.
+
+.PARAMETER Value
+ISO text or the DateTime value PowerShell creates while reading JSON.
+
+.OUTPUTS
+UTC ISO-8601 text with stable fractional precision.
+#>
+function Format-CheckpointTimestamp {
+    param([Parameter(Mandatory = $true)] [object] $Value)
+
+    return [DateTimeOffset]::Parse([string] $Value).ToUniversalTime().ToString('O')
+}
+
+<#
+.SYNOPSIS
+Returns one deterministic digest for every file beneath a directory.
+
+.PARAMETER Path
+Directory whose relative paths, sizes, and file digests are bound.
+
+.OUTPUTS
+Lowercase SHA-256 over the ordered inventory.
+#>
+function Get-DirectoryDigest {
+    param([Parameter(Mandatory = $true)] [string] $Path)
+
+    $root = [IO.Path]::GetFullPath($Path)
+    $inventory = @(Get-ChildItem -LiteralPath $root -Recurse -File | ForEach-Object {
+        $relative = [IO.Path]::GetRelativePath($root, $_.FullName).Replace('\', '/')
+        "$relative`t$($_.Length)`t$((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())"
+    } | Sort-Object)
+    return Get-TextSha256 -Value ($inventory -join "`n")
+}
 
 $reactorRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $protocolPath = Join-Path $reactorRoot '.scratch/migrate-maven-to-gradle/baseline-protocol.json'
@@ -90,6 +149,30 @@ $tes5EditRoot = [IO.Path]::GetFullPath((Join-Path $reactorRoot 'TES5Edit'))
 if ($outputRoot.StartsWith($tes5EditRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'Gradle qualification evidence must never be written beneath the read-only Reference Snapshot.'
 }
+$pendingRoot = "$outputRoot.pending"
+if ($Resume) {
+    if (-not (Test-Path -LiteralPath $pendingRoot -PathType Container)) {
+        throw "No retained qualification checkpoint set exists for resume: $pendingRoot"
+    }
+} elseif (Test-Path -LiteralPath $pendingRoot) {
+    throw "A retained qualification attempt already exists; use -Resume or choose a new output: $pendingRoot"
+}
+
+$bindingDocument = [ordered]@{
+    schemaVersion = 1
+    sourceRevision = $revision
+    branch = $branch
+    candidateVersion = $candidateVersion
+    protocolSha256 = (Get-FileHash -LiteralPath $protocolPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    mavenEvidenceSha256 = Get-DirectoryDigest -Path $mavenRoot
+    qualificationJdkSha256 = $jdkArchiveHash
+    harnessSha256 = (Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    inspectorSha256 = (Get-FileHash -LiteralPath (Join-Path $reactorRoot 'build/parity_artifact_inspector.py') -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+$bindingSha256 = Get-TextSha256 -Value ($bindingDocument | ConvertTo-Json -Compress -Depth 10)
+$script:bindingSha256 = $bindingSha256
+$script:resumeReusable = $Resume.IsPresent
+$script:resumedCommandNames = [Collections.Generic.List[string]]::new()
 
 <#
 .SYNOPSIS
@@ -110,6 +193,12 @@ Directory from which the command observes and produces files.
 .PARAMETER RequireSuccess
 Throws when the command exits nonzero after its complete log has been retained.
 
+.PARAMETER NonResumable
+Keeps a timing-sensitive command out of checkpoints so its complete sequence reruns after interruption.
+
+.PARAMETER OutputPaths
+Retained evidence files whose path, size, and digest must still match before a phase is reused.
+
 .OUTPUTS
 An ordered evidence record containing command, exit, duration, timestamps, and log digest.
 #>
@@ -119,8 +208,59 @@ function Invoke-QualificationCommand {
         [Parameter(Mandatory = $true)] [string] $Executable,
         [Parameter(Mandatory = $true)] [string[]] $Arguments,
         [Parameter(Mandatory = $true)] [string] $WorkingDirectory,
-        [switch] $RequireSuccess
+        [ValidateSet('gradle', 'powershell', 'python', 'jdk', 'process')] [string] $Category = 'process',
+        [switch] $RequireSuccess,
+        [switch] $NonResumable,
+        [string[]] $OutputPaths = @()
     )
+
+    $invocationDocument = [ordered]@{
+        bindingSha256 = $script:bindingSha256
+        name = $Name
+        category = $Category
+        executable = $Executable
+        arguments = $Arguments
+        workingDirectory = [IO.Path]::GetFullPath($WorkingDirectory)
+        outputPaths = @($OutputPaths | ForEach-Object { [IO.Path]::GetFullPath($_) })
+    }
+    $invocationSha256 = Get-TextSha256 -Value ($invocationDocument | ConvertTo-Json -Compress -Depth 10)
+    $checkpointPath = Join-Path $script:pendingRoot "checkpoints/$Name.json"
+    if ($Resume -and -not $NonResumable -and (Test-Path -LiteralPath $checkpointPath -PathType Leaf)) {
+        if (-not $script:resumeReusable) {
+            throw "Checkpoint sequence contains completed work after an incomplete phase: $Name"
+        }
+        $checkpointDigestPath = "$checkpointPath.sha256"
+        if (-not (Test-Path -LiteralPath $checkpointDigestPath -PathType Leaf) -or
+            (Get-Content -Raw -LiteralPath $checkpointDigestPath).Trim() -cne (Get-FileHash -LiteralPath $checkpointPath -Algorithm SHA256).Hash.ToLowerInvariant()) {
+            throw "Checkpoint file digest is invalid: $Name"
+        }
+        $checkpoint = Get-Content -Raw -LiteralPath $checkpointPath | ConvertFrom-Json -Depth 30
+        if ([string] $checkpoint.bindingSha256 -cne $script:bindingSha256 -or
+            [string] $checkpoint.invocationSha256 -cne $invocationSha256) {
+            throw "Checkpoint digest binding does not match the requested qualification phase: $Name"
+        }
+        $record = $checkpoint.record
+        $record.startedAt = Format-CheckpointTimestamp -Value $record.startedAt
+        $record.completedAt = Format-CheckpointTimestamp -Value $record.completedAt
+        $logPath = Join-Path $script:pendingRoot ([string] $record.log.path)
+        if (-not (Test-Path -LiteralPath $logPath -PathType Leaf) -or
+            [string] $record.log.sha256 -cne (Get-FileHash -LiteralPath $logPath -Algorithm SHA256).Hash.ToLowerInvariant()) {
+            throw "Checkpoint log digest is invalid: $Name"
+        }
+        foreach ($output in @($record.outputs)) {
+            $outputPath = Join-Path $script:pendingRoot ([string] $output.path)
+            if (-not (Test-Path -LiteralPath $outputPath -PathType Leaf) -or
+                (Get-Item -LiteralPath $outputPath).Length -ne [long] $output.size -or
+                (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant() -cne [string] $output.sha256) {
+                throw "Checkpoint output digest is invalid for ${Name}: $($output.path)"
+            }
+        }
+        $record.resumed = $true
+        $script:resumedCommandNames.Add($Name)
+        Write-Verbose "Reusing digest-bound qualification checkpoint: $Name"
+        return $record
+    }
+    if ($Resume -and -not $NonResumable) { $script:resumeReusable = $false }
 
     $logPath = Join-Path $script:pendingRoot "logs/$Name.log"
     Push-Location $WorkingDirectory
@@ -136,6 +276,17 @@ function Invoke-QualificationCommand {
         Pop-Location
     }
     [IO.File]::WriteAllText($logPath, (($lines -join "`n") + "`n"), [Text.UTF8Encoding]::new($false))
+    $outputEvidence = @($OutputPaths | ForEach-Object {
+        $resolvedOutput = [IO.Path]::GetFullPath($_)
+        if (-not (Test-Path -LiteralPath $resolvedOutput -PathType Leaf)) {
+            throw "Qualification phase $Name omitted retained output: $resolvedOutput"
+        }
+        [ordered]@{
+            path = [IO.Path]::GetRelativePath($script:pendingRoot, $resolvedOutput).Replace('\', '/')
+            size = (Get-Item -LiteralPath $resolvedOutput).Length
+            sha256 = (Get-FileHash -LiteralPath $resolvedOutput -Algorithm SHA256).Hash.ToLowerInvariant()
+        }
+    })
     $record = [ordered]@{
         name = $Name
         command = @($Executable) + $Arguments
@@ -144,15 +295,68 @@ function Invoke-QualificationCommand {
         milliseconds = $timer.ElapsedMilliseconds
         startedAt = $startedAt.ToString('O')
         completedAt = $completedAt.ToString('O')
+        category = $Category
+        resumed = $false
+        reusedFrom = $null
+        outputs = $outputEvidence
         log = [ordered]@{
             path = [IO.Path]::GetRelativePath($script:pendingRoot, $logPath).Replace('\', '/')
             sha256 = (Get-FileHash -LiteralPath $logPath -Algorithm SHA256).Hash.ToLowerInvariant()
         }
     }
+    if (-not $NonResumable -and ($exitCode -eq 0 -or -not $RequireSuccess)) {
+        $checkpointDocument = [ordered]@{
+            schemaVersion = 1
+            bindingSha256 = $script:bindingSha256
+            invocationSha256 = $invocationSha256
+            record = $record
+        }
+        $checkpointTemporary = "$checkpointPath.tmp"
+        [IO.File]::WriteAllText($checkpointTemporary, (($checkpointDocument | ConvertTo-Json -Depth 30) + "`n"), [Text.UTF8Encoding]::new($false))
+        Move-Item -LiteralPath $checkpointTemporary -Destination $checkpointPath
+        [IO.File]::WriteAllText("$checkpointPath.sha256", ((Get-FileHash -LiteralPath $checkpointPath -Algorithm SHA256).Hash.ToLowerInvariant() + "`n"), [Text.UTF8Encoding]::new($false))
+    }
     if ($RequireSuccess -and $exitCode -ne 0) {
         throw "$Name failed with exit code $exitCode; retained log: $logPath"
     }
     return $record
+}
+
+<#
+.SYNOPSIS
+Creates a named gate record from an earlier command whose task closure already ran that gate.
+
+.PARAMETER Name
+Stable gate evidence name.
+
+.PARAMETER Source
+Successful command record that executed the exact gate task closure.
+
+.OUTPUTS
+A zero-additional-wall-time command record that links back to the source evidence.
+#>
+function New-ReusedQualificationCommand {
+    param(
+        [Parameter(Mandatory = $true)] [string] $Name,
+        [Parameter(Mandatory = $true)] [object] $Source
+    )
+
+    if ([int] $Source.exitCode -ne 0) { throw "Cannot derive gate evidence from failed command: $($Source.name)" }
+    return [ordered]@{
+        name = $Name
+        command = $Source.command
+        exitCode = 0
+        outcome = 'PASS'
+        milliseconds = 0
+        sourceMilliseconds = $Source.milliseconds
+        startedAt = $Source.startedAt
+        completedAt = $Source.completedAt
+        category = 'gradle'
+        resumed = $Source.resumed
+        reusedFrom = $Source.name
+        outputs = @()
+        log = $Source.log
+    }
 }
 
 <#
@@ -333,20 +537,49 @@ function Get-GradleLockCoordinates {
     } | Sort-Object -Unique)
 }
 
-$scratchRoot = Join-Path ([IO.Path]::GetTempPath()) "jgq-$([guid]::NewGuid().ToString('N').Substring(0, 8))"
+$statePath = Join-Path $pendingRoot 'qualification-state.json'
+if ($Resume) {
+    if (-not (Test-Path -LiteralPath $statePath -PathType Leaf)) { throw "Resume state is missing: $statePath" }
+    $resumeState = Get-Content -Raw -LiteralPath $statePath | ConvertFrom-Json -Depth 20
+    if ([string] $resumeState.bindingSha256 -cne $bindingSha256) {
+        throw 'Resume input digest does not match the retained qualification binding.'
+    }
+    $scratchRoot = [IO.Path]::GetFullPath([string] $resumeState.scratchRoot)
+    $temporaryPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
+    if (-not $scratchRoot.StartsWith($temporaryPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Resume scratch directory is outside system temp: $scratchRoot"
+    }
+} else {
+    $scratchRoot = Join-Path ([IO.Path]::GetTempPath()) "jgq-$([guid]::NewGuid().ToString('N').Substring(0, 8))"
+}
 # Short child names keep the repository's deepest evidence fixtures beneath Windows MAX_PATH.
 $isolatedRoot = Join-Path $scratchRoot 's'
 $jdkExtractRoot = Join-Path $scratchRoot 'j'
 $gradleUserHome = Join-Path $scratchRoot 'g'
-$pendingRoot = "$outputRoot.pending-$([guid]::NewGuid().ToString('N'))"
 $oldJavaHome = $env:JAVA_HOME
 $oldGradleUserHome = $env:GRADLE_USER_HOME
 $oldPath = $env:PATH
 $worktreeRegistered = $false
 $gradleWrapper = $null
+$qualificationSucceeded = $false
 try {
-    New-Item -ItemType Directory -Path (Join-Path $pendingRoot 'logs'), (Join-Path $pendingRoot 'snapshots'), $jdkExtractRoot, $gradleUserHome -Force | Out-Null
-    Expand-Archive -LiteralPath $jdkArchive -DestinationPath $jdkExtractRoot
+    if ($Resume) {
+        foreach ($requiredDirectory in @($isolatedRoot, $jdkExtractRoot, $gradleUserHome, (Join-Path $pendingRoot 'checkpoints'))) {
+            if (-not (Test-Path -LiteralPath $requiredDirectory -PathType Container)) {
+                throw "Resume runtime directory is missing: $requiredDirectory"
+            }
+        }
+    } else {
+        New-Item -ItemType Directory -Path (Join-Path $pendingRoot 'logs'), (Join-Path $pendingRoot 'snapshots'), (Join-Path $pendingRoot 'checkpoints'), $jdkExtractRoot, $gradleUserHome -Force | Out-Null
+        $resumeState = [ordered]@{
+            schemaVersion = 1
+            bindingSha256 = $bindingSha256
+            binding = $bindingDocument
+            scratchRoot = $scratchRoot
+        }
+        [IO.File]::WriteAllText($statePath, (($resumeState | ConvertTo-Json -Depth 20) + "`n"), [Text.UTF8Encoding]::new($false))
+        Expand-Archive -LiteralPath $jdkArchive -DestinationPath $jdkExtractRoot
+    }
     $jdkReleases = @(Get-ChildItem -LiteralPath $jdkExtractRoot -Recurse -Filter 'release' -File | Where-Object {
         Test-Path -LiteralPath (Join-Path $_.Directory.FullName 'bin/java.exe') -PathType Leaf
     })
@@ -366,9 +599,18 @@ try {
         throw 'Extracted qualification JDK identity differs from the Maven evidence.'
     }
 
-    & git -C $reactorRoot worktree add --detach $isolatedRoot $revision
-    if ($LASTEXITCODE -ne 0) { throw 'Could not create the isolated Gradle worktree.' }
-    $worktreeRegistered = $true
+    if ($Resume) {
+        $isolatedRevision = (& git -C $isolatedRoot rev-parse --verify 'HEAD^{commit}').Trim()
+        $isolatedStatus = @(& git -C $isolatedRoot status --porcelain --untracked-files=no)
+        if ($LASTEXITCODE -ne 0 -or $isolatedRevision -cne $revision -or $isolatedStatus.Count -ne 0) {
+            throw 'Resume worktree no longer matches the clean qualified revision.'
+        }
+        $worktreeRegistered = $true
+    } else {
+        & git -C $reactorRoot worktree add --detach $isolatedRoot $revision
+        if ($LASTEXITCODE -ne 0) { throw 'Could not create the isolated Gradle worktree.' }
+        $worktreeRegistered = $true
+    }
     $env:JAVA_HOME = $javaHome
     $env:GRADLE_USER_HOME = $gradleUserHome
     $env:PATH = (Join-Path $javaHome 'bin') + [IO.Path]::PathSeparator + $oldPath
@@ -377,9 +619,9 @@ try {
     $commonArguments = @('--no-daemon', '--dependency-verification', 'strict', "-Pversion=$candidateVersion")
     $commands = [Collections.Generic.List[object]]::new()
 
-    $gradleIdentity = Invoke-QualificationCommand -Name 'gradle-version' -Executable $gradleWrapper -Arguments @('--no-daemon', '--version') -WorkingDirectory $isolatedRoot -RequireSuccess
+    $gradleIdentity = Invoke-QualificationCommand -Name 'gradle-version' -Executable $gradleWrapper -Arguments @('--no-daemon', '--version') -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($gradleIdentity)
-    $inspectorTests = Invoke-QualificationCommand -Name 'artifact-inspector-tests' -Executable 'python' -Arguments @((Join-Path $isolatedRoot 'build/test_parity_artifact_inspector.py')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    $inspectorTests = Invoke-QualificationCommand -Name 'artifact-inspector-tests' -Executable 'python' -Arguments @((Join-Path $isolatedRoot 'build/test_parity_artifact_inspector.py')) -WorkingDirectory $isolatedRoot -Category python -RequireSuccess
     $commands.Add($inspectorTests)
     $lockfilesBefore = @(Get-LockfileInventory -SourceRoot $isolatedRoot)
     $allowedGradleOnlyBuildInputs = @(
@@ -419,27 +661,31 @@ try {
     }
 
     # These are the sole network-permitted dependency-resolution passes and prime both builds.
-    $prime = Invoke-QualificationCommand -Name 'prime-verified-cache' -Executable $gradleWrapper -Arguments ($commonArguments + @('clean', 'verify', 'spotlessCheck')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    $prime = Invoke-QualificationCommand -Name 'prime-verified-cache' -Executable $gradleWrapper -Arguments ($commonArguments + @('clean', 'verify', 'spotlessCheck')) -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($prime)
-    $primeBuildLogic = Invoke-QualificationCommand -Name 'prime-build-logic-cache' -Executable $gradleWrapper -Arguments ($commonArguments + @('-p', 'build-logic', 'test')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    $primeBuildLogic = Invoke-QualificationCommand -Name 'prime-build-logic-cache' -Executable $gradleWrapper -Arguments ($commonArguments + @('-p', 'build-logic', 'test')) -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($primeBuildLogic)
-    $offline = Invoke-QualificationCommand -Name 'verified-cache-offline-build' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', 'clean', 'verify', 'spotlessCheck')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    # Run the policy/architecture selections in the offline closure so later named gate probes are up-to-date.
+    $offlineTasks = @('clean', 'verify', 'spotlessCheck', ':jbsa-conformance-tests:architectureTest', ':jbsa-conformance-tests:buildPolicyTest')
+    $offline = Invoke-QualificationCommand -Name 'verified-cache-offline-build' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline') + $offlineTasks) -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($offline)
-    $offlineBuildLogic = Invoke-QualificationCommand -Name 'verified-cache-offline-build-logic' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', '-p', 'build-logic', 'test')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    $offlineBuildLogic = Invoke-QualificationCommand -Name 'verified-cache-offline-build-logic' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', '-p', 'build-logic', 'test')) -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($offlineBuildLogic)
 
     $gradleSnapshotPath = Join-Path $pendingRoot 'snapshots/gradle-artifacts.json'
+    $inspectorProfilePath = Join-Path $pendingRoot 'snapshots/artifact-inspector-profile.json'
     $inspection = Invoke-QualificationCommand -Name 'inspect-gradle-artifacts' -Executable 'python' -Arguments @(
         $inspector, 'inspect-build', '--build-root', $isolatedRoot, '--java-home', $javaHome,
-        '--version', $candidateVersion, '--build-tool', 'gradle', '--output', $gradleSnapshotPath
-    ) -WorkingDirectory $isolatedRoot -RequireSuccess
+        '--version', $candidateVersion, '--build-tool', 'gradle', '--output', $gradleSnapshotPath,
+        '--profile-output', $inspectorProfilePath
+    ) -WorkingDirectory $isolatedRoot -Category python -RequireSuccess -OutputPaths @($gradleSnapshotPath, $inspectorProfilePath)
     $commands.Add($inspection)
     $mavenSnapshotPath = Join-Path $pendingRoot 'snapshots/maven-artifacts.json'
     [IO.File]::WriteAllText($mavenSnapshotPath, (($mavenBaseline.artifacts | ConvertTo-Json -Depth 100) + "`n"), [Text.UTF8Encoding]::new($false))
     $parityReportPath = Join-Path $pendingRoot 'parity-report.json'
     $parityCommand = Invoke-QualificationCommand -Name 'compare-normalized-artifacts' -Executable 'python' -Arguments @(
         $inspector, 'compare', '--expected', $mavenSnapshotPath, '--actual', $gradleSnapshotPath, '--output', $parityReportPath
-    ) -WorkingDirectory $isolatedRoot
+    ) -WorkingDirectory $isolatedRoot -Category python -OutputPaths @($parityReportPath)
     $commands.Add($parityCommand)
     $parityReport = Get-Content -Raw -LiteralPath $parityReportPath | ConvertFrom-Json -Depth 100
     $parityDifferences = @($parityReport.differences)
@@ -452,12 +698,6 @@ try {
         throw "Maven-to-Gradle parity has $($unexplainedParity.Count) unexplained normative differences: $unexplainedPaths"
     }
 
-    $reproducibility = Invoke-QualificationCommand -Name 'gradle-reproducibility' -Executable 'pwsh' -Arguments @(
-        '-NoLogo', '-NoProfile', '-NonInteractive', '-File', (Join-Path $isolatedRoot 'build/verify-reproducible-build.ps1'),
-        '-ReactorVersion', $candidateVersion
-    ) -WorkingDirectory $isolatedRoot -RequireSuccess
-    $commands.Add($reproducibility)
-    $reproducibilityText = Get-Content -Raw -LiteralPath (Join-Path $pendingRoot $reproducibility.log.path)
     $reproducibleArtifacts = @(
         'jbsa/target/publications/library/pom-default.xml',
         "jbsa/target/libs/jbsa-$candidateVersion.jar",
@@ -465,11 +705,6 @@ try {
         "jbsa/target/libs/jbsa-$candidateVersion-javadoc.jar",
         "jbsa-cli/target/libs/jbsa-cli-$candidateVersion.jar"
     )
-    foreach ($artifact in $reproducibleArtifacts) {
-        if ($reproducibilityText -notmatch [regex]::Escape($artifact)) {
-            throw "Reproducibility evidence omitted canonical artifact: $artifact"
-        }
-    }
 
     # Deliberately corrupt one checksum after parity capture, then restore the exact source bytes.
     $verificationMetadata = Join-Path $isolatedRoot 'gradle/verification-metadata.xml'
@@ -487,7 +722,7 @@ try {
     )
     try {
         [IO.File]::WriteAllText($verificationMetadata, $tamperedText, [Text.UTF8Encoding]::new($false))
-        $strictFailure = Invoke-QualificationCommand -Name 'strict-verification-negative' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', ':jbsa:dependencies', '--configuration', 'runtimeClasspath')) -WorkingDirectory $isolatedRoot
+        $strictFailure = Invoke-QualificationCommand -Name 'strict-verification-negative' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', ':jbsa:dependencies', '--configuration', 'runtimeClasspath')) -WorkingDirectory $isolatedRoot -Category gradle
         $commands.Add($strictFailure)
     }
     finally {
@@ -500,9 +735,9 @@ try {
 
     $compatibleTasks = @(':jbsa:compileJava', ':jbsa-cli:compileJava', ':jbsa:test', ':jbsa-cli:test', 'spotlessCheck')
     $configurationArguments = $commonArguments + @('--offline', '--configuration-cache', '--configuration-cache-problems=fail') + $compatibleTasks
-    $configurationFirst = Invoke-QualificationCommand -Name 'configuration-cache-first' -Executable $gradleWrapper -Arguments $configurationArguments -WorkingDirectory $isolatedRoot -RequireSuccess
+    $configurationFirst = Invoke-QualificationCommand -Name 'configuration-cache-first' -Executable $gradleWrapper -Arguments $configurationArguments -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($configurationFirst)
-    $configurationSecond = Invoke-QualificationCommand -Name 'configuration-cache-second' -Executable $gradleWrapper -Arguments $configurationArguments -WorkingDirectory $isolatedRoot -RequireSuccess
+    $configurationSecond = Invoke-QualificationCommand -Name 'configuration-cache-second' -Executable $gradleWrapper -Arguments $configurationArguments -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($configurationSecond)
     $configurationFirstText = Get-Content -Raw -LiteralPath (Join-Path $pendingRoot $configurationFirst.log.path)
     $configurationSecondText = Get-Content -Raw -LiteralPath (Join-Path $pendingRoot $configurationSecond.log.path)
@@ -515,7 +750,7 @@ try {
         'verify', 'automatedConformance', 'captureAutomatedConformance', 'generateResolvedProductionDependencies',
         'smokeTestBenchmarkLauncher', 'smokeTestThinCli', 'stageReleaseInputs', 'verifyCompliance', 'verifyStagedReleaseInputs'
     )
-    $configurationRejected = Invoke-QualificationCommand -Name 'configuration-cache-incompatible' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', '--configuration-cache') + $incompatibleTasks) -WorkingDirectory $isolatedRoot
+    $configurationRejected = Invoke-QualificationCommand -Name 'configuration-cache-incompatible' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', '--configuration-cache') + $incompatibleTasks) -WorkingDirectory $isolatedRoot -Category gradle
     $commands.Add($configurationRejected)
     $configurationRejectedText = Get-Content -Raw -LiteralPath (Join-Path $pendingRoot $configurationRejected.log.path)
     if ($configurationRejected.exitCode -eq 0 -or
@@ -536,7 +771,7 @@ try {
     foreach ($mavenGate in @($mavenBaseline.gates)) {
         $gateName = [string] $mavenGate.name
         if (-not $gateTasks.Contains($gateName)) { throw "Unsupported Maven baseline gate seam: $gateName" }
-        $gradleGate = Invoke-QualificationCommand -Name $gateName -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline') + $gateTasks[$gateName]) -WorkingDirectory $isolatedRoot
+        $gradleGate = New-ReusedQualificationCommand -Name $gateName -Source $offline
         $commands.Add($gradleGate)
         $gradleOutcome = $gradleGate.outcome
         if ($gateName -eq 'gate-conformance-observation' -and $gradleGate.exitCode -eq 0) {
@@ -561,8 +796,8 @@ try {
         throw 'Gradle gate outcomes contain an unexplained difference from the same-revision Maven baseline.'
     }
 
-    # The policy gate deliberately runs clean reproducibility builds, so restore the staged CLI seam.
-    $restage = Invoke-QualificationCommand -Name 'restage-cli-inputs' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', ':jbsa-dist:stageReleaseInputs')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    # Reassert the staged CLI seam explicitly before observing it; the qualifying offline closure produced it.
+    $restage = Invoke-QualificationCommand -Name 'restage-cli-inputs' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', ':jbsa-dist:stageReleaseInputs')) -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($restage)
     $stagedRoot = Join-Path $isolatedRoot 'jbsa-dist/target/release-inputs'
     $cliDefinitions = [ordered]@{
@@ -573,7 +808,7 @@ try {
     foreach ($mavenCli in @($mavenBaseline.cliObservations)) {
         $cliName = [string] $mavenCli.name
         if (-not $cliDefinitions.Contains($cliName)) { throw "Unsupported Maven CLI seam: $cliName" }
-        $gradleCli = Invoke-QualificationCommand -Name $cliName -Executable 'pwsh' -Arguments $cliDefinitions[$cliName] -WorkingDirectory $stagedRoot
+        $gradleCli = Invoke-QualificationCommand -Name $cliName -Executable 'pwsh' -Arguments $cliDefinitions[$cliName] -WorkingDirectory $stagedRoot -Category powershell
         $commands.Add($gradleCli)
         $mavenOutput = (Get-Content -Raw -LiteralPath (Join-Path $mavenRoot $mavenCli.log.path)).Replace("`r`n", "`n").Trim()
         $gradleOutput = (Get-Content -Raw -LiteralPath (Join-Path $pendingRoot $gradleCli.log.path)).Replace("`r`n", "`n").Trim()
@@ -596,8 +831,22 @@ try {
         throw 'Gradle CLI observations contain an unexplained difference from the same-revision Maven baseline.'
     }
 
+    # Reproducibility remains a distinct two-clean-build proof, but it runs after gates and CLI so its
+    # cleanup cannot force those already-qualified suites to execute again.
+    $reproducibility = Invoke-QualificationCommand -Name 'gradle-reproducibility' -Executable 'pwsh' -Arguments @(
+        '-NoLogo', '-NoProfile', '-NonInteractive', '-File', (Join-Path $isolatedRoot 'build/verify-reproducible-build.ps1'),
+        '-ReactorVersion', $candidateVersion
+    ) -WorkingDirectory $isolatedRoot -Category powershell -RequireSuccess
+    $commands.Add($reproducibility)
+    $reproducibilityText = Get-Content -Raw -LiteralPath (Join-Path $pendingRoot $reproducibility.log.path)
+    foreach ($artifact in $reproducibleArtifacts) {
+        if ($reproducibilityText -notmatch [regex]::Escape($artifact)) {
+            throw "Reproducibility evidence omitted canonical artifact: $artifact"
+        }
+    }
+
     # The measured passes use identical arguments; only the first begins after an explicit clean.
-    $timingClean = Invoke-QualificationCommand -Name 'timing-clean' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', 'clean')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    $timingClean = Invoke-QualificationCommand -Name 'timing-clean' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', 'clean')) -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess -NonResumable
     $commands.Add($timingClean)
     $timingTasks = @(
         ':jbsa:assembleLibraryPublication',
@@ -606,9 +855,9 @@ try {
         'spotlessCheck'
     )
     $timingArguments = $commonArguments + @('--offline', '--rerun-tasks') + $timingTasks
-    $coldTiming = Invoke-QualificationCommand -Name 'timing-cold' -Executable $gradleWrapper -Arguments $timingArguments -WorkingDirectory $isolatedRoot -RequireSuccess
+    $coldTiming = Invoke-QualificationCommand -Name 'timing-cold' -Executable $gradleWrapper -Arguments $timingArguments -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess -NonResumable
     $commands.Add($coldTiming)
-    $warmTiming = Invoke-QualificationCommand -Name 'timing-warm' -Executable $gradleWrapper -Arguments $timingArguments -WorkingDirectory $isolatedRoot -RequireSuccess
+    $warmTiming = Invoke-QualificationCommand -Name 'timing-warm' -Executable $gradleWrapper -Arguments $timingArguments -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess -NonResumable
     $commands.Add($warmTiming)
 
     $lockfilesAfter = @(Get-LockfileInventory -SourceRoot $isolatedRoot)
@@ -618,6 +867,20 @@ try {
     if ($LASTEXITCODE -ne 0 -or $finalStatus.Count -ne 0) {
         throw 'Qualification did not restore tracked source bytes after negative testing.'
     }
+
+    if (-not (Test-Path -LiteralPath $inspectorProfilePath -PathType Leaf)) {
+        throw 'Artifact inspection omitted its nested JDK-tool profile.'
+    }
+    $inspectorProfile = Get-Content -Raw -LiteralPath $inspectorProfilePath | ConvertFrom-Json -Depth 20
+    $processProfiles = @($commands | Group-Object -Property category | Sort-Object -Property Name | ForEach-Object {
+        [ordered]@{
+            category = $_.Name
+            commandCount = $_.Count
+            milliseconds = [long] ((@($_.Group | ForEach-Object { [long] $_.milliseconds }) | Measure-Object -Sum).Sum)
+        }
+    })
+    $mavenBuildMilliseconds = [long] ([DateTimeOffset]::Parse([string] $mavenBaseline.build.completedAt) -
+        [DateTimeOffset]::Parse([string] $mavenBaseline.build.startedAt)).TotalMilliseconds
 
     $report = [ordered]@{
         schemaVersion = 1
@@ -635,6 +898,25 @@ try {
             strategy = 'detached git worktree with fresh Gradle user home at the Maven revision'
             gradleUserHomeWasInitiallyEmpty = $true
             networkPermittedOnlyForBootstrapAndPrime = $true
+        }
+        resume = [ordered]@{
+            resumed = $Resume.IsPresent
+            bindingSha256 = $bindingSha256
+            reusedCommands = @($script:resumedCommandNames)
+            checkpointDirectory = 'checkpoints'
+        }
+        profiling = [ordered]@{
+            methodology = 'Outer processes use monotonic wall time; the Python inspector separately times every qualification-JDK tool launch.'
+            processCategories = $processProfiles
+            mavenBuild = [ordered]@{ milliseconds = $mavenBuildMilliseconds; source = 'same-revision Maven baseline timestamps' }
+            gradlePrimeBuild = $prime
+            gradleOfflineFullSuite = $offline
+            conformanceTask = @($gateEvidence | Where-Object { $_.name -eq 'gate-conformance' })[0].command
+            powershellProcesses = @($commands | Where-Object { $_.category -eq 'powershell' })
+            pythonInspector = $inspection
+            artifactInspector = $inspectorProfile
+            duplicateGateExecutionsBefore = $gateTasks.Count
+            duplicateGateExecutionsAfter = 0
         }
         gradle = [ordered]@{
             wrapperSha256 = (Get-FileHash -LiteralPath $gradleWrapper -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -712,7 +994,10 @@ try {
     }
     $reportPath = Join-Path $pendingRoot 'gradle-qualification.json'
     [IO.File]::WriteAllText($reportPath, (($report | ConvertTo-Json -Depth 100).Replace("`r`n", "`n") + "`n"), [Text.UTF8Encoding]::new($false))
+    # Runtime state contains disposable temp paths; the report retains the durable binding and reuse audit.
+    Remove-Item -LiteralPath $statePath
     Move-Item -LiteralPath $pendingRoot -Destination $outputRoot
+    $qualificationSucceeded = $true
     Write-Output "Captured Gradle qualification evidence at $outputRoot"
 }
 finally {
@@ -720,10 +1005,10 @@ finally {
         # TestKit uses a Tooling API daemon even when the outer evidence build requests --no-daemon.
         & $gradleWrapper --stop 2>$null | Out-Null
     }
-    if ($worktreeRegistered) {
+    if ($qualificationSucceeded -and $worktreeRegistered) {
         & git -C $reactorRoot worktree remove --force $isolatedRoot 2>$null
     }
-    if (Test-Path -LiteralPath $scratchRoot) {
+    if ($qualificationSucceeded -and (Test-Path -LiteralPath $scratchRoot)) {
         $resolvedScratch = [IO.Path]::GetFullPath($scratchRoot)
         $resolvedTemp = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
         if (-not $resolvedScratch.StartsWith($resolvedTemp, [StringComparison]::OrdinalIgnoreCase)) {
@@ -746,5 +1031,7 @@ finally {
     $env:JAVA_HOME = $oldJavaHome
     $env:GRADLE_USER_HOME = $oldGradleUserHome
     $env:PATH = $oldPath
-    # Failed qualification keeps its pending directory so every diagnostic continues to name retained evidence.
+    if (-not $qualificationSucceeded -and (Test-Path -LiteralPath $pendingRoot -PathType Container)) {
+        Write-Warning "Qualification state was retained. Resume with the same inputs and -Resume: $pendingRoot"
+    }
 }

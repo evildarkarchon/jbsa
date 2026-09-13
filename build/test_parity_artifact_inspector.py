@@ -2,12 +2,14 @@
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -55,7 +57,9 @@ class ArtifactInspectorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=test_target) as temporary:
             root = Path(temporary)
             first = self._build_modular_jar(root / "first", False, "String name() { return \"x\"; }")
-            second = self._build_modular_jar(root / "second", False, "String name() { return \"x\"; }")
+            second = root / "second" / "artifact.jar"
+            second.parent.mkdir()
+            shutil.copy2(first, second)
             changed = self._build_modular_jar(root / "changed", True, "long size() { return 1L; }")
             java_home = Path(os.environ["JAVA_HOME"])
 
@@ -72,6 +76,59 @@ class ArtifactInspectorTests(unittest.TestCase):
             self.assertEqual(
                 paths,
                 ["module_descriptor", "public_signatures[class=example.api.Api].signature"],
+            )
+
+    def test_java_contract_batches_public_signature_inspection(self):
+        """All public classes should share one bounded JDK-tool launch without changing output."""
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            java_home = root / "jdk"
+            (java_home / "bin").mkdir(parents=True)
+            (java_home / "bin" / "jar.exe").touch()
+            (java_home / "bin" / "javap.exe").touch()
+            artifact = root / "fixture.jar"
+            with zipfile.ZipFile(artifact, "w") as archive:
+                archive.writestr("module-info.class", b"module")
+                archive.writestr("example/Alpha.class", b"alpha")
+                archive.writestr("example/Beta.class", b"beta")
+                archive.writestr("example/Gamma.class", b"gamma")
+
+            javap_output = """Compiled from \"Alpha.java\"
+public final class example.Alpha {
+  public example.Alpha();
+    descriptor: ()V
+}
+Compiled from \"Beta.java\"
+public final class example.Beta {
+  public int size();
+    descriptor: ()I
+}
+Compiled from \"Gamma.java\"
+public final class example.Gamma {
+  public java.lang.String name();
+    descriptor: ()Ljava/lang/String;
+}
+"""
+
+            def completed(command, **_options):
+                output = (
+                    "example.module jar:file:/fixture.jar!/module-info.class\nexports example"
+                    if command[0].endswith("jar.exe")
+                    else javap_output
+                )
+                return subprocess.CompletedProcess(command, 0, stdout=output, stderr="")
+
+            with mock.patch.object(parity_artifact_inspector.subprocess, "run", side_effect=completed) as run:
+                contract = parity_artifact_inspector.inspect_java_contract(artifact, java_home)
+
+            self.assertEqual(
+                [signature["class"] for signature in contract["public_signatures"]],
+                ["example.Alpha", "example.Beta", "example.Gamma"],
+            )
+            self.assertEqual(run.call_count, 2)
+            self.assertEqual(
+                run.call_args_list[1].args[0][-3:],
+                ["example.Alpha", "example.Beta", "example.Gamma"],
             )
 
     def test_archive_comparison_ignores_envelope_but_detects_payload_changes(self):

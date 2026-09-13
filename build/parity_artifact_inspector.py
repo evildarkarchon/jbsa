@@ -8,6 +8,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
@@ -16,6 +17,7 @@ from typing import Any
 
 ARCHIVE_ENVELOPE_KEYS = frozenset({"archive_sha256"})
 KEYED_COLLECTION_FIELDS = ("path", "bom_ref", "ref", "class", "file_name")
+_JDK_TOOL_TIMINGS: list[dict[str, Any]] = []
 
 
 def sha256_file(path: Path) -> str:
@@ -274,6 +276,7 @@ def _run_jdk_tool(java_home: Path, tool: str, arguments: list[str]) -> str:
     executable = java_home / "bin" / f"{tool}.exe"
     if not executable.is_file():
         raise ValueError(f"Qualification JDK tool is missing: {executable}")
+    started = time.perf_counter_ns()
     completed = subprocess.run(
         [str(executable), *arguments],
         check=False,
@@ -281,9 +284,54 @@ def _run_jdk_tool(java_home: Path, tool: str, arguments: list[str]) -> str:
         text=True,
         encoding="utf-8",
     )
+    elapsed_milliseconds = (time.perf_counter_ns() - started) / 1_000_000
+    _JDK_TOOL_TIMINGS.append(
+        {
+            "argument_count": len(arguments),
+            "class_count": max(0, len(arguments) - 4) if tool == "javap" else 0,
+            "milliseconds": round(elapsed_milliseconds, 3),
+            "tool": tool,
+        }
+    )
     if completed.returncode != 0:
         raise ValueError(f"{tool} failed for {arguments!r}: {completed.stderr.strip()}")
     return "\n".join(line.rstrip() for line in completed.stdout.replace("\r\n", "\n").splitlines()).strip()
+
+
+def _split_javap_output(output: str, expected_count: int) -> list[str]:
+    """Split one multi-class ``javap`` response into its ordered per-class signatures."""
+    blocks: list[str] = []
+    lines: list[str] = []
+    for line in output.splitlines():
+        lines.append(line)
+        if line.strip() == "}":
+            blocks.append("\n".join(lines))
+            lines = []
+    if any(line.strip() for line in lines):
+        blocks.append("\n".join(lines))
+    if len(blocks) != expected_count:
+        raise ValueError(
+            f"javap returned {len(blocks)} class blocks for {expected_count} requested classes"
+        )
+    return blocks
+
+
+def _inspect_public_signatures(path: Path, java_home: Path, classes: list[str]) -> list[dict[str, str]]:
+    """Inspect public class signatures in bounded batches to amortize JDK process startup."""
+    signatures: list[dict[str, str]] = []
+    for offset in range(0, len(classes), 64):
+        batch = classes[offset : offset + 64]
+        output = _run_jdk_tool(
+            java_home,
+            "javap",
+            ["-public", "-s", "-classpath", str(path), *batch],
+        )
+        for class_name, block in zip(batch, _split_javap_output(output, len(batch)), strict=True):
+            normalized = "\n".join(
+                line.strip() for line in block.splitlines() if not line.startswith("Compiled from ")
+            )
+            signatures.append({"class": class_name, "signature": normalized})
+    return signatures
 
 
 def inspect_java_contract(path: Path, java_home: Path) -> dict[str, Any]:
@@ -306,13 +354,7 @@ def inspect_java_contract(path: Path, java_home: Path) -> dict[str, Any]:
             and not entry.filename.endswith("/package-info.class")
             and not entry.filename.startswith("META-INF/versions/")
         )
-    signatures = []
-    for class_name in classes:
-        output = _run_jdk_tool(java_home, "javap", ["-public", "-s", "-classpath", str(path), class_name])
-        normalized = "\n".join(
-            line.strip() for line in output.splitlines() if not line.startswith("Compiled from ")
-        )
-        signatures.append({"class": class_name, "signature": normalized})
+    signatures = _inspect_public_signatures(path, java_home, classes)
     packages = sorted({class_name.rpartition(".")[0] for class_name in classes if "." in class_name})
     return {
         "module_descriptor": descriptor,
@@ -545,6 +587,29 @@ def _write_json(path: Path | None, document: Any) -> None:
         path.write_text(text, encoding="utf-8", newline="\n")
 
 
+def _jdk_tool_profile() -> dict[str, Any]:
+    """Summarize measured JDK subprocess launches without mixing timings into parity data."""
+    by_tool: dict[str, dict[str, float | int]] = {}
+    for launch in _JDK_TOOL_TIMINGS:
+        tool = str(launch["tool"])
+        summary = by_tool.setdefault(tool, {"launchCount": 0, "milliseconds": 0.0})
+        summary["launchCount"] = int(summary["launchCount"]) + 1
+        summary["milliseconds"] = round(
+            float(summary["milliseconds"]) + float(launch["milliseconds"]), 3
+        )
+    return {
+        "schemaVersion": 1,
+        "jdkTools": {
+            "byTool": by_tool,
+            "launchCount": len(_JDK_TOOL_TIMINGS),
+            "launches": _JDK_TOOL_TIMINGS,
+            "milliseconds": round(
+                sum(float(launch["milliseconds"]) for launch in _JDK_TOOL_TIMINGS), 3
+            ),
+        },
+    }
+
+
 def main(arguments: list[str] | None = None) -> int:
     """Inspect a build or compare two previously normalized parity snapshots."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -555,6 +620,7 @@ def main(arguments: list[str] | None = None) -> int:
     inspect_parser.add_argument("--version", required=True)
     inspect_parser.add_argument("--build-tool", choices=("maven", "gradle"), default="maven")
     inspect_parser.add_argument("--output", type=Path, required=True)
+    inspect_parser.add_argument("--profile-output", type=Path)
     compare_parser = subparsers.add_parser("compare")
     compare_parser.add_argument("--expected", type=Path, required=True)
     compare_parser.add_argument("--actual", type=Path, required=True)
@@ -562,6 +628,7 @@ def main(arguments: list[str] | None = None) -> int:
     compare_parser.add_argument("--include-archive-envelopes", action="store_true")
     options = parser.parse_args(arguments)
     if options.command == "inspect-build":
+        _JDK_TOOL_TIMINGS.clear()
         _write_json(
             options.output,
             inspect_build(
@@ -571,6 +638,8 @@ def main(arguments: list[str] | None = None) -> int:
                 options.build_tool,
             ),
         )
+        if options.profile_output is not None:
+            _write_json(options.profile_output, _jdk_tool_profile())
         return 0
     differences = compare_snapshots(
         _load_json(options.expected),
