@@ -144,7 +144,7 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
             }
         }
         project.tasks.withType(GenerateModuleMetadata::class.java).configureEach {
-            // Maven parity permits only the binary, sources, Javadocs, and consumer POM.
+            // The qualified publication contract permits only the binary, sources, Javadocs, and consumer POM.
             enabled = false
         }
         val binary = project.tasks.named("jar", Jar::class.java)

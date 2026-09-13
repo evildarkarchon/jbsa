@@ -24,6 +24,10 @@ abstract class VerifyActiveReferences : DefaultTask() {
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val activeFiles: ConfigurableFileCollection
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val legacyBuildFiles: ConfigurableFileCollection
+
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val allowlistFile: RegularFileProperty
@@ -34,6 +38,22 @@ abstract class VerifyActiveReferences : DefaultTask() {
     @TaskAction
     fun verifyReferences() {
         val root = repositoryRoot.get().asFile.toPath().toAbsolutePath().normalize()
+        val activeLegacyBuildFiles =
+            legacyBuildFiles.files
+                .asSequence()
+                .map { it.toPath().toAbsolutePath().normalize() }
+                .filter(Files::isRegularFile)
+                .map { root.relativize(it).toString().replace('\\', '/') }
+                .sorted()
+                .toList()
+        if (activeLegacyBuildFiles.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("Active legacy build files are prohibited:")
+                    activeLegacyBuildFiles.forEach { appendLine("  $it") }
+                }.trimEnd()
+            )
+        }
         val violations =
             activeFiles.files
                 .asSequence()
@@ -111,17 +131,8 @@ abstract class VerifyActiveReferences : DefaultTask() {
                     require(properties.required(prefix + "rationale").isNotBlank()) {
                         "Allowlist entry $pathText must explain why its reference remains."
                     }
-                    val expirationPath =
-                        properties.getProperty(prefix + "expiresWhenClosed")?.takeIf(String::isNotBlank)
-                    if (category == "migration-comparison") {
-                        require(expirationPath != null) {
-                            "Migration comparison allowlist entry $pathText must declare expiresWhenClosed."
-                        }
-                        verifyOpenCutoverTicket(root, pathText, expirationPath)
-                    } else {
-                        require(expirationPath == null) {
-                            "Only migration-comparison entries may declare expiresWhenClosed: $pathText"
-                        }
+                    require(properties.getProperty(prefix + "expiresWhenClosed").isNullOrBlank()) {
+                        "Completed-cutover allowlist entry $pathText cannot declare expiresWhenClosed."
                     }
                     AllowedReference(pathText, lineSha256)
                 }
@@ -135,23 +146,6 @@ abstract class VerifyActiveReferences : DefaultTask() {
             return allowed
         } catch (exception: IllegalArgumentException) {
             throw GradleException(exception.message ?: "Invalid active-reference allowlist.", exception)
-        }
-    }
-
-    /** Rejects a temporary exception after the local issue that owns its removal has closed. */
-    private fun verifyOpenCutoverTicket(root: Path, referencePath: String, expirationPath: String) {
-        val relative = Path.of(expirationPath.replace('\\', '/'))
-        require(!relative.isAbsolute && relative.none { it.toString() == ".." }) {
-            "Cutover ticket path must stay repository-relative: $expirationPath"
-        }
-        val ticket = root.resolve(relative).normalize()
-        require(ticket.startsWith(root) && Files.isRegularFile(ticket)) {
-            "Migration comparison allowlist entry $referencePath names a missing cutover ticket: $expirationPath"
-        }
-        val state = Files.readString(ticket)
-        // The tracker state is the durable removal signal; dates and branch names can drift independently.
-        require(!Regex("(?m)^State:\\s*closed\\s*$").containsMatchIn(state)) {
-            "Migration comparison allowlist entry $referencePath expired because its cutover ticket is closed."
         }
     }
 
@@ -181,7 +175,7 @@ abstract class VerifyActiveReferences : DefaultTask() {
     }
 
     private companion object {
-        val ALLOWLIST_CATEGORIES = setOf("historical-provenance", "migration-comparison", "scanner-test-fixture")
+        val ALLOWLIST_CATEGORIES = setOf("historical-provenance", "scanner-test-fixture")
         // Match actionable build syntax and tool-specific instructions, while leaving consumer-POM
         // requirements, package URLs, publication APIs, and the Maven Central proper name intact.
         val PROHIBITED_REFERENCES =

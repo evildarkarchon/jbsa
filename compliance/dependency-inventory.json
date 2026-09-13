@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "scope": "Pinned third-party artifacts selected for product runtime or qualification; build-only Maven plugins and test tools are not release inputs.",
+  "scope": "Pinned third-party artifacts selected for product runtime or qualification; build plugins and test tools are not release inputs.",
   "entries": [
     {
       "groupId": "com.fulcrumgenomics",

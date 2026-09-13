@@ -112,7 +112,7 @@ final class FixtureCorpusIT {
   }
 
   /**
-   * Resolves the repository root supplied by the Maven integration-test configuration.
+   * Resolves the repository root supplied by the Gradle integration-test configuration.
    *
    * @return canonical repository root
    * @throws IOException if the configured root cannot be resolved

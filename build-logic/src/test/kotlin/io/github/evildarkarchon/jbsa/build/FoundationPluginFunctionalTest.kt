@@ -365,26 +365,33 @@ class FoundationPluginFunctionalTest {
         assertTrue(result.output.contains("does not match any prohibited line"), result.output)
     }
 
-    /** Verifies a migration-only exception expires when its declared cutover ticket closes. */
+    /** Verifies the completed cutover cannot retain temporary comparison exceptions. */
     @Test
-    fun `expires temporary comparison references at cutover`() {
+    fun `rejects temporary comparison exceptions after cutover`() {
         val comparison = "& .\\mvnw.cmd -B verify"
         write("build/compare-builds.ps1", "$comparison\n")
-        write(".scratch/migration/issues/14-cutover.md", "# Cut over\n\nState: open\n")
         writeSingleReferenceAllowlist(
             "build/compare-builds.ps1",
             comparison,
             "migration-comparison",
             "Retains the parity oracle only until the coherent cutover.",
-            ".scratch/migration/issues/14-cutover.md",
         )
-
-        run("verifyActiveReferences")
-        write(".scratch/migration/issues/14-cutover.md", "# Cut over\n\nState: closed\n")
 
         val result = runAndFail("verifyActiveReferences")
 
-        assertTrue(result.output.contains("expired because its cutover ticket is closed"), result.output)
+        assertTrue(result.output.contains("Unsupported active-reference allowlist category"), result.output)
+    }
+
+    /** Verifies the cutover gate rejects a reintroduced legacy build descriptor. */
+    @Test
+    fun `rejects active legacy build descriptors after cutover`() {
+        val descriptor = "pom" + ".xml"
+        write(descriptor, "<project/>\n")
+
+        val result = runAndFail("verifyActiveReferences")
+
+        assertTrue(result.output.contains(descriptor), result.output)
+        assertTrue(result.output.contains("Active legacy build files are prohibited"), result.output)
     }
 
     /** Verifies every ticket-defined active surface participates in one repository scan. */
@@ -812,9 +819,7 @@ class FoundationPluginFunctionalTest {
         line: String,
         category: String,
         rationale: String,
-        expiresWhenClosed: String? = null,
     ) {
-        val expiration = expiresWhenClosed?.let { "entry.0.expiresWhenClosed=$it\n" } ?: ""
         write(
             "build/active-maven-reference-allowlist.properties",
             """
@@ -824,7 +829,7 @@ class FoundationPluginFunctionalTest {
             entry.0.lineSha256=${sha256(line.toByteArray())}
             entry.0.category=$category
             entry.0.rationale=$rationale
-            """.trimIndent() + "\n" + expiration,
+            """.trimIndent() + "\n",
         )
     }
 

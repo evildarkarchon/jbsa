@@ -13,7 +13,7 @@ import org.junit.jupiter.api.io.TempDir
 class ArchiveTimestampNormalizerTest {
     @TempDir lateinit var temporaryDirectory: Path
 
-    /** Verifies that every archive entry receives the migration's fixed reproducibility epoch. */
+    /** Verifies that every archive entry receives the qualified fixed reproducibility epoch. */
     @Test
     fun `normalizes every archive entry to the fixed timestamp`() {
         val archive = temporaryDirectory.resolve("sample.jar")

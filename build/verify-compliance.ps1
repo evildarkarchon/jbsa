@@ -12,20 +12,18 @@ path, SHA-256 digest, kind, and source. It is required for a non-empty release-i
 prohibited fixture and native checks have run.
 
 .PARAMETER RequireGeneratedArtifacts
-Requires and validates the aggregate CycloneDX SBOM. Maven uses this after SBOM generation; callers
-that only need repository or candidate-input validation can omit it.
+Requires and validates the aggregate CycloneDX SBOM. Callers that only need repository or
+candidate-input validation can omit it.
 
 .PARAMETER GeneratedSbomPath
 Optional exact CycloneDX JSON path used with RequireGeneratedArtifacts. Tests may supply an owned
 fixture; normal builds use target/compliance/jbsa.cdx.json.
 
 .PARAMETER ReactorVersion
-Optional effective Maven reactor version. Maven supplies this explicitly so command-line revision
-overrides resolve the matching build outputs; standalone callers use the root POM revision.
+Required effective Gradle build version used to resolve matching project outputs.
 
 .PARAMETER BuildLayoutManifest
-Optional Gradle-produced build-layout contract. Supplying it enables Gradle model validation and
-requires the resolved-production manifest and explicit reactor version.
+Required Gradle-produced build-layout contract used for model validation and artifact resolution.
 
 .PARAMETER ResolvedProductionDependencies
 Gradle-produced schema-version-1 resolved production dependency manifest.
@@ -53,8 +51,12 @@ param(
     [string] $ReleaseInputManifest,
     [switch] $RequireGeneratedArtifacts,
     [string] $GeneratedSbomPath,
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._+-]*$')]
     [string] $ReactorVersion,
+    [Parameter(Mandatory = $true)]
     [string] $BuildLayoutManifest,
+    [Parameter(Mandatory = $true)]
     [string] $ResolvedProductionDependencies,
     [string] $ConsumerPomPath,
     [string[]] $DependencyLockPaths,
@@ -156,35 +158,6 @@ function Read-ComplianceInventory {
         throw "Compliance inventory has no entries array: $Path"
     }
     return $inventory
-}
-
-<#
-.SYNOPSIS
-Returns the default reactor version declared by the root Maven POM.
-
-.PARAMETER Path
-Exact root POM path to parse.
-
-.OUTPUTS
-The non-empty revision property value.
-
-.NOTES
-Throws a terminating error when the POM is malformed or omits its revision property.
-#>
-function Get-DeclaredReactorVersion {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Path
-    )
-
-    $rootPom = [xml](Get-Content -Raw -LiteralPath $Path)
-    $namespaces = [System.Xml.XmlNamespaceManager]::new($rootPom.NameTable)
-    $namespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
-    $revisionNode = $rootPom.SelectSingleNode('/m:project/m:properties/m:revision', $namespaces)
-    if ($null -eq $revisionNode -or [string]::IsNullOrWhiteSpace($revisionNode.InnerText)) {
-        throw 'The root POM does not declare the reactor revision.'
-    }
-    return $revisionNode.InnerText.Trim()
 }
 
 <#
@@ -563,105 +536,6 @@ function Get-ValidatedNativeHashLookup {
         $hashLookup[$entry.sha256] = $entry
     }
     return $hashLookup
-}
-
-<#
-.SYNOPSIS
-Resolves a literal or root-POM property used by an external product dependency.
-
-.PARAMETER Value
-Literal version or single Maven property expression to resolve.
-
-.PARAMETER RootPom
-Parsed reactor POM that owns pinned version properties.
-
-.PARAMETER Namespaces
-Namespace manager configured for RootPom.
-
-.OUTPUTS
-The exact resolved dependency version.
-
-.NOTES
-Throws a terminating error when a referenced root-POM property is absent or empty.
-#>
-function Resolve-PomVersion {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Value,
-        [Parameter(Mandatory = $true)]
-        [xml] $RootPom,
-        [Parameter(Mandatory = $true)]
-        [System.Xml.XmlNamespaceManager] $Namespaces
-    )
-
-    if ($Value -notmatch '^\$\{([^}]+)\}$') {
-        return $Value
-    }
-    $propertyName = $Matches[1]
-    $propertyNode = $RootPom.SelectSingleNode("/m:project/m:properties/m:$propertyName", $Namespaces)
-    if ($null -eq $propertyNode -or [string]::IsNullOrWhiteSpace($propertyNode.InnerText)) {
-        throw "Cannot resolve external dependency version property $Value."
-    }
-    return $propertyNode.InnerText.Trim()
-}
-
-<#
-.SYNOPSIS
-Requires every external production dependency to be an approved, exact inventory entry.
-
-.PARAMETER DependencyLookup
-Validated dependency entries keyed by Maven-coordinate identity.
-
-.OUTPUTS
-None.
-
-.NOTES
-Throws a terminating error when a product dependency is absent from or blocked by the inventory.
-#>
-function Test-ProductDependencies {
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable] $DependencyLookup
-    )
-
-    $rootPom = [xml](Get-Content -Raw -LiteralPath (Join-Path $reactorRoot 'pom.xml'))
-    $namespaces = New-Object System.Xml.XmlNamespaceManager($rootPom.NameTable)
-    $namespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
-
-    foreach ($relativePom in @('jbsa/pom.xml', 'jbsa-cli/pom.xml')) {
-        $pom = [xml](Get-Content -Raw -LiteralPath (Join-Path $reactorRoot $relativePom))
-        $pomNamespaces = New-Object System.Xml.XmlNamespaceManager($pom.NameTable)
-        $pomNamespaces.AddNamespace('m', 'http://maven.apache.org/POM/4.0.0')
-        foreach ($dependency in @($pom.SelectNodes('/m:project/m:dependencies/m:dependency', $pomNamespaces))) {
-            $scopeNode = $dependency.SelectSingleNode('m:scope', $pomNamespaces)
-            if ($null -ne $scopeNode -and $scopeNode.InnerText.Trim() -cin @('test', 'provided')) {
-                continue
-            }
-            $versionText = $dependency.version.Trim()
-            $version = if ($versionText -cin @('${project.version}', '${revision}')) {
-                $ReactorVersion
-            } else { Resolve-PomVersion $versionText $rootPom $namespaces }
-            $classifierNode = $dependency.SelectSingleNode('m:classifier', $pomNamespaces)
-            $classifier = if ($null -eq $classifierNode) { '' } else { $classifierNode.InnerText.Trim() }
-            $typeNode = $dependency.SelectSingleNode('m:type', $pomNamespaces)
-            $packaging = if ($null -eq $typeNode) { 'jar' } else { $typeNode.InnerText.Trim() }
-            # Only the CLI's exact current library output is a production reactor dependency.
-            if ($relativePom -ceq 'jbsa-cli/pom.xml' -and
-                $dependency.groupId -ceq 'io.github.evildarkarchon' -and
-                $dependency.artifactId -ceq 'jbsa' -and $version -ceq $ReactorVersion -and
-                $packaging -ceq 'jar' -and $classifier -ceq '') {
-                continue
-            }
-            $key = '{0}:{1}:{2}:{3}:{4}' -f
-                $dependency.groupId.Trim(), $dependency.artifactId.Trim(), $packaging, $classifier, $version
-            if (-not $DependencyLookup.ContainsKey($key)) {
-                throw "External product dependency is absent from the approved inventory: $key"
-            }
-            if (-not $DependencyLookup[$key].redistribution.approved) {
-                throw "External product dependency is not approved for release inputs: $key"
-            }
-        }
-    }
 }
 
 <#
@@ -1256,28 +1130,28 @@ function Assert-ApprovedNativePayload {
 
 <#
 .SYNOPSIS
-Resolves one production project-artifact identity to its exact current reactor output.
+Resolves one production project-artifact identity to its exact current Gradle output.
 
 .PARAMETER Source
-Three-part Maven coordinate declared by a project-artifact manifest entry.
+Three-part project coordinate declared by a project-artifact manifest entry.
 
 .PARAMETER ReleasePath
 Canonical release-input path whose filename identifies packaging and classifier.
 
 .PARAMETER ReactorVersion
-Effective Maven version of the current reactor build.
+Effective version of the current Gradle build.
 
 .PARAMETER BuildLayoutLookup
-Validated Gradle output model; an empty lookup retains the temporary Maven parity fallback.
+Validated Gradle output model.
 
 .OUTPUTS
-The exact existing reactor artifact path for the coordinate and canonical release filename.
+The exact existing project artifact path for the coordinate and canonical release filename.
 
 .NOTES
 Only required production artifacts are valid project-artifact identities. Throws when the source
-is malformed, the release filename is noncanonical, or no current reactor output exists.
+is malformed, the release filename is noncanonical, or no current build output exists.
 #>
-function Resolve-ReactorProjectArtifact {
+function Resolve-BuildProjectArtifact {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Source,
@@ -1285,7 +1159,8 @@ function Resolve-ReactorProjectArtifact {
         [string] $ReleasePath,
         [Parameter(Mandatory = $true)]
         [string] $ReactorVersion,
-        [hashtable] $BuildLayoutLookup = @{}
+        [Parameter(Mandatory = $true)]
+        [hashtable] $BuildLayoutLookup
     )
 
     $coordinate = [regex]::Match(
@@ -1299,24 +1174,11 @@ function Resolve-ReactorProjectArtifact {
     $artifactId = $coordinate.Groups[1].Value
     $version = $coordinate.Groups[2].Value
     if ($version -cne $ReactorVersion) {
-        throw "Release input project artifact does not identify the current reactor version: $Source"
+        throw "Release input project artifact does not identify the current build version: $Source"
     }
     $releaseName = [System.IO.Path]::GetFileName($ReleasePath)
-    $artifactMap = [System.Collections.Generic.Dictionary[string, string]]::new(
-        [System.StringComparer]::Ordinal
-    )
     $layoutId = $null
     if ($artifactId -ceq 'jbsa') {
-        $artifactMap.Add("jbsa-$ReactorVersion.jar", "jbsa/target/jbsa-$ReactorVersion.jar")
-        $artifactMap.Add("jbsa-$ReactorVersion.pom", 'jbsa/.flattened-pom.xml')
-        $artifactMap.Add(
-            "jbsa-$ReactorVersion-sources.jar",
-            "jbsa/target/jbsa-$ReactorVersion-sources.jar"
-        )
-        $artifactMap.Add(
-            "jbsa-$ReactorVersion-javadoc.jar",
-            "jbsa/target/jbsa-$ReactorVersion-javadoc.jar"
-        )
         $layoutId = switch -CaseSensitive ($releaseName) {
             "jbsa-$ReactorVersion.jar" { 'library-binary' }
             "jbsa-$ReactorVersion.pom" { 'library-consumer-pom' }
@@ -1324,23 +1186,17 @@ function Resolve-ReactorProjectArtifact {
             "jbsa-$ReactorVersion-javadoc.jar" { 'library-javadoc' }
         }
     } else {
-        $artifactMap.Add(
-            "jbsa-cli-$ReactorVersion.jar",
-            "jbsa-cli/target/jbsa-cli-$ReactorVersion.jar"
-        )
         if ($releaseName -ceq "jbsa-cli-$ReactorVersion.jar") { $layoutId = 'cli-binary' }
     }
-    if (-not $artifactMap.ContainsKey($releaseName)) {
+    if ([string]::IsNullOrWhiteSpace($layoutId)) {
         throw "Release input project artifact has a noncanonical path for its source: $ReleasePath"
     }
-    $artifactPath = if ($BuildLayoutLookup.Count -gt 0) {
-        if ([string]::IsNullOrWhiteSpace($layoutId) -or -not $BuildLayoutLookup.ContainsKey($layoutId)) {
-            throw "Release input project artifact is absent from the build-layout contract: $ReleasePath"
-        }
-        $BuildLayoutLookup[$layoutId].resolvedPath
-    } else { Join-Path $reactorRoot $artifactMap[$releaseName] }
+    if (-not $BuildLayoutLookup.ContainsKey($layoutId)) {
+        throw "Release input project artifact is absent from the build-layout contract: $ReleasePath"
+    }
+    $artifactPath = $BuildLayoutLookup[$layoutId].resolvedPath
     if (-not (Test-Path -LiteralPath $artifactPath -PathType Leaf)) {
-        throw "Release input project artifact has no current reactor output: $Source"
+        throw "Release input project artifact has no current build output: $Source"
     }
     return [System.IO.Path]::GetFullPath($artifactPath)
 }
@@ -1589,10 +1445,10 @@ Release-approved native entries keyed by exact payload SHA-256.
 Release-approved dependency entries keyed by exact artifact SHA-256.
 
 .PARAMETER ReactorVersion
-Effective Maven version used to resolve the current reactor artifact paths.
+Effective Gradle version used to resolve the current project artifact paths.
 
 .PARAMETER BuildLayoutLookup
-Validated Gradle output model, or an empty lookup for temporary Maven parity callers.
+Validated Gradle output model.
 
 .OUTPUTS
 None.
@@ -1712,11 +1568,11 @@ function Test-ReleaseInputs {
                 throw "Release input native payload is not reconciled with its approved inventory: $normalizedPath"
             }
         } elseif ($entry.kind -ceq 'project-artifact') {
-            $reactorArtifact = Resolve-ReactorProjectArtifact `
+            $projectArtifact = Resolve-BuildProjectArtifact `
                 $entry.source $normalizedPath $ReactorVersion $BuildLayoutLookup
-            $reactorArtifactHash = Get-LowercaseSha256 $reactorArtifact
-            if ($entry.sha256 -cne $reactorArtifactHash) {
-                throw "Release input project artifact does not match the reactor output: $normalizedPath"
+            $projectArtifactHash = Get-LowercaseSha256 $projectArtifact
+            if ($entry.sha256 -cne $projectArtifactHash) {
+                throw "Release input project artifact does not match the Gradle output: $normalizedPath"
             }
         } else {
             $sourcePath = [System.IO.Path]::GetFullPath((Join-Path $reactorRoot $entry.source))
@@ -1944,31 +1800,9 @@ foreach ($entry in @($dependencyInventory.entries | Where-Object {
         })) {
     $approvedDependencyByHash[$entry.sha256] = $entry
 }
-if ([string]::IsNullOrWhiteSpace($ReactorVersion) -and
-    -not [string]::IsNullOrWhiteSpace($BuildLayoutManifest)) {
-    throw 'Gradle compliance mode requires an explicit -ReactorVersion.'
-}
-if ([string]::IsNullOrWhiteSpace($ReactorVersion)) {
-    $ReactorVersion = Get-DeclaredReactorVersion (Join-Path $reactorRoot 'pom.xml')
-}
-
-$buildLayoutLookup = @{}
-if (-not [string]::IsNullOrWhiteSpace($BuildLayoutManifest)) {
-    if ([string]::IsNullOrWhiteSpace($ResolvedProductionDependencies)) {
-        throw '-BuildLayoutManifest requires -ResolvedProductionDependencies.'
-    }
-    $buildLayoutLookup = Test-GradleComplianceInputs `
-        $dependencyLookup $BuildLayoutManifest $ResolvedProductionDependencies $ConsumerPomPath `
-        $DependencyLockPaths $VerificationMetadataPaths
-} elseif (-not [string]::IsNullOrWhiteSpace($ResolvedProductionDependencies) -or
-    -not [string]::IsNullOrWhiteSpace($ConsumerPomPath) -or
-    ($null -ne $DependencyLockPaths -and $DependencyLockPaths.Count -gt 0) -or
-    ($null -ne $VerificationMetadataPaths -and $VerificationMetadataPaths.Count -gt 0)) {
-    throw 'Gradle compliance inputs require -BuildLayoutManifest.'
-} else {
-    # Maven remains a parity oracle on the migration branch until the atomic cutover removes this fallback.
-    Test-ProductDependencies $dependencyLookup
-}
+$buildLayoutLookup = Test-GradleComplianceInputs `
+    $dependencyLookup $BuildLayoutManifest $ResolvedProductionDependencies $ConsumerPomPath `
+    $DependencyLockPaths $VerificationMetadataPaths
 Test-TrackedRepositoryBytes $nativeByHash $approvedNativeByHash
 
 $notices = New-ThirdPartyNoticesText $dependencyInventory $nativeInventory

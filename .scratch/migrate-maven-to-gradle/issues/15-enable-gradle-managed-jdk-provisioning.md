@@ -3,11 +3,12 @@
 **What to build:** Decide whether developer builds should provision the pinned Java toolchain through Gradle after the migration is complete.
 
 Blocked by: [14: Remove Maven and verify the atomic cutover](14-remove-maven-atomic-cutover.md)
-Status: needs-triage
+Status: ready-for-agent
+Labels: ready-for-agent
 State: open
 Assignees: none
 Intended owner: agent
-Triage rationale: User-requested post-migration follow-up; intentionally unprioritized and blocked until the authoritative cutover is complete.
+Triage rationale: Fully specified and agent-owned; ticket 14 is closed, so this post-cutover evaluation is unblocked.
 
 ## Acceptance criteria
 

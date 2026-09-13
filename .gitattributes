@@ -17,8 +17,13 @@ gradle/wrapper/gradle-wrapper.properties text eol=lf
 gradle/wrapper/gradle-wrapper.jar -text
 gradlew text eol=lf
 gradlew.bat text eol=crlf
-mvnw text eol=lf
-mvnw.cmd text eol=crlf
+
+# Release Qualification binds the checked-out bytes of these staged text inputs.
+LICENSE text eol=crlf
+NOTICE text eol=crlf
+compliance/licenses/LWJGL-3.4.3.txt text eol=crlf
+compliance/licenses/LZ4-1.10.0.txt text eol=crlf
+build/windows-runtime/launch-policy.json text eol=crlf
 
 tests/fixtures/synthetic/**/*.json text eol=lf
 tests/fixtures/synthetic/**/*.ba2 -text

@@ -50,7 +50,7 @@ class JbsaBenchmarkPlugin : Plugin<Project> {
         }
     }
 
-    /** Produces the Maven-compatible standalone path and inspects its observable launch contract. */
+    /** Produces the qualified standalone path and inspects its observable launch contract. */
     private fun configureStandaloneJar(project: Project) {
         val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
         val standalone = project.tasks.named(JbsaBenchmarkIdentity.STANDALONE_TASK, ShadowJar::class.java) {

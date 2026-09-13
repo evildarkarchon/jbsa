@@ -1,13 +1,12 @@
 <#
 .SYNOPSIS
-Stages current public reactor artifacts and compliance evidence with a deterministic byte manifest.
+Stages current public Gradle artifacts and compliance evidence with a deterministic byte manifest.
 
 .PARAMETER ReactorVersion
 Effective build version used in artifact paths and project source identities.
 
 .PARAMETER BuildLayoutManifest
-Optional schema-version-1 Gradle build-layout manifest that supplies generated artifact paths. When
-omitted, the Maven-era paths remain available to the temporary parity build.
+Required schema-version-1 Gradle build-layout manifest that supplies generated artifact paths.
 
 .NOTES
 Owns only jbsa-dist/target/release-inputs and its sibling manifest. Missing inputs fail before
@@ -18,6 +17,7 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._+-]*$')]
     [string] $ReactorVersion,
+    [Parameter(Mandatory = $true)]
     [string] $BuildLayoutManifest
 )
 Set-StrictMode -Version Latest
@@ -94,20 +94,7 @@ function Get-GradleReleaseSources {
     return $sources
 }
 
-$releaseSources = @{
-    libraryBinary = "jbsa/target/jbsa-$ReactorVersion.jar"
-    libraryConsumerPom = 'jbsa/.flattened-pom.xml'
-    librarySources = "jbsa/target/jbsa-$ReactorVersion-sources.jar"
-    libraryJavadoc = "jbsa/target/jbsa-$ReactorVersion-javadoc.jar"
-    cliBinary = "jbsa-cli/target/jbsa-cli-$ReactorVersion.jar"
-    generatedThirdPartyNotices = 'target/compliance/THIRD-PARTY-NOTICES.md'
-    generatedReleaseNotes = 'target/compliance/RELEASE-NOTES.md'
-    aggregateSbom = 'target/compliance/jbsa.cdx.json'
-    runtimeDependencies = 'jbsa-dist/target/runtime-dependencies'
-}
-if (-not [string]::IsNullOrWhiteSpace($BuildLayoutManifest)) {
-    $releaseSources = Get-GradleReleaseSources -Path $BuildLayoutManifest
-}
+$releaseSources = Get-GradleReleaseSources -Path $BuildLayoutManifest
 $inputs = @(
     @{ path = "jbsa-$ReactorVersion.jar"; source = $releaseSources.libraryBinary; artifact = 'jbsa'; kind = 'project-artifact' },
     @{ path = "jbsa-$ReactorVersion.pom"; source = $releaseSources.libraryConsumerPom; artifact = 'jbsa'; kind = 'project-artifact' },
@@ -132,7 +119,7 @@ foreach ($dependency in @($inventory.entries | Where-Object { $_.groupId -eq 'or
     $source = "$($releaseSources.runtimeDependencies)/$filename"
     $sourcePath = Join-Path $reactorRoot $source
     if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) { throw "Missing release input source: $source" }
-    # Validate reactor-resolved bytes before replacing prior staging; the local Maven cache is not an assembly input.
+    # Validate Gradle-resolved bytes before replacing prior staging; dependency caches are not assembly inputs.
     if ((Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash.ToLowerInvariant() -cne $dependency.sha256) {
         throw "Runtime checksum mismatch: $filename"
     }
@@ -157,7 +144,7 @@ foreach ($ownedPath in $ownedPaths) {
 $resolvedStage = [IO.Path]::GetFullPath($stageRoot)
 $expectedStage = [IO.Path]::GetFullPath((Join-Path $reactorRoot 'jbsa-dist/target/release-inputs'))
 if ($resolvedStage -cne $expectedStage -or -not $resolvedStage.StartsWith($reactorRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
-    throw "Refusing to replace staging outside the reactor: $resolvedStage"
+    throw "Refusing to replace staging outside the build root: $resolvedStage"
 }
 if (Test-Path -LiteralPath $resolvedStage) { Remove-Item -LiteralPath $resolvedStage -Recurse -Force }
 if (Test-Path -LiteralPath $manifestPath) { Remove-Item -LiteralPath $manifestPath -Force }

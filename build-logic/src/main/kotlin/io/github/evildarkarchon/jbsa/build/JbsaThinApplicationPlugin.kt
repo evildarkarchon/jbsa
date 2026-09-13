@@ -21,7 +21,7 @@ class JbsaThinApplicationPlugin : Plugin<Project> {
         }
         project.tasks.named("compileJava", JavaCompile::class.java) {
             options.javaModuleVersion.set(project.provider { project.version.toString() })
-            // The Maven artifact used launch-policy entry points and carried no ModuleMainClass attribute.
+            // The qualified thin artifact uses launch-policy entry points and carries no ModuleMainClass attribute.
             options.javaModuleMainClass.unsetConvention()
         }
 

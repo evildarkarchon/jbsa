@@ -244,7 +244,7 @@ abstract class GenerateProductionSbom : DefaultTask() {
     private fun relationship(ref: String, dependsOn: List<String>): Map<String, Any> =
         linkedMapOf("ref" to ref, "dependsOn" to dependsOn.distinct().sorted())
 
-    /** Builds the stable Maven package URL form used by the captured parity baseline. */
+    /** Builds the stable Maven package URL form required by the qualified SBOM contract. */
     private fun purl(group: String, name: String, version: String, type: String, classifier: String?): String {
         val qualifiers =
             buildList {

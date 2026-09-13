@@ -2,7 +2,6 @@
 *.class
 __pycache__/
 **/target/
-.flattened-pom.xml
 .gradle/
 **/.gradle/
 

@@ -137,9 +137,9 @@ class GradleFoundationFilesTest {
         assertTrue(review.contains("All 124 values matched; failures: 0."))
     }
 
-    /** Verifies Gradle exposes the same Java formatter version and transformations as Maven. */
+    /** Verifies Gradle exposes the qualified Java formatter version and transformations. */
     @Test
-    fun `pins the Maven equivalent Java formatting contract`() {
+    fun `pins the qualified Java formatting contract`() {
         val catalog = Files.readString(repositoryRoot.resolve("gradle/libs.versions.toml"))
         val rootBuild = Files.readString(repositoryRoot.resolve("build.gradle.kts"))
 

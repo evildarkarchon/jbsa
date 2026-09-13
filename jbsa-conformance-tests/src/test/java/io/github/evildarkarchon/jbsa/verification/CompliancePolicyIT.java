@@ -488,9 +488,9 @@ final class CompliancePolicyIT {
   }
 
   /**
-   * Returns the checked-out reactor root supplied by the Maven policy-test configuration.
+   * Returns the checked-out build root supplied by the Gradle policy-test configuration.
    *
-   * @return absolute or working-directory-relative reactor root supplied by Maven
+   * @return absolute or working-directory-relative build root supplied by Gradle
    */
   private static Path reactorRoot() {
     return Path.of(System.getProperty("jbsa.reactor.root"));
@@ -634,20 +634,6 @@ final class CompliancePolicyIT {
     assertFalse(
         stagingScript.contains("resolved-production-dependencies.json"),
         "Internal dependency manifest became a release input");
-  }
-
-  /**
-   * Verifies the final distribution module reruns the audit after its release inputs are assembled.
-   *
-   * @throws IOException if the distribution POM cannot be read
-   */
-  @Test
-  void distributionModuleAuditsReleaseInputsAfterAssembly() throws IOException {
-    String distributionPom = Files.readString(reactorRoot().resolve("jbsa-dist/pom.xml"));
-    assertTrue(distributionPom.contains("<id>verify-assembled-release-inputs</id>"));
-    assertTrue(distributionPom.contains("<phase>verify</phase>"));
-    assertTrue(distributionPom.contains("build/verify-compliance.ps1"));
-    assertTrue(distributionPom.contains("<argument>-RequireGeneratedArtifacts</argument>"));
   }
 
   /**
@@ -913,18 +899,18 @@ final class CompliancePolicyIT {
   }
 
   /**
-   * Verifies a self-declared project coordinate cannot bless bytes unlike the reactor output.
+   * Verifies a self-declared project coordinate cannot bless bytes unlike the Gradle output.
    *
    * @throws Exception if the verifier process or owned temporary files cannot be managed
    */
   @Test
-  void releaseInputAuditRejectsProjectArtifactThatDiffersFromReactorOutput() throws Exception {
+  void releaseInputAuditRejectsProjectArtifactThatDiffersFromGradleOutput() throws Exception {
     Path releaseInputs = Files.createTempDirectory("jbsa-forged-project-artifact-input-");
     Path manifest = Files.createTempFile("jbsa-forged-project-artifact-manifest-", ".json");
     try {
       String stagedName = "jbsa-" + System.getProperty("jbsa.version") + ".jar";
       Path artifact = releaseInputs.resolve(stagedName);
-      writeZip(artifact, "forged.txt", "not the reactor artifact");
+      writeZip(artifact, "forged.txt", "not the Gradle artifact");
       writeReleaseInputManifest(
           manifest,
           stagedName,
@@ -934,7 +920,7 @@ final class CompliancePolicyIT {
 
       AuditResult result = runComplianceAudit(releaseInputs, manifest);
       assertNotEquals(0, result.exitCode(), result.output());
-      assertTrue(result.output().contains("does not match the reactor output"), result.output());
+      assertTrue(result.output().contains("does not match the Gradle output"), result.output());
     } finally {
       Files.deleteIfExists(manifest);
       deleteTree(releaseInputs);
@@ -942,12 +928,12 @@ final class CompliancePolicyIT {
   }
 
   /**
-   * Verifies the exact current reactor JAR remains a valid project-artifact release input.
+   * Verifies each exact current Gradle artifact remains a valid project-artifact release input.
    *
    * @throws Exception if the verifier process or owned temporary files cannot be managed
    */
   @Test
-  void releaseInputAuditAcceptsExactReactorProjectArtifact() throws Exception {
+  void releaseInputAuditAcceptsExactGradleProjectArtifacts() throws Exception {
     String version = System.getProperty("jbsa.version");
     List<ProjectArtifactFixture> fixtures =
         List.of(
@@ -961,8 +947,8 @@ final class CompliancePolicyIT {
             new ProjectArtifactFixture("jbsa-cli-" + version + ".jar", "jbsa.cli.jar", "jbsa-cli"));
 
     for (ProjectArtifactFixture fixture : fixtures) {
-      Path releaseInputs = Files.createTempDirectory("jbsa-reactor-project-artifact-input-");
-      Path manifest = Files.createTempFile("jbsa-reactor-project-artifact-manifest-", ".json");
+      Path releaseInputs = Files.createTempDirectory("jbsa-gradle-project-artifact-input-");
+      Path manifest = Files.createTempFile("jbsa-gradle-project-artifact-manifest-", ".json");
       try {
         Path artifact = releaseInputs.resolve(fixture.stagedName());
         Files.copy(Path.of(System.getProperty(fixture.systemProperty())), artifact);
@@ -1034,7 +1020,7 @@ final class CompliancePolicyIT {
   /** Captures the observable exit status and merged output from the compliance command. */
   private record AuditResult(int exitCode, String output) {}
 
-  /** Identifies one reactor output and its canonical staged project-artifact name. */
+  /** Identifies one Gradle output and its canonical staged project-artifact name. */
   private record ProjectArtifactFixture(
       String stagedName, String systemProperty, String artifactId) {}
 }

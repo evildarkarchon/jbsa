@@ -382,9 +382,7 @@ class MainTest {
     assertTrue(missing.error().contains("phase=PREFLIGHT"));
   }
 
-  /**
-   * Launches the modular entry point from Gradle JARs or Maven parity classes and captures UTF-8.
-   */
+  /** Launches the modular entry point from the Gradle JARs and captures UTF-8. */
   private Result run(String... arguments) throws Exception {
     List<String> command = new ArrayList<>();
     String executable = System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java";

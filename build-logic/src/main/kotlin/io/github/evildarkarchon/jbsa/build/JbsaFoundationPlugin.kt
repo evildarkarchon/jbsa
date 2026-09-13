@@ -430,6 +430,19 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 allowlistFile.set(
                     project.layout.projectDirectory.file("build/active-maven-reference-allowlist.properties")
                 )
+                legacyBuildFiles.from(
+                    project.fileTree(project.rootDir) {
+                        include(
+                            "pom" + ".xml",
+                            "**/pom" + ".xml",
+                            "mvn" + "w",
+                            "mvn" + "w.cmd",
+                            ".m" + "vn/**",
+                            "**/.m" + "vn/**",
+                        )
+                        exclude(".scratch/**", "docs/**", "**/target/**", "TES5Edit/**", "graphify-out/**")
+                    }
+                )
                 activeFiles.from(
                     project.fileTree(project.rootDir) {
                         include("**/*.md")

@@ -13,7 +13,12 @@ $ErrorActionPreference = 'Stop'
 $verifier = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'verify-compliance.ps1')
 $entryPoint = $verifier.IndexOf('$dependencyInventory = Read-ComplianceInventory')
 $definitions = $verifier.Substring(0, $entryPoint).Replace('$PSScriptRoot', ("'" + $PSScriptRoot.Replace("'", "''") + "'"))
-. ([scriptblock]::Create($definitions))
+$definitionScript = [scriptblock]::Create($definitions)
+# Dot-sourced tests exercise functions only, but the authoritative script contract remains mandatory.
+. $definitionScript `
+    -ReactorVersion '1.0' `
+    -BuildLayoutManifest 'fixture-layout.json' `
+    -ResolvedProductionDependencies 'fixture-resolved.json'
 $originalRoot = $reactorRoot
 $candidate = (Get-Content -Raw (Join-Path $originalRoot 'compliance/dependency-inventory.json') |
     ConvertFrom-Json).entries[1]
@@ -29,10 +34,6 @@ function New-PolicyFixture {
     & git -C $reactorRoot init --quiet
     & git -C $reactorRoot update-index --add --cacheinfo '160000,fd1e36020b2b5b6217e553dc0038983146a2e2dd,TES5Edit'
     Copy-Item (Join-Path $originalRoot '.gitmodules') (Join-Path $reactorRoot '.gitmodules')
-    New-Item -ItemType Directory (Join-Path $reactorRoot 'jbsa'), (Join-Path $reactorRoot 'jbsa-cli') | Out-Null
-    Set-Content (Join-Path $reactorRoot 'pom.xml') '<project xmlns="http://maven.apache.org/POM/4.0.0"><properties><revision>1.0</revision></properties></project>'
-    Set-Content (Join-Path $reactorRoot 'jbsa/pom.xml') '<project xmlns="http://maven.apache.org/POM/4.0.0"/>'
-    Set-Content (Join-Path $reactorRoot 'jbsa-cli/pom.xml') '<project xmlns="http://maven.apache.org/POM/4.0.0"/>'
     $script:ReactorVersion = '1.0'
 }
 
@@ -167,30 +168,20 @@ try {
             Assert-ProvenanceRecord $entry 'candidate'
         } 'releaseArtifacts|containing artifact'
     }
-    foreach ($scope in @('test', 'provided')) {
-        Test-PolicyCase "non-release $scope dependency" {
-            Set-Content (Join-Path $reactorRoot 'jbsa/pom.xml') "<project xmlns='http://maven.apache.org/POM/4.0.0'><dependencies><dependency><groupId>unreviewed</groupId><artifactId>tool</artifactId><version>1.0</version><scope>$scope</scope></dependency></dependencies></project>"
-            Test-ProductDependencies @{}
-        }
-    }
-    Test-PolicyCase 'same-group dependency cannot impersonate reactor output' {
-        Set-Content (Join-Path $reactorRoot 'jbsa/pom.xml') '<project xmlns="http://maven.apache.org/POM/4.0.0"><dependencies><dependency><groupId>io.github.evildarkarchon</groupId><artifactId>unreviewed-code</artifactId><version>1.0</version></dependency></dependencies></project>'
-        Test-ProductDependencies @{}
-    } 'absent from the approved inventory'
     Test-PolicyCase 'SBOM same-group artifact is not implicitly approved' {
         $entry = New-ApprovedDependency
         $entry.groupId = 'io.github.evildarkarchon'
         $entry.artifactId = 'unreviewed-code'
         Test-GeneratedSbom ([pscustomobject]@{ entries = @() }) (Write-TestSbom $entry $entry.sha256)
     } 'uninventoried external component'
-    Test-PolicyCase 'SBOM reactor exemption requires expected packaging' {
+    Test-PolicyCase 'SBOM project exemption requires expected packaging' {
         $entry = New-ApprovedDependency
         $entry.groupId = 'io.github.evildarkarchon'
         $entry.artifactId = 'jbsa-parent'
         $entry.version = '1.0'
         Test-GeneratedSbom ([pscustomobject]@{ entries = @() }) (Write-TestSbom $entry $entry.sha256)
     } 'uninventoried external component'
-    Test-PolicyCase 'SBOM current reactor library is accepted' {
+    Test-PolicyCase 'SBOM current Gradle library is accepted' {
         $entry = New-ApprovedDependency
         $entry.groupId = 'io.github.evildarkarchon'
         $entry.artifactId = 'jbsa'

@@ -248,7 +248,7 @@ class PublicLibraryPluginFunctionalTest {
         assertFalse(result.output.contains(":jbsa-test-support:publish"), result.output)
     }
 
-    /** Verifies local publication cannot expand the compatible four-file Maven artifact set. */
+    /** Verifies local publication cannot expand the compatible four-file artifact set. */
     @Test
     fun `disables incidental Gradle module metadata`() {
         val result = run("--write-locks", ":jbsa:generateMetadataFileForLibraryPublication")
