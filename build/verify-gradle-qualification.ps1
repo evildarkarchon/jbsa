@@ -275,6 +275,7 @@ $oldJavaHome = $env:JAVA_HOME
 $oldGradleUserHome = $env:GRADLE_USER_HOME
 $oldPath = $env:PATH
 $worktreeRegistered = $false
+$gradleWrapper = $null
 try {
     New-Item -ItemType Directory -Path (Join-Path $pendingRoot 'logs'), (Join-Path $pendingRoot 'snapshots'), $jdkExtractRoot, $gradleUserHome -Force | Out-Null
     Expand-Archive -LiteralPath $jdkArchive -DestinationPath $jdkExtractRoot
@@ -638,9 +639,10 @@ try {
     Write-Output "Captured Gradle qualification evidence at $outputRoot"
 }
 finally {
-    $env:JAVA_HOME = $oldJavaHome
-    $env:GRADLE_USER_HOME = $oldGradleUserHome
-    $env:PATH = $oldPath
+    if ($null -ne $gradleWrapper -and (Test-Path -LiteralPath $gradleWrapper -PathType Leaf)) {
+        # TestKit uses a Tooling API daemon even when the outer evidence build requests --no-daemon.
+        & $gradleWrapper --stop 2>$null | Out-Null
+    }
     if ($worktreeRegistered) {
         & git -C $reactorRoot worktree remove --force $isolatedRoot 2>$null
     }
@@ -650,7 +652,22 @@ finally {
         if (-not $resolvedScratch.StartsWith($resolvedTemp, [StringComparison]::OrdinalIgnoreCase)) {
             throw "Refusing to remove scratch directory outside system temp: $resolvedScratch"
         }
-        Remove-Item -LiteralPath $resolvedScratch -Recurse -Force
+        foreach ($attempt in 1..5) {
+            try {
+                Remove-Item -LiteralPath $resolvedScratch -Recurse -Force
+                break
+            }
+            catch {
+                if ($attempt -eq 5) {
+                    Write-Warning "Retained locked qualification scratch directory: $resolvedScratch"
+                } else {
+                    Start-Sleep -Milliseconds 500
+                }
+            }
+        }
     }
+    $env:JAVA_HOME = $oldJavaHome
+    $env:GRADLE_USER_HOME = $oldGradleUserHome
+    $env:PATH = $oldPath
     # Failed qualification keeps its pending directory so every diagnostic continues to name retained evidence.
 }
