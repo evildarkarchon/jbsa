@@ -263,10 +263,11 @@ function Get-GradleLockCoordinates {
     } | Sort-Object -Unique)
 }
 
-$scratchRoot = Join-Path ([IO.Path]::GetTempPath()) "jbsa-gradle-qualification-$([guid]::NewGuid().ToString('N'))"
-$isolatedRoot = Join-Path $scratchRoot 'source'
-$jdkExtractRoot = Join-Path $scratchRoot 'qualification-jdk'
-$gradleUserHome = Join-Path $scratchRoot 'gradle-user-home'
+$scratchRoot = Join-Path ([IO.Path]::GetTempPath()) "jgq-$([guid]::NewGuid().ToString('N').Substring(0, 8))"
+# Short child names keep the repository's deepest evidence fixtures beneath Windows MAX_PATH.
+$isolatedRoot = Join-Path $scratchRoot 's'
+$jdkExtractRoot = Join-Path $scratchRoot 'j'
+$gradleUserHome = Join-Path $scratchRoot 'g'
 $pendingRoot = "$outputRoot.pending-$([guid]::NewGuid().ToString('N'))"
 $oldJavaHome = $env:JAVA_HOME
 $oldGradleUserHome = $env:GRADLE_USER_HOME
