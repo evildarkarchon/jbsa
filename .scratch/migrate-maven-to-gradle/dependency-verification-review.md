@@ -52,3 +52,24 @@ downloads outside Gradle's dependency cache. All six matched the generated metad
 values also matched the existing compliance inventory and captured Maven baseline. The test-support
 lock records an intentionally empty dependency graph, while the library lock records the resolved
 JUnit and LWJGL compile/test graphs.
+
+## Ticket 06 extension: standalone benchmarks
+
+The standalone benchmark work resolved the already-pinned JMH 1.37 dependencies and Shadow 9.6.1
+plugin graph and extended the reviewed state with these exact inputs:
+
+| Input | SHA-256 |
+| --- | --- |
+| `gradle/verification-metadata.xml` | `989572da5f4dfd33a2288947cc56397ea3906dc633c66571c8fec54681ffa790` |
+| `build-logic/gradle/verification-metadata.xml` | `d18ae4bcc9928956777d4d0878232a8bc20b64b827c5a9a754f1e36132fd0df6` |
+| `build-logic/gradle.lockfile` | `cf0cf31fe42732a70f08ec2342c4fd8b8a77307d24370385acf5f9216ed4d354` |
+| `jbsa-benchmarks/gradle.lockfile` | `3fa5961f988c859148b37627c461deb74ae6435bc2227f2ae82848547c1844cf` |
+| `gradle/libs.versions.toml` | `18e7fd37aaea1d5ebd6ee2a08e62c5ebdd13c291faad0b61a8dbf45cb2642694` |
+
+The metadata union contains 192 distinct artifacts, including 62 introduced by this extension.
+All 62 were freshly downloaded outside Gradle's dependency cache and recomputed: Shadow's two
+implementation artifacts came through the Gradle Plugin Portal and the remaining 60 came from Maven
+Central. Seventeen also matched published `.sha256` sidecars, all five JMH artifacts matched the
+captured Maven-local inputs, and no checksum failed. The benchmark lock retains JMH 1.37, JOpt Simple
+5.0.4, Commons Math 3.6.1, JUnit 6.1.3, and the existing LWJGL 3.4.3 graph. The included-build lock
+retains the complete Shadow 9.6.1 implementation graph without changing any pre-existing direct pin.

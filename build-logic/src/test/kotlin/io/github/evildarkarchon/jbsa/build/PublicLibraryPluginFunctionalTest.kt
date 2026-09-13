@@ -240,7 +240,7 @@ class PublicLibraryPluginFunctionalTest {
     /** Verifies publication remains local-only and build-only projects cannot acquire publications. */
     @Test
     fun `permits publication only for the library and configures no remote action`() {
-        val result = run("verifyPublicationPolicy", ":jbsa-test-support:tasks", "--all")
+        val result = run("--write-locks", "verifyPublicationPolicy", ":jbsa-test-support:tasks", "--all")
 
         assertTrue(result.output.contains("JBSA_PUBLICATION :jbsa=library"), result.output)
         assertTrue(result.output.contains("JBSA_PUBLICATION_REMOTE_TASKS 0"), result.output)
@@ -320,7 +320,7 @@ class PublicLibraryPluginFunctionalTest {
             """.trimIndent(),
         )
 
-        val result = runAndFail("verifyPublicationPolicy")
+        val result = runAndFail("--write-locks", "verifyPublicationPolicy")
 
         assertTrue(result.output.contains(":jbsa-test-support is build-only and cannot apply maven-publish"), result.output)
     }
@@ -337,7 +337,7 @@ class PublicLibraryPluginFunctionalTest {
             """.trimIndent(),
         )
 
-        val result = runAndFail("verifyPublicationPolicy")
+        val result = runAndFail("--write-locks", "verifyPublicationPolicy")
 
         assertTrue(result.output.contains("Remote publication repositories are prohibited for :jbsa"), result.output)
     }
@@ -410,7 +410,7 @@ class PublicLibraryPluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(listOf("--dependency-verification=off", "--stacktrace") + arguments)
+            .withArguments(TestKitBuildArguments.create(arguments))
 
     /** Writes the fixture's complete centrally pinned dependency catalog. */
     private fun writeCatalog() {
@@ -418,10 +418,13 @@ class PublicLibraryPluginFunctionalTest {
             "gradle/libs.versions.toml",
             """
             [versions]
+            jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
 
             [libraries]
+            jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+            jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
             junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
             junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }

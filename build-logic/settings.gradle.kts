@@ -7,6 +7,10 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        exclusiveContent {
+            forRepository { gradlePluginPortal() }
+            filter { includeModule("com.gradleup.shadow", "shadow-gradle-plugin") }
+        }
         mavenCentral()
     }
     versionCatalogs {

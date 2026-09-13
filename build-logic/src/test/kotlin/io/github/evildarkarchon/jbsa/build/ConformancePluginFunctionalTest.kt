@@ -65,6 +65,7 @@ class ConformancePluginFunctionalTest {
         writeTaggedTest("Tes3FixtureIT", "tes3")
         writeTaggedTest("BsaFixtureIT", "bsa")
         writeTaggedTest("HarnessFixtureIT", "conformance-harness")
+        writeTaggedTest("PerformanceFixtureIT", "performance-harness")
         write("tests/conformance/catalog.json", "{}\n")
         write("tests/conformance/contradictions.json", "{}\n")
         write("tests/fixtures/synthetic/manifest.json", "{}\n")
@@ -89,15 +90,22 @@ class ConformancePluginFunctionalTest {
                 ":jbsa-conformance-tests:tes3ConformanceTest",
                 ":jbsa-conformance-tests:bsaConformanceTest",
                 ":jbsa-conformance-tests:conformanceHarnessTest",
+                ":jbsa-conformance-tests:performanceHarnessTest",
             )
 
         val executions = Files.readAllLines(projectDir.resolve("conformance-executions.txt"))
         assertEquals(
-            setOf("ContractFixtureIT", "Tes3FixtureIT", "BsaFixtureIT", "HarnessFixtureIT"),
+            setOf("ContractFixtureIT", "Tes3FixtureIT", "BsaFixtureIT", "HarnessFixtureIT", "PerformanceFixtureIT"),
             executions.toSet(),
         )
-        assertEquals(4, executions.size)
-        listOf("integrationTest", "tes3ConformanceTest", "bsaConformanceTest", "conformanceHarnessTest")
+        assertEquals(5, executions.size)
+        listOf(
+                "integrationTest",
+                "tes3ConformanceTest",
+                "bsaConformanceTest",
+                "conformanceHarnessTest",
+                "performanceHarnessTest",
+            )
             .forEach { task -> assertTrue(result.task(":jbsa-conformance-tests:$task") != null, task) }
     }
 
@@ -214,7 +222,7 @@ class ConformancePluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(listOf("--dependency-verification=off", "--stacktrace") + arguments)
+            .withArguments(TestKitBuildArguments.create(arguments))
 
     /** Writes the fixture's complete centrally pinned dependency catalog. */
     private fun writeCatalog() {
@@ -222,10 +230,13 @@ class ConformancePluginFunctionalTest {
             "gradle/libs.versions.toml",
             """
             [versions]
+            jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
 
             [libraries]
+            jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+            jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
             junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
             junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }

@@ -202,7 +202,7 @@ class ThinApplicationPluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments("--dependency-verification=off", "--stacktrace", *arguments)
+            .withArguments(TestKitBuildArguments.create(arguments))
             .build()
 
     /** Runs a fixture build that is expected to reject an invalid thin-application contract. */
@@ -210,7 +210,7 @@ class ThinApplicationPluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments("--dependency-verification=off", "--stacktrace", *arguments)
+            .withArguments(TestKitBuildArguments.create(arguments))
             .buildAndFail()
 
     /** Writes the centralized dependency pins required by the foundation policy. */
@@ -219,11 +219,14 @@ class ThinApplicationPluginFunctionalTest {
             "gradle/libs.versions.toml",
             """
             [versions]
+            jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
             spotless = "8.10.2"
 
             [libraries]
+            jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+            jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
             junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
             junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }

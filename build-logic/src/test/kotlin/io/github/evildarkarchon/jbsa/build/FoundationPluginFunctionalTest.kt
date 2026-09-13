@@ -267,15 +267,10 @@ class FoundationPluginFunctionalTest {
 
     /** Creates one consistently configured runner while allowing strict-verification negative coverage. */
     private fun runner(arguments: Array<out String>, verificationOff: Boolean): GradleRunner {
-        val options = buildList {
-            if (verificationOff) add("--dependency-verification=off")
-            add("--stacktrace")
-            addAll(arguments)
-        }
         return GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(options)
+            .withArguments(TestKitBuildArguments.create(arguments, verificationOff))
     }
 
     /** Declares a single resolvable dependency graph for negative resolution-policy tests. */
@@ -310,12 +305,15 @@ class FoundationPluginFunctionalTest {
             "gradle/libs.versions.toml",
             """
             [versions]
+            jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
             spotless = "8.10.2"
             $conflictVersion
 
             [libraries]
+            jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+            jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
             junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
             junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
             junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }

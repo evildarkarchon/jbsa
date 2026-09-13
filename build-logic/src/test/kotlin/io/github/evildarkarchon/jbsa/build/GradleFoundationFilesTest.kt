@@ -87,6 +87,11 @@ class GradleFoundationFilesTest {
         listOf("org.cyclonedx.bom", "com.gradleup.shadow", "com.diffplug.spotless")
             .forEach { pluginId -> assertTrue(catalog.contains("id = \"$pluginId\"")) }
         val includedBuild = Files.readString(repositoryRoot.resolve("build-logic/build.gradle.kts"))
+        val includedSettings = Files.readString(repositoryRoot.resolve("build-logic/settings.gradle.kts"))
+        assertTrue(catalog.contains("shadow-gradle-plugin = { module = \"com.gradleup.shadow:shadow-gradle-plugin\""))
+        assertTrue(includedBuild.contains("implementation(libs.shadow.gradle.plugin)"))
+        assertTrue(includedSettings.contains("forRepository { gradlePluginPortal() }"))
+        assertTrue(includedSettings.contains("includeModule(\"com.gradleup.shadow\", \"shadow-gradle-plugin\")"))
         assertTrue(includedBuild.contains("testRuntimeOnly(libs.junit.platform.launcher)"))
         assertTrue(includedBuild.contains("requested in catalogDependencyPins"))
 
@@ -102,7 +107,12 @@ class GradleFoundationFilesTest {
                 assertFalse(properties.contains("telemetry", ignoreCase = true))
             }
 
-        assertTrue(Files.readString(repositoryRoot.resolve("build-logic/gradle.lockfile")).contains("junit-jupiter:6.1.3"))
+        val includedLock = Files.readString(repositoryRoot.resolve("build-logic/gradle.lockfile"))
+        assertTrue(includedLock.contains("junit-jupiter:6.1.3"))
+        assertTrue(includedLock.contains("shadow-gradle-plugin:9.6.1"))
+        val benchmarkLock = Files.readString(repositoryRoot.resolve("jbsa-benchmarks/gradle.lockfile"))
+        assertTrue(benchmarkLock.contains("jmh-core:1.37"))
+        assertTrue(benchmarkLock.contains("jmh-generator-annprocess:1.37"))
         assertTrue(Files.exists(repositoryRoot.resolve("settings-gradle.lockfile")))
         assertTrue(Files.exists(repositoryRoot.resolve("build-logic/settings-gradle.lockfile")))
 

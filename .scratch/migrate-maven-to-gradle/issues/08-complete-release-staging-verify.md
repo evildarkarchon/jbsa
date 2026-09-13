@@ -7,7 +7,7 @@ Status: needs-triage
 State: open
 Assignees: none
 Intended owner: agent
-Triage rationale: Approved scope; ticket 05 is closed, while tickets 06 and 07 remain open. Reassess readiness when both remaining blockers close.
+Triage rationale: Approved scope; tickets 05 and 06 are closed, while ticket 07 remains open. Reassess readiness when the remaining blocker closes.
 
 ## Acceptance criteria
 

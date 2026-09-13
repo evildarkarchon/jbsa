@@ -1,8 +1,18 @@
 # Local performance instrumentation
 
 This build-only module packages JMH 1.37 as
-`target/jbsa-benchmarks-<version>-standalone.jar`. Ordinary Maven verification
-compiles and tests the harness; it does not run performance qualification.
+`target/jbsa-benchmarks-<version>-standalone.jar`. Build and smoke-test the
+standalone launcher without running measurements:
+
+```powershell
+.\gradlew.bat :jbsa-benchmarks:check --no-daemon
+java -jar jbsa-benchmarks/target/jbsa-benchmarks-0.1.0-SNAPSHOT-standalone.jar -l
+```
+
+Pass `-Pversion=<candidate>` to Gradle and use the matching JAR name for a
+release candidate. Ordinary Gradle verification compiles and tests the harness,
+inspects the standalone artifact, and lists its benchmarks; it does not run a
+Performance Case or establish performance qualification.
 
 The `RandomAccessBenchmark.metadata` and `.payload` benchmarks use three forks,
 five two-second warmup iterations, and ten two-second measurement iterations.

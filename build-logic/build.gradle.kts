@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
+    implementation(libs.shadow.gradle.plugin)
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
@@ -88,6 +89,10 @@ gradlePlugin {
         create("jbsaBuildOnlyConformance") {
             id = "jbsa.build-only-conformance"
             implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaConformancePlugin"
+        }
+        create("jbsaBuildOnlyBenchmarks") {
+            id = "jbsa.build-only-benchmarks"
+            implementationClass = "io.github.evildarkarchon.jbsa.build.JbsaBenchmarkPlugin"
         }
     }
 }

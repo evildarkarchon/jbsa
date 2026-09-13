@@ -79,6 +79,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
             JbsaProjectRole.THIN_APPLICATION -> project.pluginManager.apply("jbsa.thin-application")
             JbsaProjectRole.BUILD_ONLY_TEST_SUPPORT -> project.pluginManager.apply("jbsa.test-support")
             JbsaProjectRole.BUILD_ONLY_CONFORMANCE -> project.pluginManager.apply("jbsa.build-only-conformance")
+            JbsaProjectRole.BUILD_ONLY_BENCHMARKS -> project.pluginManager.apply("jbsa.build-only-benchmarks")
             JbsaProjectRole.NON_JAVA_STAGING_AUDIT -> project.pluginManager.apply("jbsa.runtime-inputs")
             else -> Unit
         }
@@ -130,7 +131,10 @@ class JbsaFoundationPlugin : Plugin<Project> {
             project.tasks.register("verifyPublicationPolicy") {
                 group = LifecycleBasePlugin.VERIFICATION_GROUP
                 description = "Verifies that publication remains local-only and library-only."
-                doLast { PublicationPolicy.verify(project) }
+                doLast {
+                    PublicationPolicy.verify(project)
+                    BenchmarkIsolationPolicy.verify(project)
+                }
             }
         project.tasks.register("verify") {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -167,6 +171,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 JbsaConformanceIdentity.ARCHIVE_FAMILY_TASKS.map { taskName ->
                     project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named(taskName)
                 },
+                project.project(JbsaBenchmarkIdentity.PROJECT_PATH).tasks.named("check"),
             )
         }
         project.tasks.named(LifecycleBasePlugin.CLEAN_TASK_NAME) {
