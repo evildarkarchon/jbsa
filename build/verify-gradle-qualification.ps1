@@ -356,11 +356,11 @@ try {
     }
 
     # These are the sole network-permitted dependency-resolution passes and prime both builds.
-    $prime = Invoke-QualificationCommand -Name 'prime-verified-cache' -Executable $gradleWrapper -Arguments ($commonArguments + @('clean', 'verify')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    $prime = Invoke-QualificationCommand -Name 'prime-verified-cache' -Executable $gradleWrapper -Arguments ($commonArguments + @('clean', 'verify', 'spotlessCheck')) -WorkingDirectory $isolatedRoot -RequireSuccess
     $commands.Add($prime)
     $primeBuildLogic = Invoke-QualificationCommand -Name 'prime-build-logic-cache' -Executable $gradleWrapper -Arguments ($commonArguments + @('-p', 'build-logic', 'test')) -WorkingDirectory $isolatedRoot -RequireSuccess
     $commands.Add($primeBuildLogic)
-    $offline = Invoke-QualificationCommand -Name 'verified-cache-offline-build' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', 'clean', 'verify')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    $offline = Invoke-QualificationCommand -Name 'verified-cache-offline-build' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', 'clean', 'verify', 'spotlessCheck')) -WorkingDirectory $isolatedRoot -RequireSuccess
     $commands.Add($offline)
     $offlineBuildLogic = Invoke-QualificationCommand -Name 'verified-cache-offline-build-logic' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', '-p', 'build-logic', 'test')) -WorkingDirectory $isolatedRoot -RequireSuccess
     $commands.Add($offlineBuildLogic)
