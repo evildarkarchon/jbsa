@@ -118,7 +118,7 @@ exit 0
     New-Item -ItemType Directory -Path (Join-Path $evidence 'logs') -Force | Out-Null
     [IO.File]::WriteAllText(
         (Join-Path $evidence 'resolved-graphs/jbsa.json'),
-        '{"groupId":"io.github.evildarkarchon","artifactId":"jbsa","version":"0.1.0-SNAPSHOT","children":[{"groupId":"fixture","artifactId":"library","version":"1","children":[]}]}',
+        '{"groupId":"io.github.evildarkarchon","artifactId":"jbsa","version":"0.1.0-SNAPSHOT","children":[{"groupId":"fixture","artifactId":"library","version":"1"}]}',
         [Text.UTF8Encoding]::new($false)
     )
     Set-Content -LiteralPath (Join-Path $evidence 'logs/cli-module-version.log') -Value 'jbsa 0.1.0-SNAPSHOT'

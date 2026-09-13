@@ -244,7 +244,9 @@ function Get-MavenDependencyCoordinates {
         if ([string] $Current.groupId -cne 'io.github.evildarkarchon') {
             $null = $coordinates.Add("$($Current.groupId):$($Current.artifactId):$($Current.version)")
         }
-        foreach ($child in @($Current.children)) { Add-Node -Current $child }
+        if ($null -ne $Current.PSObject.Properties['children']) {
+            foreach ($child in @($Current.children)) { Add-Node -Current $child }
+        }
     }
     Add-Node -Current $Node
     return @($coordinates | Sort-Object)
