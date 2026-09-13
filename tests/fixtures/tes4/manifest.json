@@ -9,7 +9,7 @@
     "path": "build/generate-bsa-fixtures.py",
     "version": "1",
     "spdx_license": "Apache-2.0",
-    "sha256": "09526e38d6e19173bf3ced9e3b958bfcb2713b338514362671115d29b319902d",
+    "sha256": "c4eef63b2785385a006ee171bc8f89c91b8bf83692e14b309ba0885237ff4461",
     "command": "python build/generate-bsa-fixtures.py --output <directory>"
   },
   "fixtures": [

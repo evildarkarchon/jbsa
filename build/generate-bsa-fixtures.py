@@ -82,7 +82,9 @@ def generate(destination):
                                     "file_sha256": hashlib.sha256(encoded).hexdigest(),
                                     "source": "independently authored BSA-002/003/006/008/009 wire vector; " + name,
                                     "oracle_sha256": None})
-    (destination / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (destination / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
 
 
 if __name__ == "__main__":
