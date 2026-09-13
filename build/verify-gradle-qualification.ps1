@@ -498,6 +498,9 @@ try {
         throw 'Gradle gate outcomes contain an unexplained difference from the same-revision Maven baseline.'
     }
 
+    # The policy gate deliberately runs clean reproducibility builds, so restore the staged CLI seam.
+    $restage = Invoke-QualificationCommand -Name 'restage-cli-inputs' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', ':jbsa-dist:stageReleaseInputs')) -WorkingDirectory $isolatedRoot -RequireSuccess
+    $commands.Add($restage)
     $stagedRoot = Join-Path $isolatedRoot 'jbsa-dist/target/release-inputs'
     $cliDefinitions = [ordered]@{
         'cli-module-version' = @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', (Join-Path $stagedRoot 'jbsa.ps1'), '-JavaHome', $javaHome, '--version')
