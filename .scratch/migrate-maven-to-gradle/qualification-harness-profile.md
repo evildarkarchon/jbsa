@@ -52,7 +52,8 @@ suite took 26.656 seconds before fixture reuse on this workstation.
 1. Retain a deterministic pending attempt and its exact JDK extraction, detached worktree, and
    initially empty Gradle home after failure. -Resume revalidates all ordinary preflight checks,
    the global source/protocol/Maven-evidence/JDK/harness/inspector digest, checkpoint-file hashes,
-   and log hashes before reuse.
+   retained-output hashes, staged CLI bytes when still needed, and the complete extracted JDK
+   directory before reuse.
 2. Add the architecture and policy selections to the strict-offline full-suite command. Derive the
    seven named gate outcomes from that successful exact task closure instead of launching the same
    test selections again. Observe the staged CLI before the separate two-clean-build reproducibility
@@ -73,7 +74,8 @@ observations, and raw timing records are unchanged.
 ## Representative demonstration
 
 build/test-gradle-qualification.ps1 uses an isolated committed fixture and injects a one-time
-late restaging failure. It verifies that a modified Maven evidence input and a modified checkpoint
-log both fail closed, restores those bytes, resumes the valid digest-bound attempt, and proves the
-offline full-suite checkpoint was reused. The final fixture report retains all prior policy,
-offline, reproducibility, configuration-cache, gate, CLI, JDK-profile, and timing assertions.
+late timing-setup failure. It verifies that modified Maven evidence, an extracted JDK tool, a
+checkpoint log, and a retained output all fail closed; restores those bytes; resumes the valid
+digest-bound attempt; and proves the offline full-suite checkpoint was reused. The final fixture
+report retains all prior policy, offline, reproducibility, configuration-cache, gate, CLI,
+JDK-profile, and timing assertions.

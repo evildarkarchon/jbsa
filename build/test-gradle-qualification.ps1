@@ -19,6 +19,7 @@ try {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'verify-gradle-qualification.ps1') -Destination (Join-Path $repository 'build')
     [IO.File]::WriteAllText((Join-Path $jdkStaging 'release'), "IMPLEMENTOR_VERSION=`"Temurin-25.0.4+7`"`n", [Text.UTF8Encoding]::new($false))
     [IO.File]::WriteAllBytes((Join-Path $jdkStaging 'bin/java.exe'), [byte[]](1, 2, 3, 4))
+    [IO.File]::WriteAllBytes((Join-Path $jdkStaging 'bin/jar.exe'), [byte[]](5, 6, 7, 8))
     Compress-Archive -Path (Join-Path $fixtureRoot 'jdk-staging/*') -DestinationPath $jdkArchive
     $archiveHash = (Get-FileHash -LiteralPath $jdkArchive -Algorithm SHA256).Hash.ToLowerInvariant()
     $releaseHash = (Get-FileHash -LiteralPath (Join-Path $jdkStaging 'release') -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -113,11 +114,11 @@ if ($args -contains 'verify') {
     New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'target') -Force | Out-Null
     Set-Content -LiteralPath (Join-Path $PSScriptRoot 'target/conformance-exit-code.txt') -Value '1'
 }
-if ($env:JBSA_QUALIFICATION_TEST_FAIL_ONCE -eq 'restage' -and $args -contains ':jbsa-dist:stageReleaseInputs') {
-    $failureMarker = Join-Path $env:GRADLE_USER_HOME 'fixture-restage-failed-once'
+if ($env:JBSA_QUALIFICATION_TEST_FAIL_ONCE -eq 'timing-clean' -and $args -contains 'clean' -and $args -contains '--offline' -and $args -notcontains 'verify') {
+    $failureMarker = Join-Path $env:GRADLE_USER_HOME 'fixture-timing-clean-failed-once'
     if (-not (Test-Path -LiteralPath $failureMarker)) {
         Set-Content -LiteralPath $failureMarker -Value 'failed'
-        Write-Output 'Injected one-time harness-only restaging failure.'
+        Write-Output 'Injected one-time harness-only timing setup failure.'
         exit 23
     }
 }
@@ -176,11 +177,17 @@ exit 0
     [IO.File]::WriteAllText((Join-Path $evidence 'maven-baseline.json'), (($maven | ConvertTo-Json -Depth 30) + "`n"), [Text.UTF8Encoding]::new($false))
 
     $qualificationScript = Join-Path $repository 'build/verify-gradle-qualification.ps1'
-    $env:JBSA_QUALIFICATION_TEST_FAIL_ONCE = 'restage'
-    & pwsh -NoLogo -NoProfile -NonInteractive -File $qualificationScript -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision 2>&1 | Out-Null
+    $env:JBSA_QUALIFICATION_TEST_FAIL_ONCE = 'timing-clean'
+    $firstDiagnostic = @(& pwsh -NoLogo -NoProfile -NonInteractive -File $qualificationScript -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision 2>&1)
     if ($LASTEXITCODE -eq 0) { throw 'The injected late harness failure did not stop qualification.' }
     if (-not (Test-Path -LiteralPath "$qualification.pending/checkpoints/verified-cache-offline-build.json" -PathType Leaf)) {
         throw 'The failed run did not retain its full-suite checkpoint.'
+    }
+    if (-not (Test-Path -LiteralPath "$qualification.pending/logs/timing-clean.log" -PathType Leaf) -or
+        -not (Test-Path -LiteralPath "$qualification.pending/checkpoints/cli-module-version.json" -PathType Leaf) -or
+        -not (Test-Path -LiteralPath "$qualification.pending/checkpoints/cli-classpath-version.json" -PathType Leaf)) {
+        $retainedNames = @(Get-ChildItem -LiteralPath "$qualification.pending/checkpoints" -File | ForEach-Object { $_.Name }) -join ', '
+        throw "The injected failure did not occur after CLI checkpointing; retained: $retainedNames; diagnostic: $($firstDiagnostic -join ' | ')"
     }
 
     $baselineBytes = [IO.File]::ReadAllBytes((Join-Path $evidence 'maven-baseline.json'))
@@ -190,6 +197,16 @@ exit 0
         throw 'Resume accepted evidence whose digest no longer matched the checkpoint binding.'
     }
     [IO.File]::WriteAllBytes((Join-Path $evidence 'maven-baseline.json'), $baselineBytes)
+
+    $retainedState = Get-Content -Raw -LiteralPath "$qualification.pending/qualification-state.json" | ConvertFrom-Json -Depth 20
+    $extractedJar = Join-Path ([string] $retainedState.scratchRoot) 'j/jdk/bin/jar.exe'
+    $extractedJarBytes = [IO.File]::ReadAllBytes($extractedJar)
+    Add-Content -LiteralPath $extractedJar -Value 'tampered'
+    $jdkDiagnostic = @(& pwsh -NoLogo -NoProfile -NonInteractive -File $qualificationScript -OutputDirectory $qualification -MavenEvidenceDirectory $evidence -QualificationJdkArchive $jdkArchive -SourceRevision $revision -Resume 2>&1)
+    if ($LASTEXITCODE -eq 0 -or ($jdkDiagnostic -join "`n") -notmatch 'JDK extraction digest') {
+        throw 'Resume accepted a changed JDK tool that was outside the prior release/java spot checks.'
+    }
+    [IO.File]::WriteAllBytes($extractedJar, $extractedJarBytes)
 
     $checkpointLog = "$qualification.pending/logs/gradle-version.log"
     $checkpointLogBytes = [IO.File]::ReadAllBytes($checkpointLog)
@@ -214,7 +231,7 @@ exit 0
 
     $result = Get-Content -Raw -LiteralPath (Join-Path $qualification 'gradle-qualification.json') | ConvertFrom-Json -Depth 100
     if ($result.source.revision -cne $revision -or -not $result.source.clean) { throw 'Qualification did not bind the clean source revision.' }
-    if ($result.qualificationJdk.distributionSha256 -cne $archiveHash -or -not $result.qualificationJdk.matchesMaven) { throw 'Qualification did not bind the exact JDK archive and extracted identity.' }
+    if ($result.qualificationJdk.distributionSha256 -cne $archiveHash -or [string]::IsNullOrWhiteSpace($result.qualificationJdk.extractedSha256) -or -not $result.qualificationJdk.matchesMaven) { throw 'Qualification did not bind the exact JDK archive and complete extracted identity.' }
     if (-not $result.parity.matches -or -not $result.parity.archiveEnvelopeDifferencesIgnored) { throw 'Normalized cross-tool parity did not ignore only archive envelopes.' }
     if (-not $result.reproducibility.matches -or $result.reproducibility.artifactCount -ne 5) { throw 'The complete five-artifact reproducibility workflow was not retained.' }
     if (-not $result.offline.verifiedCacheBuildPassed -or -not $result.offline.strictVerificationFailureObserved) { throw 'Verified-cache offline and strict-verification evidence is incomplete.' }

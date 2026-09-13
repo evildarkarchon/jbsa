@@ -342,21 +342,17 @@ function New-ReusedQualificationCommand {
     )
 
     if ([int] $Source.exitCode -ne 0) { throw "Cannot derive gate evidence from failed command: $($Source.name)" }
-    return [ordered]@{
-        name = $Name
-        command = $Source.command
-        exitCode = 0
-        outcome = 'PASS'
-        milliseconds = 0
-        sourceMilliseconds = $Source.milliseconds
-        startedAt = $Source.startedAt
-        completedAt = $Source.completedAt
-        category = 'gradle'
-        resumed = $Source.resumed
-        reusedFrom = $Source.name
-        outputs = @()
-        log = $Source.log
-    }
+    $record = $Source | ConvertTo-Json -Depth 20 | ConvertFrom-Json -Depth 20
+    $record.name = $Name
+    $record.command = @($Source.command)
+    $record.exitCode = 0
+    $record.outcome = 'PASS'
+    $record.milliseconds = 0
+    $record.startedAt = Format-CheckpointTimestamp -Value $record.startedAt
+    $record.completedAt = Format-CheckpointTimestamp -Value $record.completedAt
+    $record.reusedFrom = $Source.name
+    $record | Add-Member -NotePropertyName sourceMilliseconds -NotePropertyValue $Source.milliseconds
+    return $record
 }
 
 <#
@@ -576,6 +572,7 @@ try {
             bindingSha256 = $bindingSha256
             binding = $bindingDocument
             scratchRoot = $scratchRoot
+            extractedJdkSha256 = $null
         }
         [IO.File]::WriteAllText($statePath, (($resumeState | ConvertTo-Json -Depth 20) + "`n"), [Text.UTF8Encoding]::new($false))
         Expand-Archive -LiteralPath $jdkArchive -DestinationPath $jdkExtractRoot
@@ -597,6 +594,15 @@ try {
     if ($releaseHash -cne [string] $mavenBaseline.qualificationJdk.releaseSha256 -or
         $javaHash -cne [string] $mavenBaseline.qualificationJdk.javaExecutableSha256) {
         throw 'Extracted qualification JDK identity differs from the Maven evidence.'
+    }
+    $extractedJdkSha256 = Get-DirectoryDigest -Path $javaHome
+    if ($Resume) {
+        if ([string] $resumeState.extractedJdkSha256 -cne $extractedJdkSha256) {
+            throw 'Resume JDK extraction digest no longer matches the retained exact-JDK identity.'
+        }
+    } else {
+        $resumeState.extractedJdkSha256 = $extractedJdkSha256
+        [IO.File]::WriteAllText($statePath, (($resumeState | ConvertTo-Json -Depth 20) + "`n"), [Text.UTF8Encoding]::new($false))
     }
 
     if ($Resume) {
@@ -671,6 +677,22 @@ try {
     $commands.Add($offline)
     $offlineBuildLogic = Invoke-QualificationCommand -Name 'verified-cache-offline-build-logic' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', '-p', 'build-logic', 'test')) -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
     $commands.Add($offlineBuildLogic)
+    $conformanceExitSource = Join-Path $isolatedRoot 'target/conformance-exit-code.txt'
+    $conformanceExitSnapshot = Join-Path $pendingRoot 'snapshots/offline-conformance-exit-code.txt'
+    $conformanceExitDigestPath = "$conformanceExitSnapshot.sha256"
+    if ($offline.resumed) {
+        if (-not (Test-Path -LiteralPath $conformanceExitSnapshot -PathType Leaf) -or
+            -not (Test-Path -LiteralPath $conformanceExitDigestPath -PathType Leaf) -or
+            (Get-Content -Raw -LiteralPath $conformanceExitDigestPath).Trim() -cne (Get-FileHash -LiteralPath $conformanceExitSnapshot -Algorithm SHA256).Hash.ToLowerInvariant()) {
+            throw 'The retained offline conformance outcome digest is invalid.'
+        }
+    } else {
+        if (-not (Test-Path -LiteralPath $conformanceExitSource -PathType Leaf)) {
+            throw 'The strict-offline full suite omitted its conformance outcome.'
+        }
+        Copy-Item -LiteralPath $conformanceExitSource -Destination $conformanceExitSnapshot
+        [IO.File]::WriteAllText($conformanceExitDigestPath, ((Get-FileHash -LiteralPath $conformanceExitSnapshot -Algorithm SHA256).Hash.ToLowerInvariant() + "`n"), [Text.UTF8Encoding]::new($false))
+    }
 
     $gradleSnapshotPath = Join-Path $pendingRoot 'snapshots/gradle-artifacts.json'
     $inspectorProfilePath = Join-Path $pendingRoot 'snapshots/artifact-inspector-profile.json'
@@ -775,10 +797,7 @@ try {
         $commands.Add($gradleGate)
         $gradleOutcome = $gradleGate.outcome
         if ($gateName -eq 'gate-conformance-observation' -and $gradleGate.exitCode -eq 0) {
-            $conformanceExit = Join-Path $isolatedRoot 'target/conformance-exit-code.txt'
-            if (Test-Path -LiteralPath $conformanceExit) {
-                $gradleOutcome = if ((Get-Content -Raw -LiteralPath $conformanceExit).Trim() -eq '1') { 'BLOCKED' } else { 'PASS' }
-            }
+            $gradleOutcome = if ((Get-Content -Raw -LiteralPath $conformanceExitSnapshot).Trim() -eq '1') { 'BLOCKED' } else { 'PASS' }
         }
         $gateEvidence += [ordered]@{
             name = $gateName
@@ -796,10 +815,27 @@ try {
         throw 'Gradle gate outcomes contain an unexplained difference from the same-revision Maven baseline.'
     }
 
-    # Reassert the staged CLI seam explicitly before observing it; the qualifying offline closure produced it.
-    $restage = Invoke-QualificationCommand -Name 'restage-cli-inputs' -Executable $gradleWrapper -Arguments ($commonArguments + @('--offline', ':jbsa-dist:stageReleaseInputs')) -WorkingDirectory $isolatedRoot -Category gradle -RequireSuccess
-    $commands.Add($restage)
     $stagedRoot = Join-Path $isolatedRoot 'jbsa-dist/target/release-inputs'
+    $stagedDigestPath = Join-Path $pendingRoot 'snapshots/staged-inputs.sha256'
+    $incompleteCliCheckpoints = @($mavenBaseline.cliObservations | Where-Object {
+        $cliCheckpointName = [string] $_.name
+        -not (Test-Path -LiteralPath (Join-Path $pendingRoot "checkpoints/$cliCheckpointName.json") -PathType Leaf)
+    })
+    if (-not $Resume -or $incompleteCliCheckpoints.Count -ne 0) {
+        if (-not (Test-Path -LiteralPath $stagedRoot -PathType Container)) {
+            throw 'The strict-offline full suite omitted staged CLI inputs.'
+        }
+        $stagedDigest = Get-DirectoryDigest -Path $stagedRoot
+        if ($Resume) {
+            if (-not (Test-Path -LiteralPath $stagedDigestPath -PathType Leaf) -or
+                (Get-Content -Raw -LiteralPath $stagedDigestPath).Trim() -cne $stagedDigest) {
+                $incompleteNames = @($incompleteCliCheckpoints | ForEach-Object { [string] $_.name }) -join ', '
+                throw "The retained staged CLI input digest is invalid for incomplete observations: $incompleteNames"
+            }
+        } else {
+            [IO.File]::WriteAllText($stagedDigestPath, ($stagedDigest + "`n"), [Text.UTF8Encoding]::new($false))
+        }
+    }
     $cliDefinitions = [ordered]@{
         'cli-module-version' = @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', (Join-Path $stagedRoot 'jbsa.ps1'), '-JavaHome', $javaHome, '--version')
         'cli-classpath-version' = @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', (Join-Path $stagedRoot 'jbsa.ps1'), '-JavaHome', $javaHome, '-ClassPath', '--version')
@@ -890,6 +926,7 @@ try {
             implementorVersion = [string] $protocol.qualificationJdk.implementorVersion
             distributionArchive = [IO.Path]::GetFileName($jdkArchive)
             distributionSha256 = $jdkArchiveHash
+            extractedSha256 = $extractedJdkSha256
             releaseSha256 = $releaseHash
             javaExecutableSha256 = $javaHash
             matchesMaven = $true
@@ -956,6 +993,10 @@ try {
             build = $offline
             includedBuild = $offlineBuildLogic
             negative = $strictFailure
+            conformanceOutcome = [ordered]@{
+                path = [IO.Path]::GetRelativePath($pendingRoot, $conformanceExitSnapshot).Replace('\', '/')
+                sha256 = (Get-FileHash -LiteralPath $conformanceExitSnapshot -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
         }
         lockfiles = [ordered]@{ byteConsistent = $lockfilesMatch; before = $lockfilesBefore; after = $lockfilesAfter }
         configurationCache = [ordered]@{
@@ -994,8 +1035,6 @@ try {
     }
     $reportPath = Join-Path $pendingRoot 'gradle-qualification.json'
     [IO.File]::WriteAllText($reportPath, (($report | ConvertTo-Json -Depth 100).Replace("`r`n", "`n") + "`n"), [Text.UTF8Encoding]::new($false))
-    # Runtime state contains disposable temp paths; the report retains the durable binding and reuse audit.
-    Remove-Item -LiteralPath $statePath
     Move-Item -LiteralPath $pendingRoot -Destination $outputRoot
     $qualificationSucceeded = $true
     Write-Output "Captured Gradle qualification evidence at $outputRoot"

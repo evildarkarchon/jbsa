@@ -38,6 +38,9 @@ test selections are not launched again.
 The artifact inspector batches javap by modular JAR and profiles nested JDK launches separately.
 Its byte-identical control fixture is reused instead of compiled again; the nine-test inspector
 suite improved from 26.656 seconds to 17.889 seconds on the profiling workstation. The isolated
-qualification regression demonstrated a late failure, rejected changed input/log/output bytes,
-then resumed without rerunning the completed full suite. One final Gradle clean verify passed in
-3m10s with all 62 tasks successful.
+qualification regression demonstrated a late timing-setup failure, rejected changed
+input/JDK/log/output bytes, then resumed without rerunning the completed full suite. One final
+Gradle clean verify passed in 3m10s with all 62 tasks successful. The CONTRIBUTING-required Maven
+clean verify was also run once; it reproduced the migration baseline's expected policy failure
+because Maven clean removes the Gradle-owned build-layout and resolved-dependency evidence before
+the shared policy tests execute.

@@ -111,6 +111,7 @@ public final class example.Gamma {
 """
 
             def completed(command, **_options):
+                """Return deterministic jar or batched-javap output at the subprocess boundary."""
                 output = (
                     "example.module jar:file:/fixture.jar!/module-info.class\nexports example"
                     if command[0].endswith("jar.exe")
