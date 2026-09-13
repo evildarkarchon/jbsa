@@ -102,6 +102,10 @@ if ($args -contains '--configuration-cache') {
     if (Test-Path -LiteralPath $marker) { Write-Output 'Configuration cache entry reused.' }
     else { Set-Content -LiteralPath $marker -Value 'stored'; Write-Output 'Configuration cache entry stored.' }
 }
+if ($args -contains ':jbsa-conformance-tests:automatedConformance') {
+    New-Item -ItemType Directory -Path (Join-Path $PSScriptRoot 'target') -Force | Out-Null
+    Set-Content -LiteralPath (Join-Path $PSScriptRoot 'target/conformance-exit-code.txt') -Value '1'
+}
 $stage = Join-Path $PSScriptRoot 'jbsa-dist/target/release-inputs'
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
 Set-Content -LiteralPath (Join-Path $stage 'jbsa.ps1') -Value 'param([string] $JavaHome, [switch] $ClassPath) Write-Output "jbsa 0.1.0-SNAPSHOT"'
@@ -144,6 +148,11 @@ exit 0
         )
         resolvedGraphs = @([ordered]@{ project = 'jbsa'; path = 'resolved-graphs/jbsa.json'; sha256 = 'historical' })
         normativeGaps = @()
+    }
+    $maven.gates += [ordered]@{
+        name = 'gate-conformance-observation'
+        exitCode = 1
+        outcome = 'BLOCKED'
     }
     [IO.File]::WriteAllText((Join-Path $evidence 'maven-baseline.json'), (($maven | ConvertTo-Json -Depth 30) + "`n"), [Text.UTF8Encoding]::new($false))
 

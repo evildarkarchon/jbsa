@@ -477,7 +477,7 @@ try {
         $commands.Add($gradleGate)
         $gradleOutcome = $gradleGate.outcome
         if ($gateName -eq 'gate-conformance-observation' -and $gradleGate.exitCode -eq 0) {
-            $conformanceExit = Join-Path $isolatedRoot 'target/conformance/conformance-exit-code.txt'
+            $conformanceExit = Join-Path $isolatedRoot 'target/conformance-exit-code.txt'
             if (Test-Path -LiteralPath $conformanceExit) {
                 $gradleOutcome = if ((Get-Content -Raw -LiteralPath $conformanceExit).Trim() -eq '1') { 'BLOCKED' } else { 'PASS' }
             }
