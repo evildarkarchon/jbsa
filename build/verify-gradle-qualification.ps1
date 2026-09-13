@@ -203,6 +203,11 @@ function Get-ParityDifferenceAssessment {
         $category = 'optional-package-info-bytecode'
         $requirement = 'Java sources, Javadocs, packages, and public signatures must remain equivalent.'
         $explanation = 'Maven emits class files for documentation-only package-info.java sources while direct javac compilation does not; the source and documented package remain present.'
+    } elseif ($path -match '^artifacts\.library_javadocs\.entries\[' -and
+        @($AllDifferences | Where-Object { $_.path -match '^artifacts\.library\.java_contract\.' }).Count -eq 0) {
+        $category = 'javadoc-task-presentation'
+        $requirement = 'The Javadocs artifact must document the unchanged public API, use the pinned JDK, and reproduce byte-for-byte across clean Gradle builds.'
+        $explanation = 'Maven and Gradle select different standard-doclet navigation, source-page, and bundled-font presentation defaults; public signatures and source bytes match, and Gradle reproducibility is checked separately.'
     } elseif ($path -match '^artifacts\.(library|thin_cli)\.entries\[path=module-info\.class\]\.(sha256|size)$' -and
         @($AllDifferences | Where-Object { $_.path -match '^artifacts\.(library|thin_cli)\.java_contract\.' }).Count -eq 0) {
         $category = 'module-attribute-encoding'
