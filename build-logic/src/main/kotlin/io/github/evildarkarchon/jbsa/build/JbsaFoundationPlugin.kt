@@ -8,6 +8,7 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.dsl.LockMode
 import org.gradle.api.tasks.Exec
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 /** Establishes the single-version, six-project JBSA build and its deterministic resolution policy. */
@@ -317,6 +318,83 @@ class JbsaFoundationPlugin : Plugin<Project> {
         project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named("buildPolicyTest") {
             dependsOn(verifyCompliance)
         }
+        val distribution = project.project(JbsaThinApplicationIdentity.DISTRIBUTION_PROJECT_PATH)
+        val libraryBinary = library.tasks.named("jar", Jar::class.java)
+        val librarySources = library.tasks.named("sourcesJar", Jar::class.java)
+        val libraryJavadoc = library.tasks.named("javadocJar", Jar::class.java)
+        val cli = project.project(JbsaThinApplicationIdentity.PROJECT_PATH)
+        val cliBinary = cli.tasks.named("jar", Jar::class.java)
+        val runtimeDependencies = distribution.layout.buildDirectory.dir("runtime-dependencies")
+        val releaseInputDirectory = distribution.layout.buildDirectory.dir("release-inputs")
+        val releaseInputManifest = distribution.layout.buildDirectory.file("release-inputs.json")
+        val stageReleaseInputs =
+            distribution.tasks.register(
+                JbsaThinApplicationIdentity.STAGE_RELEASE_INPUTS_TASK,
+                StageReleaseInputs::class.java,
+            ) {
+                group = "distribution"
+                description = "Stages the unchanged canonical release-input set with a deterministic manifest."
+                dependsOn(
+                    verifyCompliance,
+                    library.tasks.named(JbsaPublicLibraryIdentity.ASSEMBLE_PUBLICATION_TASK),
+                    cliBinary,
+                    distribution.tasks.named(JbsaThinApplicationIdentity.STAGE_RUNTIME_DEPENDENCIES_TASK),
+                )
+                stagingScript.set(project.layout.projectDirectory.file("build/stage-release-inputs.ps1"))
+                buildLayoutManifest.set(generateBuildLayout.flatMap { it.manifestFile })
+                dependencyInventory.set(
+                    project.layout.projectDirectory.file("compliance/dependency-inventory.json")
+                )
+                canonicalFiles.from(
+                    libraryBinary.flatMap(Jar::getArchiveFile),
+                    librarySources.flatMap(Jar::getArchiveFile),
+                    libraryJavadoc.flatMap(Jar::getArchiveFile),
+                    cliBinary.flatMap(Jar::getArchiveFile),
+                    consumerPom,
+                    generateProductionSbom.flatMap { it.sbomFile },
+                    project.layout.buildDirectory.file("compliance/THIRD-PARTY-NOTICES.md"),
+                    project.layout.buildDirectory.file("compliance/RELEASE-NOTES.md"),
+                    project.layout.projectDirectory.file("LICENSE"),
+                    project.layout.projectDirectory.file("NOTICE"),
+                    project.layout.projectDirectory.file("compliance/licenses/LWJGL-3.4.3.txt"),
+                    project.layout.projectDirectory.file("compliance/licenses/LZ4-1.10.0.txt"),
+                    project.layout.projectDirectory.file("build/windows-runtime/jbsa.ps1"),
+                    project.layout.projectDirectory.file("build/windows-runtime/launch-policy.json"),
+                )
+                this.runtimeDependencies.set(runtimeDependencies)
+                reactorVersion.set(candidate)
+                powershellExecutable.set("pwsh")
+                this.releaseInputDirectory.set(releaseInputDirectory)
+                this.releaseInputManifest.set(releaseInputManifest)
+            }
+        val verifyStagedReleaseInputs =
+            distribution.tasks.register(
+                JbsaThinApplicationIdentity.VERIFY_STAGED_RELEASE_INPUTS_TASK,
+                VerifyStagedReleaseInputs::class.java,
+            ) {
+                group = LifecycleBasePlugin.VERIFICATION_GROUP
+                description = "Audits the completed canonical staging set against compliance policy."
+                dependsOn(stageReleaseInputs)
+                verificationScript.set(project.layout.projectDirectory.file("build/verify-compliance.ps1"))
+                buildLayoutManifest.set(generateBuildLayout.flatMap { it.manifestFile })
+                resolvedProductionDependencies.set(generateResolvedDependencies.flatMap { it.manifestFile })
+                this.consumerPom.set(consumerPom)
+                generatedSbom.set(generateProductionSbom.flatMap { it.sbomFile })
+                algorithmInputs.from(
+                    project.layout.projectDirectory.file("compliance/dependency-inventory.json"),
+                    project.layout.projectDirectory.file("compliance/native-payload-inventory.json"),
+                    project.layout.projectDirectory.file("THIRD-PARTY-NOTICES.md"),
+                    project.layout.projectDirectory.file("RELEASE-NOTES.md"),
+                    project.layout.buildDirectory.file("compliance/THIRD-PARTY-NOTICES.md"),
+                    project.layout.buildDirectory.file("compliance/RELEASE-NOTES.md"),
+                    lockFiles,
+                    verificationFiles,
+                )
+                this.releaseInputDirectory.set(stageReleaseInputs.flatMap { it.releaseInputDirectory })
+                this.releaseInputManifest.set(stageReleaseInputs.flatMap { it.releaseInputManifest })
+                reactorVersion.set(candidate)
+                powershellExecutable.set("pwsh")
+            }
         val verifyFoundation =
             project.tasks.register("verifyBuildFoundation") {
                 group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -346,7 +424,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
             }
         project.tasks.register("verify") {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
-            description = "Runs the complete verification available at the current migration stage."
+            description = "Builds, audits, stages, and post-audits the complete canonical release inputs."
             dependsOn(
                 generateBuildLayout,
                 generateResolvedDependencies,
@@ -384,6 +462,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
                     project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named(taskName)
                 },
                 project.project(JbsaBenchmarkIdentity.PROJECT_PATH).tasks.named("check"),
+                verifyStagedReleaseInputs,
             )
         }
         project.tasks.named(LifecycleBasePlugin.CLEAN_TASK_NAME) {

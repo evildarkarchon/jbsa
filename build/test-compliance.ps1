@@ -277,6 +277,30 @@ try {
         & git config --file (Join-Path $reactorRoot '.gitmodules') submodule.TES5Edit.url 'https://example.com/replaced.git'
         Test-TrackedRepositoryBytes @{} @{}
     } 'reference.*(path|URL)|TES5Edit.*(path|URL)'
+    Test-PolicyCase 'post-staging generated evidence audit is read-only' {
+        $path = Join-Path $reactorRoot 'target/compliance/evidence.txt'
+        New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
+        $expected = "stable generated evidence`n"
+        [IO.File]::WriteAllText($path, $expected, [Text.UTF8Encoding]::new($false))
+        $before = [IO.File]::ReadAllBytes($path)
+        Write-OrVerifyGeneratedText $path $expected $true 'fixture evidence'
+        if ([Convert]::ToHexString($before) -cne [Convert]::ToHexString([IO.File]::ReadAllBytes($path))) {
+            throw 'Post-staging audit rewrote generated evidence.'
+        }
+    }
+    Test-PolicyCase 'post-staging generated evidence audit rejects stale bytes' {
+        $path = Join-Path $reactorRoot 'target/compliance/evidence.txt'
+        New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
+        [IO.File]::WriteAllText($path, "stale generated evidence`n", [Text.UTF8Encoding]::new($false))
+        Write-OrVerifyGeneratedText $path "expected generated evidence`n" $true 'fixture evidence'
+    } 'stale generated fixture evidence'
+    Test-PolicyCase 'post-staging generated evidence audit rejects alternate encoding' {
+        $path = Join-Path $reactorRoot 'target/compliance/evidence.txt'
+        New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
+        $expected = "same decoded evidence`n"
+        [IO.File]::WriteAllText($path, $expected, [Text.UnicodeEncoding]::new($false, $true))
+        Write-OrVerifyGeneratedText $path $expected $true 'fixture evidence'
+    } 'stale generated fixture evidence'
 } finally {
     $script:reactorRoot = $originalRoot
     # Only this script's freshly created temp subtree is eligible for recursive cleanup.

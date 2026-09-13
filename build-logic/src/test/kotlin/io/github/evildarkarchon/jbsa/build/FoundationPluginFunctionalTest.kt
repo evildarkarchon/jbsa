@@ -273,6 +273,102 @@ class FoundationPluginFunctionalTest {
         assertFalse(Files.exists(projectDir.resolve("jbsa/target")))
     }
 
+    /** Verifies complete verification orders canonical inputs, pre-audit, staging, and post-audit. */
+    @Test
+    fun `complete verification orders the release staging lifecycle`() {
+        val result = run("--write-locks", "verify", "--dry-run")
+        val taskPaths = taskPathsFromDryRun(result.output)
+
+        assertTaskPrecedes(taskPaths, ":jbsa:assembleLibraryPublication", ":jbsa-dist:stageReleaseInputs")
+        assertTaskPrecedes(taskPaths, ":jbsa-cli:jar", ":jbsa-dist:stageReleaseInputs")
+        assertTaskPrecedes(taskPaths, ":jbsa-dist:stageRuntimeDependencies", ":jbsa-dist:stageReleaseInputs")
+        assertTaskPrecedes(taskPaths, ":verifyCompliance", ":jbsa-dist:stageReleaseInputs")
+        assertTaskPrecedes(taskPaths, ":jbsa-dist:stageReleaseInputs", ":jbsa-dist:verifyStagedReleaseInputs")
+        assertTaskPrecedes(taskPaths, ":jbsa-dist:verifyStagedReleaseInputs", ":verify")
+    }
+
+    /** Verifies ordinary Gradle lifecycles do not silently expand into full release qualification. */
+    @Test
+    fun `assemble check and build exclude complete release staging`() {
+        val result = run("assemble", "check", "build", "--dry-run")
+        val taskPaths = taskPathsFromDryRun(result.output)
+
+        assertFalse(taskPaths.any { it.endsWith(":stageReleaseInputs") }, taskPaths.toString())
+        assertFalse(taskPaths.any { it.endsWith(":verifyStagedReleaseInputs") }, taskPaths.toString())
+        assertFalse(taskPaths.contains(":verifyCompliance"), taskPaths.toString())
+        assertFalse(taskPaths.any { it.endsWith(":automatedConformance") }, taskPaths.toString())
+    }
+
+    /** Verifies the post-staging audit cannot bypass the stage that owns its required input tree. */
+    @Test
+    fun `post-staging audit rejects an absent staging output`() {
+        val result =
+            runAndFail(
+                ":jbsa-dist:verifyStagedReleaseInputs",
+                "-x",
+                ":jbsa-dist:stageReleaseInputs",
+                "-x",
+                ":verifyCompliance",
+                "-x",
+                ":generateBuildLayoutManifest",
+                "-x",
+                ":generateResolvedProductionDependencies",
+                "-x",
+                ":generateProductionSbom",
+                "-x",
+                ":jbsa:generatePomFileForLibraryPublication",
+            )
+
+        assertTrue(result.output.contains("release-inputs"), result.output)
+        assertFalse(result.output.contains("Task 'verifyStagedReleaseInputs' not found"), result.output)
+    }
+
+    /** Verifies staging passes its declared PowerShell arguments and propagates a nonzero process exit. */
+    @Test
+    fun `release staging propagates its PowerShell failure`() {
+        configureStageProbe(
+            """
+            param([string] ${'$'}ReactorVersion, [string] ${'$'}BuildLayoutManifest)
+            if (${'$'}ReactorVersion -cne '2.3.4' -or
+                (Split-Path -Leaf ${'$'}BuildLayoutManifest) -cne 'stage-layout.json') {
+                Write-Error 'staging process contract mismatch'
+                exit 18
+            }
+            Write-Error 'intentional staging process failure'
+            exit 19
+            """.trimIndent(),
+        )
+
+        val result = runAndFail(":jbsa-dist:stageReleaseInputs")
+
+        assertTrue(result.output.contains("intentional staging process failure"), result.output)
+        assertFalse(result.output.contains("staging process contract mismatch"), result.output)
+    }
+
+    /** Verifies staging rejects a successful process that omits its declared transaction outputs. */
+    @Test
+    fun `release staging rejects missing outputs after a successful process`() {
+        configureStageProbe("param()`nexit 0")
+
+        val result = runAndFail(":jbsa-dist:stageReleaseInputs")
+
+        assertTrue(
+            result.output.contains("Release staging completed without its declared directory and manifest outputs"),
+            result.output,
+        )
+    }
+
+    /** Verifies post-staging audit passes every switch/path contract and propagates a rejected audit. */
+    @Test
+    fun `post-staging audit propagates its PowerShell failure`() {
+        configureAuditProbe()
+
+        val result = runAndFail(":jbsa-dist:verifyStagedReleaseInputs")
+
+        assertTrue(result.output.contains("intentional post-staging audit failure"), result.output)
+        assertFalse(result.output.contains("audit process contract mismatch"), result.output)
+    }
+
     /** Verifies the public task emits the versioned, contained output contract consumed by automation. */
     @Test
     fun `generates the deterministic build layout manifest`() {
@@ -522,6 +618,123 @@ class FoundationPluginFunctionalTest {
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
             .withArguments(TestKitBuildArguments.create(arguments, verificationOff))
+    }
+
+    /** Asserts an exact task-graph edge through observable execution order. */
+    private fun assertTaskPrecedes(taskPaths: List<String>, predecessor: String, successor: String) {
+        val predecessorIndex = taskPaths.indexOf(predecessor)
+        val successorIndex = taskPaths.indexOf(successor)
+        assertTrue(predecessorIndex >= 0, "Missing $predecessor from $taskPaths")
+        assertTrue(successorIndex >= 0, "Missing $successor from $taskPaths")
+        assertTrue(predecessorIndex < successorIndex, "$predecessor must run before $successor: $taskPaths")
+    }
+
+    /** Extracts the observable task order printed by Gradle's dry-run execution plan. */
+    private fun taskPathsFromDryRun(output: String): List<String> =
+        output.lineSequence()
+            .map(String::trim)
+            .filter { it.startsWith(":") && it.endsWith(" SKIPPED") }
+            .map { it.substringBefore(' ') }
+            .toList()
+
+    /** Rebinds the real staging task to an owned process fixture while preserving its declared property model. */
+    private fun configureStageProbe(scriptBody: String) {
+        write("stage-probe.ps1", scriptBody)
+        write("stage-layout.json", "{}")
+        write("stage-inventory.json", "{}")
+        write("stage-input.txt", "canonical input")
+        Files.createDirectories(projectDir.resolve("stage-runtime"))
+        appendBuildScript(
+            """
+            project(":jbsa-dist") {
+                tasks.named<io.github.evildarkarchon.jbsa.build.StageReleaseInputs>("stageReleaseInputs") {
+                    setDependsOn(emptyList<Any>())
+                    stagingScript.set(rootProject.layout.projectDirectory.file("stage-probe.ps1"))
+                    buildLayoutManifest.set(rootProject.layout.projectDirectory.file("stage-layout.json"))
+                    dependencyInventory.set(rootProject.layout.projectDirectory.file("stage-inventory.json"))
+                    canonicalFiles.setFrom(rootProject.layout.projectDirectory.file("stage-input.txt"))
+                    runtimeDependencies.set(rootProject.layout.projectDirectory.dir("stage-runtime"))
+                    reactorVersion.set("2.3.4")
+                    powershellExecutable.set("pwsh")
+                    releaseInputDirectory.set(layout.buildDirectory.dir("probe-release-inputs"))
+                    releaseInputManifest.set(layout.buildDirectory.file("probe-release-inputs.json"))
+                }
+            }
+            """.trimIndent(),
+        )
+    }
+
+    /** Rebinds the real post-staging task to complete owned inputs and a rejecting process-contract probe. */
+    private fun configureAuditProbe() {
+        write(
+            "audit-probe.ps1",
+            """
+            param(
+                [string] ${'$'}ReactorVersion,
+                [string] ${'$'}BuildLayoutManifest,
+                [string] ${'$'}ResolvedProductionDependencies,
+                [string] ${'$'}ConsumerPomPath,
+                [string] ${'$'}GeneratedSbomPath,
+                [string] ${'$'}ReleaseInputRoot,
+                [string] ${'$'}ReleaseInputManifest,
+                [switch] ${'$'}RequireGeneratedArtifacts,
+                [switch] ${'$'}VerifyGeneratedComplianceOutputs
+            )
+            ${'$'}leafNames = @(
+                (Split-Path -Leaf ${'$'}BuildLayoutManifest),
+                (Split-Path -Leaf ${'$'}ResolvedProductionDependencies),
+                (Split-Path -Leaf ${'$'}ConsumerPomPath),
+                (Split-Path -Leaf ${'$'}GeneratedSbomPath),
+                (Split-Path -Leaf ${'$'}ReleaseInputRoot),
+                (Split-Path -Leaf ${'$'}ReleaseInputManifest)
+            )
+            if (${'$'}ReactorVersion -cne '2.3.4' -or
+                (${'$'}leafNames -join ',') -cne 'audit-layout.json,audit-resolved.json,audit-pom.xml,audit-sbom.json,audit-release-inputs,audit-release-inputs.json' -or
+                -not ${'$'}RequireGeneratedArtifacts -or -not ${'$'}VerifyGeneratedComplianceOutputs) {
+                Write-Error 'audit process contract mismatch'
+                exit 18
+            }
+            Write-Error 'intentional post-staging audit failure'
+            exit 19
+            """.trimIndent(),
+        )
+        listOf(
+                "audit-layout.json",
+                "audit-resolved.json",
+                "audit-pom.xml",
+                "audit-sbom.json",
+                "audit-input.txt",
+                "audit-release-inputs.json",
+            )
+            .forEach { write(it, "fixture") }
+        Files.createDirectories(projectDir.resolve("audit-release-inputs"))
+        appendBuildScript(
+            """
+            project(":jbsa-dist") {
+                tasks.named<io.github.evildarkarchon.jbsa.build.VerifyStagedReleaseInputs>(
+                    "verifyStagedReleaseInputs"
+                ) {
+                    setDependsOn(emptyList<Any>())
+                    verificationScript.set(rootProject.layout.projectDirectory.file("audit-probe.ps1"))
+                    buildLayoutManifest.set(rootProject.layout.projectDirectory.file("audit-layout.json"))
+                    resolvedProductionDependencies.set(rootProject.layout.projectDirectory.file("audit-resolved.json"))
+                    consumerPom.set(rootProject.layout.projectDirectory.file("audit-pom.xml"))
+                    generatedSbom.set(rootProject.layout.projectDirectory.file("audit-sbom.json"))
+                    algorithmInputs.setFrom(rootProject.layout.projectDirectory.file("audit-input.txt"))
+                    releaseInputDirectory.set(rootProject.layout.projectDirectory.dir("audit-release-inputs"))
+                    releaseInputManifest.set(rootProject.layout.projectDirectory.file("audit-release-inputs.json"))
+                    reactorVersion.set("2.3.4")
+                    powershellExecutable.set("pwsh")
+                }
+            }
+            """.trimIndent(),
+        )
+    }
+
+    /** Appends one Kotlin DSL fragment without replacing the fixture's required root plugin configuration. */
+    private fun appendBuildScript(content: String) {
+        val buildFile = projectDir.resolve("build.gradle.kts")
+        Files.writeString(buildFile, Files.readString(buildFile) + System.lineSeparator() + content)
     }
 
     /** Declares a single resolvable dependency graph for negative resolution-policy tests. */

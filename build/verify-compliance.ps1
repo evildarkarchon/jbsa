@@ -39,6 +39,10 @@ Optional exact lockfiles. Gradle mode defaults to the CycloneDX root lock plus t
 .PARAMETER VerificationMetadataPaths
 Optional strict Gradle verification metadata. Gradle mode defaults to both build verification files.
 
+.PARAMETER VerifyGeneratedComplianceOutputs
+Requires generated notices and release notes to match their deterministic source text without
+rewriting them. The post-staging audit uses this mode after pre-staging compliance generated them.
+
 .NOTES
 This engineering gate does not make a legal determination. Unclear rights or provenance remain a
 stop condition even when the mechanical checks pass.
@@ -54,7 +58,8 @@ param(
     [string] $ResolvedProductionDependencies,
     [string] $ConsumerPomPath,
     [string[]] $DependencyLockPaths,
-    [string[]] $VerificationMetadataPaths
+    [string[]] $VerificationMetadataPaths,
+    [switch] $VerifyGeneratedComplianceOutputs
 )
 
 Set-StrictMode -Version Latest
@@ -78,6 +83,48 @@ $maximumArchiveEntryBytes = 268435456
 $maximumZipTrailerBytes = 65557
 # Four nested layers cover expected packaging while bounding adversarial archive recursion.
 $maximumArchiveDepth = 4
+
+function Write-OrVerifyGeneratedText {
+    <#
+    .SYNOPSIS
+    Writes deterministic generated evidence or verifies its existing exact UTF-8 text in audit mode.
+
+    .PARAMETER Path
+    Exact generated evidence path.
+
+    .PARAMETER ExpectedText
+    Complete deterministic text expected at the path.
+
+    .PARAMETER VerifyExisting
+    When true, rejects missing or stale bytes and leaves the file untouched.
+
+    .PARAMETER Context
+    Human-readable evidence identity used in failure diagnostics.
+
+    .NOTES
+    Throws a terminating error in verification mode when the generated file is absent or stale.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string] $Path,
+        [Parameter(Mandatory = $true)][string] $ExpectedText,
+        [Parameter(Mandatory = $true)][bool] $VerifyExisting,
+        [Parameter(Mandatory = $true)][string] $Context
+    )
+
+    if ($VerifyExisting) {
+        if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+            throw "Missing generated $Context`: $Path"
+        }
+        $expectedBytes = [System.Text.UTF8Encoding]::new($false).GetBytes($ExpectedText)
+        $actualBytes = [System.IO.File]::ReadAllBytes($Path)
+        if (-not [System.Linq.Enumerable]::SequenceEqual[byte]($actualBytes, $expectedBytes)) {
+            throw "Stale generated $Context`: $Path"
+        }
+        return
+    }
+    New-Item -ItemType Directory -Path (Split-Path $Path) -Force | Out-Null
+    [System.IO.File]::WriteAllText($Path, $ExpectedText, [System.Text.UTF8Encoding]::new($false))
+}
 
 <#
 .SYNOPSIS
@@ -1929,18 +1976,15 @@ $committedNotices = (Get-Content -Raw -LiteralPath $committedNoticesPath).Replac
 if ($committedNotices -cne $notices) {
     throw 'THIRD-PARTY-NOTICES.md is stale; regenerate it from the compliance inventories.'
 }
-New-Item -ItemType Directory -Path $complianceOutput -Force | Out-Null
-[System.IO.File]::WriteAllText($generatedNoticesPath, $notices, [System.Text.UTF8Encoding]::new($false))
+Write-OrVerifyGeneratedText `
+    $generatedNoticesPath $notices $VerifyGeneratedComplianceOutputs 'third-party notices'
 $releaseNotes = (Get-Content -Raw -LiteralPath $committedReleaseNotesPath).Replace("`r`n", "`n")
 if ($releaseNotes -cnotmatch 'fd1e36020b2b5b6217e553dc0038983146a2e2dd' -or
     $releaseNotes -cnotmatch 'independently authored') {
     throw 'RELEASE-NOTES.md must retain independent-project and pinned Reference Snapshot attribution.'
 }
-[System.IO.File]::WriteAllText(
-    $generatedReleaseNotesPath,
-    $releaseNotes,
-    [System.Text.UTF8Encoding]::new($false)
-)
+Write-OrVerifyGeneratedText `
+    $generatedReleaseNotesPath $releaseNotes $VerifyGeneratedComplianceOutputs 'release notes'
 
 if (-not [string]::IsNullOrWhiteSpace($ReleaseInputRoot)) {
     Test-ReleaseInputs `

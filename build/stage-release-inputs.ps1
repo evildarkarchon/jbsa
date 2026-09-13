@@ -3,7 +3,11 @@
 Stages current public reactor artifacts and compliance evidence with a deterministic byte manifest.
 
 .PARAMETER ReactorVersion
-Effective Maven revision used in artifact paths and project source identities.
+Effective build version used in artifact paths and project source identities.
+
+.PARAMETER BuildLayoutManifest
+Optional schema-version-1 Gradle build-layout manifest that supplies generated artifact paths. When
+omitted, the Maven-era paths remain available to the temporary parity build.
 
 .NOTES
 Owns only jbsa-dist/target/release-inputs and its sibling manifest. Missing inputs fail before
@@ -13,7 +17,8 @@ replacing staging. This prepares packaging inputs; it does not qualify or publis
 param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._+-]*$')]
-    [string] $ReactorVersion
+    [string] $ReactorVersion,
+    [string] $BuildLayoutManifest
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -21,17 +26,99 @@ $reactorRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $targetRoot = Join-Path $reactorRoot 'jbsa-dist/target'
 $stageRoot = Join-Path $targetRoot 'release-inputs'
 $manifestPath = Join-Path $targetRoot 'release-inputs.json'
+
+function Get-GradleReleaseSources {
+    <#
+    .SYNOPSIS
+    Resolves the canonical staging sources from a validated Gradle build-layout manifest.
+
+    .PARAMETER Path
+    Exact schema-version-1 build-layout manifest produced by Gradle.
+
+    .OUTPUTS
+    A hashtable from staging source role to a repository-relative, contained generated path.
+
+    .NOTES
+    Throws a terminating error when the manifest is absent, malformed, duplicated, incomplete, or
+    names a path outside the repository.
+    #>
+    param([Parameter(Mandatory = $true)][string] $Path)
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Missing build-layout manifest: $Path"
+    }
+    $layout = Get-Content -Raw -LiteralPath $Path | ConvertFrom-Json -Depth 100
+    if ($layout.schemaVersion -ne 1 -or $layout.rootProject -cne 'jbsa-parent' -or $null -eq $layout.outputs) {
+        throw 'The build-layout manifest must use schema 1 and the jbsa-parent root.'
+    }
+    $outputsById = @{}
+    foreach ($output in @($layout.outputs)) {
+        $id = [string] $output.id
+        $relativePath = ([string] $output.path).Replace('\', '/')
+        if ([string]::IsNullOrWhiteSpace($id) -or [string]::IsNullOrWhiteSpace($relativePath)) {
+            throw 'Build-layout outputs require non-empty ids and paths.'
+        }
+        if ($outputsById.ContainsKey($id)) {
+            throw "Duplicate build-layout output id: $id"
+        }
+        $segments = @($relativePath -split '/')
+        if ([IO.Path]::IsPathFullyQualified($relativePath) -or $relativePath.StartsWith('/') -or
+            $segments.Count -eq 0 -or @($segments | Where-Object { $_ -in @('', '.', '..') }).Count -gt 0) {
+            throw "Build-layout output path must be relative and non-traversing: $relativePath"
+        }
+        $resolved = [IO.Path]::GetFullPath((Join-Path $reactorRoot $relativePath))
+        if (-not $resolved.StartsWith($reactorRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
+            throw "Build-layout output escapes the repository: $relativePath"
+        }
+        $outputsById[$id] = $relativePath
+    }
+    $requiredOutputs = [ordered]@{
+        libraryBinary = 'library-binary'
+        libraryConsumerPom = 'library-consumer-pom'
+        librarySources = 'library-sources'
+        libraryJavadoc = 'library-javadoc'
+        cliBinary = 'cli-binary'
+        generatedThirdPartyNotices = 'generated-third-party-notices'
+        generatedReleaseNotes = 'generated-release-notes'
+        aggregateSbom = 'aggregate-sbom'
+        runtimeDependencies = 'runtime-dependencies'
+    }
+    $sources = @{}
+    foreach ($role in $requiredOutputs.Keys) {
+        $id = $requiredOutputs[$role]
+        if (-not $outputsById.ContainsKey($id)) {
+            throw "Build-layout manifest is missing required staging output: $id"
+        }
+        $sources[$role] = $outputsById[$id]
+    }
+    return $sources
+}
+
+$releaseSources = @{
+    libraryBinary = "jbsa/target/jbsa-$ReactorVersion.jar"
+    libraryConsumerPom = 'jbsa/.flattened-pom.xml'
+    librarySources = "jbsa/target/jbsa-$ReactorVersion-sources.jar"
+    libraryJavadoc = "jbsa/target/jbsa-$ReactorVersion-javadoc.jar"
+    cliBinary = "jbsa-cli/target/jbsa-cli-$ReactorVersion.jar"
+    generatedThirdPartyNotices = 'target/compliance/THIRD-PARTY-NOTICES.md'
+    generatedReleaseNotes = 'target/compliance/RELEASE-NOTES.md'
+    aggregateSbom = 'target/compliance/jbsa.cdx.json'
+    runtimeDependencies = 'jbsa-dist/target/runtime-dependencies'
+}
+if (-not [string]::IsNullOrWhiteSpace($BuildLayoutManifest)) {
+    $releaseSources = Get-GradleReleaseSources -Path $BuildLayoutManifest
+}
 $inputs = @(
-    @{ path = "jbsa-$ReactorVersion.jar"; source = "jbsa/target/jbsa-$ReactorVersion.jar"; artifact = 'jbsa'; kind = 'project-artifact' },
-    @{ path = "jbsa-$ReactorVersion.pom"; source = 'jbsa/.flattened-pom.xml'; artifact = 'jbsa'; kind = 'project-artifact' },
-    @{ path = "jbsa-$ReactorVersion-sources.jar"; source = "jbsa/target/jbsa-$ReactorVersion-sources.jar"; artifact = 'jbsa'; kind = 'project-artifact' },
-    @{ path = "jbsa-$ReactorVersion-javadoc.jar"; source = "jbsa/target/jbsa-$ReactorVersion-javadoc.jar"; artifact = 'jbsa'; kind = 'project-artifact' },
-    @{ path = "jbsa-cli-$ReactorVersion.jar"; source = "jbsa-cli/target/jbsa-cli-$ReactorVersion.jar"; artifact = 'jbsa-cli'; kind = 'project-artifact' },
+    @{ path = "jbsa-$ReactorVersion.jar"; source = $releaseSources.libraryBinary; artifact = 'jbsa'; kind = 'project-artifact' },
+    @{ path = "jbsa-$ReactorVersion.pom"; source = $releaseSources.libraryConsumerPom; artifact = 'jbsa'; kind = 'project-artifact' },
+    @{ path = "jbsa-$ReactorVersion-sources.jar"; source = $releaseSources.librarySources; artifact = 'jbsa'; kind = 'project-artifact' },
+    @{ path = "jbsa-$ReactorVersion-javadoc.jar"; source = $releaseSources.libraryJavadoc; artifact = 'jbsa'; kind = 'project-artifact' },
+    @{ path = "jbsa-cli-$ReactorVersion.jar"; source = $releaseSources.cliBinary; artifact = 'jbsa-cli'; kind = 'project-artifact' },
     @{ path = 'LICENSE'; source = 'LICENSE'; kind = 'license' },
     @{ path = 'NOTICE'; source = 'NOTICE'; kind = 'notice' },
-    @{ path = 'THIRD-PARTY-NOTICES.md'; source = 'target/compliance/THIRD-PARTY-NOTICES.md'; kind = 'notice' },
-    @{ path = 'RELEASE-NOTES.md'; source = 'target/compliance/RELEASE-NOTES.md'; kind = 'release-notes' },
-    @{ path = 'jbsa.cdx.json'; source = 'target/compliance/jbsa.cdx.json'; kind = 'sbom' },
+    @{ path = 'THIRD-PARTY-NOTICES.md'; source = $releaseSources.generatedThirdPartyNotices; kind = 'notice' },
+    @{ path = 'RELEASE-NOTES.md'; source = $releaseSources.generatedReleaseNotes; kind = 'release-notes' },
+    @{ path = 'jbsa.cdx.json'; source = $releaseSources.aggregateSbom; kind = 'sbom' },
     @{ path = 'licenses/LWJGL-3.4.3.txt'; source = 'compliance/licenses/LWJGL-3.4.3.txt'; kind = 'license' },
     @{ path = 'licenses/LZ4-1.10.0.txt'; source = 'compliance/licenses/LZ4-1.10.0.txt'; kind = 'license' },
     @{ path = 'jbsa.ps1'; source = 'build/windows-runtime/jbsa.ps1'; kind = 'provenance' },
@@ -42,7 +129,7 @@ foreach ($dependency in @($inventory.entries | Where-Object { $_.groupId -eq 'or
     if (-not $dependency.redistribution.approved) { throw "Runtime dependency is not qualified: $($dependency.artifactId)" }
     $classifierSuffix = if ($null -eq $dependency.classifier) { '' } else { "-$($dependency.classifier)" }
     $filename = "$($dependency.artifactId)-$($dependency.version)$classifierSuffix.jar"
-    $source = "jbsa-dist/target/runtime-dependencies/$filename"
+    $source = "$($releaseSources.runtimeDependencies)/$filename"
     $sourcePath = Join-Path $reactorRoot $source
     if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) { throw "Missing release input source: $source" }
     # Validate reactor-resolved bytes before replacing prior staging; the local Maven cache is not an assembly input.

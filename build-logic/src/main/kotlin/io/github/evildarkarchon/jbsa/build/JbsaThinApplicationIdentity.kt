@@ -11,5 +11,7 @@ internal object JbsaThinApplicationIdentity {
     const val SMOKE_TEST_TASK = "smokeTestThinCli"
     const val STAGE_RUNTIME_DEPENDENCIES_TASK = "stageRuntimeDependencies"
     const val VERIFY_RUNTIME_DEPENDENCIES_TASK = "verifyRuntimeDependencies"
+    const val STAGE_RELEASE_INPUTS_TASK = "stageReleaseInputs"
+    const val VERIFY_STAGED_RELEASE_INPUTS_TASK = "verifyStagedReleaseInputs"
     const val RUNTIME_CONFIGURATION = "runtimeInputs"
 }
