@@ -10,10 +10,12 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 /** Optional read-only local archive comparison; protected payloads stay in ignored build output. */
+@Tag("ba2")
 @EnabledIfSystemProperty(named = "jbsa.ba2.local", matches = "true")
 final class Ba2LocalCorpusIT {
   /**

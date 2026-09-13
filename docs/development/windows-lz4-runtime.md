@@ -46,7 +46,7 @@ not claim that final application-image qualification has already passed.
 JARs and both `natives-windows` classifiers. The native inventory additionally
 pins each uncompressed DLL and records upstream LZ4 1.10.0 provenance. Native
 JARs remain separate from the thin library JAR. `stage-release-inputs.ps1`
-consumes reactor-resolved dependencies under `jbsa-dist/target/runtime-dependencies`,
+consumes Gradle-resolved dependencies under `jbsa-dist/target/runtime-dependencies`,
 checks each inventory approval and SHA-256 before replacing staging, and records
 the exact coordinates and hashes in the release-input manifest. The existing
 compliance verifier recursively audits those JARs and their native contents.
@@ -59,7 +59,7 @@ commits `30fac9b95f99cda97312232be25ba55297bf9951` and
 notice inventory supplements these full copyright, permission, and disclaimer
 texts. jlibdeflate and Airlift are not promoted by this ticket.
 
-After a successful reactor verification, launch the staged CLI with PowerShell 7:
+After a successful `.\gradlew.bat clean verify`, launch the staged CLI with PowerShell 7:
 
 ```powershell
 pwsh -NoProfile -File jbsa-dist/target/release-inputs/jbsa.ps1 -JavaHome C:/OpenJDK/jdk-25
@@ -74,7 +74,7 @@ Both use `--illegal-native-access=deny` and validate Windows x64, Java 25, and
 the four runtime JAR hashes before invoking the CLI. Arguments are passed as an
 argument array. `launch-policy.json` records the exact runtime bytes.
 
-Maven embedders must provide the same runtime artifacts and native-access grants.
+Embedding applications must provide the same runtime artifacts and native-access grants.
 JBSA must never modify host-process native policy. Providers initialize lazily
 when an applicable codec operation first needs LZ4, extract their bundled JAR
 resources, and retain native libraries for process lifetime. Public callers have

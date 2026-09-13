@@ -30,6 +30,10 @@ class FoundationPluginFunctionalTest {
             """.trimIndent(),
         )
         write("gradle.properties", "version=0.1.0-SNAPSHOT\n")
+        write(
+            "build/active-maven-reference-allowlist.properties",
+            "allowlistVersion=1\nentryCount=0\n",
+        )
         writeCatalog()
         write(
             "build.gradle.kts",
@@ -318,6 +322,125 @@ class FoundationPluginFunctionalTest {
         assertFalse(Files.exists(projectDir.resolve("jbsa/target")))
     }
 
+    /** Verifies active contributor instructions cannot reintroduce a Maven wrapper command. */
+    @Test
+    fun `rejects stale active Maven instructions with their source location`() {
+        write("docs/development.md", "Run `.\\mvnw.cmd -B clean verify` before committing.\n")
+
+        val result = runAndFail("verifyActiveReferences")
+
+        assertTrue(result.output.contains("docs/development.md:1"), result.output)
+        assertTrue(result.output.contains(".\\mvnw.cmd -B clean verify"), result.output)
+    }
+
+    /** Verifies a reviewed historical exception is bound to the exact preserved instruction. */
+    @Test
+    fun `accepts an exact reviewed historical reference`() {
+        val historical = "The archived procedure ran `mvn -B verify`."
+        write("docs/reviews/historical-build.md", "$historical\n")
+        writeSingleReferenceAllowlist(
+            "docs/reviews/historical-build.md",
+            historical,
+            "historical-provenance",
+            "Preserves the reviewed command as historical evidence.",
+        )
+
+        run("verifyActiveReferences")
+    }
+
+    /** Verifies an edited historical instruction cannot reuse approval for different bytes. */
+    @Test
+    fun `rejects a changed allowlisted reference`() {
+        val reviewed = "The archived procedure ran `mvn -B verify`."
+        write("docs/reviews/historical-build.md", "The archived procedure ran `mvn -B clean verify`.\n")
+        writeSingleReferenceAllowlist(
+            "docs/reviews/historical-build.md",
+            reviewed,
+            "historical-provenance",
+            "Preserves the reviewed command as historical evidence.",
+        )
+
+        val result = runAndFail("verifyActiveReferences")
+
+        assertTrue(result.output.contains("does not match any prohibited line"), result.output)
+    }
+
+    /** Verifies a migration-only exception expires when its declared cutover ticket closes. */
+    @Test
+    fun `expires temporary comparison references at cutover`() {
+        val comparison = "& .\\mvnw.cmd -B verify"
+        write("build/compare-builds.ps1", "$comparison\n")
+        write(".scratch/migration/issues/14-cutover.md", "# Cut over\n\nState: open\n")
+        writeSingleReferenceAllowlist(
+            "build/compare-builds.ps1",
+            comparison,
+            "migration-comparison",
+            "Retains the parity oracle only until the coherent cutover.",
+            ".scratch/migration/issues/14-cutover.md",
+        )
+
+        run("verifyActiveReferences")
+        write(".scratch/migration/issues/14-cutover.md", "# Cut over\n\nState: closed\n")
+
+        val result = runAndFail("verifyActiveReferences")
+
+        assertTrue(result.output.contains("expired because its cutover ticket is closed"), result.output)
+    }
+
+    /** Verifies every ticket-defined active surface participates in one repository scan. */
+    @Test
+    fun `scans specifications documentation automation CI tests and local issues`() {
+        val paths =
+            listOf(
+                ".scratch/migration/spec.md",
+                ".scratch/migration/issues/11-active-references.md",
+                ".github/workflows/reference.yml",
+                "build/reference-probe.ps1",
+                "docs/reference-probe.md",
+                "tests/reference-probe.md",
+            )
+        paths.forEach { path -> write(path, "Run `.\\mvnw.cmd -B verify` here.\n") }
+
+        val result = runAndFail("verifyActiveReferences")
+
+        paths.forEach { path -> assertTrue(result.output.contains("$path:1"), result.output) }
+    }
+
+    /** Verifies alternate automation entry points and production build logic cannot bypass the scan. */
+    @Test
+    fun `scans shell batch actions project scripts and production build logic`() {
+        val paths =
+            listOf(
+                ".github/actions/reference/action.yml",
+                "build/reference-probe.sh",
+                "build/reference-probe.cmd",
+                "build/reference-probe.bat",
+                "build-logic/src/main/kotlin/example/ReferenceProbe.kt",
+                "jbsa/build.gradle.kts",
+                "jbsa-benchmarks/README.md",
+                ".github/pull_request_template.md",
+            )
+        paths.forEach { path ->
+            val prefix = if (path.endsWith(".kt") || path.endsWith(".kts")) "// " else ""
+            write(path, "${prefix}Run mvn.cmd verify here.\n")
+        }
+
+        val result = runAndFail("verifyActiveReferences")
+
+        paths.forEach { path -> assertTrue(result.output.contains("$path:1"), result.output) }
+    }
+
+    /** Verifies accurate ecosystem terminology is not mistaken for an active build instruction. */
+    @Test
+    fun `preserves consumer POM requirements and the Maven Central proper name`() {
+        write(
+            "docs/dependency-metadata.md",
+            "The consumer POM retains accurate dependencies resolved from Maven Central.\n",
+        )
+
+        run("verifyActiveReferences")
+    }
+
     /** Verifies complete verification orders canonical inputs, pre-audit, staging, and post-audit. */
     @Test
     fun `complete verification orders the release staging lifecycle`() {
@@ -330,6 +453,7 @@ class FoundationPluginFunctionalTest {
         assertTaskPrecedes(taskPaths, ":verifyCompliance", ":jbsa-dist:stageReleaseInputs")
         assertTaskPrecedes(taskPaths, ":jbsa-dist:stageReleaseInputs", ":jbsa-dist:verifyStagedReleaseInputs")
         assertTaskPrecedes(taskPaths, ":jbsa-dist:verifyStagedReleaseInputs", ":verify")
+        assertTaskPrecedes(taskPaths, ":verifyActiveReferences", ":verify")
     }
 
     /** Verifies ordinary Gradle lifecycles do not silently expand into full release qualification. */
@@ -681,6 +805,28 @@ class FoundationPluginFunctionalTest {
             .filter { it.startsWith(":") && it.endsWith(" SKIPPED") }
             .map { it.substringBefore(' ') }
             .toList()
+
+    /** Writes one exact reviewed scanner exception for an isolated functional-test fixture. */
+    private fun writeSingleReferenceAllowlist(
+        path: String,
+        line: String,
+        category: String,
+        rationale: String,
+        expiresWhenClosed: String? = null,
+    ) {
+        val expiration = expiresWhenClosed?.let { "entry.0.expiresWhenClosed=$it\n" } ?: ""
+        write(
+            "build/active-maven-reference-allowlist.properties",
+            """
+            allowlistVersion=1
+            entryCount=1
+            entry.0.path=$path
+            entry.0.lineSha256=${sha256(line.toByteArray())}
+            entry.0.category=$category
+            entry.0.rationale=$rationale
+            """.trimIndent() + "\n" + expiration,
+        )
+    }
 
     /** Rebinds the real staging task to an owned process fixture while preserving its declared property model. */
     private fun configureStageProbe(scriptBody: String) {

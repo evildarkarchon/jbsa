@@ -35,14 +35,20 @@ does not bypass the gate, and changing any native byte requires a new inventory 
 
 ## Reproducing artifact hashes
 
-Resolve the exact coordinate from Maven Central without transitives, then hash the downloaded JAR:
+Declare the exact candidate in the Gradle version catalog and applicable production configuration
+as an isolated review change. After updating the lock and dependency-verification metadata from the
+checksum-reviewed Maven Central bytes, resolve the production model and emit its independently
+calculated SHA-256:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C org.apache.maven.plugins:maven-dependency-plugin:3.9.0:get `
-  '-Dartifact=<group>:<artifact>:<version>[:jar:<classifier>]' `
-  -Dtransitive=false
-Get-FileHash -Algorithm SHA256 -LiteralPath <resolved-jar>
+.\gradlew.bat generateResolvedProductionDependencies --no-daemon
+Get-Content -Raw target/compliance/resolved-production-dependencies.json
 ```
+
+The manifest records requested and selected coordinates, classifier, selected variant, filename,
+and the SHA-256 computed from the exact Gradle-resolved bytes. Review the relevant record against
+the candidate and copy that digest into the licensing inventory; do not approve an unrelated
+transitive selected in the same graph.
 
 For native entries, open the JAR as a ZIP and hash the uncompressed entry stream. Do not copy a
 checksum from mutable prose or infer a payload’s license from Maven metadata alone; compare the
@@ -63,7 +69,7 @@ exists, and every digest matches. It recursively opens JAR/ZIP inputs through a 
 size, rejects unsafe or duplicate entry names, and applies the proprietary/native checks to nested
 bytes before general manifest accounting. The generated SBOM is reconciled in both directions so
 an uninventoried transitive runtime component fails even when every direct dependency is approved.
-The final `jbsa-dist` verification stages current reactor outputs and compliance evidence, then
+The final `jbsa-dist` verification stages current multi-project outputs and compliance evidence, then
 requires `jbsa-dist/target/release-inputs` and `jbsa-dist/target/release-inputs.json` explicitly.
 Missing assembly inputs fail rather than skipping this audit. Standalone callers supply both
 paths explicitly for any staging location; the root repository audit does not consume stale

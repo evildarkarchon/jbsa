@@ -1,6 +1,6 @@
-schema_version: 1
+schema_version: 2
 specification:
-  version: 0.14.0
+  version: 0.16.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -13,7 +13,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 44
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
     test_evidence: []
   - id: JBSA-BSA-002
     owner:
@@ -23,7 +24,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-BSA-003
     owner:
@@ -34,7 +36,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-BSA-004
     owner:
@@ -44,7 +47,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 44
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
     test_evidence: []
   - id: JBSA-BSA-005
     owner:
@@ -59,7 +63,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-BSA-006
     owner:
@@ -71,7 +76,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-BSA-007
     owner:
@@ -84,7 +90,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-BSA-008
     owner:
@@ -94,7 +101,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-BSA-009
     owner:
@@ -105,7 +113,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-BSA-010
     owner:
@@ -116,7 +125,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 44
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
     test_evidence: []
   - id: JBSA-BSA-011
     owner:
@@ -126,7 +136,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 42
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/42-implement-bsa-for-fallout-3-new-vegas-and-skyrim-le.md
     test_evidence: []
   - id: JBSA-BSA-012
     owner:
@@ -136,7 +147,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-BSA-013
     owner:
@@ -149,7 +161,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 44
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
     test_evidence: []
   - id: JBSA-BSA-014
     owner:
@@ -164,7 +177,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 44
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
     test_evidence: []
   - id: JBSA-BSA-015
     owner:
@@ -176,7 +190,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 44
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
     test_evidence: []
   - id: JBSA-BUILD-001
     owner:
@@ -186,9 +201,13 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+      - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#reactorContainsExactlyTheSpecifiedProjectsAtOneVersion"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/GradleFoundationFilesTest.kt#pins and classifies both Gradle wrapper launchers"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/FoundationPluginFunctionalTest.kt#reports the default identity and all six roles"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectBuildPublishesTheDeclaredArtifactLayout"
   - id: JBSA-BUILD-002
     owner:
       document: docs/spec/modules-and-build.md
@@ -197,9 +216,13 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+      - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#reactorContainsExactlyTheSpecifiedProjectsAtOneVersion"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/FoundationPluginFunctionalTest.kt#reports the default identity and all six roles"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/FoundationPluginFunctionalTest.kt#applies an explicit version override to every project"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/FoundationPluginFunctionalTest.kt#rejects inconsistent project identity"
   - id: JBSA-BUILD-003
     owner:
       document: docs/spec/modules-and-build.md
@@ -209,9 +232,13 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+      - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#productionPomsKeepBuildSupportOutsideTheProductGraph"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#permits publication only for the library and configures no remote action"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#rejects build-only publication configuration"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsExposeOnlyTheSpecifiedModules"
   - id: JBSA-BUILD-004
     owner:
       document: docs/spec/modules-and-build.md
@@ -220,7 +247,9 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+      - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsExposeOnlyTheSpecifiedModules"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsRemainUsableOnTheClassPath"
@@ -233,9 +262,11 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+      - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#productionPomsKeepBuildSupportOutsideTheProductGraph"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectResolutionRetainsEachProductionConsumer"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsExposeOnlyTheSpecifiedModules"
   - id: JBSA-BUILD-006
     owner:
@@ -245,7 +276,9 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+      - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#exportedLibrarySignaturesContainNoThirdPartyOrInternalTypes"
   - id: JBSA-BUILD-007
@@ -256,10 +289,13 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+      - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#flattenedLibraryPomIsSelfContainedAndComplete"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#libraryArtifactsAreJava25AndReproduciblyTimestamped"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#generates the exact parent-free consumer pom"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#builds the compatible public artifact set"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectBuildPublishesTheDeclaredArtifactLayout"
   - id: JBSA-BUILD-008
     owner:
       document: docs/spec/modules-and-build.md
@@ -269,7 +305,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-BUILD-009
     owner:
@@ -279,7 +316,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 60
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/60-publish-the-first-public-jbsa-github-release.md
     test_evidence: []
   - id: JBSA-BUILD-010
     owner:
@@ -290,7 +328,9 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+      - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
       - ".github/workflows/build.yml"
       - "build/run-ci-gate.ps1"
@@ -306,7 +346,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-002
     owner:
@@ -317,7 +358,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-003
     owner:
@@ -328,7 +370,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-004
     owner:
@@ -340,7 +383,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-005
     owner:
@@ -351,7 +395,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-006
     owner:
@@ -364,7 +409,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-007
     owner:
@@ -380,7 +426,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-008
     owner:
@@ -390,7 +437,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-009
     owner:
@@ -402,7 +450,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-010
     owner:
@@ -412,7 +461,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-011
     owner:
@@ -423,7 +473,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-012
     owner:
@@ -433,7 +484,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-013
     owner:
@@ -443,7 +495,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-014
     owner:
@@ -453,7 +506,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-CLI-015
     owner:
@@ -463,7 +517,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-CODEC-001
     owner:
@@ -473,7 +528,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-CODEC-002
     owner:
@@ -483,7 +539,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-CODEC-003
     owner:
@@ -493,7 +550,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-CODEC-004
     owner:
@@ -503,7 +561,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-CODEC-005
     owner:
@@ -513,7 +572,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-CODEC-006
     owner:
@@ -523,7 +583,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 38
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-CODEC-007
     owner:
@@ -533,7 +594,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 52
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md
     test_evidence: []
   - id: JBSA-CODEC-008
     owner:
@@ -544,7 +606,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 43
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
     test_evidence: []
   - id: JBSA-CODEC-009
     owner:
@@ -554,7 +617,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 43
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
     test_evidence: []
   - id: JBSA-CODEC-010
     owner:
@@ -565,7 +629,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 43
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
     test_evidence: []
   - id: JBSA-CODEC-011
     owner:
@@ -575,7 +640,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 43
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
     test_evidence: []
   - id: JBSA-CODEC-012
     owner:
@@ -586,7 +652,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 43
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
     test_evidence: []
   - id: JBSA-CODEC-013
     owner:
@@ -596,7 +663,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 52
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md
     test_evidence: []
   - id: JBSA-COMPAT-001
     owner:
@@ -607,7 +675,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-COMPAT-002
     owner:
@@ -620,7 +689,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 54
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/54-complete-release-provenance-notices-and-operator-documentation.md
     test_evidence: []
   - id: JBSA-COMPAT-003
     owner:
@@ -632,7 +702,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179510
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-COMPAT-004
     owner:
@@ -642,7 +713,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-COMPAT-005
     owner:
@@ -653,7 +725,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-COMPAT-006
     owner:
@@ -664,7 +737,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-COMPAT-007
     owner:
@@ -675,7 +749,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-001
     owner:
@@ -687,7 +762,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 31
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
     test_evidence: []
   - id: JBSA-CONF-002
     owner:
@@ -698,7 +774,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/27
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 31
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
     test_evidence: []
   - id: JBSA-CONF-003
     owner:
@@ -709,7 +786,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: document-review
-    implementing_issue: 31
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
     test_evidence: []
   - id: JBSA-CONF-004
     owner:
@@ -720,7 +798,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-005
     owner:
@@ -730,7 +809,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 31
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
     test_evidence: []
   - id: JBSA-CONF-006
     owner:
@@ -741,7 +821,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 31
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
     test_evidence: []
   - id: JBSA-CONF-007
     owner:
@@ -752,7 +833,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 31
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
     test_evidence: []
   - id: JBSA-CONF-008
     owner:
@@ -764,7 +846,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-009
     owner:
@@ -791,7 +874,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-010
     owner:
@@ -803,7 +887,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-011
     owner:
@@ -814,7 +899,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-012
     owner:
@@ -830,7 +916,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-013
     owner:
@@ -840,7 +927,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-014
     owner:
@@ -850,7 +938,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-015
     owner:
@@ -861,7 +950,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/27
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 56
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/56-qualify-binary-conformance-cases-on-a-second-windows-x64-cpu.md
     test_evidence: []
   - id: JBSA-CONF-016
     owner:
@@ -872,7 +962,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-017
     owner:
@@ -883,7 +974,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/27
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 31
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
     test_evidence: []
   - id: JBSA-CONF-018
     owner:
@@ -894,7 +986,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-CONF-019
     owner:
@@ -905,7 +998,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 58
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md
     test_evidence: []
   - id: JBSA-DDS-001
     owner:
@@ -916,7 +1010,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-002
     owner:
@@ -930,7 +1025,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-003
     owner:
@@ -941,7 +1037,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-004
     owner:
@@ -952,7 +1049,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-005
     owner:
@@ -962,7 +1060,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-006
     owner:
@@ -972,7 +1071,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-007
     owner:
@@ -984,10 +1084,11 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: retired
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
     retirement:
-      issue: 24
+      ticket: .scratch/jbsa-1-0/issues/24-publish-the-specification-framework-and-requirement-registry.md
       reason: Replaced by JBSA-DDS-013 because the original mip-size shortcut excluded mandatory small and odd-dimension BC encode cases.
   - id: JBSA-DDS-008
     owner:
@@ -998,7 +1099,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-009
     owner:
@@ -1009,7 +1111,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-010
     owner:
@@ -1021,7 +1124,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-011
     owner:
@@ -1032,7 +1136,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-012
     owner:
@@ -1043,7 +1148,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DDS-013
     owner:
@@ -1055,7 +1161,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DET-001
     owner:
@@ -1065,7 +1172,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-DET-002
     owner:
@@ -1076,7 +1184,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-DET-003
     owner:
@@ -1086,7 +1195,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 23
+    implementation_tickets:
+      - .scratch/jbsa-1-0/map.md
     test_evidence: []
   - id: JBSA-DET-004
     owner:
@@ -1097,7 +1207,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 23
+    implementation_tickets:
+      - .scratch/jbsa-1-0/map.md
     test_evidence: []
   - id: JBSA-DET-005
     owner:
@@ -1108,7 +1219,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-DET-006
     owner:
@@ -1121,7 +1233,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 23
+    implementation_tickets:
+      - .scratch/jbsa-1-0/map.md
     test_evidence: []
   - id: JBSA-DIST-001
     owner:
@@ -1132,7 +1245,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-002
     owner:
@@ -1143,7 +1257,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-003
     owner:
@@ -1154,7 +1269,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-004
     owner:
@@ -1165,7 +1281,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-005
     owner:
@@ -1176,7 +1293,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-006
     owner:
@@ -1187,7 +1305,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-007
     owner:
@@ -1198,7 +1317,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-008
     owner:
@@ -1210,7 +1330,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-009
     owner:
@@ -1221,7 +1342,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-010
     owner:
@@ -1232,7 +1354,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-011
     owner:
@@ -1244,7 +1367,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-012
     owner:
@@ -1256,7 +1380,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-013
     owner:
@@ -1269,7 +1394,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/57
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 57
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/57-audit-release-bytes-licenses-notices-sbom-and-provenance.md
     test_evidence: []
   - id: JBSA-DIST-014
     owner:
@@ -1280,7 +1406,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-DIST-015
     owner:
@@ -1291,7 +1418,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/57
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 57
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/57-audit-release-bytes-licenses-notices-sbom-and-provenance.md
     test_evidence: []
   - id: JBSA-DX10-001
     owner:
@@ -1304,7 +1432,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 47
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence: []
   - id: JBSA-DX10-002
     owner:
@@ -1314,7 +1443,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DX10-003
     owner:
@@ -1324,7 +1454,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DX10-004
     owner:
@@ -1335,7 +1466,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 46
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DX10-005
     owner:
@@ -1345,7 +1477,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DX10-006
     owner:
@@ -1357,7 +1490,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-DX10-007
     owner:
@@ -1371,7 +1505,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 47
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence: []
   - id: JBSA-DX10-008
     owner:
@@ -1382,7 +1517,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 40
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-001
     owner:
@@ -1392,7 +1528,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-002
     owner:
@@ -1404,7 +1541,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 47
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence: []
   - id: JBSA-GNRL-003
     owner:
@@ -1415,7 +1553,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 45
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/45-implement-starfield-general-ba2.md
     test_evidence: []
   - id: JBSA-GNRL-004
     owner:
@@ -1425,7 +1564,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-005
     owner:
@@ -1436,7 +1576,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 45
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/45-implement-starfield-general-ba2.md
     test_evidence: []
   - id: JBSA-GNRL-006
     owner:
@@ -1446,7 +1587,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-007
     owner:
@@ -1459,7 +1601,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-008
     owner:
@@ -1475,7 +1618,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-009
     owner:
@@ -1487,7 +1631,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-010
     owner:
@@ -1500,7 +1645,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-011
     owner:
@@ -1512,7 +1658,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-012
     owner:
@@ -1523,7 +1670,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-GNRL-013
     owner:
@@ -1536,7 +1684,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 39
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
     test_evidence: []
   - id: JBSA-IO-001
     owner:
@@ -1546,7 +1695,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 34
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
     test_evidence: []
   - id: JBSA-IO-002
     owner:
@@ -1556,7 +1706,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 34
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
     test_evidence: []
   - id: JBSA-IO-003
     owner:
@@ -1566,7 +1717,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 34
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
     test_evidence: []
   - id: JBSA-IO-004
     owner:
@@ -1576,7 +1728,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 34
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
     test_evidence: []
   - id: JBSA-IO-005
     owner:
@@ -1587,7 +1740,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 34
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
     test_evidence: []
   - id: JBSA-IO-006
     owner:
@@ -1598,7 +1752,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 34
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
     test_evidence: []
   - id: JBSA-IO-007
     owner:
@@ -1608,7 +1763,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-IO-008
     owner:
@@ -1621,7 +1777,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-IO-009
     owner:
@@ -1635,7 +1792,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-IO-010
     owner:
@@ -1646,7 +1804,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-IO-011
     owner:
@@ -1657,7 +1816,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-IO-012
     owner:
@@ -1668,7 +1828,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-IO-013
     owner:
@@ -1679,7 +1840,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-IO-014
     owner:
@@ -1690,7 +1852,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-IO-015
     owner:
@@ -1700,7 +1863,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-LIB-001
     owner:
@@ -1713,7 +1877,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-LIB-002
     owner:
@@ -1724,7 +1889,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence:
       - docs/development/interface-candidate.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicMetadataContractIT.java
@@ -1738,7 +1904,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 34
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
     test_evidence: []
   - id: JBSA-LIB-004
     owner:
@@ -1750,7 +1917,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 34
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
     test_evidence: []
   - id: JBSA-LIB-005
     owner:
@@ -1761,7 +1929,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/12#issuecomment-5520294067
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence:
       - docs/development/interface-candidate.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicArchiveContractIT.java
@@ -1776,7 +1945,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-LIB-007
     owner:
@@ -1790,7 +1960,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-LIB-008
     owner:
@@ -1806,7 +1977,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-LIB-009
     owner:
@@ -1820,7 +1992,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-LIB-010
     owner:
@@ -1832,7 +2005,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-LIB-011
     owner:
@@ -1845,7 +2019,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence:
       - docs/development/interface-candidate.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java
@@ -1862,7 +2037,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-LIC-001
     owner:
@@ -1872,7 +2048,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-002
@@ -1884,7 +2061,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-003
@@ -1895,7 +2073,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-004
@@ -1906,7 +2085,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 30
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/30-create-the-committed-synthetic-fixture-corpus.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#generatorReproducesCommittedFixtureObjects"
@@ -1919,7 +2099,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 30
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/30-create-the-committed-synthetic-fixture-corpus.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#localCorpusIsDiscoverableAndExcludedFromVersionControl"
@@ -1933,7 +2114,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 30
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/30-create-the-committed-synthetic-fixture-corpus.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#fixtureAuditRejectsGoldenDriftWithoutChangingCommittedObjects"
@@ -1947,7 +2129,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
   - id: JBSA-LIC-008
@@ -1959,7 +2142,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnapprovedNativePayloads"
@@ -1974,7 +2158,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 57
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/57-audit-release-bytes-licenses-notices-sbom-and-provenance.md
     test_evidence: []
   - id: JBSA-LIC-010
     owner:
@@ -1984,7 +2169,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-011
@@ -1997,7 +2183,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/62
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#buildGeneratesSbomAndThirdPartyNotices"
@@ -2017,7 +2204,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-013
@@ -2028,7 +2216,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-014
@@ -2039,10 +2228,11 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#flattenedLibraryPomIsSelfContainedAndComplete"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#generates the exact parent-free consumer pom"
   - id: JBSA-LIC-015
     owner:
       document: docs/spec/compliance.md
@@ -2051,7 +2241,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
   - id: JBSA-LIC-016
@@ -2063,10 +2254,11 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/62
     lifecycle_state: retired
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence: []
     retirement:
-      issue: 62
+      ticket: .scratch/retire-external-contributor-verification/issues/01-retire-external-contributor-verification-gate.md
       reason: DCO sign-off is no longer required, so a maintainer-specific exemption is unnecessary.
   - id: JBSA-LIC-017
     owner:
@@ -2077,10 +2269,11 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/62
     lifecycle_state: retired
     verification_class: release-audit
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence: []
     retirement:
-      issue: 62
+      ticket: .scratch/retire-external-contributor-verification/issues/01-retire-external-contributor-verification-gate.md
       reason: External pull requests are now assessed directly without an automated DCO or declaration gate.
   - id: JBSA-OPS-001
     owner:
@@ -2090,7 +2283,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-002
     owner:
@@ -2100,7 +2294,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-003
     owner:
@@ -2114,7 +2309,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-004
     owner:
@@ -2127,7 +2323,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-005
     owner:
@@ -2138,7 +2335,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-006
     owner:
@@ -2150,7 +2348,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-007
     owner:
@@ -2161,7 +2360,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-008
     owner:
@@ -2173,7 +2373,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-009
     owner:
@@ -2184,7 +2385,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-010
     owner:
@@ -2195,7 +2397,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 36
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
     test_evidence: []
   - id: JBSA-OPS-011
     owner:
@@ -2206,7 +2409,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 35
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
     test_evidence: []
   - id: JBSA-PERF-001
     owner:
@@ -2217,7 +2421,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/27
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-002
     owner:
@@ -2228,7 +2433,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/27
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-003
     owner:
@@ -2240,7 +2446,8 @@ requirements:
       - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md#accepted-sequencing-and-completion
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence:
       - docs/reviews/issue43-lz4-runtime/targeted-qualification.md
       - docs/reviews/issue43-lz4-runtime/performance-impact.json
@@ -2253,7 +2460,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-PERF-005
     owner:
@@ -2263,7 +2471,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-006
     owner:
@@ -2274,7 +2483,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-007
     owner:
@@ -2284,7 +2494,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-008
     owner:
@@ -2295,7 +2506,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/27
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-009
     owner:
@@ -2305,7 +2517,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-010
     owner:
@@ -2315,7 +2528,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-011
     owner:
@@ -2325,7 +2539,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-012
     owner:
@@ -2335,7 +2550,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-013
     owner:
@@ -2347,7 +2563,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 32
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
     test_evidence: []
   - id: JBSA-PERF-014
     owner:
@@ -2357,7 +2574,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-PERF-015
     owner:
@@ -2369,7 +2587,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-PERF-016
     owner:
@@ -2379,7 +2598,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-PERF-017
     owner:
@@ -2389,7 +2609,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-PERF-018
     owner:
@@ -2399,7 +2620,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-PERF-019
     owner:
@@ -2409,7 +2631,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-PERF-020
     owner:
@@ -2420,7 +2643,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 52
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md
     test_evidence: []
   - id: JBSA-PERF-021
     owner:
@@ -2431,7 +2655,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-PERF-022
     owner:
@@ -2442,7 +2667,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-REL-001
     owner:
@@ -2455,7 +2681,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5525693059
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 59
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/59-approve-the-jbsa-1-0-specification-and-release-gate.md
     test_evidence: []
   - id: JBSA-REL-002
     owner:
@@ -2466,7 +2693,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/27
     lifecycle_state: active
     verification_class: document-review
-    implementing_issue: 27
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/27-materialize-the-cli-and-qualification-specifications.md
     test_evidence: []
   - id: JBSA-REL-003
     owner:
@@ -2476,7 +2704,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 33
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence: []
   - id: JBSA-REL-004
     owner:
@@ -2487,7 +2716,8 @@ requirements:
       - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#acceptance
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 41
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md
     test_evidence:
       - docs/development/interface-candidate.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicModuleConsumerIT.java
@@ -2501,7 +2731,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/50
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 50
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
     test_evidence: []
   - id: JBSA-REL-006
     owner:
@@ -2512,7 +2743,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/51
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 51
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/51-freeze-the-jbsa-1-0-public-archive-interface.md
     test_evidence: []
   - id: JBSA-REL-007
     owner:
@@ -2523,7 +2755,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/51
     lifecycle_state: active
     verification_class: document-review
-    implementing_issue: 51
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/51-freeze-the-jbsa-1-0-public-archive-interface.md
     test_evidence: []
   - id: JBSA-REL-008
     owner:
@@ -2534,7 +2767,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/52
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 52
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md
     test_evidence: []
   - id: JBSA-REL-009
     owner:
@@ -2545,7 +2779,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/53
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 53
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md
     test_evidence: []
   - id: JBSA-REL-010
     owner:
@@ -2556,7 +2791,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/54
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 54
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/54-complete-release-provenance-notices-and-operator-documentation.md
     test_evidence: []
   - id: JBSA-REL-011
     owner:
@@ -2567,7 +2803,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/55
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 55
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
     test_evidence: []
   - id: JBSA-REL-012
     owner:
@@ -2578,7 +2815,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/56
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 56
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/56-qualify-binary-conformance-cases-on-a-second-windows-x64-cpu.md
     test_evidence: []
   - id: JBSA-REL-013
     owner:
@@ -2589,7 +2827,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/57
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 57
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/57-audit-release-bytes-licenses-notices-sbom-and-provenance.md
     test_evidence: []
   - id: JBSA-REL-014
     owner:
@@ -2600,7 +2839,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/58
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 58
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md
     test_evidence: []
   - id: JBSA-REL-015
     owner:
@@ -2610,7 +2850,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 59
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/59-approve-the-jbsa-1-0-specification-and-release-gate.md
     test_evidence: []
   - id: JBSA-REL-016
     owner:
@@ -2621,7 +2862,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/59
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 59
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/59-approve-the-jbsa-1-0-specification-and-release-gate.md
     test_evidence: []
   - id: JBSA-REL-017
     owner:
@@ -2632,7 +2874,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/60
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 60
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/60-publish-the-first-public-jbsa-github-release.md
     test_evidence: []
   - id: JBSA-REL-018
     owner:
@@ -2642,7 +2885,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/60
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 60
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/60-publish-the-first-public-jbsa-github-release.md
     test_evidence: []
   - id: JBSA-REL-019
     owner:
@@ -2655,7 +2899,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/60
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 59
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/59-approve-the-jbsa-1-0-specification-and-release-gate.md
     test_evidence: []
   - id: JBSA-REL-020
     owner:
@@ -2668,7 +2913,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/59
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 59
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/59-approve-the-jbsa-1-0-specification-and-release-gate.md
     test_evidence: []
   - id: JBSA-SCHED-001
     owner:
@@ -2678,7 +2924,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-002
     owner:
@@ -2688,7 +2935,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-003
     owner:
@@ -2699,7 +2947,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-004
     owner:
@@ -2709,7 +2958,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-005
     owner:
@@ -2719,7 +2969,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-006
     owner:
@@ -2730,7 +2981,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-007
     owner:
@@ -2740,7 +2992,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-008
     owner:
@@ -2750,7 +3003,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-009
     owner:
@@ -2761,7 +3015,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-010
     owner:
@@ -2772,7 +3027,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-011
     owner:
@@ -2782,7 +3038,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-012
     owner:
@@ -2793,7 +3050,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: automated-test
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCHED-013
     owner:
@@ -2803,7 +3061,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
     lifecycle_state: active
     verification_class: performance-case
-    implementing_issue: 48
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md
     test_evidence: []
   - id: JBSA-SCOPE-001
     owner:
@@ -2813,9 +3072,11 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
     test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BuildPolicyIT.java#libraryArtifactsAreJava25AndReproduciblyTimestamped"
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#builds the compatible public artifact set"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectBuildPublishesTheDeclaredArtifactLayout"
   - id: JBSA-SCOPE-002
     owner:
       document: docs/spec/scope.md
@@ -2824,7 +3085,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 23
+    implementation_tickets:
+      - .scratch/jbsa-1-0/map.md
     test_evidence: []
   - id: JBSA-SCOPE-003
     owner:
@@ -2834,7 +3096,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 49
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
     test_evidence: []
   - id: JBSA-SCOPE-004
     owner:
@@ -2845,7 +3108,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
     lifecycle_state: active
     verification_class: document-review
-    implementing_issue: 29
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence: []
   - id: JBSA-SCOPE-005
     owner:
@@ -2855,7 +3119,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 31
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
     test_evidence: []
   - id: JBSA-SCOPE-006
     owner:
@@ -2865,7 +3130,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: release-qualification
-    implementing_issue: 58
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md
     test_evidence: []
   - id: JBSA-SCOPE-007
     owner:
@@ -2875,7 +3141,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: build-verification
-    implementing_issue: 28
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
     test_evidence:
       - ".github/workflows/build.yml"
   - id: JBSA-SCOPE-008
@@ -2886,7 +3153,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
     lifecycle_state: active
     verification_class: release-audit
-    implementing_issue: 60
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/60-publish-the-first-public-jbsa-github-release.md
     test_evidence: []
   - id: JBSA-SCOPE-009
     owner:
@@ -2896,7 +3164,8 @@ requirements:
       - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#post-10-xbox-dds-deferral
     lifecycle_state: active
     verification_class: document-review
-    implementing_issue: 41
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md
     test_evidence:
       - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#post-10-xbox-dds-deferral
   - id: JBSA-TES3-001
@@ -2908,7 +3177,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 37
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/37-implement-the-tes3-morrowind-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-TES3-002
     owner:
@@ -2918,7 +3188,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 37
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/37-implement-the-tes3-morrowind-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-TES3-003
     owner:
@@ -2931,7 +3202,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 37
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/37-implement-the-tes3-morrowind-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-TES3-004
     owner:
@@ -2948,7 +3220,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 37
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/37-implement-the-tes3-morrowind-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-TES3-005
     owner:
@@ -2960,7 +3233,8 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 37
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/37-implement-the-tes3-morrowind-bsa-vertical-slice.md
     test_evidence: []
   - id: JBSA-TES3-006
     owner:
@@ -2972,5 +3246,6 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179533
     lifecycle_state: active
     verification_class: conformance-case
-    implementing_issue: 37
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/37-implement-the-tes3-morrowind-bsa-vertical-slice.md
     test_evidence: []

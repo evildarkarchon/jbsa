@@ -422,6 +422,54 @@ class JbsaFoundationPlugin : Plugin<Project> {
                     BenchmarkIsolationPolicy.verify(project)
                 }
             }
+        val verifyActiveReferences =
+            project.tasks.register("verifyActiveReferences", VerifyActiveReferences::class.java) {
+                group = LifecycleBasePlugin.VERIFICATION_GROUP
+                description = "Rejects stale legacy build instructions from active repository surfaces."
+                repositoryRoot.set(project.layout.projectDirectory)
+                allowlistFile.set(
+                    project.layout.projectDirectory.file("build/active-maven-reference-allowlist.properties")
+                )
+                activeFiles.from(
+                    project.fileTree(project.rootDir) {
+                        include("**/*.md")
+                        include("CONTRIBUTING.md")
+                        include("README.md", "compliance/**/*.md")
+                        include("docs/**/*.md", "docs/**/*.yaml", "docs/**/*.yml")
+                        include(".github/workflows/**/*.yaml", ".github/workflows/**/*.yml")
+                        include(
+                            ".github/actions/**/*.yaml",
+                            ".github/actions/**/*.yml",
+                            ".github/actions/**/*.ps1",
+                            ".github/actions/**/*.sh",
+                            ".github/actions/**/*.js",
+                            ".github/actions/**/*.ts",
+                        )
+                        include(
+                            "build/**/*.ps1",
+                            "build/**/*.py",
+                            "build/**/*.cs",
+                            "build/**/*.json",
+                            "build/**/*.sh",
+                            "build/**/*.cmd",
+                            "build/**/*.bat",
+                            "build/**/*.kts",
+                            "build/**/*.gradle",
+                            "build/**/*.md",
+                            "build/**/*.yaml",
+                            "build/**/*.yml",
+                        )
+                        include("tests/**/*.md", "tests/**/*.yaml", "tests/**/*.yml", "tests/**/*.json")
+                        include("tests/**/*.java", "tests/**/*.kt", "tests/**/*.kts", "tests/**/*.ps1", "tests/**/*.py")
+                        include(".scratch/*/spec.md", ".scratch/*/issues/*.md")
+                        include("**/*.gradle.kts", "**/*.gradle")
+                        include("build-logic/src/main/**/*.kt", "build-logic/src/main/**/*.java")
+                        include("build-logic/src/test/**/*.kt", "build-logic/src/test/**/*.java")
+                        include("jbsa*/src/test/**/*.java", "jbsa*/src/test/**/*.kt")
+                        exclude("**/target/**", "TES5Edit/**", "graphify-out/**")
+                    }
+                )
+            }
         project.tasks.register("verify") {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
             description = "Builds, audits, stages, and post-audits the complete canonical release inputs."
@@ -432,6 +480,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 verifyCompliance,
                 verifyFoundation,
                 verifyPublicationPolicy,
+                verifyActiveReferences,
                 project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named("check"),
                 project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named(
                     JbsaPublicLibraryIdentity.ASSEMBLE_PUBLICATION_TASK

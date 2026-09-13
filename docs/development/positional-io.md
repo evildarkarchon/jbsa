@@ -69,13 +69,13 @@ not establish publication or durability guarantees.
 
 ## Verification
 
-Run the focused substrate checks with Java 25 on Windows:
+Run the focused substrate checks with an installed Java 25 JDK on Windows:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C -pl jbsa -am test
+.\gradlew.bat :jbsa:test
 ```
 
-The final gate is the complete reactor `clean verify`, including packaged public
+The final gate is the complete `.\gradlew.bat clean verify`, including packaged public
 consumer, architecture, compliance, and existing harness checks. The I/O tests
 use project-authored byte sequences and temporary sparse files; no local game
 assets or Reference Snapshot writes are involved.

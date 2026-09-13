@@ -1,8 +1,8 @@
 # Distribution
 
 This specification owns assembly and verification of the Windows x64 release
-image. The product boundary, reactor, released library inputs, and public
-release channel remain owned by [JBSA-SCOPE-001](scope.md#jbsa-scope-001),
+image. The product boundary, multi-project build, released library inputs, and
+public release channel remain owned by [JBSA-SCOPE-001](scope.md#jbsa-scope-001),
 [JBSA-BUILD-007](modules-and-build.md#jbsa-build-007),
 [JBSA-BUILD-008](modules-and-build.md#jbsa-build-008), and
 [JBSA-BUILD-009](modules-and-build.md#jbsa-build-009). CLI behavior remains
@@ -13,8 +13,8 @@ redistribution authorization remains owned by [Compliance](compliance.md).
 
 Every release-candidate assembly **MUST** use one recorded packaging-input
 identity containing the candidate version and Git commit; Windows and x64
-identity; the full JDK 25 vendor, version, and build; the Maven version; the
-codec-profile identifier and digest required by
+identity; the full JDK 25 vendor, version, and build; the Gradle version and
+wrapper identities; the codec-profile identifier and digest required by
 [JBSA-CODEC-006](codecs.md#jbsa-codec-006); and cryptographic digests for the JDK
 distribution, application modules, runtime dependencies, and native payloads.
 The assembly **MUST** fail before packaging when an input is missing, mutable,
@@ -24,9 +24,9 @@ _Source decisions: [accepted pinned packaging flow](https://github.com/evildarka
 
 ## JBSA-DIST-002
 
-The distribution assembly **MUST** consume the production JARs, flattened
+The distribution assembly **MUST** consume the production JARs, generated
 consumer POM, sources JAR, Javadoc JAR, runtime dependencies, and distribution
-inputs produced by one successful clean Maven reactor build of the exact
+inputs produced by one successful clean Gradle multi-project build of the exact
 candidate identity. It **MUST NOT** substitute an artifact from another build,
 local repository state, or an independently rebuilt module. The consumed
 library artifacts **MUST** first satisfy the output contract in
@@ -133,9 +133,9 @@ the exact linked runtime, every approved required Windows x64 native payload,
 and applicable license and notice texts. Its recursive inventory **MUST** map
 each file to a recorded build input, JDK component, generated launcher output,
 or compliance-approved document. It **MUST NOT** contain `jbsa.cmd`, a full
-development JDK, Maven, test or benchmark modules, fixtures, the Conformance
-Oracle, local game material, build caches, credentials, debug residue, or any
-other unaccounted byte.
+development JDK, a build tool, test or benchmark modules, fixtures, the
+Conformance Oracle, local game material, build caches, credentials, debug
+residue, or any other unaccounted byte.
 
 This requirement refines [JBSA-BUILD-008](modules-and-build.md#jbsa-build-008),
 [JBSA-LIC-005](compliance.md#jbsa-lic-005), and
@@ -219,13 +219,14 @@ _Source decisions: [accepted release-byte inspection](https://github.com/evildar
 ## JBSA-DIST-014
 
 A clean-machine smoke qualification **MUST** extract the final ZIP on Windows 11
-x64 with NTFS, with no installed JDK, Maven, build tree, local dependency cache,
-or developer native-library path available to the application. It **MUST** run
-help, version, archive information, list, dump, pack, and unpack; cover every
-runtime codec capability in the selected release profile; verify representative
-success, usage error, operational failure, and Cooperative Cancellation exits;
-and fail on a missing module, missing native payload, external Java dependency,
-unexpected child launcher, or lookup outside the extracted image.
+x64 with NTFS, with no installed JDK, build tool, build tree, local dependency
+cache, or developer native-library path available to the application. It
+**MUST** run help, version, archive information, list, dump, pack, and unpack;
+cover every runtime codec capability in the selected release profile; verify
+representative success, usage error, operational failure, and Cooperative
+Cancellation exits; and fail on a missing module, missing native payload,
+external Java dependency, unexpected child launcher, or lookup outside the
+extracted image.
 
 _Source decisions: [accepted packaged-image and clean-machine gates](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247), [clean-machine acceptance](https://github.com/evildarkarchon/jbsa/issues/53)._
 

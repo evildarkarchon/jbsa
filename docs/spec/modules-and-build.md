@@ -1,19 +1,20 @@
 # Modules and build
 
-This specification owns the Maven reactor, Java/JPMS seams, dependency exposure,
-and build outputs. The Java and operating-system qualification baseline is owned
-by [JBSA-SCOPE-001](scope.md#jbsa-scope-001). Detailed launcher behavior and
-release qualification are owned by the distribution and release-gate
-specifications.
+This specification owns the Gradle multi-project build, Java/JPMS seams,
+dependency exposure, and build outputs. The Java and operating-system
+qualification baseline is owned by
+[JBSA-SCOPE-001](scope.md#jbsa-scope-001). Detailed launcher behavior and release
+qualification are owned by the distribution and release-gate specifications.
 
 ## JBSA-BUILD-001
 
-The Maven build **MUST** use one single-version reactor with exactly the following
-baseline projects and roles:
+The source build **MUST** use Gradle 9.7.1 through the checked-in, checksum-pinned
+Gradle wrapper. Build and settings scripts **MUST** use Kotlin DSL. The build
+**MUST** be one single-version multi-project build with logical root identity
+`jbsa-parent` and exactly the following six subprojects and roles:
 
-| Reactor project | Packaging and role |
+| Gradle project | Packaging and role |
 | --- | --- |
-| `jbsa-parent` | Root `pom` aggregator and inherited build policy; build-only and not released. |
 | `jbsa` | The one deep archive-library JAR and the only supported Java library interface. |
 | `jbsa-cli` | Thin CLI consumer JAR containing argument parsing, presentation, process-exit handling, and launch code. |
 | `jbsa-test-support` | Build-only shared corpus, Conformance Oracle, fixture, and validator support; neither a product interface nor a release artifact. |
@@ -21,11 +22,17 @@ baseline projects and roles:
 | `jbsa-benchmarks` | Build-only benchmark suite. |
 | `jbsa-dist` | Build-only assembly project producing the Windows x64 distribution. |
 
+Substantial shared policy **MUST** live in Kotlin convention plugins in the
+included `build-logic` build; the logical root **MUST** remain build-only, use
+only trivial aggregation and cross-project task wiring, and **MUST NOT** be
+released. External dependency and build-plugin versions **MUST** be centralized
+and exactly pinned.
+
 _Source decision: [accepted reactor and artifact seams](https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669)._
 
 ## JBSA-BUILD-002
 
-All reactor projects **MUST** use one version and the group
+The root and all six subprojects **MUST** use one version and the group
 `io.github.evildarkarchon`. The production coordinates and JPMS module identities
 **MUST** be:
 
@@ -70,24 +77,25 @@ _Source decisions: [accepted consumer and test-support seams](https://github.com
 
 ## JBSA-BUILD-006
 
-Third-party types **MUST NOT** appear in exported library interfaces. Maven POMs
-**MUST** declare actual dependencies accurately, while JPMS descriptors
-**SHOULD** use ordinary non-transitive `requires` by default. `requires
-transitive` **MAY** be used only when a dependency is deliberately part of the
-public interface. Maven `optional` **MAY** be used only for a truly optional
+Third-party types **MUST NOT** appear in exported library interfaces. The
+generated consumer POM **MUST** declare actual dependencies accurately, while
+JPMS descriptors **SHOULD** use ordinary non-transitive `requires` by default.
+`requires transitive` **MAY** be used only when a dependency is deliberately part
+of the public interface. POM `optional` **MAY** be used only for a truly optional
 feature and **MUST NOT** conceal a required implementation dependency.
 
 _Source decision: [accepted dependency-exposure policy](https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669)._
 
 ## JBSA-BUILD-007
 
-Source child POMs **MUST** inherit build policy from `jbsa-parent`. Because that
-parent is not released, the release build **MUST** emit a flattened,
-self-contained consumer POM for `jbsa` with accurate dependency metadata. The
-released library inputs **MUST** include the `jbsa` binary JAR, flattened POM,
-sources JAR, and Javadoc JAR. Shared POM metadata **MUST** record the project
-name, a description crediting the pinned Reference Snapshot, project URL,
-Apache-2.0 license, developer, SCM, Java 25 release, and accurate dependencies.
+The `jbsa` Gradle project **MUST** be the only project with public publication
+capability. The build **MUST** emit a parent-free, self-contained consumer POM
+for `jbsa` with accurate dependency metadata and **MUST NOT** configure a remote
+publication action. The released library inputs **MUST** include the `jbsa`
+binary JAR, generated consumer POM, sources JAR, and Javadoc JAR. Consumer POM
+metadata **MUST** record the project name, a description crediting the pinned
+Reference Snapshot, project URL, Apache-2.0 license, developer, SCM, and accurate
+dependencies; production compilation **MUST** target Java 25.
 
 _Source decision: [accepted parent, flattened-POM, and library-artifact policy](https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5518106669)._
 
@@ -126,8 +134,9 @@ _Source decisions: [accepted hosted conformance boundary](https://github.com/evi
 
 ## Deferred build inputs
 
-The exact Maven plugin versions, audited dependency inventory entries, native
-payload identities, runtime-module set, `jpackage` configuration, and JDK 25
-vendor/build identity are intentionally not selected here. They remain inputs
-to their owning implementation and distribution requirements and cannot be
-inferred from the module layout.
+The exact centralized external build-plugin versions, audited dependency
+inventory entries, native payload identities, runtime-module set, `jpackage`
+configuration, and JDK 25 vendor/build identity are implementation inputs rather
+than values inferred from the module layout. Plugin-version changes **MUST** be
+isolated, manually reviewed, checksum-verified changes that rerun every affected
+qualification gate.

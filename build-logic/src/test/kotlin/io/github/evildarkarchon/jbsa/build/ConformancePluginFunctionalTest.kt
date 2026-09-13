@@ -109,6 +109,16 @@ class ConformancePluginFunctionalTest {
             .forEach { task -> assertTrue(result.task(":jbsa-conformance-tests:$task") != null, task) }
     }
 
+    /** Verifies explicit local-evidence opt-ins reach the forked JVM selected by a Gradle task. */
+    @Test
+    fun `forwards supported local evidence system properties`() {
+        writeTaggedTest("BsaFixtureIT", "bsa", expectedSystemProperty = "jbsa.bsa.local")
+
+        run("--write-locks", "-Djbsa.bsa.local=true", ":jbsa-conformance-tests:bsaConformanceTest")
+
+        assertEquals("BsaFixtureIT", Files.readString(projectDir.resolve("conformance-executions.txt")).trim())
+    }
+
     /** Keeps the conformance project out of install, publication, and product runtime graphs. */
     @Test
     fun `keeps conformance build only and outside production dependencies`() {
@@ -145,7 +155,12 @@ class ConformancePluginFunctionalTest {
     }
 
     /** Writes one JUnit integration class whose tag and optional process assertions are externally observable. */
-    private fun writeTaggedTest(className: String, tag: String, verifyEnvironment: Boolean = false) {
+    private fun writeTaggedTest(
+        className: String,
+        tag: String,
+        verifyEnvironment: Boolean = false,
+        expectedSystemProperty: String? = null,
+    ) {
         val environmentAssertions =
             if (verifyEnvironment) {
                 """
@@ -168,6 +183,10 @@ class ConformancePluginFunctionalTest {
             } else {
                 ""
             }
+        val systemPropertyAssertion =
+            expectedSystemProperty?.let { property ->
+                "org.junit.jupiter.api.Assertions.assertEquals(\"true\", System.getProperty(\"$property\"));"
+            } ?: ""
         write(
             "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/$className.java",
             """
@@ -182,6 +201,7 @@ class ConformancePluginFunctionalTest {
                 /** Records this tag-selected execution and validates the inherited process contract. */
                 @Test void recordsExecution() throws Exception {
                     $environmentAssertions
+                    $systemPropertyAssertion
                     Files.writeString(
                         Path.of(System.getProperty("jbsa.reactor.root"), "conformance-executions.txt"),
                         "$className\n", StandardOpenOption.CREATE, StandardOpenOption.APPEND);

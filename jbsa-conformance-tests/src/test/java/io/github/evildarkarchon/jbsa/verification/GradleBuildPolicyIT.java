@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.verification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -71,6 +72,66 @@ final class GradleBuildPolicyIT {
     assertEquals(3, count(dependencies, "\"fileName\": \"lwjgl-lz4-3.4.3.jar\""));
     assertEquals(3, count(dependencies, "\"fileName\": \"lwjgl-3.4.3-natives-windows.jar\""));
     assertEquals(3, count(dependencies, "\"fileName\": \"lwjgl-lz4-3.4.3-natives-windows.jar\""));
+  }
+
+  /**
+   * Requires requirement ownership to use authoritative local-ticket paths rather than retired
+   * GitHub issue numbers.
+   *
+   * @throws IOException if the registry or a referenced local ticket cannot be read
+   */
+  @Test
+  void requirementRegistryUsesExistingLocalImplementationTickets() throws IOException {
+    Path root = reactorRoot();
+    String registry = Files.readString(root.resolve("docs/spec/requirements.yaml"));
+    List<String> lines = registry.lines().toList();
+    long requirementCount = lines.stream().filter(line -> line.startsWith("  - id: JBSA-")).count();
+    long ownershipCount =
+        lines.stream().filter(line -> line.equals("    implementation_tickets:")).count();
+    List<String> tickets = new java.util.ArrayList<>();
+    boolean inImplementationTickets = false;
+    for (String line : lines) {
+      if (line.equals("    implementation_tickets:")) {
+        inImplementationTickets = true;
+      } else if (inImplementationTickets && line.startsWith("      - ")) {
+        tickets.add(line.substring(8));
+      } else if (inImplementationTickets && !line.isBlank()) {
+        inImplementationTickets = false;
+      }
+    }
+
+    assertEquals("schema_version: 2", lines.getFirst());
+    assertFalse(registry.contains("implementing_issue:"));
+    assertEquals(requirementCount, ownershipCount, "Every requirement needs local implementation ownership");
+    assertTrue(tickets.size() >= requirementCount);
+    tickets.forEach(ticket -> assertLocalTicket(root, ticket));
+    long retiredCount =
+        lines.stream().filter(line -> line.equals("    lifecycle_state: retired")).count();
+    List<String> retirementTickets =
+        lines.stream()
+            .map(String::trim)
+            .filter(line -> line.startsWith("ticket: "))
+            .map(line -> line.substring("ticket: ".length()))
+            .toList();
+    assertFalse(registry.contains("      issue:"));
+    assertEquals(retiredCount, retirementTickets.size(), "Every retirement needs local ticket ownership");
+    retirementTickets.forEach(ticket -> assertLocalTicket(root, ticket));
+    assertTrue(
+        count(
+                registry,
+                ".scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md")
+            >= 8,
+        "Gradle build requirements must retain their current local migration ownership");
+  }
+
+  /** Requires one registry ticket path to remain relative, contained by .scratch, and present. */
+  private static void assertLocalTicket(Path root, String ticket) {
+    Path relative = Path.of(ticket);
+    Path scratch = root.resolve(".scratch").toAbsolutePath().normalize();
+    Path resolved = root.resolve(relative).toAbsolutePath().normalize();
+    assertFalse(relative.isAbsolute(), () -> "Local ticket path must be relative: " + ticket);
+    assertTrue(resolved.startsWith(scratch), () -> "Local ticket path escapes .scratch: " + ticket);
+    assertTrue(Files.isRegularFile(resolved), () -> "Missing local implementation ticket " + ticket);
   }
 
   /**

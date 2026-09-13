@@ -1,6 +1,8 @@
 {
   "contract": "performance-v1",
-  "implementing_issue": 32,
+  "implementation_tickets": [
+    ".scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md"
+  ],
   "note": "Harness evidence only. The authoritative lifecycle and ownership remain in docs/spec/requirements.yaml; this supplemental map does not mutate the byte-pinned CV1 specification set.",
   "requirements": [
     {

@@ -13,16 +13,18 @@ Unsupported combinations are negative cases. There are no waived cases or aggreg
 scores. The immutable scenario descriptors describe inputs that later archive slices
 must materialize; a descriptor is never evidence that the scenario ran.
 
-Run the harness checks with the pinned Java 25 build:
+Run the harness checks with an installed Java 25 JDK. Qualification evidence uses the exact
+Eclipse Temurin `25.0.4+7.0.LTS` release:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C '-Dgroups=conformance-harness' verify
+.\gradlew.bat :jbsa-conformance-tests:conformanceHarnessTest
 ```
 
-Produce a complete product case report in a new output directory:
+Produce a complete product case report for the exact Gradle-built candidate. The task replaces
+`target/conformance` with fresh evidence and retains trustworthy non-passing case results:
 
 ```powershell
-pwsh -File build/run-conformance.ps1 -OutputDirectory target/conformance-run-1
+.\gradlew.bat :jbsa-conformance-tests:automatedConformance
 ```
 
 Exit `0` means every hosted case passed, `1` means a case did not pass, and `2`

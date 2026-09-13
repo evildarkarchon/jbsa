@@ -7,8 +7,8 @@ and names. The internal zlib profile and operation substrate also serve TES4;
 there is no new public provider or family-specific service interface.
 
 ```powershell
-java -jar jbsa-cli/target/jbsa-cli-0.1.0-SNAPSHOT.jar pack sources output.ba2 -fo4 -z
-java -jar jbsa-cli/target/jbsa-cli-0.1.0-SNAPSHOT.jar output.ba2 -dump
+java -jar jbsa-cli/target/libs/jbsa-cli-0.1.0-SNAPSHOT.jar pack sources output.ba2 -fo4 -z
+java -jar jbsa-cli/target/libs/jbsa-cli-0.1.0-SNAPSHOT.jar output.ba2 -dump
 ```
 
 Omit `-z` for stored output. `PackOptions.entryCompression` permits stored and
@@ -41,13 +41,15 @@ specifications. General BA2 split planning follows `JBSA-IO-008`.
 
 ## Verification
 
-Use Java 25, Maven, PowerShell 7, and Python 3.11 or newer:
+Use an installed Java 25 JDK, the checked-in Gradle wrapper, PowerShell 7, and
+Python 3.11 or newer:
 
 ```powershell
-mvn -B -ntp -C '-Dtest=Ba2ReaderTest,Ba2PackTest,MainTest' '-Dsurefire.failIfNoSpecifiedTests=false' test
-mvn -B -ntp -C '-Dit.test=Ba2ConformanceIT' '-Dfailsafe.failIfNoSpecifiedTests=false' '-Djbsa.ba2.local=true' verify
-mvn -B -ntp -C '-Dit.test=Ba2LocalCorpusIT' '-Dfailsafe.failIfNoSpecifiedTests=false' '-Djbsa.ba2.local=true' verify
-mvn -B -ntp -C '-Dit.test=Ba2PerformanceCheckpointIT' '-Dfailsafe.failIfNoSpecifiedTests=false' '-Djbsa.ba2.performance=true' verify
+.\gradlew.bat :jbsa:test --tests '*Ba2ReaderTest' --tests '*Ba2PackTest'
+.\gradlew.bat :jbsa-cli:test --tests '*MainTest'
+.\gradlew.bat "-Djbsa.ba2.local=true" :jbsa-conformance-tests:ba2ConformanceTest --tests '*Ba2ConformanceIT'
+.\gradlew.bat "-Djbsa.ba2.local=true" :jbsa-conformance-tests:ba2ConformanceTest --tests '*Ba2LocalCorpusIT'
+.\gradlew.bat "-Djbsa.ba2.performance=true" :jbsa-conformance-tests:ba2ConformanceTest --tests '*Ba2PerformanceCheckpointIT'
 ```
 
 The local differential requires the digest-pinned oracle documented in

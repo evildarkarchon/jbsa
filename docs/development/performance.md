@@ -17,19 +17,20 @@ Neither harness unit tests nor a successful JMH build claims qualification.
 
 ## Build and harness checks
 
-Use Java 25, Maven 3.9.16 through the wrapper, PowerShell 7 and Python 3.11 or later.
+Use an installed Java 25 JDK, PowerShell 7, and Python 3.11 or later. Exact
+qualification uses Eclipse Temurin `25.0.4+7.0.LTS` through the checked-in Gradle wrapper.
 Python uses only its standard library. Java source and tests compile during the
-ordinary reactor build; the standalone JMH 1.37 JAR is build-only evidence tooling.
+ordinary multi-project build; the standalone JMH 1.37 JAR is build-only evidence tooling.
 
 ```powershell
-.\mvnw.cmd -B -ntp -C clean verify
+.\gradlew.bat clean verify
 python -m unittest discover -s build/performance -p 'test_*.py'
 .\build\test-performance-memory.ps1
 ```
 
 These commands execute bounded harness checks with tiny project-authored inputs.
 They do not generate the full corpus, execute archive benchmarks or set machine
-performance configuration. GitHub Actions and ordinary `mvn verify` never execute
+performance configuration. GitHub Actions and ordinary `gradlew verify` never execute
 the qualification command. The command rejects hosted and self-hosted runner
 environments before launching any measured executable.
 

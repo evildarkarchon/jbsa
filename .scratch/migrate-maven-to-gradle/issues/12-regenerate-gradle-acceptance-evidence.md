@@ -3,11 +3,11 @@
 **What to build:** Produce a complete fresh evidence set attributable to the Gradle candidate and ready for manual qualification.
 
 Blocked by: [10: Prove artifact parity, reproducibility, and offline operation](10-prove-parity-reproducibility-offline.md), [11: Migrate active instructions and enforce reference hygiene](11-migrate-active-instructions.md)
-Status: needs-triage
+Status: ready-for-agent
 State: open
 Assignees: none
 Intended owner: agent
-Triage rationale: Approved scope; prerequisites remain open. Reassess readiness when all blockers close.
+Triage rationale: Approved and fully specified; tickets 10 and 11 are closed, so evidence regeneration is unblocked.
 
 ## Acceptance criteria
 
@@ -20,4 +20,3 @@ Triage rationale: Approved scope; prerequisites remain open. Reassess readiness 
 ## Context
 
 Follow the [approved migration spec](../spec.md) and [ADR-0001](../../../docs/adr/0001-migrate-maven-build-to-gradle-kotlin-dsl.md). Work on the shared migration branch; preserve Java sources, project boundaries, unrelated dependency versions, historical evidence, and the read-only Reference Snapshot.
-

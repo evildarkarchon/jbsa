@@ -28,7 +28,7 @@ _Source decisions: [research-derived adaptation boundary](https://github.com/evi
 
 ## JBSA-LIC-003
 
-The project, packages, Maven artifacts, and executable **MUST** use the `jbsa`
+The project, packages, published artifacts, and executable **MUST** use the `jbsa`
 identity. “BSArch-compatible” **MAY** be used only descriptively with an
 independent and unaffiliated statement. Project materials **MUST NOT** use
 TES5Edit or BSArch logos or imply endorsement.
@@ -65,7 +65,7 @@ _Source decision: [accepted fixture-provenance policy](https://github.com/evilda
 
 ## JBSA-LIC-007
 
-Maintained open-source Maven dependencies **MAY** be used when their selected
+Maintained open-source dependencies **MAY** be used when their selected
 versions and redistributed bytes satisfy this specification. Native dependencies
 **MUST NOT** be admitted without evidence that pure Java cannot satisfy the
 applicable conformance or performance contract. An admitted native dependency
@@ -114,7 +114,7 @@ _Source decision: [accepted policy-material set](https://github.com/evildarkarch
 
 CI and release gates **MUST** verify SPDX/REUSE metadata, dependency and native
 licensing, SBOM generation, fixture provenance, and inspection of final release
-bytes. A clean metadata or Maven validation result **MUST NOT** be treated by
+bytes. A clean metadata or build-tool validation result **MUST NOT** be treated by
 itself as proof of license compliance.
 
 _Source decisions: [Maven-metadata limitation](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted compliance-gate policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724), [external-contribution gate retirement](https://github.com/evildarkarchon/jbsa/issues/62)._

@@ -90,19 +90,21 @@ exactly these required fields:
 - `id`: the permanent requirement identifier;
 - `owner`: `document` and stable `anchor` values locating the one normative
   owner;
-- `source_decisions`: one or more stable links to the originating accepted
-  decision or its explicit supersession;
+- `source_decisions`: one or more stable repository-relative local-ticket links to
+  the originating accepted decision or its explicit supersession; migrated historical
+  entries MAY retain their original external links as archival provenance;
 - `lifecycle_state`: `active` or `retired`;
 - `verification_class`: one of `document-review`, `automated-test`,
   `build-verification`, `conformance-case`, `performance-case`,
   `release-qualification`, or `release-audit`;
-- `implementing_issue`: the GitHub issue number responsible for satisfying the
-  requirement; and
+- `implementation_tickets`: one or more repository-relative paths to authoritative
+  local tracker records under `.scratch/` that are responsible for satisfying or
+  deliberately migrating the requirement; and
 - `test_evidence`: stable test selectors, case identifiers, or repository paths
   to evidence. An empty list means that no evidence is claimed yet.
 
-A retired entry additionally has a `retirement` mapping with `issue` and
-`reason`. Registry consumers MUST reject duplicate identifiers, missing owners,
+A retired entry additionally has a `retirement` mapping with a repository-relative local `ticket`
+path and `reason`. Registry consumers MUST reject duplicate identifiers, missing owners,
 owner anchors that do not match the identifier, unknown lifecycle or
 verification values, and normative-text fields such as `title`, `summary`, or
 `text`.
@@ -153,11 +155,12 @@ _Decision sources: [specification authority and gate-reset policy](https://githu
 
 Every normative change MUST:
 
-1. have a GitHub issue that records the accepted decision and affected scope;
+1. have an authoritative local ticket under `.scratch/` that records the accepted
+   decision and affected scope;
 2. update the owning Markdown section, registry metadata, and specification-set
    version together;
 3. preserve existing identifiers unless the old obligation is retired;
-4. identify affected implementation issues and verification evidence; and
+4. identify affected implementation tickets and verification evidence; and
 5. reset every affected gate when a requirement changes after its evidence was
    recorded.
 
@@ -177,12 +180,13 @@ compressed JDK 25 `jlink` runtime and `jpackage` application image with
 
 _Supersession sources: [original module decision and partial supersession](https://github.com/evildarkarchon/jbsa/issues/8#issuecomment-5521260730), [accepted CLI packaging decision](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
 
-This foundation intentionally does not choose exact Maven plugin versions,
-audited dependency inventory entries, native payload identities, or the JDK 25
-vendor/build identity. Those release inputs remain deferred until the owning
-implementation or distribution requirement has evidence. Archive Family, DDS
-payload, library behavior, CLI behavior, qualification, distribution, and
-release gates are owned by the specifications below. The
+This foundation fixes Gradle 9.7.1, Kotlin DSL, and centralized exact
+build-plugin pinning. It intentionally does not duplicate the selected external
+plugin versions, audited dependency inventory entries, native payload
+identities, or the JDK 25 vendor/build identity. Those release inputs remain
+governed by their owning implementation or distribution requirement. Archive
+Family, DDS payload, library behavior, CLI behavior, qualification,
+distribution, and release gates are owned by the specifications below. The
 [accepted review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451)
 resolve the additional DDS-size, archive-name, split-preflight, and progress
 contradictions found during publication review. No other unresolved

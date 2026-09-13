@@ -20,8 +20,8 @@ generated fixture or golden. A documentation-like filename in another directory 
 Build the generator and materialize a fresh copy into an empty staging directory:
 
 ```powershell
-mvn -pl jbsa-test-support -am -DskipTests package
-java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output target/fixture-corpus
+.\gradlew.bat :jbsa-test-support:classes
+java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output target/fixture-corpus
 ```
 
 Audit the committed or staged corpus without modifying it:

@@ -23,12 +23,12 @@ its request-wide `-z` switch.
 
 ## Reproduce slice evidence
 
-Use Java 25 (`C:\OpenJDK\jdk-25` on the development machine), PowerShell 7,
-Python 3.11 or later, and the Maven wrapper:
+Use an installed Java 25 JDK (`C:\OpenJDK\jdk-25` on the development machine),
+PowerShell 7, Python 3.11 or later, and the checked-in Gradle wrapper:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C '-Dit.test=BsaConformanceIT' '-Dfailsafe.failIfNoSpecifiedTests=false' verify
-.\mvnw.cmd -B -ntp -C '-Dit.test=BsaConformanceIT' '-Dfailsafe.failIfNoSpecifiedTests=false' '-Djbsa.bsa.local=true' verify
+.\gradlew.bat :jbsa-conformance-tests:bsaConformanceTest --tests '*BsaConformanceIT'
+.\gradlew.bat "-Djbsa.bsa.local=true" :jbsa-conformance-tests:bsaConformanceTest --tests '*BsaConformanceIT'
 ```
 
 The second command requires the locally provisioned, digest-pinned
@@ -86,7 +86,7 @@ The task's development checkpoint runs on the current machine, as explicitly
 authorized by the user, without idle or reboot gating:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C '-Dit.test=BsaPerformanceCheckpointIT' '-Dfailsafe.failIfNoSpecifiedTests=false' '-Djbsa.bsa.performance=true' verify
+.\gradlew.bat "-Djbsa.bsa.performance=true" :jbsa-conformance-tests:bsaConformanceTest --tests '*BsaPerformanceCheckpointIT'
 ```
 
 It records stored/zlib pack and extraction times, output sizes, 64 entry-prefix

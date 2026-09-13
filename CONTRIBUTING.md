@@ -22,6 +22,6 @@ review resolve the concern.
 
 ## Verification
 
-Run `./mvnw.cmd -B -ntp -C clean verify` on Windows and the focused gate appropriate to the change.
+Run `.\gradlew.bat clean verify` on Windows and the focused Gradle task appropriate to the change.
 Dependency and native changes must update the compliance inventories before their bytes can enter
 release inputs.

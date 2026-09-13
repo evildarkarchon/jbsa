@@ -150,9 +150,9 @@ _Source decisions: [accepted adapter concurrency](https://github.com/evildarkarc
 ## JBSA-CODEC-011
 
 Required Windows x64 native artifacts and launcher native-access grants **MUST**
-be pinned in the Windows application image. A Maven embedder **MUST** supply the
-equivalent runtime artifacts and Java 25 native-access policy; JBSA **MUST NOT**
-change host-process policy.
+be pinned in the Windows application image. A host application embedding JBSA
+**MUST** supply the equivalent runtime artifacts and Java 25 native-access
+policy; JBSA **MUST NOT** change host-process policy.
 
 Native providers **MUST** load lazily through their JAR-resource extraction when
 an operation first requires them, **MUST** remain loaded for the process

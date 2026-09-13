@@ -96,6 +96,27 @@ class JbsaJavaPlugin : Plugin<Project> {
             )
             systemProperty("jbsa.reactor.root", project.rootDir.absolutePath)
             systemProperty("jbsa.version", project.version.toString())
+            forwardEvidenceOptIns(this)
         }
+    }
+
+    /** Forwards only the reviewed local-evidence switches from Gradle into its isolated test JVM. */
+    private fun forwardEvidenceOptIns(test: Test) {
+        EVIDENCE_OPT_IN_PROPERTIES.forEach { propertyName ->
+            // Test JVMs do not inherit Gradle's -D properties, so explicit forwarding prevents silent skips.
+            System.getProperty(propertyName)?.let { value -> test.systemProperty(propertyName, value) }
+        }
+    }
+
+    private companion object {
+        val EVIDENCE_OPT_IN_PROPERTIES =
+            setOf(
+                "jbsa.tes3.local",
+                "jbsa.bsa.local",
+                "jbsa.ba2.local",
+                "jbsa.bsa.performance",
+                "jbsa.ba2.performance",
+                "jbsa.dds.performance",
+            )
     }
 }

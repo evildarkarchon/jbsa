@@ -124,9 +124,9 @@ must follow REL-004 and REL-020, including explicit evidence and gate reset.
 Run the focused contracts and architecture checks with:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C '-Dgroups=contract,architecture' verify
+.\gradlew.bat :jbsa-conformance-tests:integrationTest :jbsa-conformance-tests:architectureTest
 ```
 
-Run `mvnw.cmd -B -ntp -C clean verify` for the full final build after admitted
+Run `.\gradlew.bat clean verify` for the full final build after admitted
 catalog bindings match the new specification. An expected digest rejection is
 an open evidence gate, not a passing conformance result.

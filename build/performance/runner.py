@@ -594,7 +594,7 @@ def qualify(mode, output, config_path=None, impact_path=None):
 
 
 def main():
-    """Expose explicit full/targeted local commands; no Maven lifecycle runs benchmarks."""
+    """Expose explicit full/targeted commands; ordinary Gradle lifecycles never run benchmarks."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("full", "targeted"))
     parser.add_argument("--output", type=Path, required=True)

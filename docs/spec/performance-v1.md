@@ -63,7 +63,7 @@ _Source decisions: [accepted correctness prerequisite and outcome rules](https:/
 
 Normative performance qualification **MUST** run locally on Windows x64 and NTFS
 and **MUST NOT** run in GitHub Actions, on a project self-hosted runner, or as
-part of ordinary `mvn verify`. A full qualification **MUST** run before every
+part of ordinary `gradlew verify`. A full qualification **MUST** run before every
 release and after a Benchmark Corpus, JVM identity, provider set or
 configuration, protocol, or Performance Baseline change. A targeted
 qualification **MUST** run before merging a change to codec implementation,

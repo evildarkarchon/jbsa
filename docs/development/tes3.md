@@ -45,9 +45,9 @@ Hosted execution is prohibited even if a local path accidentally exists.
 Run the slice evidence with Java 25:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C -pl jbsa-conformance-tests -am '-Dgroups=tes3' '-Dit.test=Tes3ConformanceIT' '-Dfailsafe.failIfNoSpecifiedTests=false' verify
+.\gradlew.bat :jbsa-conformance-tests:tes3ConformanceTest --tests '*Tes3ConformanceIT'
 # Explicit local opt-in; never enabled by hosted jobs:
-.\mvnw.cmd -B -ntp -C -pl jbsa-conformance-tests -am '-Dgroups=tes3' '-Dit.test=Tes3ConformanceIT' '-Dfailsafe.failIfNoSpecifiedTests=false' '-Djbsa.tes3.local=true' verify
+.\gradlew.bat "-Djbsa.tes3.local=true" :jbsa-conformance-tests:tes3ConformanceTest --tests '*Tes3ConformanceIT'
 ```
 
 `build/validate-tes3-wire.ps1` independently scans the narrow canonical ASCII,

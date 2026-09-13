@@ -83,11 +83,11 @@ guarantee is made.
 
 ## Verification
 
-Run on Java 25 / Windows:
+Run with an installed Java 25 JDK on Windows:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C -pl jbsa -am '-Dtest=SpillBufferTest,ResourceBudgetTest,WindowsPathIdentityTest,ExtractionPathsTest,PublicationTransactionTest,PublicationFailuresTest,PublicationDriveRootTest' '-Dsurefire.failIfNoSpecifiedTests=false' test
-.\mvnw.cmd -B -ntp -C clean verify
+.\gradlew.bat :jbsa:test --tests '*SpillBufferTest' --tests '*ResourceBudgetTest' --tests '*WindowsPathIdentityTest' --tests '*ExtractionPathsTest' --tests '*PublicationTransactionTest' --tests '*PublicationFailuresTest' --tests '*PublicationDriveRootTest'
+.\gradlew.bat clean verify
 ```
 
 The tests use authored byte sequences and disposable filesystem fixtures. Fault

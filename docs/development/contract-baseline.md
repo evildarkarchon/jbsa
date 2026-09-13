@@ -124,11 +124,11 @@ entry/content/extract/pack usage and executes the TES3 consumer paths.
 `PublicOutcomeContractIT` verify the public value and baseline behavior. Existing architecture
 tests inspect exported signatures for third-party or internal types.
 
-Run the focused contract checks after packaging with the normal reactor lifecycle:
+Run the focused contract checks against the packaged artifacts:
 
 ```powershell
-.\mvnw.cmd -B -ntp -C '-Dgroups=contract' verify
+.\gradlew.bat :jbsa-conformance-tests:integrationTest
 ```
 
-The complete `clean verify` build remains the final local gate. Neither these tests nor a successful
+The complete `.\gradlew.bat clean verify` build remains the final local gate. Neither these tests nor a successful
 build constitutes Automated Conformance, Performance Qualification, or Release Qualification.
