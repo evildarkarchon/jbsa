@@ -432,6 +432,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 )
                 legacyBuildFiles.from(
                     project.fileTree(project.rootDir) {
+                        // Split scanner targets so this production configuration does not approve its own patterns.
                         include(
                             "pom" + ".xml",
                             "**/pom" + ".xml",

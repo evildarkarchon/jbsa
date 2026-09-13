@@ -385,6 +385,7 @@ class FoundationPluginFunctionalTest {
     /** Verifies the cutover gate rejects a reintroduced legacy build descriptor. */
     @Test
     fun `rejects active legacy build descriptors after cutover`() {
+        // Keep the runtime fixture recognizable without making the scanner test source match itself.
         val descriptor = "pom" + ".xml"
         write(descriptor, "<project/>\n")
 
