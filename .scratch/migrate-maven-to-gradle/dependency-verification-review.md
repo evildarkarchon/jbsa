@@ -130,3 +130,18 @@ Central and the Spotless plugin marker came from the Gradle Plugin Portal. Every
 generated metadata and no checksum failed. The generated consumer POM and resolved production
 manifest retain only the approved Windows runtime classifiers; native launch tests remain
 Windows-only procedures.
+
+## Ticket 10 canonical-checkout and offline qualification extension
+
+The included build's verification metadata is canonically checked out with LF according to
+`.gitattributes`. Earlier review rows retain the CRLF working-tree digest that was measured before a
+fresh detached worktree exposed the mismatch. The canonical file digest is:
+
+| Input | SHA-256 |
+| --- | --- |
+| `build-logic/gradle/verification-metadata.xml` | `6e21d8cba644bf4b2d668c86330fa2d6f8878653ade14b6204092ccc38a9d8f7` |
+
+No trusted checksum value or verified artifact identity changed; only the XML line-ending envelope
+was normalized to the repository's existing policy. Ticket 10's same-revision qualification primes
+the product and included-build caches under strict verification, reruns both closures offline, and
+retains a deliberate checksum-failure proof plus byte-consistency records for all ten lockfiles.
