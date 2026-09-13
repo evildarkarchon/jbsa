@@ -748,9 +748,17 @@ try {
     $commands.Add($inspectorTests)
     $lockfilesBefore = @(Get-LockfileInventory -SourceRoot $isolatedRoot)
     $allowedGradleOnlyBuildInputs = @(
+        # The typed requirement-registry parser is Gradle-only policy-test infrastructure; the
+        # Maven oracle intentionally has no authority over its reviewed direct/transitive inputs.
+        'com.fasterxml.jackson:jackson-bom:2.22.1',
+        'com.fasterxml.jackson.core:jackson-annotations:2.22',
+        'com.fasterxml.jackson.core:jackson-core:2.22.1',
+        'com.fasterxml.jackson.core:jackson-databind:2.22.1',
+        'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.1',
         'org.junit.platform:junit-platform-launcher:6.1.3',
         'org.junit:junit-bom:6.1.3',
-        'org.openjdk.jmh:jmh-generator-annprocess:1.37'
+        'org.openjdk.jmh:jmh-generator-annprocess:1.37',
+        'org.yaml:snakeyaml:2.5'
     )
     $dependencyComparisons = @($mavenBaseline.resolvedGraphs | ForEach-Object {
         $projectName = [string] $_.project

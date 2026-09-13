@@ -42,7 +42,15 @@ try {
     Set-Content -LiteralPath (Join-Path $repository 'gradle.properties') -Value 'version=0.1.0-SNAPSHOT'
     Set-Content -LiteralPath (Join-Path $repository 'gradle.lockfile') -Value 'fixture:root:1=fixture'
     Set-Content -LiteralPath (Join-Path $repository 'settings-gradle.lockfile') -Value 'fixture:settings:1=fixture'
-    Set-Content -LiteralPath (Join-Path $repository 'jbsa/gradle.lockfile') -Value 'fixture:library:1=fixture'
+    Set-Content -LiteralPath (Join-Path $repository 'jbsa/gradle.lockfile') -Value @(
+        'fixture:library:1=fixture',
+        'com.fasterxml.jackson:jackson-bom:2.22.1=fixture',
+        'com.fasterxml.jackson.core:jackson-annotations:2.22=fixture',
+        'com.fasterxml.jackson.core:jackson-core:2.22.1=fixture',
+        'com.fasterxml.jackson.core:jackson-databind:2.22.1=fixture',
+        'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.1=fixture',
+        'org.yaml:snakeyaml:2.5=fixture'
+    )
     [IO.File]::WriteAllText(
         (Join-Path $repository 'gradle/verification-metadata.xml'),
         '<verification-metadata><components><component><artifact><sha256 value="1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"/></artifact></component></components></verification-metadata>',
