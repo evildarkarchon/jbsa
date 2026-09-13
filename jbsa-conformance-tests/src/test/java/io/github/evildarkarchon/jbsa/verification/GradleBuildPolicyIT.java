@@ -73,10 +73,17 @@ final class GradleBuildPolicyIT {
     assertEquals(3, count(dependencies, "\"fileName\": \"lwjgl-lz4-3.4.3-natives-windows.jar\""));
   }
 
-  /** Requires one generated output identity to resolve to the artifact supplied by Gradle. */
+  /**
+   * Requires one generated output identity to resolve to the artifact supplied by Gradle.
+   *
+   * @param layout generated build-layout JSON text
+   * @param identifier output identity expected in the manifest
+   * @param artifactPathValue absolute artifact path supplied to the black-box test
+   * @param root repository root used to normalize the artifact path
+   */
   private static void assertDeclaredArtifact(
-      String layout, String identifier, String artifactProperty, Path root) {
-    Path artifact = Path.of(artifactProperty).toAbsolutePath().normalize();
+      String layout, String identifier, String artifactPathValue, Path root) {
+    Path artifact = Path.of(artifactPathValue).toAbsolutePath().normalize();
     assertTrue(Files.isRegularFile(artifact), () -> "Missing generated artifact " + artifact);
     String relative =
         root.toAbsolutePath().normalize().relativize(artifact).toString().replace('\\', '/');

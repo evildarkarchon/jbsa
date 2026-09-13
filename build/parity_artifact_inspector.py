@@ -412,7 +412,11 @@ def _common_unique_key(left: list[Any], right: list[Any]) -> str | None:
 
 
 def load_build_layout(build_root: Path) -> dict[str, Path]:
-    """Load Gradle's declared output identities as absolute paths beneath one isolated build root."""
+    """Load Gradle's declared output identities beneath one isolated build root.
+
+    Return an identifier-to-absolute-path mapping. Raise ``ValueError`` for unsupported schemas,
+    incomplete output rows, or any declared path that escapes ``build_root``.
+    """
     manifest_path = build_root / "target" / "compliance" / "build-layout.json"
     document = json.loads(manifest_path.read_text(encoding="utf-8"))
     if document.get("schemaVersion") != 1:
@@ -436,7 +440,13 @@ def _file_record(path: Path) -> dict[str, Any]:
 
 
 def inspect_build(build_root: Path, version: str, java_home: Path, build_tool: str = "maven") -> dict[str, Any]:
-    """Inspect all canonical Maven/Gradle parity outputs beneath one isolated build root."""
+    """Inspect all canonical parity outputs beneath one isolated build root.
+
+    ``build_tool`` selects Maven's legacy output paths or Gradle's generated build-layout contract.
+    Return the normalized artifact, metadata, runtime, compliance, and staging snapshot. Raise
+    ``ValueError`` for an unsupported tool, missing canonical output, or invalid nested inspector
+    input.
+    """
     if build_tool == "gradle":
         layout = load_build_layout(build_root)
         artifacts = {
@@ -485,6 +495,21 @@ def inspect_build(build_root: Path, version: str, java_home: Path, build_tool: s
     }
     normalized_sbom = normalize_sbom(sbom)
     staged_files = inspect_tree(build_root / "jbsa-dist" / "target" / "release-inputs")
+    staged_by_name = {entry["path"]: entry["sha256"] for entry in staged_files["files"]}
+    canonical_staged_hashes = {
+        artifacts["library"].name: inspected_artifacts["library"]["archive_sha256"],
+        artifacts["library_sources"].name: inspected_artifacts["library_sources"]["archive_sha256"],
+        artifacts["library_javadocs"].name: inspected_artifacts["library_javadocs"]["archive_sha256"],
+        artifacts["thin_cli"].name: inspected_artifacts["thin_cli"]["archive_sha256"],
+        f"jbsa-{version}.pom": sha256_file(consumer_pom),
+        "jbsa.cdx.json": sha256_file(sbom),
+    }
+    for staged_name, canonical_hash in canonical_staged_hashes.items():
+        if staged_by_name.get(staged_name) != canonical_hash:
+            raise ValueError(
+                f"Staged canonical input differs from its producer: {staged_name} "
+                f"({staged_by_name.get(staged_name)} != {canonical_hash})"
+            )
     benchmark_name = artifacts["benchmark_standalone"].name
     return {
         "artifacts": inspected_artifacts,

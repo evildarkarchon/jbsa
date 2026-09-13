@@ -94,6 +94,24 @@ if ($outputRoot.StartsWith($tes5EditRoot + [IO.Path]::DirectorySeparatorChar, [S
 <#
 .SYNOPSIS
 Runs one command, retains its merged stream, and returns timing and outcome evidence.
+
+.PARAMETER Name
+Stable identifier used for the retained log filename and evidence record.
+
+.PARAMETER Executable
+Exact executable path or command name to invoke without shell reparsing.
+
+.PARAMETER Arguments
+Ordered argument array passed to the executable.
+
+.PARAMETER WorkingDirectory
+Directory from which the command observes and produces files.
+
+.PARAMETER RequireSuccess
+Throws when the command exits nonzero after its complete log has been retained.
+
+.OUTPUTS
+An ordered evidence record containing command, exit, duration, timestamps, and log digest.
 #>
 function Invoke-QualificationCommand {
     param(
@@ -140,6 +158,15 @@ function Invoke-QualificationCommand {
 <#
 .SYNOPSIS
 Records every tracked Gradle lockfile by path, length, and content hash.
+
+.PARAMETER SourceRoot
+Clean detached worktree whose tracked lockfiles are inventoried.
+
+.OUTPUTS
+Sorted evidence rows for every tracked `*gradle.lockfile`.
+
+.NOTES
+Throws when Git cannot enumerate lockfiles or a tracked lockfile is absent.
 #>
 function Get-LockfileInventory {
     param([Parameter(Mandatory = $true)] [string] $SourceRoot)
@@ -162,6 +189,15 @@ function Get-LockfileInventory {
 <#
 .SYNOPSIS
 Returns true only when path, length, and hash of every lockfile are byte-consistent.
+
+.PARAMETER Before
+Lockfile inventory captured before qualification commands.
+
+.PARAMETER After
+Lockfile inventory captured after qualification commands and negative fixtures.
+
+.OUTPUTS
+Boolean equality across ordered path, size, and SHA-256 fields.
 #>
 function Test-InventoryEquality {
     param([object[]] $Before, [object[]] $After)
@@ -180,6 +216,16 @@ function Test-InventoryEquality {
 <#
 .SYNOPSIS
 Explains one measured cross-tool representation difference against the normative Gradle contracts.
+
+.PARAMETER Difference
+One normalized leaf difference with path, expected, and actual values.
+
+.PARAMETER AllDifferences
+Complete difference set used to ensure raw module or service encodings are accepted only when their
+normalized semantic contracts match.
+
+.OUTPUTS
+An ordered assessment containing category, requirement, explanation, and acceptance status.
 #>
 function Get-ParityDifferenceAssessment {
     param(
@@ -204,10 +250,14 @@ function Get-ParityDifferenceAssessment {
         $requirement = 'Java sources, Javadocs, packages, and public signatures must remain equivalent.'
         $explanation = 'Maven emits class files for documentation-only package-info.java sources while direct javac compilation does not; the source and documented package remain present.'
     } elseif ($path -match '^artifacts\.library_javadocs\.entries\[' -and
-        @($AllDifferences | Where-Object { $_.path -match '^artifacts\.library\.java_contract\.' }).Count -eq 0) {
+        @($AllDifferences | Where-Object { $_.path -match '^artifacts\.library\.java_contract\.' }).Count -eq 0 -and
+        ($path -match '\.(sha256|size)$' -or
+            ($null -eq $Difference.expected -and $null -ne $Difference.actual) -or
+            ($null -ne $Difference.expected -and $null -eq $Difference.actual -and
+                $path -match '(?:/class-use/|/package-use\.html\]|\[path=src/)'))) {
         $category = 'javadoc-task-presentation'
         $requirement = 'The Javadocs artifact must document the unchanged public API, use the pinned JDK, and reproduce byte-for-byte across clean Gradle builds.'
-        $explanation = 'Maven and Gradle select different standard-doclet navigation, source-page, and bundled-font presentation defaults; public signatures and source bytes match, and Gradle reproducibility is checked separately.'
+        $explanation = 'The plugins differ in generated class-use/package-use/source navigation and Gradle-added internal cross-reference or font presentation; missing primary type, package-summary, module-summary, or index documentation is never accepted.'
     } elseif ($path -match '^artifacts\.(library|thin_cli)\.entries\[path=module-info\.class\]\.(sha256|size)$' -and
         @($AllDifferences | Where-Object { $_.path -match '^artifacts\.(library|thin_cli)\.java_contract\.' }).Count -eq 0) {
         $category = 'module-attribute-encoding'
@@ -239,11 +289,18 @@ function Get-ParityDifferenceAssessment {
 <#
 .SYNOPSIS
 Returns the external module versions recorded recursively by one Maven dependency-tree document.
+
+.PARAMETER Node
+Root Maven dependency-tree node produced by the captured dependency-plugin JSON report.
+
+.OUTPUTS
+Sorted unique `groupId:artifactId:version` strings, excluding JBSA reactor projects.
 #>
 function Get-MavenDependencyCoordinates {
     param([Parameter(Mandatory = $true)] [object] $Node)
 
     $coordinates = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    <# Recursively adds external coordinates while accepting Maven leaf nodes without `children`. #>
     function Add-Node {
         param([Parameter(Mandatory = $true)] [object] $Current)
         if ([string] $Current.groupId -cne 'io.github.evildarkarchon') {
@@ -260,6 +317,12 @@ function Get-MavenDependencyCoordinates {
 <#
 .SYNOPSIS
 Returns the external module versions retained by one Gradle project lockfile.
+
+.PARAMETER Path
+Tracked Gradle lockfile to normalize.
+
+.OUTPUTS
+Sorted unique `group:artifact:version` strings; comments and the synthetic `empty` row are omitted.
 #>
 function Get-GradleLockCoordinates {
     param([Parameter(Mandatory = $true)] [string] $Path)
