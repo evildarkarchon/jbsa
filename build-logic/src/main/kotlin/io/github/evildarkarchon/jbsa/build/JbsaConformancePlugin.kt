@@ -23,6 +23,9 @@ class JbsaConformancePlugin : Plugin<Project> {
     private fun configureDependencies(project: Project) {
         val catalog = PinnedVersionCatalog.load(project.rootDir.toPath().resolve("gradle/libs.versions.toml"))
         val junitVersion = catalog.dependencyVersion("org.junit.jupiter", "junit-jupiter")
+        val jacksonYamlVersion =
+            catalog.dependencyVersion("com.fasterxml.jackson.dataformat", "jackson-dataformat-yaml")
+        val snakeYamlVersion = catalog.dependencyVersion("org.yaml", "snakeyaml")
         listOf(JbsaPublicLibraryIdentity.PROJECT_PATH, JbsaThinApplicationIdentity.PROJECT_PATH, ":jbsa-test-support")
             .forEach { path -> project.dependencies.add("testImplementation", project.dependencies.project(path)) }
         project.dependencies.add(
@@ -30,6 +33,11 @@ class JbsaConformancePlugin : Plugin<Project> {
             project.dependencies.platform("org.junit:junit-bom:$junitVersion"),
         )
         project.dependencies.add("testImplementation", "org.junit.jupiter:junit-jupiter:$junitVersion")
+        project.dependencies.add(
+            "testImplementation",
+            "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonYamlVersion",
+        )
+        project.dependencies.add("testImplementation", "org.yaml:snakeyaml:$snakeYamlVersion")
         project.dependencies.add(
             "testRuntimeOnly",
             "org.junit.platform:junit-platform-launcher:$junitVersion",

@@ -145,3 +145,21 @@ No trusted checksum value or verified artifact identity changed; only the XML li
 was normalized to the repository's existing policy. Ticket 10's same-revision qualification primes
 the product and included-build caches under strict verification, reruns both closures offline, and
 retains a deliberate checksum-failure proof plus byte-consistency records for all ten lockfiles.
+
+## Ticket 11 follow-up: typed requirement-registry YAML parsing
+
+The build-policy tests now declare Jackson YAML 2.22.1 and its directly imported SnakeYAML 2.5 API
+instead of parsing the normative registry by indentation. This test-only resolution does not change the generated consumer
+POM, resolved-production-dependency manifest, SBOM, staged inputs, or product runtime graph. The
+exact Jackson annotations 2.22, core/databind/YAML 2.22.1, and SnakeYAML 2.5 artifacts were already
+present with single SHA-256 trust decisions in the unchanged root verification metadata; this
+change adds no checksum or artifact identity to the trust set.
+
+| Input | SHA-256 |
+| --- | --- |
+| `gradle/libs.versions.toml` | `721c9a87179e46ed79fac8c68dc3bae93a02642b2e6280fa635129fd55bb505a` |
+| `jbsa-conformance-tests/gradle.lockfile` | `a18f465fdc60a1baabb47e17ddeffebfea83d395b9dc3ffea53a237c99c6f0c9` |
+| `gradle/verification-metadata.xml` | `4d2a286c4697a2e6213d1d6760bce4e5c89f5ea819761054ad0ee4c3ace63f3d` |
+
+The lock records the parser only on the conformance project's test compile/runtime classpaths.
+Strict dependency verification accepted every resolved byte without modifying metadata.

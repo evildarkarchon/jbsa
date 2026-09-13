@@ -212,13 +212,17 @@ class BenchmarkPluginFunctionalTest {
             "gradle/libs.versions.toml",
             """
             [versions]
+            jackson = "2.22.1"
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
+            snakeyaml = "2.5"
             shadow = "9.6.1"
             spotless = "8.10.2"
 
             [libraries]
+            jackson-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
+            snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
             jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
             jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
             junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }

@@ -59,3 +59,13 @@ local tracker file exists, and binds the migrated Gradle build requirements to t
 retaining their imported predecessor tickets. The performance-requirement supplement uses the same
 local identity. Historical GitHub decision links remain only as archival provenance; new normative
 changes must originate from an authoritative ticket under `.scratch/`.
+
+### 2026-09-13 — Typed registry parser follow-up
+
+Replaced the build-policy test's indentation-sensitive registry scan with a typed Jackson YAML
+model. A formatting-variation test covers valid flow-style maps/lists and noncanonical indentation;
+the real registry test continues to validate schema version, unique requirements, local ownership,
+retirement tickets, `.scratch/` containment, file existence, and Gradle-migration bindings. Jackson
+YAML is a pinned test-only dependency whose exact transitive artifacts were already covered by the
+unchanged strict verification metadata; the conformance test lock and dependency review record its
+direct use.

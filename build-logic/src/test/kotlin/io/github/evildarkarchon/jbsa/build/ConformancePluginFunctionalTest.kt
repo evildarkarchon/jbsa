@@ -250,11 +250,14 @@ class ConformancePluginFunctionalTest {
             "gradle/libs.versions.toml",
             """
             [versions]
+            jackson = "2.22.1"
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
+            snakeyaml = "2.5"
 
             [libraries]
+            jackson-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
             jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
             jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
             junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
@@ -262,6 +265,7 @@ class ConformancePluginFunctionalTest {
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
             lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
             lwjgl-lz4 = { module = "org.lwjgl:lwjgl-lz4", version.ref = "lwjgl" }
+            snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 
             [plugins]
             """.trimIndent(),

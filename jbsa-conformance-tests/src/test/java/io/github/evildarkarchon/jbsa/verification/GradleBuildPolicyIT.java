@@ -2,6 +2,7 @@ package io.github.evildarkarchon.jbsa.verification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -83,45 +84,110 @@ final class GradleBuildPolicyIT {
   @Test
   void requirementRegistryUsesExistingLocalImplementationTickets() throws IOException {
     Path root = reactorRoot();
-    String registry = Files.readString(root.resolve("docs/spec/requirements.yaml"));
-    List<String> lines = registry.lines().toList();
-    long requirementCount = lines.stream().filter(line -> line.startsWith("  - id: JBSA-")).count();
-    long ownershipCount =
-        lines.stream().filter(line -> line.equals("    implementation_tickets:")).count();
-    List<String> tickets = new java.util.ArrayList<>();
-    boolean inImplementationTickets = false;
-    for (String line : lines) {
-      if (line.equals("    implementation_tickets:")) {
-        inImplementationTickets = true;
-      } else if (inImplementationTickets && line.startsWith("      - ")) {
-        tickets.add(line.substring(8));
-      } else if (inImplementationTickets && !line.isBlank()) {
-        inImplementationTickets = false;
+    var registry = RequirementRegistryYaml.parse(root.resolve("docs/spec/requirements.yaml"));
+    assertEquals(2, registry.schemaVersion());
+    assertFalse(registry.requirements().isEmpty());
+
+    var identifiers = new java.util.HashSet<String>();
+    for (var requirement : registry.requirements()) {
+      assertTrue(
+          identifiers.add(requirement.id()), () -> "Duplicate requirement " + requirement.id());
+      assertTrue(
+          requirement.implementationTickets() != null
+              && !requirement.implementationTickets().isEmpty(),
+          () -> "Missing implementation ownership for " + requirement.id());
+      requirement.implementationTickets().forEach(ticket -> assertLocalTicket(root, ticket));
+      if (requirement.lifecycleState().equals("retired")) {
+        assertTrue(
+            requirement.retirement() != null, () -> "Missing retirement for " + requirement.id());
+        assertLocalTicket(root, requirement.retirement().ticket());
       }
     }
 
-    assertEquals("schema_version: 2", lines.getFirst());
-    assertFalse(registry.contains("implementing_issue:"));
-    assertEquals(requirementCount, ownershipCount, "Every requirement needs local implementation ownership");
-    assertTrue(tickets.size() >= requirementCount);
-    tickets.forEach(ticket -> assertLocalTicket(root, ticket));
-    long retiredCount =
-        lines.stream().filter(line -> line.equals("    lifecycle_state: retired")).count();
-    List<String> retirementTickets =
-        lines.stream()
-            .map(String::trim)
-            .filter(line -> line.startsWith("ticket: "))
-            .map(line -> line.substring("ticket: ".length()))
-            .toList();
-    assertFalse(registry.contains("      issue:"));
-    assertEquals(retiredCount, retirementTickets.size(), "Every retirement needs local ticket ownership");
-    retirementTickets.forEach(ticket -> assertLocalTicket(root, ticket));
-    assertTrue(
-        count(
-                registry,
-                ".scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md")
-            >= 8,
+    String migrationTicket =
+        ".scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md";
+    long migratedBuildRequirements =
+        registry.requirements().stream()
+            .filter(
+                requirement ->
+                    requirement.id().matches("JBSA-BUILD-00[1-7]|JBSA-BUILD-010")
+                        && requirement.implementationTickets().contains(migrationTicket))
+            .count();
+    assertEquals(
+        8L,
+        migratedBuildRequirements,
         "Gradle build requirements must retain their current local migration ownership");
+  }
+
+  /** Verifies semantically valid YAML does not depend on the repository's preferred indentation. */
+  @Test
+  void requirementRegistryParserAcceptsEquivalentYamlFormatting() throws IOException {
+    var registry =
+        RequirementRegistryYaml.parse(
+            """
+            schema_version: 2
+            specification: {version: 1.0.0, status: normative, authority: docs/spec/README.md}
+            requirements:
+             - id: JBSA-BUILD-001
+               owner: {document: docs/spec/modules-and-build.md, anchor: jbsa-build-001}
+               source_decisions: [.scratch/decisions/01-build.md]
+               lifecycle_state: active
+               verification_class: build-verification
+               implementation_tickets: [.scratch/build/issues/01-foundation.md]
+               test_evidence: []
+            """);
+
+    assertEquals(2, registry.schemaVersion());
+    assertEquals("1.0.0", registry.specification().version());
+    assertEquals(
+        List.of(".scratch/build/issues/01-foundation.md"),
+        registry.requirements().getFirst().implementationTickets());
+  }
+
+  /** Verifies malformed, incomplete, duplicate, and semantically invalid registries fail closed. */
+  @Test
+  void requirementRegistryParserRejectsInvalidDocuments() {
+    String valid = validRegistryYaml();
+    List<String> invalidDocuments =
+        List.of(
+            valid.replace(
+                "   owner: {document: docs/spec/modules-and-build.md, anchor: jbsa-build-001}\n",
+                ""),
+            valid.replace("anchor: jbsa-build-001", "anchor: wrong-anchor"),
+            valid.replace("authority: docs/spec/README.md", "authority: null"),
+            valid.replace(
+                "source_decisions: [.scratch/decisions/01-build.md]", "source_decisions: null"),
+            valid.replace(
+                "implementation_tickets: [.scratch/build/issues/01-foundation.md]",
+                "implementation_tickets: null"),
+            valid.replace("   test_evidence: []\n", ""),
+            valid.replace("lifecycle_state: active", "lifecycle_state: unknown"),
+            valid.replace("verification_class: build-verification", "verification_class: unknown"),
+            valid.replace(
+                "owner: {document: docs/spec/modules-and-build.md, anchor: jbsa-build-001}",
+                "owner: {document: docs/spec/modules-and-build.md, document: duplicate.md, anchor: jbsa-build-001}"),
+            valid.replace("test_evidence: []", "unknown_field: true\n   test_evidence: []"),
+            valid + "---\n{}\n",
+            "schema_version: [unterminated");
+
+    invalidDocuments.forEach(
+        yaml -> assertThrows(IOException.class, () -> RequirementRegistryYaml.parse(yaml)));
+  }
+
+  /** Returns one hand-authored valid registry using legal noncanonical YAML presentation. */
+  private static String validRegistryYaml() {
+    return """
+        schema_version: 2
+        specification: {version: 1.0.0, status: normative, authority: docs/spec/README.md}
+        requirements:
+         - id: JBSA-BUILD-001
+           owner: {document: docs/spec/modules-and-build.md, anchor: jbsa-build-001}
+           source_decisions: [.scratch/decisions/01-build.md]
+           lifecycle_state: active
+           verification_class: build-verification
+           implementation_tickets: [.scratch/build/issues/01-foundation.md]
+           test_evidence: []
+        """;
   }
 
   /** Requires one registry ticket path to remain relative, contained by .scratch, and present. */
@@ -131,7 +197,8 @@ final class GradleBuildPolicyIT {
     Path resolved = root.resolve(relative).toAbsolutePath().normalize();
     assertFalse(relative.isAbsolute(), () -> "Local ticket path must be relative: " + ticket);
     assertTrue(resolved.startsWith(scratch), () -> "Local ticket path escapes .scratch: " + ticket);
-    assertTrue(Files.isRegularFile(resolved), () -> "Missing local implementation ticket " + ticket);
+    assertTrue(
+        Files.isRegularFile(resolved), () -> "Missing local implementation ticket " + ticket);
   }
 
   /**
