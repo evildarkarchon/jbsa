@@ -27,12 +27,12 @@ Follow the [approved migration spec](../spec.md) and [ADR-0001](../../../docs/ad
 ### 2026-09-13 — Implemented
 
 Regenerated the complete acceptance set for clean Gradle candidate
-`494db4e7cd3d288a17cecb4c9fc7705adeccacd6`, version `0.1.0-SNAPSHOT`, with exact
+`c3404f789bdc1a82e777efef5b46dbf53a3121ea`, version `0.1.0-SNAPSHOT`, with exact
 Temurin `25.0.4+7` toolchains. Windows complete and verified-offline closures, Linux portability,
 publication, dependency, SBOM, compliance/staging, policy/module, active-reference,
 reproducibility, and normalized parity evidence passed. The compact tracked record is
-[acceptance/494db4e](../acceptance/494db4e/README.md); its report binds the ignored raw evidence and
-actual 18-entry staged handoff under `target/qualification-evidence/494db4e` without modifying the
+[acceptance/c3404f7](../acceptance/c3404f7/README.md); its report binds the ignored raw evidence and
+actual 18-entry staged handoff under `target/qualification-evidence/c3404f7` without modifying the
 earlier `236202b` evidence.
 
 The fresh 508-case Automated Conformance observation remains `BLOCKED`: every case is `INVALID`
@@ -40,3 +40,11 @@ because no public-interface execution adapter is registered. This is retained as
 not relabelled as a pass. The manual Windows Release Qualification package and 23 positive Encode
 Conformance Case scope are prepared, but no game/official-tool run or operator approval is claimed;
 the human-owned qualification and public release remain blocked by their existing prerequisites.
+
+### 2026-09-13 — Review correction
+
+The final evidence cycle was rerun at `c3404f7` after review corrected the tracker index and split
+the Gradle launcher, wrapper-JAR, and wrapper-properties identities. The earlier compact `494db4e`
+record was removed because a subsequent root `clean` had correctly deleted its ignored raw handoff;
+no acceptance claim relies on unavailable files. The `c3404f7` raw evidence remains present for the
+operator handoff, and its compact report binds the complete tree.

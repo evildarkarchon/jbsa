@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "source": {
-    "revision": "494db4e7cd3d288a17cecb4c9fc7705adeccacd6",
-    "shortRevision": "494db4e",
+    "revision": "c3404f789bdc1a82e777efef5b46dbf53a3121ea",
+    "shortRevision": "c3404f7",
     "branch": "initial-implementation",
     "clean": true,
     "candidateVersion": "0.1.0-SNAPSHOT"
@@ -25,18 +25,20 @@
     },
     "gradle": {
       "version": "9.7.1",
-      "wrapperSha256": "d228565307df93fcd8dcaf83f7cdbaf17de2f147fc602f4c8e6938033aa3bc20"
+      "launcherSha256": "d228565307df93fcd8dcaf83f7cdbaf17de2f147fc602f4c8e6938033aa3bc20",
+      "wrapperJarSha256": "7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d",
+      "wrapperPropertiesSha256": "5689676b853a52fb04ac6a62d9e49872247f47c61b115f85c5377eb61cb586f9"
     }
   },
   "rawEvidence": {
-    "location": "target/qualification-evidence/494db4e",
+    "location": "target/qualification-evidence/c3404f7",
     "committed": false,
-    "completeTreeSha256": "1b03e2dd35b13fa7337eb68aaf766174bdad2c25eb397a41e7c6c8d10fe2a12c",
-    "mavenOracleTreeSha256": "841f6162feb0b0cb58ed2db1e3555c43b9858dfb69fd798feccaf57ee4eb7fb1",
-    "gradleTreeSha256": "70306edf8037b9ed39a20d7549f0ddefe069192a748549eb7b6e38ea24824a43",
+    "completeTreeSha256": "dc8a57a55994d1b19ed849d403e7062b5a56ddb85d33944e6d1b501ec10eb21a",
+    "mavenOracleTreeSha256": "688aa39dc71808fe8032a5eacfcc21ae97e2427901b485e08947c621ea5a5985",
+    "gradleTreeSha256": "266af391c2f556d2f54f1a515ca10a01e5cd2c6d238d9f5e34ff890f0ee15a81",
     "gradleQualification": {
       "path": "gradle/gradle-qualification.json",
-      "sha256": "fe019df70c2f7e443080bbe1d2c764311fd660ec2f989f876c547316c64a3a3f"
+      "sha256": "a1a7fee61ce7dc292740a6c65ec8b00003ed7e60b75386c3c5bba27267ca12dc"
     },
     "normalizedParity": {
       "path": "gradle/parity-report.json",
@@ -44,15 +46,15 @@
     },
     "handoffManifest": {
       "path": "gradle/release-qualification/manifest.json",
-      "sha256": "ebb900aea7b06066934a151e17e27c148532b5502cc1fdb406de79f3ea726dad"
+      "sha256": "b569a1e238d68ee5b4b063d50c9e1f68088da1d3b176e666325e22f9cc2621b1"
     },
     "linuxTranscript": {
       "path": "linux-portability.log",
-      "sha256": "5d7f2a922216253559f493a21de0b7c4a873aa550c8b5790764a08d9977e36c9"
+      "sha256": "a627579d5b74114ba3336afe7239719a1c10a52abbdb9a864b163e7f259dfba8"
     },
     "linuxProcedure": {
       "path": "run-linux-portability.sh",
-      "sha256": "ba9277930cf9d4e3224944cf81879f41fee59ad310cfed014b6c0f11d026802a"
+      "sha256": "b2652bb592378702d8d298f4d07db0271ee9282659475b7478358c9e70c53c12"
     }
   },
   "windowsCompleteVerification": {
@@ -62,7 +64,7 @@
     "prime": {
       "name": "prime-verified-cache",
       "command": [
-        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-5dc09a3c\\s\\gradlew.bat",
+        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
         "--no-daemon",
         "--dependency-verification",
         "strict",
@@ -73,22 +75,22 @@
       ],
       "exitCode": 0,
       "outcome": "PASS",
-      "milliseconds": 270732,
-      "startedAt": "2026-09-13T13:51:00.6080022-07:00",
-      "completedAt": "2026-09-13T13:55:31.3401402-07:00",
+      "milliseconds": 256577,
+      "startedAt": "2026-09-13T14:31:24.8616895-07:00",
+      "completedAt": "2026-09-13T14:35:41.4392419-07:00",
       "category": "gradle",
       "resumed": false,
       "reusedFrom": null,
       "outputs": [],
       "log": {
         "path": "logs/prime-verified-cache.log",
-        "sha256": "ef39354a1327aeb0981b218417744368d5d8736961b29f26d29a1cc9869b42ad"
+        "sha256": "40b2c5de2bb0e1371b7939f704bbb1182d2ff2506fbfea953e7598ee95432a07"
       }
     },
     "verifiedOffline": {
       "name": "verified-cache-offline-build",
       "command": [
-        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-5dc09a3c\\s\\gradlew.bat",
+        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
         "--no-daemon",
         "--dependency-verification",
         "strict",
@@ -102,22 +104,22 @@
       ],
       "exitCode": 0,
       "outcome": "PASS",
-      "milliseconds": 299380,
-      "startedAt": "2026-09-13T13:56:22.3129324-07:00",
-      "completedAt": "2026-09-13T14:01:21.6929806-07:00",
+      "milliseconds": 290996,
+      "startedAt": "2026-09-13T14:36:30.1407089-07:00",
+      "completedAt": "2026-09-13T14:41:21.1371669-07:00",
       "category": "gradle",
       "resumed": false,
       "reusedFrom": null,
       "outputs": [],
       "log": {
         "path": "logs/verified-cache-offline-build.log",
-        "sha256": "15bea6ea3558500875f722b51569b9a2bc6501b6a3f58b89e6f6a4f6eba0192e"
+        "sha256": "4922578020a94b89fef545c8ccb2af4475540883d28c08e48f4d8b94bae9de46"
       }
     },
     "includedBuildPrime": {
       "name": "prime-build-logic-cache",
       "command": [
-        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-5dc09a3c\\s\\gradlew.bat",
+        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
         "--no-daemon",
         "--dependency-verification",
         "strict",
@@ -128,22 +130,22 @@
       ],
       "exitCode": 0,
       "outcome": "PASS",
-      "milliseconds": 50963,
-      "startedAt": "2026-09-13T13:55:31.3448321-07:00",
-      "completedAt": "2026-09-13T13:56:22.3086589-07:00",
+      "milliseconds": 48693,
+      "startedAt": "2026-09-13T14:35:41.443647-07:00",
+      "completedAt": "2026-09-13T14:36:30.1368183-07:00",
       "category": "gradle",
       "resumed": false,
       "reusedFrom": null,
       "outputs": [],
       "log": {
         "path": "logs/prime-build-logic-cache.log",
-        "sha256": "3755a675cd2df99b8c97dd5e06bb3990e4fc1fe1339d170da4189aaea8adbb3b"
+        "sha256": "df9684b3d3117136813ac571b383ded17cd873301e5c1559b547d375fa20dc64"
       }
     },
     "includedBuildOffline": {
       "name": "verified-cache-offline-build-logic",
       "command": [
-        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-5dc09a3c\\s\\gradlew.bat",
+        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
         "--no-daemon",
         "--dependency-verification",
         "strict",
@@ -155,16 +157,16 @@
       ],
       "exitCode": 0,
       "outcome": "PASS",
-      "milliseconds": 44680,
-      "startedAt": "2026-09-13T14:01:21.6976003-07:00",
-      "completedAt": "2026-09-13T14:02:06.3776778-07:00",
+      "milliseconds": 43101,
+      "startedAt": "2026-09-13T14:41:21.1415362-07:00",
+      "completedAt": "2026-09-13T14:42:04.2431644-07:00",
       "category": "gradle",
       "resumed": false,
       "reusedFrom": null,
       "outputs": [],
       "log": {
         "path": "logs/verified-cache-offline-build-logic.log",
-        "sha256": "702208826ac56087bc9e5ad932e1ae74a80b16a7321dcfa73255ac4308c84740"
+        "sha256": "b9c3e9bd6e5af4dd11ad5dc3ee9223649faceb70d29ff830c09b8fd2fd8f481a"
       }
     },
     "gates": {
@@ -215,7 +217,7 @@
       "./build/run-ci-gate.ps1 -Gate unit",
       "./gradlew --no-daemon :jbsa:integrationTest :jbsa-cli:integrationTest :jbsa-test-support:integrationTest :jbsa-conformance-tests:integrationTest :jbsa-benchmarks:integrationTest"
     ],
-    "transcriptSha256": "5d7f2a922216253559f493a21de0b7c4a873aa550c8b5790764a08d9977e36c9",
+    "transcriptSha256": "a627579d5b74114ba3336afe7239719a1c10a52abbdb9a864b163e7f259dfba8",
     "sourceCleanBeforeAndAfter": true
   },
   "activeReferenceScan": {
@@ -461,7 +463,7 @@
         "source": "io.github.evildarkarchon:jbsa-cli:0.1.0-SNAPSHOT"
       }
     ],
-    "commandLogSha256": "bb89bce4bc6a81fafbcb9102de89c4ab8252af72e66c543ed39513d8e28fe558"
+    "commandLogSha256": "8d1c5aaf4f909cc0e15082ee78facc73c3be5c530dff6a451338b682678c6657"
   },
   "offlineAndDependencyPolicy": {
     "outcome": "PASS",
@@ -484,7 +486,7 @@
         "first": {
           "name": "configuration-cache-first",
           "command": [
-            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-5dc09a3c\\s\\gradlew.bat",
+            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
             "--no-daemon",
             "--dependency-verification",
             "strict",
@@ -500,22 +502,22 @@
           ],
           "exitCode": 0,
           "outcome": "PASS",
-          "milliseconds": 7507,
-          "startedAt": "2026-09-13T14:02:11.378846-07:00",
-          "completedAt": "2026-09-13T14:02:18.8858929-07:00",
+          "milliseconds": 7034,
+          "startedAt": "2026-09-13T14:42:08.928992-07:00",
+          "completedAt": "2026-09-13T14:42:15.9632965-07:00",
           "category": "gradle",
           "resumed": false,
           "reusedFrom": null,
           "outputs": [],
           "log": {
             "path": "logs/configuration-cache-first.log",
-            "sha256": "ce04a18b7565ae3b59375ed2421cae3e511e5c3ec35f77cba36de2f83f823908"
+            "sha256": "c2b07835a310648b88b31ab2290c0b1a440fa0522cd9d50b9e585ff40dd1c6a5"
           }
         },
         "second": {
           "name": "configuration-cache-second",
           "command": [
-            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-5dc09a3c\\s\\gradlew.bat",
+            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
             "--no-daemon",
             "--dependency-verification",
             "strict",
@@ -531,16 +533,16 @@
           ],
           "exitCode": 0,
           "outcome": "PASS",
-          "milliseconds": 3175,
-          "startedAt": "2026-09-13T14:02:18.8892755-07:00",
-          "completedAt": "2026-09-13T14:02:22.0650427-07:00",
+          "milliseconds": 3112,
+          "startedAt": "2026-09-13T14:42:15.9667998-07:00",
+          "completedAt": "2026-09-13T14:42:19.0791164-07:00",
           "category": "gradle",
           "resumed": false,
           "reusedFrom": null,
           "outputs": [],
           "log": {
             "path": "logs/configuration-cache-second.log",
-            "sha256": "8f42d9bc1b36b182b2667dd7544db8c14c5dff15f56b8c08f0266ec659383da7"
+            "sha256": "2b35f6e2bf49bfef1693914504eec2740b35aa02a4b3eb736fafda46d6423e06"
           }
         }
       },
@@ -561,7 +563,7 @@
         "command": {
           "name": "configuration-cache-incompatible",
           "command": [
-            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-5dc09a3c\\s\\gradlew.bat",
+            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
             "--no-daemon",
             "--dependency-verification",
             "strict",
@@ -580,16 +582,16 @@
           ],
           "exitCode": 1,
           "outcome": "FAIL",
-          "milliseconds": 4646,
-          "startedAt": "2026-09-13T14:02:22.0688278-07:00",
-          "completedAt": "2026-09-13T14:02:26.7153576-07:00",
+          "milliseconds": 4462,
+          "startedAt": "2026-09-13T14:42:19.0836622-07:00",
+          "completedAt": "2026-09-13T14:42:23.5466445-07:00",
           "category": "gradle",
           "resumed": false,
           "reusedFrom": null,
           "outputs": [],
           "log": {
             "path": "logs/configuration-cache-incompatible.log",
-            "sha256": "2d5d645ee6716fe0336479a18385c073a56ec6b41b960368f3e1e208103bf76c"
+            "sha256": "c5be643547074f6510e75bccd405411e6eef829f078277fef83824e62a80a91c"
           }
         }
       }
@@ -610,7 +612,7 @@
     "reason": "Every required case received a fresh INVALID result because no public-interface execution adapter is registered; this is retained evidence, not a PASS claim.",
     "caseManifestSha256": "17a573a623e30ba2287b9cb514e01f7257fbf29d99de90bf4c0cc3efadc9c6ba",
     "specificationSetSha256": "674e1e373a4558dbb50b5853043a238f27f9bdd6ef6331f35ae63160ec9b75f9",
-    "reportSha256": "db5c7f30826924245e93d00c4baddb8b1387aca508ae67ee520f5c1023860d4f",
+    "reportSha256": "ff60d45f3a6a5f794f4969e5b9871f1b960f3340ccab8babf44cdfe004c5e282",
     "matrixSha256": "877fc7dd1f14e945d74d76599bd5d518abd61bfe7eedc6270d1e95f446c41042",
     "candidateArtifacts": [
       {
@@ -630,8 +632,8 @@
     "prerequisiteTicket": ".scratch/jbsa-1-0/issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md",
     "prerequisiteState": "open and blocked by tickets 50 and 53",
     "requiredEnvironment": "Windows 11 x64 on NTFS with the relevant game or official tool",
-    "handoffRoot": "target/qualification-evidence/494db4e/gradle/release-qualification",
-    "handoffManifestSha256": "ebb900aea7b06066934a151e17e27c148532b5502cc1fdb406de79f3ea726dad",
+    "handoffRoot": "target/qualification-evidence/c3404f7/gradle/release-qualification",
+    "handoffManifestSha256": "b569a1e238d68ee5b4b063d50c9e1f68088da1d3b176e666325e22f9cc2621b1",
     "writableConformanceCaseCount": 23,
     "writableConformanceCases": [
       {

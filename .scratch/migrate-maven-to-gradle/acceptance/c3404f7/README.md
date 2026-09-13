@@ -1,9 +1,9 @@
-# Gradle acceptance evidence for `494db4e`
+# Gradle acceptance evidence for `c3404f7`
 
 This is the final ticket-12 acceptance record for clean candidate revision
-`494db4e7cd3d288a17cecb4c9fc7705adeccacd6`, version `0.1.0-SNAPSHOT`. The
+`c3404f789bdc1a82e777efef5b46dbf53a3121ea`, version `0.1.0-SNAPSHOT`. The
 [machine-readable report](report.json) binds the complete ignored evidence tree at
-`target/qualification-evidence/494db4e` by SHA-256. Earlier evidence, including
+`target/qualification-evidence/c3404f7` by SHA-256. Earlier evidence, including
 `../../parity/236202b`, remains unchanged historical provenance and does not qualify these
 Gradle-produced artifacts.
 
@@ -11,6 +11,7 @@ Gradle-produced artifacts.
 
 - Exact Eclipse Temurin `25.0.4+7` Windows qualification used the pinned archive SHA-256
   `7caab7db43bf4b94a2e6252c699e70d90084f9aa7c943cd3414761fd540937ae` and Gradle `9.7.1`.
+  The report identifies the launcher, wrapper JAR, and wrapper properties separately.
 - Windows cache priming and strict-offline complete verification passed with `--no-daemon`, as did
   the included build, strict checksum negative proof, lockfile consistency, module/architecture and
   Gradle-policy tests, active-reference scan, publication, SBOM, compliance, staging, and
@@ -21,7 +22,7 @@ Gradle-produced artifacts.
 - Linux portability passed the five hosted-CI-equivalent compile, formatting, build-logic, unit, and
   ordinary integration commands from a clean native Ubuntu WSL2 checkout using the pinned Temurin
   `25.0.4+7` Linux archive.
-- The new Release Qualification handoff retains 18 staged inputs plus the release manifest,
+- The Release Qualification handoff retains 18 staged inputs plus the release manifest,
   build/dependency/SBOM/compliance outputs, and complete Automated Conformance report before later
   clean phases remove the detached worktree.
 - Automated Conformance is honestly `BLOCKED`, not `PASS`: all 508 required Conformance Cases were
@@ -34,7 +35,7 @@ Gradle-produced artifacts.
 The raw evidence is intentionally ignored build output rather than committed binaries:
 
 ```text
-target/qualification-evidence/494db4e/
+target/qualification-evidence/c3404f7/
 ├── maven/                         temporary same-revision comparison oracle
 ├── gradle/                        qualification logs, snapshots, and reports
 │   └── release-qualification/
@@ -49,7 +50,9 @@ target/qualification-evidence/494db4e/
 
 Verify `report.json`'s `rawEvidence.completeTreeSha256`, then verify
 `gradle/release-qualification/manifest.json.sha256` and every file row in the manifest before moving
-or using the handoff. Do not substitute later build outputs under the same candidate label.
+or using the handoff. Do not run the root `clean` task before copying the ignored handoff to its
+operator-controlled evidence location, and do not substitute later build outputs under the same
+candidate label.
 
 ## Manual Windows Release Qualification
 
