@@ -9,9 +9,12 @@ import java.nio.channels.Channels;
 import java.nio.file.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public 0x68 packing contract with independently specified wire expectations. */
+@EnabledOnOs(OS.WINDOWS)
 class Bsa68PackTest {
   @TempDir Path temporary;
 

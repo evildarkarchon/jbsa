@@ -19,45 +19,29 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $reactorRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$mavenWrapper = Join-Path $reactorRoot 'mvnw.cmd'
-$gradleWrapper = Join-Path $reactorRoot 'gradlew.bat'
+$gradleWrapper = Join-Path $reactorRoot $(if ($IsWindows) { 'gradlew.bat' } else { 'gradlew' })
 
-if ($Gate -eq 'conformance') {
-    Push-Location $reactorRoot
-    try {
-        & $gradleWrapper --no-daemon ':jbsa-conformance-tests:automatedConformance'
-        if ($LASTEXITCODE -ne 0) {
-            throw "The conformance Gradle gate failed with exit code $LASTEXITCODE."
-        }
+$gradleArguments = switch ($Gate) {
+    'compile' {
+        @('--no-daemon', ':jbsa:classes', ':jbsa-cli:classes', ':jbsa-test-support:classes', ':jbsa-conformance-tests:classes', ':jbsa-benchmarks:classes')
     }
-    finally {
-        Pop-Location
+    'unit' {
+        @('--no-daemon', ':jbsa:test', ':jbsa-cli:test', ':jbsa-test-support:test', ':jbsa-conformance-tests:test', ':jbsa-benchmarks:test')
     }
-    return
-}
-
-$mavenArguments = switch ($Gate) {
-    'compile' { @('-B', '-ntp', '-C', '-DskipTests', 'compile') }
-    'unit' { @('-B', '-ntp', '-C', 'test') }
-    'architecture' { @('-B', '-ntp', '-C', '-Dgroups=architecture', 'verify') }
-    'formatting' { @('-B', '-ntp', '-C', 'spotless:check') }
-    'policy' { @('-B', '-ntp', '-C', '-Dgroups=build-policy', 'verify') }
-    'conformance' { throw 'The conformance gate must use the Gradle workflow.' }
+    'architecture' { @('--no-daemon', ':jbsa-conformance-tests:architectureTest') }
+    'formatting' { @('--no-daemon', 'spotlessCheck') }
+    'policy' { @('--no-daemon', ':jbsa-conformance-tests:buildPolicyTest') }
+    'conformance' { @('--no-daemon', ':jbsa-conformance-tests:automatedConformance') }
 }
 
 Push-Location $reactorRoot
 try {
-    & $mavenWrapper @mavenArguments
+    & $gradleWrapper @gradleArguments
     if ($LASTEXITCODE -ne 0) {
-        throw "The $Gate Maven gate failed with exit code $LASTEXITCODE."
+        throw "The $Gate Gradle gate failed with exit code $LASTEXITCODE."
     }
 
     if ($Gate -eq 'policy') {
-        & $mavenWrapper -B -ntp -C org.apache.maven.plugins:maven-artifact-plugin:3.6.1:check-buildplan '-Dcheck.buildplan.tasks=verify'
-        if ($LASTEXITCODE -ne 0) {
-            throw "The reproducible-build plan check failed with exit code $LASTEXITCODE."
-        }
-
         & (Join-Path $PSScriptRoot 'verify-reproducible-build.ps1')
         if (-not $?) {
             throw 'The two-build reproducibility check failed.'

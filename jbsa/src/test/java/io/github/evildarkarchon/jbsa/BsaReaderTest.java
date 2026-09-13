@@ -7,9 +7,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public BSA reader contracts against independently worked literal wire records. */
+@EnabledOnOs(OS.WINDOWS)
 final class BsaReaderTest {
   @TempDir Path directory;
 

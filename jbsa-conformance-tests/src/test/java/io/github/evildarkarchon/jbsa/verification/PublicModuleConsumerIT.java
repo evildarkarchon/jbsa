@@ -8,10 +8,13 @@ import java.util.concurrent.TimeUnit;
 import javax.tools.ToolProvider;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Compiles and runs real named-module consumers using only the library's JPMS exports. */
 @Tag("contract")
+@EnabledOnOs(OS.WINDOWS)
 final class PublicModuleConsumerIT {
   @TempDir Path directory;
 

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Exercises the command process boundary without depending on parser implementation details. */
@@ -18,6 +20,7 @@ class MainTest {
 
   /** Each legacy game spelling selects version 104 and survives as a pack observation. */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksVersion104Aliases() throws Exception {
     for (String selector : List.of("-fo3", "-FNV", "-tes5")) {
       for (boolean compressed : List.of(false, true)) {
@@ -55,6 +58,7 @@ class MainTest {
 
   /** Profile family priority must include version 104 and select its earliest-priority alias. */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void profileSelectsVersion104BetweenTes4AndFallout4() throws Exception {
     for (String[] order :
         List.of(
@@ -114,6 +118,7 @@ class MainTest {
 
   /** DDS family selection defaults to compressed PC output and exposes texture chunk facts. */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void packsDdsWithMandatoryDefaultCompression() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("dds-input/Textures"));
     var bytes = java.nio.ByteBuffer.allocate(136).order(java.nio.ByteOrder.LITTLE_ENDIAN);
@@ -145,6 +150,7 @@ class MainTest {
 
   /** General BA2 commands expose compressed payloads through the public process boundary. */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksFallout4GeneralZlib() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("fo4-input/Meshes"));
     Files.writeString(source.resolve("A.nif"), "payload".repeat(100));
@@ -192,6 +198,7 @@ class MainTest {
 
   /** TES4 switches reach the public packer and inspection renders actual compression and flags. */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksTes4ZlibWithDetachedDump() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("tes4-input/meshes"));
     Files.writeString(source.resolve("a.nif"), "payload".repeat(100));
@@ -253,6 +260,7 @@ class MainTest {
    * priority.
    */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void profileChoosesTes3BeforeTes4RegardlessOfSwitchOrder() throws Exception {
     for (String[] order :
         List.of(new String[] {"-tes4", "-tes3"}, new String[] {"-tes3", "-tes4"})) {
@@ -293,6 +301,7 @@ class MainTest {
   }
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void packAndDetachedListDumpPreserveNamesAndProduceAnArchive() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("Café sources"));
     Files.writeString(source.resolve("cafe.txt"), "payload", StandardCharsets.UTF_8);
@@ -316,6 +325,7 @@ class MainTest {
   }
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void unpackPublishesPayloadAndRequiresExplicitReplacement() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("input"));
     Files.writeString(source.resolve("entry.txt"), "payload");
@@ -336,6 +346,7 @@ class MainTest {
   }
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void profileUsesFirstValueAndPermissiveBooleanWhileRetainingTheSourceBoundary() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("profile-source"));
     Files.writeString(source.resolve("entry.txt"), "payload");
@@ -357,6 +368,7 @@ class MainTest {
   }
 
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void versionReportsArtifactAndProfileAndOperationalFailuresUseStderr() throws Exception {
     Result version = run("--VERSION");
     assertEquals(0, version.status());

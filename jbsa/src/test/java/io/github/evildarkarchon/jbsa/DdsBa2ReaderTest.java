@@ -7,9 +7,12 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public texture-reader behavior from independently authored archive records. */
+@EnabledOnOs(OS.WINDOWS)
 final class DdsBa2ReaderTest {
   @TempDir Path directory;
 

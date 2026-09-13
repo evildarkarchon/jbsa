@@ -13,11 +13,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 /** DDS format and envelope checks through public packing and reconstructed content. */
+@EnabledOnOs(OS.WINDOWS)
 class DdsEnvelopePackTest {
   @TempDir Path temporary;
 

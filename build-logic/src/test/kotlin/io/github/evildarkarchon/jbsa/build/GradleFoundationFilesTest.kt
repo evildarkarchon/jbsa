@@ -137,6 +137,22 @@ class GradleFoundationFilesTest {
         assertTrue(review.contains("All 124 values matched; failures: 0."))
     }
 
+    /** Verifies Gradle exposes the same Java formatter version and transformations as Maven. */
+    @Test
+    fun `pins the Maven equivalent Java formatting contract`() {
+        val catalog = Files.readString(repositoryRoot.resolve("gradle/libs.versions.toml"))
+        val rootBuild = Files.readString(repositoryRoot.resolve("build.gradle.kts"))
+
+        assertTrue(catalog.contains("google-java-format = \"1.36.0\""))
+        assertTrue(catalog.contains("spotless = \"8.10.2\""))
+        assertTrue(rootBuild.contains("alias(libs.plugins.spotless)"))
+        assertTrue(rootBuild.contains("encoding(\"UTF-8\")"))
+        assertTrue(rootBuild.contains("target(\"jbsa*/src/**/*.java\")"))
+        assertTrue(rootBuild.contains("googleJavaFormat(libs.versions.google.java.format.get())"))
+        assertTrue(rootBuild.contains("formatAnnotations()"))
+        assertTrue(rootBuild.contains("removeUnusedImports()"))
+    }
+
     /** Returns the lowercase SHA-256 digest of one committed wrapper artifact. */
     private fun sha256(path: Path): String =
         MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)).joinToString("") { "%02x".format(it) }

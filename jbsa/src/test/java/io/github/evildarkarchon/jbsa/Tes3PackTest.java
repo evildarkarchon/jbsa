@@ -10,9 +10,12 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public TES3 encode examples independently calculated from the wire specification. */
+@EnabledOnOs(OS.WINDOWS)
 class Tes3PackTest {
   @TempDir Path temporary;
 

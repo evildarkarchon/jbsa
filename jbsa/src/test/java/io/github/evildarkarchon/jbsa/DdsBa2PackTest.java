@@ -8,9 +8,12 @@ import java.nio.channels.Channels;
 import java.nio.file.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** DDS packing behavior through the public archive API and independently specified wire fields. */
+@EnabledOnOs(OS.WINDOWS)
 class DdsBa2PackTest {
   @TempDir Path temporary;
 

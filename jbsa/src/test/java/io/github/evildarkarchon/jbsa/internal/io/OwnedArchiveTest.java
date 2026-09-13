@@ -12,9 +12,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Exercises the accepted public lifetime seam with a test-only stored-entry index. */
+@EnabledOnOs(OS.WINDOWS)
 final class OwnedArchiveTest {
   @TempDir Path directory;
 

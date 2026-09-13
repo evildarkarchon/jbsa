@@ -14,11 +14,14 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 /** Tests settled publication evidence through real files and deliberate mutation failures. */
+@EnabledOnOs(OS.WINDOWS)
 final class PublicationFailuresTest {
   @TempDir Path directory;
 

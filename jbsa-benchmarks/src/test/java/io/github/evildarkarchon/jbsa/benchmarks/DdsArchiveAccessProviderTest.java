@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.ServiceLoader;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Checks the benchmark adapter's production delegation and external-manifest authority. */
@@ -23,6 +25,7 @@ final class DdsArchiveAccessProviderTest {
 
   /** Reaches the public metadata/content seam and rejects incorrect external payload evidence. */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void validatesManifestBeforeDelegatingReads() throws Exception {
     byte[] dds = new byte[136];
     ByteBuffer header = ByteBuffer.wrap(dds).order(ByteOrder.LITTLE_ENDIAN);

@@ -8,9 +8,12 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Checks real file bounds and Windows input lifetimes below the exported archive interface. */
+@EnabledOnOs(OS.WINDOWS)
 final class ArchiveInputTest {
   @TempDir Path directory;
 

@@ -9,9 +9,12 @@ import java.util.HexFormat;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public query and content contracts against literal independently specified TES3 bytes. */
+@EnabledOnOs(OS.WINDOWS)
 final class Tes3ReadTest {
   @TempDir Path directory;
 

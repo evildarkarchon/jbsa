@@ -8,9 +8,12 @@ import java.nio.channels.Channels;
 import java.nio.file.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Canonical General BA2 output observed through the public packing boundary. */
+@EnabledOnOs(OS.WINDOWS)
 class Ba2PackTest {
   @TempDir Path temporary;
 

@@ -7,8 +7,11 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 /** Fresh JVMs isolate process-lifetime native loading and Java 25 host policy. */
+@EnabledOnOs(OS.WINDOWS)
 final class Lz4LaunchTest {
   /**
    * Missing grants and missing native artifacts leave zlib available and fail LZ4

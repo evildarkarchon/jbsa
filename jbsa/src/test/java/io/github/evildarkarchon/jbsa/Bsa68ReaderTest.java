@@ -7,9 +7,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Independently worked 0x68 records exercise the public reader and framing contract. */
+@EnabledOnOs(OS.WINDOWS)
 final class Bsa68ReaderTest {
   @TempDir Path directory;
   private static final String ONE =

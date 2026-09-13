@@ -19,9 +19,12 @@ import java.nio.file.attribute.FileTime;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Exercises the real I/O lifetime with an explicitly simulated stable-identity provider. */
+@EnabledOnOs(OS.WINDOWS)
 final class SourceFileTest {
   @TempDir Path directory;
 

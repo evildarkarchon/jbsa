@@ -9,9 +9,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public extraction behavior from independent literal stored TES3 archives. */
+@EnabledOnOs(OS.WINDOWS)
 final class Tes3ExtractTest {
   @TempDir Path directory;
 

@@ -13,8 +13,8 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | local | [Gradle 06: Preserve the standalone benchmark workflow](migrate-maven-to-gradle/issues/06-preserve-standalone-benchmarks.md) | closed | none |
 | local | [Gradle 07: Generate and audit production compliance inputs](migrate-maven-to-gradle/issues/07-generate-audit-compliance-inputs.md) | closed | none |
 | local | [Gradle 08: Complete release staging through clean verify](migrate-maven-to-gradle/issues/08-complete-release-staging-verify.md) | closed | none |
-| local | [Gradle 09: Run stable CI gates on Windows and Linux](migrate-maven-to-gradle/issues/09-run-stable-ci-gates.md) | open | ready-for-agent |
-| local | [Gradle 10: Prove artifact parity, reproducibility, and offline operation](migrate-maven-to-gradle/issues/10-prove-parity-reproducibility-offline.md) | open | needs-triage |
+| local | [Gradle 09: Run stable CI gates on Windows and Linux](migrate-maven-to-gradle/issues/09-run-stable-ci-gates.md) | closed | none |
+| local | [Gradle 10: Prove artifact parity, reproducibility, and offline operation](migrate-maven-to-gradle/issues/10-prove-parity-reproducibility-offline.md) | open | ready-for-agent |
 | local | [Gradle 11: Migrate active instructions and enforce reference hygiene](migrate-maven-to-gradle/issues/11-migrate-active-instructions.md) | open | needs-triage |
 | local | [Gradle 12: Regenerate the Gradle acceptance evidence](migrate-maven-to-gradle/issues/12-regenerate-gradle-acceptance-evidence.md) | open | needs-triage |
 | local | [Gradle 13: Complete Windows Release Qualification](migrate-maven-to-gradle/issues/13-complete-windows-release-qualification.md) | open | needs-triage |

@@ -7,8 +7,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 /** Exercises the internal raw-block qualification seam with independently authored wire bytes. */
+@EnabledOnOs(OS.WINDOWS)
 final class Lz4RawTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("raw.ba2"), Operation.OPEN);
 

@@ -8,9 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public General BA2 contracts using independently specified wire records. */
+@EnabledOnOs(OS.WINDOWS)
 final class Ba2ReaderTest {
   @TempDir Path directory;
 

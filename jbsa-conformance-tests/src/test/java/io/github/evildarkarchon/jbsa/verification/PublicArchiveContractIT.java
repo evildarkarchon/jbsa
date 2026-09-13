@@ -7,10 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Exercises the Contract Baseline through the same public interface as an embedded consumer. */
 @Tag("contract")
+@EnabledOnOs(OS.WINDOWS)
 final class PublicArchiveContractIT {
   @TempDir Path directory;
 

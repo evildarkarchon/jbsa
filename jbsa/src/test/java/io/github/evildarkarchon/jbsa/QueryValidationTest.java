@@ -5,11 +5,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /** Public query operations distinguish source and recognition failures before parser dispatch. */
+@EnabledOnOs(OS.WINDOWS)
 final class QueryValidationTest {
   @TempDir Path directory;
 

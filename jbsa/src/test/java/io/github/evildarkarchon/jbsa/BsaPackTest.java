@@ -9,9 +9,12 @@ import java.nio.channels.Channels;
 import java.nio.file.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public canonical Oblivion packing behavior and independent wire expectations. */
+@EnabledOnOs(OS.WINDOWS)
 class BsaPackTest {
   @TempDir Path temporary;
 

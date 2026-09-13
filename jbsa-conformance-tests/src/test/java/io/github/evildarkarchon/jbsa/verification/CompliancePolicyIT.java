@@ -94,24 +94,26 @@ final class CompliancePolicyIT {
    */
   private static AuditResult runComplianceAuditAgainstSbom(Path sbom) throws Exception {
     List<String> command =
-        new java.util.ArrayList<>(List.of(
-            "pwsh",
-            "-NoLogo",
-            "-NoProfile",
-            "-NonInteractive",
-            "-File",
-            reactorRoot().resolve("build/verify-compliance.ps1").toString(),
-            "-ReactorVersion",
-            System.getProperty("jbsa.version"),
-            "-RequireGeneratedArtifacts",
-            "-GeneratedSbomPath",
-            sbom.toString()));
+        new java.util.ArrayList<>(
+            List.of(
+                "pwsh",
+                "-NoLogo",
+                "-NoProfile",
+                "-NonInteractive",
+                "-File",
+                reactorRoot().resolve("build/verify-compliance.ps1").toString(),
+                "-ReactorVersion",
+                System.getProperty("jbsa.version"),
+                "-RequireGeneratedArtifacts",
+                "-GeneratedSbomPath",
+                sbom.toString()));
     addGradleModelArguments(command);
     return runAuditProcess(command, reactorRoot(), Map.of(), "Compliance verifier");
   }
 
   /**
-   * Adds the generated Gradle model, production locks, and strict verification metadata to an audit.
+   * Adds the generated Gradle model, production locks, and strict verification metadata to an
+   * audit.
    *
    * @param command mutable compliance-verifier command
    */
@@ -120,7 +122,9 @@ final class CompliancePolicyIT {
     command.add(reactorRoot().resolve("target/compliance/build-layout.json").toString());
     command.add("-ResolvedProductionDependencies");
     command.add(
-        reactorRoot().resolve("target/compliance/resolved-production-dependencies.json").toString());
+        reactorRoot()
+            .resolve("target/compliance/resolved-production-dependencies.json")
+            .toString());
     command.add("-ConsumerPomPath");
     command.add(System.getProperty("jbsa.library.consumerPom"));
   }
@@ -541,7 +545,8 @@ final class CompliancePolicyIT {
   void gradleModelAuditRejectsUnapprovedResolvedDependencies() throws Exception {
     Path complianceOutput = reactorRoot().resolve("target/compliance");
     String suffix = "-rejected-" + java.util.UUID.randomUUID();
-    Path resolvedFixture = complianceOutput.resolve("resolved-production-dependencies" + suffix + ".json");
+    Path resolvedFixture =
+        complianceOutput.resolve("resolved-production-dependencies" + suffix + ".json");
     Path layoutFixture = complianceOutput.resolve("build-layout" + suffix + ".json");
     try {
       Path resolved = complianceOutput.resolve("resolved-production-dependencies.json");
@@ -616,12 +621,16 @@ final class CompliancePolicyIT {
     assertTrue(Files.isRegularFile(releaseNotes), () -> "Missing release notices: " + releaseNotes);
     assertFileContains(
         "target/compliance/RELEASE-NOTES.md", "fd1e36020b2b5b6217e553dc0038983146a2e2dd");
-    assertTrue(Files.isRegularFile(buildLayout), () -> "Missing build-layout manifest: " + buildLayout);
+    assertTrue(
+        Files.isRegularFile(buildLayout), () -> "Missing build-layout manifest: " + buildLayout);
     assertTrue(
         Files.isRegularFile(resolvedDependencies),
         () -> "Missing resolved-production manifest: " + resolvedDependencies);
-    String stagingScript = Files.readString(reactorRoot().resolve("build/stage-release-inputs.ps1"));
-    assertFalse(stagingScript.contains("build-layout.json"), "Internal layout manifest became a release input");
+    String stagingScript =
+        Files.readString(reactorRoot().resolve("build/stage-release-inputs.ps1"));
+    assertFalse(
+        stagingScript.contains("build-layout.json"),
+        "Internal layout manifest became a release input");
     assertFalse(
         stagingScript.contains("resolved-production-dependencies.json"),
         "Internal dependency manifest became a release input");

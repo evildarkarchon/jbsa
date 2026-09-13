@@ -10,11 +10,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /** Exercises extraction preflight and identity rechecks on the qualified Windows filesystem. */
+@EnabledOnOs(OS.WINDOWS)
 final class ExtractionPathsTest {
   @TempDir Path directory;
 

@@ -8,9 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Qualifies existing drive-root extraction using a temporary user-scoped DOS drive mapping. */
+@EnabledOnOs(OS.WINDOWS)
 class PublicationDriveRootTest {
   @TempDir Path directory;
 

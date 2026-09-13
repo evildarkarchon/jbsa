@@ -111,3 +111,22 @@ canonical outputs covered by artifact and reproducibility tests rather than depe
 A primed-cache `generateProductionSbom verifyCompliance --offline --no-daemon` run then completed
 with strict verification and locks enabled, proving that the new compliance closure needs no
 undeclared network input.
+
+## Ticket 09 extension: Spotless and Linux resolution
+
+The stable-CI work applied the already-pinned Spotless 8.10.2 plugin and Google Java Format 1.36.0
+implementation at the root. Resolving the included Kotlin build on Linux also introduced
+platform-specific POM and Gradle-module inputs that Windows had not requested.
+
+| Input | SHA-256 |
+| --- | --- |
+| `gradle/verification-metadata.xml` | `4d2a286c4697a2e6213d1d6760bce4e5c89f5ea819761054ad0ee4c3ace63f3d` |
+| `build-logic/gradle/verification-metadata.xml` | `d18ae4bcc9928956777d4d0878232a8bc20b64b827c5a9a754f1e36132fd0df6` |
+
+The metadata union now contains 433 distinct artifacts. This extension added 88 Spotless,
+Google Java Format, transitive, POM, and Gradle-module artifacts. All 88 were freshly downloaded
+outside Gradle's dependency cache and independently hashed: 87 came from Maven
+Central and the Spotless plugin marker came from the Gradle Plugin Portal. Every SHA-256 matched the
+generated metadata and no checksum failed. The generated consumer POM and resolved production
+manifest retain only the approved Windows runtime classifiers; native launch tests remain
+Windows-only procedures.

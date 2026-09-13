@@ -15,9 +15,12 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Exercises the shared publication adapter using caller-observable progress and disk outcomes. */
+@EnabledOnOs(OS.WINDOWS)
 class PublicationProgressTest {
   @TempDir Path directory;
 

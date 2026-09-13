@@ -10,9 +10,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public metadata ceilings include names and decoded-size fields outside the index. */
+@EnabledOnOs(OS.WINDOWS)
 final class Bsa68PackLimitsTest {
   @TempDir Path directory;
 

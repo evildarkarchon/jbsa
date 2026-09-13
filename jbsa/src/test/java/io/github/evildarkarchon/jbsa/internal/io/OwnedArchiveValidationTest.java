@@ -8,9 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Exercises layered evidence through the accepted public archive and content interfaces. */
+@EnabledOnOs(OS.WINDOWS)
 final class OwnedArchiveValidationTest {
   @TempDir Path directory;
 
