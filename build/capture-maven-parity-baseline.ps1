@@ -185,9 +185,10 @@ try {
     ) -WorkingDirectory $isolatedRoot
 
     # A failing real gate is part of the baseline. Re-materialize the complete canonical output set
-    # without tests so later inventory does not accidentally describe a partially built reactor.
+    # without compiling tests: Gradle-only policy tests may legitimately depend on inputs absent from
+    # the temporary Maven oracle, and later inventory must not describe a partially built reactor.
     $materialization = Invoke-BaselineCommand -Name 'materialize-outputs' -Executable $maven -Arguments @(
-        '-B', '-ntp', '-C', "-Drevision=$candidateVersion", '-DskipTests', 'clean', 'verify'
+        '-B', '-ntp', '-C', "-Drevision=$candidateVersion", '-Dmaven.test.skip=true', 'clean', 'verify'
     ) -WorkingDirectory $isolatedRoot -RequireSuccess
 
     $dependencyGraph = Invoke-BaselineCommand -Name 'resolved-dependencies' -Executable $maven -Arguments @(
