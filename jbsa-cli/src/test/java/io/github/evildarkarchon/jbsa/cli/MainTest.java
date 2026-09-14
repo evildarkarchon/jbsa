@@ -18,6 +18,77 @@ import org.junit.jupiter.api.io.TempDir;
 class MainTest {
   @TempDir Path temporary;
 
+  /** The SSE selector exposes version 105 and family-default LZ4-frame round trips. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void packsAndUnpacksSseLz4Frame() throws Exception {
+    for (String codec : List.of("-z", "-z:lz4f")) {
+      Path source = Files.createTempDirectory(temporary, "sse-source");
+      Files.createDirectories(source.resolve("meshes"));
+      Files.writeString(source.resolve("meshes/a.nif"), "payload".repeat(10_000));
+      Path archive = temporary.resolve(source.getFileName() + ".bsa");
+      Result packed =
+          run("pack", source.toString(), archive.toString(), "-sse", codec, "--no-progress");
+      assertEquals(0, packed.status(), packed.error());
+      assertTrue(packed.output().contains("Selector: -sse"));
+      Result dumped = run(archive.toString(), "-dump");
+      assertEquals(0, dumped.status(), dumped.error());
+      assertTrue(dumped.output().contains("Family: SSE_BSA"));
+      assertTrue(dumped.output().contains("Version: 105"));
+      assertTrue(dumped.output().contains("Codec: LZ4_FRAME"));
+      assertTrue(dumped.output().contains("Folder padding before offset: 0"));
+      Path destination = Files.createTempDirectory(temporary, "sse-output");
+      Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
+      assertEquals(0, unpacked.status(), unpacked.error());
+      assertEquals("payload".repeat(10_000), Files.readString(destination.resolve("meshes/a.nif")));
+    }
+  }
+
+  /** Family-specific codec spellings reject contradictions at the invocation boundary. */
+  @Test
+  void rejectsInvalidSseCodecCombinations() throws Exception {
+    for (String[] options :
+        List.of(
+            new String[] {"-sse", "-z:zlib"},
+            new String[] {"-sse", "-z:lz4"},
+            new String[] {"-tes4", "-z:lz4f"},
+            new String[] {"-sse", "-tes5"})) {
+      var args =
+          new ArrayList<>(List.of("pack", "missing", temporary.resolve("absent.bsa").toString()));
+      args.addAll(List.of(options));
+      Result result = run(args.toArray(String[]::new));
+      assertEquals(2, result.status(), result.error());
+      assertEquals("", result.output());
+    }
+  }
+
+  /** The compatibility profile places SSE after legacy Skyrim and before Fallout 4. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileSelectsSseBetweenVersion104AndFallout4() throws Exception {
+    for (String[] order :
+        List.of(
+            new String[] {"-fo4", "-sse"},
+            new String[] {"-sse", "-fo4"},
+            new String[] {"-fo4dds", "-sse"})) {
+      Path source = Files.createTempDirectory(temporary, "sse-priority-source");
+      Files.createDirectories(source.resolve("meshes"));
+      Files.writeString(source.resolve("meshes/a.nif"), "one");
+      Path archive = temporary.resolve(source.getFileName() + ".bsa");
+      var args =
+          new ArrayList<>(
+              List.of(
+                  "--compatibility-profile=bsarch-1.0/v1",
+                  "pack",
+                  source.toString(),
+                  archive.toString()));
+      args.addAll(List.of(order));
+      Result result = run(args.toArray(String[]::new));
+      assertEquals(0, result.status(), result.error());
+      assertTrue(run(archive.toString()).output().contains("Family: SSE_BSA"));
+    }
+  }
+
   /** Each legacy game spelling selects version 104 and survives as a pack observation. */
   @Test
   @EnabledOnOs(OS.WINDOWS)

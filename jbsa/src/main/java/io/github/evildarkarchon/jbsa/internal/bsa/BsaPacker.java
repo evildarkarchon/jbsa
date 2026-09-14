@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 
-/** Canonical sequential zlib-family BSA writer with bounded stabilization before split planning. */
+/** Canonical sequential versioned-BSA writer with bounded stabilization before split planning. */
 public final class BsaPacker {
   private BsaPacker() {}
 
@@ -29,29 +29,41 @@ public final class BsaPacker {
       operation.begin();
       io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names.encoding(
           request.compatibilityProfile(), context);
-      int version = request.family() == ArchiveFamily.TES4_BSA ? 0x67 : 0x68;
+      int version =
+          switch (request.family()) {
+            case TES4_BSA -> 0x67;
+            case FO3_FNV_SKYRIM_LE_BSA -> 0x68;
+            case SSE_BSA -> 0x69;
+            default -> throw new IllegalArgumentException("Not a versioned-BSA family");
+          };
       if (!request
           .encoding()
           .equals(
               new ArchiveEncoding(
                   Optional.of(new WireVersion(version)), Optional.empty(), OptionalLong.empty())))
         throw context.failure(FailureKind.UNSUPPORTED, "archive.unsupported-encoding", null);
-      boolean defaultCompressed = request.options().compression() == PackOptions.Compression.ZLIB;
+      PackOptions.Compression familyCodec =
+          version == 0x69 ? PackOptions.Compression.LZ4_FRAME : PackOptions.Compression.ZLIB;
+      boolean defaultCompressed = request.options().compression() == familyCodec;
       if (request.options().compression() != PackOptions.Compression.FAMILY_DEFAULT
           && request.options().compression() != PackOptions.Compression.STORED
           && !defaultCompressed)
         throw context.failure(FailureKind.UNSUPPORTED, "bsa.unsupported-codec", null);
       if (request.options().archiveFlags() instanceof FlagSelection.Explicit flags
           && ((flags.value() & 3) != 3
-              || (flags.value() & ~(version == 0x67 ? 0x6bfL : 0x7bfL)) != 0))
+              || (flags.value() & ~(version == 0x67 ? 0x6bfL : version == 0x69 ? 0x7ffL : 0x7bfL))
+                  != 0))
         throw context.failure(FailureKind.POLICY, "bsa.invalid-archive-flags", null);
       boolean embedded =
-          version == 0x68
+          version != 0x67
               && request.options().archiveFlags() instanceof FlagSelection.Explicit flags
               && (flags.value() & 0x100) != 0;
       for (var choice : request.options().entryCompression().values())
-        if (choice != PackOptions.Compression.STORED && choice != PackOptions.Compression.ZLIB)
+        if (choice != PackOptions.Compression.STORED && choice != familyCodec)
           throw context.failure(FailureKind.UNSUPPORTED, "bsa.unsupported-entry-codec", null);
+      if (version == 0x69
+          && (defaultCompressed || request.options().entryCompression().containsValue(familyCodec)))
+        BsaLz4Frame.preflight("encode", context);
       Set<NormalizedNameIdentity> unmatched =
           new HashSet<>(request.options().entryCompression().keySet());
       List<Item> items = new ArrayList<>();
@@ -65,7 +77,7 @@ public final class BsaPacker {
                     .getOrDefault(
                         new NormalizedNameIdentity(source.identity()),
                         request.options().compression())
-                == PackOptions.Compression.ZLIB;
+                == familyCodec;
         int separator = source.identity().lastIndexOf('\\');
         if (separator <= 0 || separator == source.identity().length() - 1)
           throw context.failure(FailureKind.POLICY, "bsa.invalid-encode-name", null);
@@ -112,15 +124,15 @@ public final class BsaPacker {
         for (Item item : items)
           item.size =
               item.source.size() + (embedded ? item.folder.length + item.name.length + 2L : 0);
-        for (var part : split(items, request.options())) layout(part, context);
+        for (var part : split(items, request.options())) layout(part, version, context);
       }
       // One spool bounds heap and handle use independently of entry count, and fixes split sizes.
       scratch = SpillBuffer.open(Path.of(System.getProperty("java.io.tmpdir")), budget, context);
       SpillBuffer stable = scratch;
       try (var codecCredits =
           budget.reserve(
-              anyCompressed ? JdkZlib.ENCODE_HEAP_BYTES : 65536,
-              anyCompressed ? JdkZlib.ENCODE_NATIVE_BYTES : 0,
+              anyCompressed && version != 0x69 ? JdkZlib.ENCODE_HEAP_BYTES : 65536,
+              anyCompressed && version != 0x69 ? JdkZlib.ENCODE_NATIVE_BYTES : 0,
               0,
               0)) {
         for (int ordinal = 0; ordinal < items.size(); ordinal++) {
@@ -145,14 +157,31 @@ public final class BsaPacker {
           PackSources.consume(
               item.source,
               input -> {
-                if (item.compressed)
+                if (!item.compressed) {
+                  transfer(input, item.source.size(), stable, start, operation, processing);
+                } else if (version == 0x69) {
+                  long[] position = {0};
+                  BsaLz4Frame.encode(
+                      (offset, bytes) -> {
+                        if (offset != position[0])
+                          throw new IllegalStateException("Nonsequential source");
+                        readExact(input, bytes, processing);
+                        position[0] += bytes.position();
+                      },
+                      item.source.size(),
+                      (offset, bytes) -> stable.write(start + offset, bytes),
+                      () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
+                      budget,
+                      processing);
+                  requireEnd(input, processing);
+                } else {
                   JdkZlib.encode(
                       input,
                       item.source.size(),
                       (offset, bytes) -> stable.write(start + offset, bytes),
                       () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
                       processing);
-                else transfer(input, item.source.size(), stable, start, operation, processing);
+                }
               },
               processing);
           item.size = stable.size() - item.offset;
@@ -161,7 +190,7 @@ public final class BsaPacker {
       }
       stable.seal();
       List<List<Item>> parts = split(items, request.options());
-      for (var part : parts) budget.metadata(layout(part, context).dataStart);
+      for (var part : parts) budget.metadata(layout(part, version, context).dataStart);
       // Payload framing is encoded record/name metadata even though it follows the index.
       for (Item item : items)
         budget.metadata(
@@ -255,7 +284,8 @@ public final class BsaPacker {
   }
 
   /** Calculates serialized groups, table extents, and maximum payload position before staging. */
-  private static Layout layout(List<Item> items, IoContext context) throws ArchiveException {
+  private static Layout layout(List<Item> items, int version, IoContext context)
+      throws ArchiveException {
     List<List<Item>> groups = new ArrayList<>();
     long folderNames = 0, fileNames = 0;
     for (Item item : items) {
@@ -266,7 +296,9 @@ public final class BsaPacker {
       groups.getLast().add(item);
       fileNames += item.name.length + 1L;
     }
-    long dataStart = 36 + groups.size() * 17L + folderNames + items.size() * 16L + fileNames;
+    int folderRecordSize = version == 0x69 ? 24 : 16;
+    long dataStart =
+        36 + groups.size() * (folderRecordSize + 1L) + folderNames + items.size() * 16L + fileNames;
     checkU32(folderNames, context);
     checkU32(fileNames, context);
     checkU32(dataStart, context);
@@ -288,7 +320,7 @@ public final class BsaPacker {
       int version,
       IoContext context)
       throws IOException {
-    Layout layout = layout(items, context);
+    Layout layout = layout(items, version, context);
     long files = 0;
     boolean retain = false;
     for (Item item : items) {
@@ -299,6 +331,7 @@ public final class BsaPacker {
         files |= 4;
     }
     if (version != 0x67) files &= ~(4 | 0x20 | 0x80);
+    if (version == 0x69) files &= ~0x100;
     if (options.fileFlags() instanceof FlagSelection.Explicit explicit) files = explicit.value();
     long flags =
         (version == 0x67 ? 0x603 : 3)
@@ -319,7 +352,8 @@ public final class BsaPacker {
             layout.folderNames,
             layout.fileNames,
             files));
-    long block = 36 + layout.groups.size() * 16L,
+    int folderRecordSize = version == 0x69 ? 24 : 16;
+    long block = 36 + layout.groups.size() * (long) folderRecordSize,
         namePosition = layout.dataStart - layout.fileNames,
         payloadPosition = layout.dataStart;
     Map<String, List<Item>> emitted = new HashMap<>();
@@ -327,8 +361,8 @@ public final class BsaPacker {
     for (var group : layout.groups) {
       Item first = group.getFirst();
       output.write(
-          36 + folderOrdinal++ * 16L,
-          record(first.folderHash, group.size(), block + layout.fileNames));
+          36 + folderOrdinal++ * (long) folderRecordSize,
+          folderRecord(first.folderHash, group.size(), block + layout.fileNames, version));
       output.write(block++, ByteBuffer.wrap(new byte[] {(byte) (first.folder.length + 1)}));
       output.write(block, ByteBuffer.wrap(Arrays.copyOf(first.folder, first.folder.length + 1)));
       block += first.folder.length + 1L;
@@ -393,6 +427,33 @@ public final class BsaPacker {
       count += read;
     }
     if (count != size) throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+  }
+
+  /** Fills one codec source window while bounding stalled-channel retries. */
+  private static void readExact(ReadableByteChannel input, ByteBuffer bytes, IoContext context)
+      throws IOException {
+    int idle = 0;
+    while (bytes.hasRemaining()) {
+      int count = input.read(bytes);
+      if (count < 0) throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (count == 0) {
+        if (++idle > 16) throw context.failure(FailureKind.SOURCE, "io.no-progress", null);
+      } else {
+        idle = 0;
+      }
+    }
+  }
+
+  /** Probes once beyond the declared generated length so LZ4 cannot hide excess source bytes. */
+  private static void requireEnd(ReadableByteChannel input, IoContext context) throws IOException {
+    ByteBuffer probe = ByteBuffer.allocate(1);
+    int idle = 0;
+    while (true) {
+      int count = input.read(probe);
+      if (count < 0) return;
+      if (count > 0) throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (++idle > 16) throw context.failure(FailureKind.SOURCE, "io.no-progress", null);
+    }
   }
 
   /** Compares stable record bytes in a fixed window before reusing any payload offset. */
@@ -485,6 +546,19 @@ public final class BsaPacker {
         .putLong(hash)
         .putInt((int) value)
         .putInt((int) offset)
+        .flip();
+  }
+
+  /** Serializes the family-specific folder record, including mandatory zero 0x69 padding. */
+  private static ByteBuffer folderRecord(long hash, long count, long offset, int version) {
+    if (version != 0x69) return record(hash, count, offset);
+    return ByteBuffer.allocate(24)
+        .order(ByteOrder.LITTLE_ENDIAN)
+        .putLong(hash)
+        .putInt((int) count)
+        .putInt(0)
+        .putInt((int) offset)
+        .putInt(0)
         .flip();
   }
 

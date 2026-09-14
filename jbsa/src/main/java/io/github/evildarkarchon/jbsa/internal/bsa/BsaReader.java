@@ -11,7 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.*;
 
-/** Bounded common 0x67/0x68 BSA reader; the parent archive owns lazy payload access. */
+/** Bounded common 0x67/0x68/0x69 BSA reader; the parent archive owns lazy payload access. */
 public final class BsaReader {
   private final OwnedArchive.IndexBuilder builder;
   private final IoContext context;
@@ -74,8 +74,14 @@ public final class BsaReader {
     ByteBuffer header = builder.readMetadata(0, 36);
     if (header.getInt() != 0x00415342) throw malformed("bsa.invalid-selector");
     version = header.getInt();
-    if (version != 0x67 && version != 0x68) throw malformed("bsa.invalid-selector");
-    family = version == 0x67 ? ArchiveFamily.TES4_BSA : ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA;
+    if (version != 0x67 && version != 0x68 && version != 0x69)
+      throw malformed("bsa.invalid-selector");
+    family =
+        switch (version) {
+          case 0x67 -> ArchiveFamily.TES4_BSA;
+          case 0x68 -> ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA;
+          default -> ArchiveFamily.SSE_BSA;
+        };
     archiveEncoding =
         new ArchiveEncoding(
             Optional.of(new WireVersion(version)), Optional.empty(), OptionalLong.empty());
@@ -89,9 +95,13 @@ public final class BsaReader {
     if (recordsOffset < 36
         || ((flags & 1) == 0 && folderNamesLength != 0)
         || ((flags & 2) == 0 && fileNamesLength != 0)) throw malformed("bsa.invalid-name-sections");
+    int folderRecordSize = version == 0x69 ? 24 : 16;
     long blocksStart =
         ExactIo.end(
-            recordsOffset, ExactIo.multiply(folderCount, 16, context), builder.size(), context);
+            recordsOffset,
+            ExactIo.multiply(folderCount, folderRecordSize, context),
+            builder.size(),
+            context);
     long namesStart =
         ExactIo.end(blocksStart, ExactIo.multiply(count, 16, context), builder.size(), context);
     namesStart = ExactIo.end(namesStart, folderNamesLength, builder.size(), context);
@@ -105,9 +115,16 @@ public final class BsaReader {
     NameCursor names = new NameCursor(namesStart, dataStart);
     long block = blocksStart, ordinal = 0, folderBytes = 0;
     for (long folderOrdinal = 0; folderOrdinal < folderCount; folderOrdinal++) {
-      long folderField = recordsOffset + folderOrdinal * 16;
-      ByteBuffer folder = builder.readMetadata(folderField, 16);
-      long folderHash = folder.getLong(), files = u32(folder), folderOffset = u32(folder);
+      long folderField = recordsOffset + folderOrdinal * folderRecordSize;
+      ByteBuffer folder = builder.readMetadata(folderField, folderRecordSize);
+      long folderHash = folder.getLong(), files = u32(folder), paddingBefore = 0, paddingAfter = 0;
+      if (version == 0x69) paddingBefore = u32(folder);
+      long folderOffset = u32(folder);
+      if (version == 0x69) {
+        paddingAfter = u32(folder);
+        // Padding is ignorable for bounded parsing but cannot be produced canonically.
+        noncanonical |= paddingBefore != 0 || paddingAfter != 0;
+      }
       if (files > count - ordinal || folderOffset != block + fileNamesLength)
         throw malformed("bsa.invalid-folder-record");
       WireName folderName = null;
@@ -226,6 +243,16 @@ public final class BsaReader {
                 length,
                 Map.of(),
                 false);
+          if (version == 0x69 && !compressed)
+            warning(
+                "bsa.uncompressed-sse-embedded-name",
+                ordinal,
+                display,
+                "embedded",
+                contentOffset,
+                length,
+                Map.of(),
+                false);
           contentOffset += length;
           contentSize -= 1L + length;
         }
@@ -240,7 +267,11 @@ public final class BsaReader {
                   contentOffset + (compressed ? 4 : 0),
                   contentSize - (compressed ? 4 : 0),
                   decodedSize,
-                  compressed,
+                  compressed
+                      ? version == 0x69
+                          ? OwnedArchive.PayloadCodec.LZ4_FRAME
+                          : OwnedArchive.PayloadCodec.ZLIB
+                      : OwnedArchive.PayloadCodec.STORED,
                   128);
           if (dds.remaining() == 128
               && dds.getInt(0) == 0x20534444
@@ -273,12 +304,14 @@ public final class BsaReader {
                     folderOrdinal,
                     files,
                     folderOffset,
-                    0,
-                    0,
+                    paddingBefore,
+                    paddingAfter,
                     sizeToggle,
                     offset,
                     compressed));
-        if (compressed) builder.addZlib(metadata, contentOffset + 4, contentSize - 4);
+        if (compressed && version == 0x69)
+          builder.addLz4Frame(metadata, contentOffset + 4, contentSize - 4);
+        else if (compressed) builder.addZlib(metadata, contentOffset + 4, contentSize - 4);
         else builder.addStored(metadata, contentOffset, contentSize);
         entries.add(metadata);
       }

@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import io.github.evildarkarchon.jbsa.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -18,6 +21,34 @@ import org.junit.jupiter.api.condition.OS;
 @EnabledOnOs(OS.WINDOWS)
 final class Lz4FrameTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("frame.bin"), Operation.OPEN);
+
+  @Test
+  void decoderStateMayBeConsumedAndClosedByAnotherThread() throws Exception {
+    byte[] data = new byte[200_000];
+    new Random(45).nextBytes(data);
+    byte[] frame = encode(data);
+    try (ResourceBudget budget = budget();
+        ResourceBudget.Lease lease =
+            budget.reserve(Lz4Frame.HEAP_BYTES, Lz4Frame.DECODE_NATIVE_BYTES, 0, 0)) {
+      var decoder = Lz4Frame.decoder(source(frame), frame.length, data.length, CONTEXT);
+      var result =
+          CompletableFuture.supplyAsync(
+              () -> {
+                try (decoder) {
+                  var output = new ByteArrayOutputStream();
+                  ByteBuffer window = ByteBuffer.allocate(8192);
+                  while (decoder.read(window) >= 0) {
+                    output.write(window.array(), 0, window.position());
+                    window.clear();
+                  }
+                  return output.toByteArray();
+                } catch (IOException failure) {
+                  throw new CompletionException(failure);
+                }
+              });
+      assertArrayEquals(data, result.get(10, java.util.concurrent.TimeUnit.SECONDS));
+    }
+  }
 
   @Test
   void streamsUpstreamFourMegabyteBlocksThroughSmallOutputWindows() throws Exception {

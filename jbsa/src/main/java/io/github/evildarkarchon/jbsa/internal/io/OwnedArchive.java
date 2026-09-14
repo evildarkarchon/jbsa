@@ -18,6 +18,13 @@ import java.util.Set;
 
 /** Parent-owned input and eager payload index; no storage seam is exported through JPMS. */
 public final class OwnedArchive implements OpenArchive {
+  /** Complete internal codec identity for one ordinary payload span. */
+  public enum PayloadCodec {
+    STORED,
+    ZLIB,
+    LZ4_FRAME
+  }
+
   private final Object lifetime = new Object();
   private final ArchiveInput input;
   private final ResourceLimits limits;
@@ -203,34 +210,64 @@ public final class OwnedArchive implements OpenArchive {
     /**
      * Borrows at most 128 decoded bytes for format warnings without claiming complete payload
      * validation. Codec and buffer credits are reserved before allocation and released on return.
+     *
+     * @param offset absolute stored stream offset after archive-specific framing
+     * @param streamSize exact stored stream size
+     * @param decodedSize declared decoded payload size
+     * @param codec codec required to expose the decoded prefix
+     * @param length maximum requested decoded prefix, from zero through 128 bytes
+     * @throws IOException if input, capability, codec, or resource admission fails
      */
     public ByteBuffer readPayloadPrefix(
-        long offset, long streamSize, long decodedSize, boolean zlib, int length)
+        long offset, long streamSize, long decodedSize, PayloadCodec codec, int length)
         throws IOException {
       if (length < 0 || length > 128) throw new IllegalArgumentException("Payload prefix extent");
       ExactIo.end(offset, streamSize, input.size(), context);
       try (var credit =
           budget.reserve(
-              length + (zlib ? JdkZlib.DECODE_HEAP_BYTES : 0),
-              zlib ? JdkZlib.DECODE_NATIVE_BYTES : 0,
+              length
+                  + switch (codec) {
+                    case STORED -> 0;
+                    case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
+                    case LZ4_FRAME -> Lz4Frame.HEAP_BYTES;
+                  },
+              switch (codec) {
+                case STORED -> 0;
+                case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
+                case LZ4_FRAME -> Lz4Frame.DECODE_NATIVE_BYTES;
+              },
               0,
               0)) {
         ByteBuffer prefix =
             ByteBuffer.allocate((int) Math.min(length, decodedSize))
                 .order(java.nio.ByteOrder.LITTLE_ENDIAN);
-        if (zlib) {
-          try (var decoder =
-              JdkZlib.decoder(
-                  (relative, bytes) -> input.readExact(offset + relative, bytes),
-                  streamSize,
-                  decodedSize,
-                  context)) {
-            while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
-              // Only the bounded prefix is requested; full codec consumption belongs to content
-              // EOF.
+        switch (codec) {
+          case LZ4_FRAME -> {
+            try (var decoder =
+                BsaLz4Frame.decoder(
+                    (relative, bytes) -> input.readExact(offset + relative, bytes),
+                    streamSize,
+                    decodedSize,
+                    context)) {
+              while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
+                // Only the bounded prefix is requested; complete validation belongs to content EOF.
+              }
             }
           }
-        } else input.readExact(offset, prefix);
+          case ZLIB -> {
+            try (var decoder =
+                JdkZlib.decoder(
+                    (relative, bytes) -> input.readExact(offset + relative, bytes),
+                    streamSize,
+                    decodedSize,
+                    context)) {
+              while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
+                // Only the bounded prefix is requested; complete validation belongs to content EOF.
+              }
+            }
+          }
+          case STORED -> input.readExact(offset, prefix);
+        }
         return prefix.flip();
       }
     }
@@ -251,7 +288,7 @@ public final class OwnedArchive implements OpenArchive {
         throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
       }
       ExactIo.end(offset, contentSize, input.size(), context);
-      entries.add(new StoredEntry(metadata, offset, contentSize, false));
+      entries.add(new StoredEntry(metadata, offset, contentSize, PayloadCodec.STORED));
     }
 
     /**
@@ -262,7 +299,16 @@ public final class OwnedArchive implements OpenArchive {
       if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
         throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
       ExactIo.end(streamOffset, streamSize, input.size(), context);
-      entries.add(new StoredEntry(metadata, streamOffset, streamSize, true));
+      entries.add(new StoredEntry(metadata, streamOffset, streamSize, PayloadCodec.ZLIB));
+    }
+
+    /** Admits one complete LZ4 frame for exact validation by its lazy content cursor. */
+    public void addLz4Frame(EntryMetadata metadata, long streamOffset, long streamSize)
+        throws ArchiveException {
+      if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
+        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
+      ExactIo.end(streamOffset, streamSize, input.size(), context);
+      entries.add(new StoredEntry(metadata, streamOffset, streamSize, PayloadCodec.LZ4_FRAME));
     }
 
     /** Admits a generated DDS envelope followed by independently bounded texture chunks. */
@@ -286,7 +332,9 @@ public final class OwnedArchive implements OpenArchive {
               metadata,
               0,
               0,
-              chunks.stream().anyMatch(c -> c.packedSize() != 0),
+              chunks.stream().anyMatch(c -> c.packedSize() != 0)
+                  ? PayloadCodec.ZLIB
+                  : PayloadCodec.STORED,
               header.clone(),
               List.copyOf(chunks)));
     }
@@ -297,12 +345,12 @@ public final class OwnedArchive implements OpenArchive {
       EntryMetadata metadata,
       long offset,
       long streamSize,
-      boolean zlib,
+      PayloadCodec codec,
       byte[] header,
       List<EntryMetadata.DdsChunk> chunks) {
     /** Retains the existing single-span representation for non-texture entries. */
-    private StoredEntry(EntryMetadata metadata, long offset, long streamSize, boolean zlib) {
-      this(metadata, offset, streamSize, zlib, null, List.of());
+    private StoredEntry(EntryMetadata metadata, long offset, long streamSize, PayloadCodec codec) {
+      this(metadata, offset, streamSize, codec, null, List.of());
     }
   }
 
@@ -355,8 +403,17 @@ public final class OwnedArchive implements OpenArchive {
             try {
               credit =
                   budget.reserve(
-                      512 + (stored.zlib() ? JdkZlib.DECODE_HEAP_BYTES : 0),
-                      stored.zlib() ? JdkZlib.DECODE_NATIVE_BYTES : 0,
+                      512
+                          + switch (stored.codec()) {
+                            case STORED -> 0;
+                            case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
+                            case LZ4_FRAME -> Lz4Frame.HEAP_BYTES;
+                          },
+                      switch (stored.codec()) {
+                        case STORED -> 0;
+                        case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
+                        case LZ4_FRAME -> Lz4Frame.DECODE_NATIVE_BYTES;
+                      },
                       0,
                       0);
             } catch (ArchiveException capacity) {
@@ -371,7 +428,14 @@ public final class OwnedArchive implements OpenArchive {
                           capacity.getCause()));
               throw retention.finish(List.of());
             }
-            Content content = new Content(stored, credit);
+            Content content;
+            try {
+              content = new Content(stored, credit);
+            } catch (ArchiveException failure) {
+              // Capability preflight failed before the child could adopt the reserved credits.
+              credit.close();
+              throw failure;
+            }
             children.add(content);
             return content;
           }
@@ -406,6 +470,7 @@ public final class OwnedArchive implements OpenArchive {
       for (Content child : children) {
         child.open = false;
         if (child.decoder != null) child.decoder.close();
+        if (child.lz4Decoder != null) child.lz4Decoder.close();
         child.credit.close();
       }
       children.clear();
@@ -422,6 +487,7 @@ public final class OwnedArchive implements OpenArchive {
     private final StoredEntry stored;
     private final ResourceBudget.Lease credit;
     private JdkZlib.Decoder decoder;
+    private BsaLz4Frame.Decoder lz4Decoder;
     private int chunkIndex;
     private long chunkPosition;
     private final Object reads = new Object();
@@ -429,12 +495,25 @@ public final class OwnedArchive implements OpenArchive {
     private long position;
     private volatile ArchiveAssessment assessment;
 
-    private Content(StoredEntry stored, ResourceBudget.Lease credit) {
+    /**
+     * Adopts reserved credits and creates at most one parent-owned ordinary-payload decoder.
+     *
+     * @throws ArchiveException if native LZ4 capability cannot be established
+     */
+    private Content(StoredEntry stored, ResourceBudget.Lease credit) throws ArchiveException {
       this.stored = stored;
       this.credit = credit;
       decoder =
-          stored.zlib() && stored.header() == null
+          stored.codec() == PayloadCodec.ZLIB && stored.header() == null
               ? JdkZlib.decoder(
+                  (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
+                  stored.streamSize(),
+                  stored.metadata().decodedSize(),
+                  contentContext(stored.metadata().ordinal()))
+              : null;
+      lz4Decoder =
+          stored.codec() == PayloadCodec.LZ4_FRAME
+              ? BsaLz4Frame.decoder(
                   (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
                   stored.streamSize(),
                   stored.metadata().decodedSize(),
@@ -490,6 +569,20 @@ public final class OwnedArchive implements OpenArchive {
             synchronized (lifetime) {
               // Codec completion and parent close use the same publication boundary as stored
               // reads.
+              if (!open || closed) throw new AsynchronousCloseException();
+              if (count < 0 && assessment == null)
+                assessment =
+                    new ArchiveAssessment(
+                        inspection.assessment().disposition(),
+                        new ValidationExtent.Payloads(Set.of(stored.metadata().ordinal())),
+                        inspection.assessment().diagnostics());
+              return count;
+            }
+          }
+          if (lz4Decoder != null) {
+            int count = lz4Decoder.read(destination);
+            synchronized (lifetime) {
+              // Native completion and parent close share the same publication boundary.
               if (!open || closed) throw new AsynchronousCloseException();
               if (count < 0 && assessment == null)
                 assessment =
@@ -665,6 +758,7 @@ public final class OwnedArchive implements OpenArchive {
         open = false;
         children.remove(this);
         if (decoder != null) decoder.close();
+        if (lz4Decoder != null) lz4Decoder.close();
         credit.close();
       }
     }

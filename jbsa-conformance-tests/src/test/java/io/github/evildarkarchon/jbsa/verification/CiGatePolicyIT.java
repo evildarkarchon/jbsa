@@ -58,7 +58,8 @@ final class CiGatePolicyIT {
   void hostedWorkflowSeparatesAuthoritativeWindowsAndPortableLinuxGates() throws Exception {
     Path root = Path.of(System.getProperty("jbsa.reactor.root"));
     String workflow = Files.readString(root.resolve(".github/workflows/build.yml"));
-    String setupAction = Files.readString(root.resolve(".github/actions/setup-qualified-jdk/action.yml"));
+    String setupAction =
+        Files.readString(root.resolve(".github/actions/setup-qualified-jdk/action.yml"));
     String provisioner = Files.readString(root.resolve("build/provision-qualified-jdk.ps1"));
 
     for (String gate :

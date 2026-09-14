@@ -28,21 +28,21 @@ public final class ResourceBudget implements AutoCloseable {
         limits,
         context,
         Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
-        1024 * 1024,
+        Lz4Frame.DECODE_NATIVE_BYTES,
         1);
   }
 
   /**
-   * Creates bounded admission for sequential mutation with source, scratch, and staging handles.
-   * The native allowance covers sequential zlib state and a Windows identity downcall. The caller
-   * closes this operation-scoped budget after every owner releases its resources.
+   * Creates bounded admission for sequential mutation with source, scratch, staging handles, and
+   * the largest release-pinned codec state. The caller closes this operation-scoped budget after
+   * every owner releases its resources.
    */
   public static ResourceBudget forMutation(ResourceLimits limits, IoContext context) {
     return new ResourceBudget(
         limits,
         context,
         Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
-        1024 * 1024,
+        Lz4Frame.DECODE_NATIVE_BYTES,
         4);
   }
 

@@ -79,6 +79,7 @@ record Invocation(
     ArchiveFamily family = null;
     String familySelector = null;
     PackOptions.Compression compression = PackOptions.Compression.STORED;
+    boolean familyDefaultCompression = false;
     FlagSelection archiveFlags = FlagSelection.AUTOMATIC;
     FlagSelection fileFlags = FlagSelection.AUTOMATIC;
     boolean list = false;
@@ -102,7 +103,7 @@ record Invocation(
         require(false, "Duplicate switch: " + key);
       }
       switch (key) {
-        case "-tes3", "-tes4", "-fo3", "-fnv", "-tes5", "-fo4", "-fo4dds" -> {
+        case "-tes3", "-tes4", "-fo3", "-fnv", "-tes5", "-sse", "-fo4", "-fo4dds" -> {
           require(
               pack && option.equals(key) && (family == null || profile.isPresent()),
               "Inapplicable or duplicate family");
@@ -112,6 +113,7 @@ record Invocation(
                 case "-tes3" -> ArchiveFamily.TES3_BSA;
                 case "-tes4" -> ArchiveFamily.TES4_BSA;
                 case "-fo3", "-fnv", "-tes5" -> ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA;
+                case "-sse" -> ArchiveFamily.SSE_BSA;
                 case "-fo4dds" -> ArchiveFamily.FO4_DDS_BA2;
                 default -> ArchiveFamily.FO4_GENERAL_BA2;
               };
@@ -123,8 +125,14 @@ record Invocation(
           }
         }
         case "-z" -> {
-          require(pack && (option.equals("-z") || option.equals("-z:zlib")), "Unsupported codec");
-          compression = PackOptions.Compression.ZLIB;
+          require(
+              pack && (option.equals("-z") || option.equals("-z:zlib") || option.equals("-z:lz4f")),
+              "Unsupported codec");
+          familyDefaultCompression = option.equals("-z");
+          compression =
+              option.equals("-z:lz4f")
+                  ? PackOptions.Compression.LZ4_FRAME
+                  : PackOptions.Compression.ZLIB;
         }
         case "-af", "-ff" -> {
           require(pack, "Flags apply only to versioned BSA pack");
@@ -183,6 +191,14 @@ record Invocation(
       }
     }
     require(!pack || family != null, "Pack requires one supported family selector");
+    if (familyDefaultCompression && family == ArchiveFamily.SSE_BSA)
+      compression = PackOptions.Compression.LZ4_FRAME;
+    require(
+        !seen.contains("-z")
+            || (family == ArchiveFamily.SSE_BSA
+                ? compression == PackOptions.Compression.LZ4_FRAME
+                : compression == PackOptions.Compression.ZLIB),
+        "Codec is not supported by the selected family");
     require(
         (family != ArchiveFamily.FO4_GENERAL_BA2 && family != ArchiveFamily.FO4_DDS_BA2)
             || (!seen.contains("-af") && !seen.contains("-ff")),
@@ -242,6 +258,7 @@ record Invocation(
       case "-fo3" -> 2;
       case "-fnv" -> 3;
       case "-tes5" -> 4;
+      case "-sse" -> 5;
       case "-fo4" -> 6;
       case "-fo4dds" -> 7;
       default -> throw new IllegalArgumentException("Unsupported family selector: " + selector);

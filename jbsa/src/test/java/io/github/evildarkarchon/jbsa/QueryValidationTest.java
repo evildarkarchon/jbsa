@@ -29,7 +29,7 @@ final class QueryValidationTest {
     assertTrue(failure.artifacts().isEmpty());
   }
 
-  /** Bounded recognition distinguishes invalid and unsupported inputs without a structure claim. */
+  /** Bounded recognition distinguishes invalid, unsupported, and truncated supported inputs. */
   @ParameterizedTest
   @ValueSource(strings = {"inspect", "inspect-options", "open"})
   void recognitionPrecedesFamilyCapability(String query) throws Exception {
@@ -44,8 +44,9 @@ final class QueryValidationTest {
     assertRecognition(
         query,
         new byte[] {66, 83, 65, 0, 0x69, 0, 0, 0},
-        FailureKind.CAPABILITY,
-        "baseline.archive-operation-unavailable");
+        FailureKind.FORMAT,
+        "io.invalid-span",
+        true);
   }
 
   /**
@@ -53,11 +54,20 @@ final class QueryValidationTest {
    */
   private void assertRecognition(String query, byte[] bytes, FailureKind kind, String identifier)
       throws Exception {
+    assertRecognition(query, bytes, kind, identifier, false);
+  }
+
+  /** Distinguishes a supported-family structural rejection from recognition-only failures. */
+  private void assertRecognition(
+      String query, byte[] bytes, FailureKind kind, String identifier, boolean rejectedAssessment)
+      throws Exception {
     Path path = Files.write(directory.resolve("selector.bin"), bytes);
     ArchiveException failure = invoke(query, path);
     assertEquals(kind, failure.kind());
     assertEquals(identifier, failure.primaryFailure().diagnosticIdentifier().orElseThrow());
-    assertTrue(failure.assessment().isEmpty());
+    assertEquals(rejectedAssessment, failure.assessment().isPresent());
+    if (rejectedAssessment)
+      assertEquals(ArchiveDisposition.REJECTED, failure.assessment().orElseThrow().disposition());
     assertTrue(failure.artifacts().isEmpty());
     Files.delete(path);
   }

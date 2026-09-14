@@ -1,9 +1,9 @@
-<# .SYNOPSIS Corroborates the two-entry 0x67/0x68 slices through the independent-validator harness. #>
+<# .SYNOPSIS Corroborates two-entry versioned-BSA slices through the independent-validator harness. #>
 param(
     [Parameter(Mandatory)][string]$InputPath,
     [Parameter(Mandatory)][string]$WorkingDirectory,
     [Parameter(Mandatory)][string]$EvidenceDirectory,
-    [ValidateSet('bsa-067', 'bsa-068')][string]$Family = 'bsa-067'
+    [ValidateSet('bsa-067', 'bsa-068', 'bsa-069')][string]$Family = 'bsa-067'
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'conformance-adapters.ps1')
@@ -20,7 +20,7 @@ $tool = [ordered]@{
     derived_from_reference = $false
     implementation = $implementation
     implementation_sha256 = $implementationDigest
-    scope = 'ASCII named unshared 0x67/0x68 stored/zlib and 0x68 embedded names; independent of product and Reference Snapshot source'
+    scope = 'ASCII named unshared 0x67/0x68 stored/zlib and 0x69 stored/LZ4-frame, including embedded names; independent of product and Reference Snapshot source'
 }
 $expected = @'
 {"family":"bsa-067","entries":[{"name":"meshes\\a.nif","size":1024,"payload_sha256":"6ab72eeb9e77b07540897e0c8d6d23ec8eef0f8c3a47e1b3f4e93443d9536bed"},{"name":"meshes\\b.nif","size":4,"payload_sha256":"3d1f57c984978ef98a18378c8166c1cb8ede02c03eeb6aee7e2f121dfeee3e56"}]}

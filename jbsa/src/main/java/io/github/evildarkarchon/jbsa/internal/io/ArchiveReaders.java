@@ -30,7 +30,8 @@ public final class ArchiveReaders {
               .filter(
                   family ->
                       family == ArchiveFamily.TES4_BSA
-                          || family == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA)
+                          || family == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
+                          || family == ArchiveFamily.SSE_BSA)
               .isPresent()) return BsaReader.load(builder, path, options, operation, policy);
           if (detection.family().filter(ArchiveFamily.FO4_GENERAL_BA2::equals).isPresent()
               && detection.wireVersion().orElseThrow().value() == 1)

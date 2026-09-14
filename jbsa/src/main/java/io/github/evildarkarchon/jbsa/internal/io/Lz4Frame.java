@@ -32,18 +32,54 @@ public final class Lz4Frame {
       ResourceBudget budget,
       IoContext context)
       throws IOException {
+    return encode(source, decodedSize, sink, checkpoint, budget, context, false);
+  }
+
+  /** Encodes one frame with the exact versioned-BSA 0x69 profile. */
+  public static long encodeBsa(
+      JdkZlib.ByteSource source,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      IoContext context)
+      throws IOException {
+    return encode(source, decodedSize, sink, checkpoint, budget, context, true);
+  }
+
+  /** Owns one admitted encoder invocation and selects only a recorded internal profile. */
+  private static long encode(
+      JdkZlib.ByteSource source,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      IoContext context,
+      boolean bsaProfile)
+      throws IOException {
     if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
     Lz4Runtime.preflight("lz4-frame", "encode", context);
     try (var lease = budget.reserve(HEAP_BYTES, ENCODE_NATIVE_BYTES, 0, 0);
         var state = new State(true, context)) {
       var preferences = state.preferences;
-      preferences.compressionLevel(9).autoFlush(true);
-      preferences
-          .frameInfo()
-          .blockSizeID(LZ4F_max64KB)
-          .blockMode(LZ4F_blockLinked)
-          .contentChecksumFlag(LZ4F_contentChecksumEnabled)
-          .contentSize(decodedSize);
+      preferences.compressionLevel(bsaProfile ? 12 : 9).autoFlush(true);
+      if (bsaProfile) {
+        preferences
+            .frameInfo()
+            .blockSizeID(LZ4F_max4MB)
+            .blockMode(LZ4F_blockIndependent)
+            .blockChecksumFlag(LZ4F_noBlockChecksum)
+            .contentChecksumFlag(LZ4F_noContentChecksum)
+            .contentSize(0)
+            .dictID(0);
+      } else {
+        preferences
+            .frameInfo()
+            .blockSizeID(LZ4F_max64KB)
+            .blockMode(LZ4F_blockLinked)
+            .contentChecksumFlag(LZ4F_contentChecksumEnabled)
+            .contentSize(decodedSize);
+      }
       caller(checkpoint::check, context);
       long written =
           emit(
@@ -78,6 +114,127 @@ public final class Lz4Frame {
           context);
     } catch (RuntimeException | LinkageError | AssertionError cause) {
       throw fault(context, "encode", decodedSize, -1, cause);
+    }
+  }
+
+  /**
+   * Creates an incremental decoder after its owner reserves the declared decode resources. The
+   * decoder borrows its positional source and releases native state when closed.
+   */
+  public static Decoder decoder(
+      JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context)
+      throws ArchiveException {
+    if (storedSize < 0 || decodedSize < 0)
+      throw new IllegalArgumentException("Negative codec size");
+    Lz4Runtime.preflight("lz4-frame", "decode", context);
+    return new Decoder(source, storedSize, decodedSize, context);
+  }
+
+  /** Per-content sequential frame decoder with bounded direct input and output windows. */
+  public static final class Decoder implements AutoCloseable {
+    private final JdkZlib.ByteSource source;
+    private final long storedSize, decodedSize;
+    private final IoContext context;
+    private final State state;
+    private long supplied, produced;
+    private boolean first = true, finished, closed;
+
+    /** Allocates independent native state only after capability preflight and caller admission. */
+    private Decoder(JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context)
+        throws ArchiveException {
+      this.source = source;
+      this.storedSize = storedSize;
+      this.decodedSize = decodedSize;
+      this.context = context;
+      state = new State(false, context);
+      state.input.limit(0);
+    }
+
+    /** Returns one bounded decoded window and validates exact frame consumption at terminal EOF. */
+    public synchronized int read(ByteBuffer destination) throws IOException {
+      if (closed) throw new java.nio.channels.ClosedChannelException();
+      if (!destination.hasRemaining()) return 0;
+      if (finished) return -1;
+      try {
+        while (true) {
+          if (!state.input.hasRemaining()) {
+            if (supplied == storedSize)
+              throw invalid(context, "codec.invalid-data", decodedSize, produced);
+            int count = (int) Math.min(WINDOW, storedSize - supplied);
+            state.input.clear().limit(count);
+            caller(() -> source.read(supplied, state.input), context);
+            if (state.input.hasRemaining())
+              throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+            state.input.flip();
+            if (first) {
+              first = false;
+              if (count < 4 || state.input.order(ByteOrder.LITTLE_ENDIAN).getInt(0) != 0x184D2204)
+                throw invalid(context, "codec.invalid-data", decodedSize, produced);
+            }
+            supplied += count;
+          }
+          int available = state.input.remaining();
+          int capacity =
+              (int)
+                  Math.min(
+                      Math.min(WINDOW, destination.remaining()),
+                      decodedSize - produced + (produced == decodedSize ? 1 : 0));
+          state.output.clear().limit(capacity);
+          state.inputSize.put(0, available);
+          state.outputSize.put(0, capacity);
+          long result =
+              LZ4F_decompress(
+                  state.handle,
+                  state.output,
+                  state.outputSize,
+                  state.input,
+                  state.inputSize,
+                  state.decodeOptions);
+          if (LZ4F_isError(result))
+            throw Lz4Runtime.failure(
+                context,
+                FailureKind.FORMAT,
+                "codec.invalid-data",
+                "lz4-frame",
+                "decode",
+                decodedSize,
+                produced,
+                providerError(result));
+          int consumed = Math.toIntExact(state.inputSize.get(0));
+          int count = Math.toIntExact(state.outputSize.get(0));
+          if (consumed < 0 || consumed > available || count < 0 || count > capacity)
+            throw new IllegalStateException("Invalid provider counts");
+          state.input.position(state.input.position() + consumed);
+          if (count > decodedSize - produced)
+            throw invalid(context, "codec.size-mismatch", decodedSize, produced + count);
+          if (count > 0) {
+            state.output.position(0).limit(count);
+            destination.put(state.output);
+            produced += count;
+          }
+          if (result == 0) {
+            if (produced != decodedSize || supplied != storedSize || state.input.hasRemaining())
+              throw invalid(context, "codec.size-mismatch", decodedSize, produced);
+            finished = true;
+          }
+          if (count > 0) return count;
+          if (finished) return -1;
+          if (consumed == 0) throw invalid(context, "codec.invalid-data", decodedSize, produced);
+        }
+      } catch (ArchiveException failure) {
+        throw failure;
+      } catch (RuntimeException | LinkageError | AssertionError cause) {
+        throw fault(context, "decode", decodedSize, produced, cause);
+      }
+    }
+
+    /** Releases native frame state exactly once, including abandoned content reads. */
+    @Override
+    public synchronized void close() {
+      if (!closed) {
+        closed = true;
+        state.close();
+      }
     }
   }
 
@@ -233,7 +390,7 @@ public final class Lz4Frame {
 
   /** Owns every explicit native allocation and frees partial construction in reverse order. */
   private static final class State implements AutoCloseable {
-    private final Arena arena = Arena.ofConfined();
+    private final Arena arena;
     private ByteBuffer input, output;
     private PointerBuffer inputSize, outputSize;
     private LZ4FPreferences preferences;
@@ -244,6 +401,9 @@ public final class Lz4Frame {
     /** Allocates only after the caller's complete worst-case reservation has succeeded. */
     State(boolean encode, IoContext context) throws ArchiveException {
       this.encode = encode;
+      // Lazy content channels can move between consumer threads; synchronized decoder methods
+      // provide serialization, while encoder state never leaves its invocation thread.
+      arena = encode ? Arena.ofConfined() : Arena.ofShared();
       try {
         input = arena.allocate(WINDOW, 8).asByteBuffer();
         output = arena.allocate(WINDOW * 2, 8).asByteBuffer();

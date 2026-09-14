@@ -45,12 +45,14 @@ final class ResourceBudgetTest {
   @Test
   void mutationCapacityRemainsBoundedAndReleasesWithTheOperation() throws Exception {
     try (ResourceBudget budget = ResourceBudget.forMutation(ResourceLimits.standard(), CONTEXT)) {
-      try (ResourceBudget.Lease owners = budget.reserve(64 * 1024, 1024 * 1024, 4, 0)) {
+      try (ResourceBudget.Lease owners =
+          budget.reserve(64 * 1024, Lz4Frame.DECODE_NATIVE_BYTES, 4, 0)) {
         assertNotNull(owners);
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 0, 1, 0));
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
       }
-      try (ResourceBudget.Lease returned = budget.reserve(64 * 1024, 1024 * 1024, 4, 0)) {
+      try (ResourceBudget.Lease returned =
+          budget.reserve(64 * 1024, Lz4Frame.DECODE_NATIVE_BYTES, 4, 0)) {
         assertNotNull(returned);
       }
     }
@@ -223,13 +225,15 @@ final class ResourceBudgetTest {
   @Test
   void defaultCapacityAdmitsOneHandleAndBoundedDecoderState() throws Exception {
     try (ResourceBudget budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT)) {
-      assertThrows(ArchiveException.class, () -> budget.reserve(0, 1024 * 1024 + 1, 0, 0));
-      try (ResourceBudget.Lease input = budget.reserve(512, 1024 * 1024, 1, 0)) {
+      assertThrows(
+          ArchiveException.class, () -> budget.reserve(0, Lz4Frame.DECODE_NATIVE_BYTES + 1, 0, 0));
+      try (ResourceBudget.Lease input = budget.reserve(512, Lz4Frame.DECODE_NATIVE_BYTES, 1, 0)) {
         assertNotNull(input);
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 0, 1, 0));
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
       }
-      try (ResourceBudget.Lease returned = budget.reserve(512, 1024 * 1024, 1, 0)) {
+      try (ResourceBudget.Lease returned =
+          budget.reserve(512, Lz4Frame.DECODE_NATIVE_BYTES, 1, 0)) {
         assertNotNull(returned);
       }
     }

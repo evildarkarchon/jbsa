@@ -26,9 +26,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 final class BsaPerformanceCheckpointIT {
   @TempDir Path directory;
 
-  /** Records matched 0x67 and 0x68 workloads, discarding the first round of each codec. */
+  /** Records matched versioned-BSA workloads, discarding the first round of each family codec. */
   @ParameterizedTest
-  @ValueSource(ints = {0x67, 0x68})
+  @ValueSource(ints = {0x67, 0x68, 0x69})
   void recordsCurrentMachineCheckpoint(int version) throws Exception {
     org.junit.jupiter.api.Assumptions.assumeFalse("true".equals(System.getenv("GITHUB_ACTIONS")));
     Path sources = Files.createDirectories(directory.resolve("sources/meshes"));
@@ -47,7 +47,11 @@ final class BsaPerformanceCheckpointIT {
     StringBuilder rows =
         new StringBuilder(
             "codec,round,input_bytes,archive_bytes,pack_seconds,extract_seconds,random_prefix_seconds,random_prefix_count,heap_pool_peak_sum_bytes,scratch_limit_bytes\n");
-    for (var compression : List.of(PackOptions.Compression.STORED, PackOptions.Compression.ZLIB)) {
+    List<PackOptions.Compression> codecs =
+        List.of(
+            PackOptions.Compression.STORED,
+            version == 0x69 ? PackOptions.Compression.LZ4_FRAME : PackOptions.Compression.ZLIB);
+    for (var compression : codecs) {
       for (int round = 0; round < 4; round++) {
         ManagementFactory.getMemoryPoolMXBeans().stream()
             .filter(pool -> pool.getType() == MemoryType.HEAP)
@@ -122,8 +126,14 @@ final class BsaPerformanceCheckpointIT {
             + "Heap is the sum of memory-pool peaks, not simultaneous live heap or process memory.\n"
             + "Scratch is the enforced request ceiling; no observed peak is claimed.\n"
             + "No oracle timing comparison, JMH, confidence interval, or release qualification.\n"
-            + "codec_profile_id=jbsa-lz4-v1\n"
-            + "codec_profile_sha256=f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e\n"
+            + "codec_profile_id="
+            + (version == 0x69 ? "jbsa-bsa-069-lz4-v1" : "jbsa-lz4-v1")
+            + "\n"
+            + "codec_profile_sha256="
+            + (version == 0x69
+                ? "3eb01cfdf11f0052406682b4cb0ffd7814de095d7dd2a543ed9d9441fa41ef85"
+                : "f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e")
+            + "\n"
             + "java.version="
             + System.getProperty("java.version")
             + "\n"
@@ -143,7 +153,12 @@ final class BsaPerformanceCheckpointIT {
     var limits = ResourceLimits.standard();
     return new PackRequest(
         archive,
-        version == 0x67 ? ArchiveFamily.TES4_BSA : ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA,
+        switch (version) {
+          case 0x67 -> ArchiveFamily.TES4_BSA;
+          case 0x68 -> ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA;
+          case 0x69 -> ArchiveFamily.SSE_BSA;
+          default -> throw new IllegalArgumentException("Unsupported BSA version");
+        },
         new ArchiveEncoding(
             Optional.of(new WireVersion(version)), Optional.empty(), OptionalLong.empty()),
         Optional.empty(),

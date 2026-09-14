@@ -1,4 +1,4 @@
-<# .SYNOPSIS Runs a bounded, digest-pinned local 0x67/0x68 differential observation. #>
+<# .SYNOPSIS Runs a bounded, digest-pinned local versioned-BSA differential observation. #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidateSet('pack', 'unpack')][string]$Operation,
@@ -6,8 +6,8 @@ param(
     [Parameter(Mandatory)][string]$OutputPath,
     [Parameter(Mandatory)][string]$WorkingDirectory,
     [Parameter(Mandatory)][string]$EvidenceDirectory,
-    [ValidateSet('stored', 'zlib')][string]$Compression = 'stored',
-    [ValidateSet('tes4', 'fo3', 'fnv', 'tes5')][string]$Selector = 'tes4',
+    [ValidateSet('stored', 'zlib', 'lz4-frame')][string]$Compression = 'stored',
+    [ValidateSet('tes4', 'fo3', 'fnv', 'tes5', 'sse')][string]$Selector = 'tes4',
     [switch]$EmbeddedNames
 )
 $ErrorActionPreference = 'Stop'
@@ -17,9 +17,13 @@ $oracleArguments = @($Operation, $InputPath, $OutputPath, '-mt:no')
 if ($Operation -eq 'pack') {
     $oracleArguments += @("-$Selector", '-split:0', '-share:no')
     if ($Compression -eq 'zlib') { $oracleArguments += '-z:zlib' }
+    if ($Compression -eq 'lz4-frame') {
+        # Preserve the family-default spelling used by the oracle's documented SSE workflow.
+        $oracleArguments += $(if ($Selector -eq 'sse') { '-z' } else { '-z:lz4f' })
+    }
     if ($EmbeddedNames) {
-        if ($Selector -eq 'tes4') { throw 'Embedded framing requires a version 0x68 selector' }
-        $oracleArguments += $(if ($Compression -eq 'zlib') { '-af:187' } else { '-af:183' })
+        if ($Selector -eq 'tes4') { throw 'Embedded framing requires a version 0x68 or 0x69 selector' }
+        $oracleArguments += $(if ($Compression -eq 'stored') { '-af:183' } else { '-af:187' })
     }
 }
 # Default oracle 0x67 flags contain the known embedded-name contradiction. These are

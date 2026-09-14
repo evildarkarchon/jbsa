@@ -106,7 +106,9 @@ public final class Main {
                                                 : invocation.family()
                                                         == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
                                                     ? 0x68
-                                                    : 0x67)),
+                                                    : invocation.family() == ArchiveFamily.SSE_BSA
+                                                        ? 0x69
+                                                        : 0x67)),
                                     invocation.family() == ArchiveFamily.FO4_GENERAL_BA2
                                         ? Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.GNRL)
                                         : invocation.family() == ArchiveFamily.FO4_DDS_BA2
@@ -144,7 +146,8 @@ public final class Main {
                         .filter(artifact -> artifact.state() == ArtifactState.PUBLISHED)
                         .count());
           } else {
-            if (invocation.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA) {
+            if (invocation.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
+                || invocation.family() == ArchiveFamily.SSE_BSA) {
               output.println("Selector: " + invocation.familySelector());
             }
             for (OperationReport.ArchivePart part : report.archiveParts()) {
@@ -208,7 +211,11 @@ public final class Main {
                             && dds.chunks().stream().anyMatch(chunk -> chunk.packedSize() != 0)))
             .count();
     output.println("Compressed entries: " + compressed);
-    output.println("Codec: " + (compressed == 0 ? "STORED" : "ZLIB"));
+    output.println(
+        "Codec: "
+            + (compressed == 0
+                ? "STORED"
+                : inspection.metadata().family() == ArchiveFamily.SSE_BSA ? "LZ4_FRAME" : "ZLIB"));
     if (inspection.metadata() instanceof ArchiveMetadata.DdsBa2 metadata) {
       output.println("Version: " + metadata.encoding().wireVersion().orElseThrow().value());
       output.println("Subtype: DX10");
@@ -303,6 +310,8 @@ public final class Main {
               "  Name hash: "
                   + Long.toUnsignedString(facts.nameHash(), 16).toUpperCase(java.util.Locale.ROOT));
           output.println("  Folder offset: " + facts.folderOffset());
+          output.println("  Folder padding before offset: " + facts.folderPaddingBeforeOffset());
+          output.println("  Folder padding after offset: " + facts.folderPaddingAfterOffset());
           output.println("  Decoded size: " + entry.decodedSize());
           output.println("  Stored size: " + entry.storedSize());
           output.println("  Size and compression toggle: " + facts.sizeAndCompressionToggle());
@@ -362,6 +371,8 @@ public final class Main {
         "TES4 pack: -tes4 [-z|-z:zlib] [-af:hex] [-ff:hex] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println(
         "FO3/FNV/Skyrim LE pack: -fo3|-fnv|-tes5 [-z|-z:zlib] [-af:hex] [-ff:hex] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
+    output.println(
+        "SSE/Skyrim AE pack: -sse [-z|-z:lz4f] [-af:hex] [-ff:hex] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println("Mutations: --replace --no-progress; administration: --help --version");
   }
 

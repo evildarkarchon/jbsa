@@ -40,6 +40,9 @@ stored and zlib content, mixed-entry decoding, flags, and `-tes4` CLI operations
 The [Fallout 3 / New Vegas / Skyrim LE slice](docs/development/bsa-068.md) extends
 the common BSA implementation to `0x68`, including explicit embedded names,
 mixed-entry packing, and the `-fo3`, `-fnv`, and `-tes5` CLI selectors.
+The [Skyrim SE / AE slice](docs/development/bsa-069.md) completes versioned BSA
+with `0x69` 24-byte folder records, stored/LZ4-frame/mixed payloads, and the
+`-sse` CLI selector.
 The [Fallout 4 General BA2 slice](docs/development/fo4-general.md) adds `BTDX/GNRL`
 version 1 stored/zlib reading and writing, source overlays, sharing, splitting,
 and `-fo4` CLI operations.

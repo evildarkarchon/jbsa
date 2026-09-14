@@ -73,3 +73,32 @@ Issue #42's approved 52-case catalog is activated and all 52 active cases pass.
 Both listed prerequisites are now closed; this unassigned, agent-owned issue is
 ready. The existing acceptance criteria and 126 LZ4-frame performance assignments
 remain required. No prerequisite or qualification gate was removed.
+
+### Implementation candidate — 2026-09-13
+
+Implemented the public library and CLI `0x69` slice, including 24-byte folder
+records, stored/LZ4-frame/mixed payloads, exact family frame parameters, embedded
+names and warnings, automatic flags, bounded lazy decoding, codec rejection,
+sharing, splitting, cancellation, and resource admission. See the
+[implementation and requirement trace](../../../docs/development/bsa-069.md).
+
+Project-authored SE/AE fixtures reproduce deterministically and pass the
+independent wire/LZ4 validator. Both directions of the digest-pinned local
+BSArch differential pass. The recorded 16 MiB development checkpoint covers
+stored and LZ4-frame pack/extract time, output size, heap-pool peaks, and repeated
+prefix reads under family profile `jbsa-bsa-069-lz4-v1`, SHA-256
+`3eb01cfdf11f0052406682b4cb0ffd7814de095d7dd2a543ed9d9441fa41ef85`.
+
+The ticket remains open: the active catalog's required `bsa-069` goldens still
+need a separately reviewed proposal, explicit maintainer approval, activation,
+and the retained formal targeted performance assignments before the acceptance
+gate can be claimed.
+
+### Evidence-scope direction — 2026-09-13
+
+The maintainer directed the agent to stop and discard the uncommitted 52-case
+CV1 proposal work because these requirements are to be removed or revised. The
+active catalog and approved rebaselines were not changed. This ticket remains
+open until its acceptance text is updated; the implementation, focused
+independent validation, pinned-oracle differential, and development performance
+checkpoint remain recorded above.

@@ -128,7 +128,8 @@ public final class BethesdaArchives {
     if (request.family() == ArchiveFamily.TES3_BSA)
       return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Packer.pack(request, control);
     if (request.family() == ArchiveFamily.TES4_BSA
-        || request.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA)
+        || request.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
+        || request.family() == ArchiveFamily.SSE_BSA)
       return io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
     if (request.family() == ArchiveFamily.FO4_GENERAL_BA2
         || request.family() == ArchiveFamily.FO4_DDS_BA2)
