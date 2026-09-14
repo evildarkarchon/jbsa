@@ -5,16 +5,18 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 class JdkPolicyTest {
-    /** Verifies that a complete installed Java 25 development kit is accepted. */
+    /** Verifies every supported Gradle runtime can bootstrap the managed Java 25 toolchain. */
     @Test
-    fun `accepts Java 25 with a compiler`() {
-        assertDoesNotThrow { JdkPolicy.validate("25", true) }
+    fun `accepts supported Gradle runtimes`() {
+        assertDoesNotThrow { JdkPolicy.validateRuntime("17") }
+        assertDoesNotThrow { JdkPolicy.validateRuntime("25") }
+        assertDoesNotThrow { JdkPolicy.validateRuntime("26") }
     }
 
-    /** Verifies that a runtime image and the wrong Java release are both rejected. */
+    /** Verifies runtimes older than the resolver and malformed version identities are rejected. */
     @Test
-    fun `rejects missing compiler and non Java 25 runtimes`() {
-        assertThrows(IllegalArgumentException::class.java) { JdkPolicy.validate("25", false) }
-        assertThrows(IllegalArgumentException::class.java) { JdkPolicy.validate("26", true) }
+    fun `rejects unsupported Gradle runtimes`() {
+        assertThrows(IllegalArgumentException::class.java) { JdkPolicy.validateRuntime("16") }
+        assertThrows(IllegalArgumentException::class.java) { JdkPolicy.validateRuntime("unknown") }
     }
 }

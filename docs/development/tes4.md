@@ -23,8 +23,8 @@ its request-wide `-z` switch.
 
 ## Reproduce slice evidence
 
-Use an installed Java 25 JDK (`C:\OpenJDK\jdk-25` on the development machine),
-PowerShell 7, Python 3.11 or later, and the checked-in Gradle wrapper:
+Use Java 17 or newer, PowerShell 7, Python 3.11 or later, and the checked-in Gradle wrapper. Gradle
+supplies the Temurin Java 25 toolchain:
 
 ```powershell
 .\gradlew.bat :jbsa-conformance-tests:bsaConformanceTest --tests '*BsaConformanceIT'

@@ -48,22 +48,9 @@ jobs:
           submodules: false
 
       - name: Set up the pinned Java 25 build
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        uses: ./.github/actions/setup-qualified-jdk
         with:
-          architecture: x64
-          cache: gradle
-          cache-dependency-path: |
-            **/*.gradle.kts
-            **/gradle.lockfile
-            **/settings-gradle.lockfile
-            gradle/libs.versions.toml
-            gradle/verification-metadata.xml
-            build-logic/gradle/verification-metadata.xml
-            gradle/wrapper/gradle-wrapper.properties
-          check-latest: false
-          distribution: temurin
-          # Temurin's LTS catalog suffix is part of the exact SemVer build metadata.
-          java-version: '25.0.4+7.0.LTS'
+          platform: windows-x64
 
       - name: Verify immutable case history and deliberate golden rebaselines
         if: matrix.gate == 'conformance'
@@ -116,22 +103,9 @@ jobs:
           submodules: false
 
       - name: Set up the pinned Java 25 build
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        uses: ./.github/actions/setup-qualified-jdk
         with:
-          architecture: x64
-          cache: gradle
-          cache-dependency-path: |
-            **/*.gradle.kts
-            **/gradle.lockfile
-            **/settings-gradle.lockfile
-            gradle/libs.versions.toml
-            gradle/verification-metadata.xml
-            build-logic/gradle/verification-metadata.xml
-            gradle/wrapper/gradle-wrapper.properties
-          check-latest: false
-          distribution: temurin
-          # The complete Windows gate produces the authoritative hosted build evidence.
-          java-version: '25.0.4+7.0.LTS'
+          platform: windows-x64
 
       - name: Verify immutable case history and deliberate golden rebaselines
         shell: pwsh
@@ -183,22 +157,9 @@ jobs:
           submodules: false
 
       - name: Set up the pinned Java 25 build
-        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6
+        uses: ./.github/actions/setup-qualified-jdk
         with:
-          architecture: x64
-          cache: gradle
-          cache-dependency-path: |
-            **/*.gradle.kts
-            **/gradle.lockfile
-            **/settings-gradle.lockfile
-            gradle/libs.versions.toml
-            gradle/verification-metadata.xml
-            build-logic/gradle/verification-metadata.xml
-            gradle/wrapper/gradle-wrapper.properties
-          check-latest: false
-          distribution: temurin
-          # Linux uses the qualification JDK identity without claiming Windows-only procedures.
-          java-version: '25.0.4+7.0.LTS'
+          platform: linux-x64
 
       - name: Compile portable sources through the public gate
         shell: pwsh

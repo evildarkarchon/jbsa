@@ -10,8 +10,10 @@ import org.gradle.api.initialization.resolve.RepositoriesMode
 
 /** Owns plugin and dependency repository policy before any JBSA project is configured. */
 class JbsaSettingsPlugin @Inject constructor(private val buildFeatures: BuildFeatures) : Plugin<Settings> {
-    /** Configures central repositories and rejects unpinned external plugin requests. */
+    /** Configures managed toolchains, central repositories, and pinned external plugin requests. */
     override fun apply(settings: Settings) {
+        // Loading the locked implementation here gives real and TestKit builds the same resolver policy.
+        settings.pluginManager.apply("org.gradle.toolchains.foojay-resolver-convention")
         if (buildFeatures.configurationCache.requested.getOrElse(false)) {
             try {
                 ConfigurationCachePolicy.validate(settings.gradle.startParameter.taskNames)

@@ -1,6 +1,5 @@
 package io.github.evildarkarchon.jbsa.build
 
-import javax.tools.ToolProvider
 import org.gradle.api.GradleException
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
@@ -26,7 +25,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
     /**
      * Configures the root build and every retained project from one validated identity.
      *
-     * @throws GradleException when applied outside the root, on a non-Java-25 runtime, or to the wrong topology
+     * @throws GradleException when applied outside the root, on an unsupported Gradle runtime, or to the wrong topology
      */
     override fun apply(project: Project) {
         if (project != project.rootProject) {
@@ -38,7 +37,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
             )
         }
         try {
-            JdkPolicy.validate(JavaVersion.current().majorVersion, ToolProvider.getSystemJavaCompiler() != null)
+            JdkPolicy.validateRuntime(JavaVersion.current().majorVersion)
         } catch (exception: IllegalArgumentException) {
             throw GradleException(exception.message ?: "Invalid Java development kit.", exception)
         }

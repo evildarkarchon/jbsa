@@ -1,9 +1,11 @@
 # Building JBSA
 
-The source build requires an installed Java 25 JDK; Gradle toolchain auto-download is disabled. The
+The source build requires Java 17 or newer to run Gradle. Java tasks request an Adoptium Java 25
+toolchain; the pinned Foojay resolver provisions it when no matching local installation exists. The
 checked-in wrapper downloads Gradle 9.7.1 and verifies its SHA-256 checksum. Hosted qualification
-and reproducibility use the exact Eclipse Temurin `25.0.4+7.0.LTS` release. JBSA qualifies Windows
-11 x64 on NTFS; successful builds elsewhere do not create a portability or support claim.
+and reproducibility use exact, separately checksummed Eclipse Temurin `25.0.4.1+1` archives for
+Windows and Linux/WSL. JBSA qualifies Windows 11 x64 on NTFS; successful builds elsewhere do not
+create a portability or support claim.
 
 ## Multi-project build
 

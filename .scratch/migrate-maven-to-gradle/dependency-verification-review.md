@@ -120,7 +120,7 @@ platform-specific POM and Gradle-module inputs that Windows had not requested.
 
 | Input | SHA-256 |
 | --- | --- |
-| `gradle/verification-metadata.xml` | `4d2a286c4697a2e6213d1d6760bce4e5c89f5ea819761054ad0ee4c3ace63f3d` |
+| `gradle/verification-metadata.xml` | `03229afbc115e824d991616cbda1fe474ef51f3ec3efe41e7c6d2f8f49c83802` |
 | `build-logic/gradle/verification-metadata.xml` | `d18ae4bcc9928956777d4d0878232a8bc20b64b827c5a9a754f1e36132fd0df6` |
 
 The metadata union now contains 433 distinct artifacts. This extension added 88 Spotless,
@@ -163,3 +163,47 @@ change adds no checksum or artifact identity to the trust set.
 
 The lock records the parser only on the conformance project's test compile/runtime classpaths.
 Strict dependency verification accepted every resolved byte without modifying metadata.
+
+## Ticket 15 extension: Foojay toolchain resolver
+
+Managed Java 25 provisioning adds the Foojay resolver convention plugin `1.0.0` to both settings
+builds. The included build bootstraps the exact settings-plugin version from the Gradle Plugin
+Portal. The product settings plugin registers the same resolver from a catalog-pinned, locked
+build-logic implementation dependency, which also makes the policy available to TestKit builds.
+The generated settings lockfiles remain intentionally empty because Gradle emits no dependency lock
+entry for settings-plugin resolution.
+
+| Input | SHA-256 |
+| --- | --- |
+| `gradle/verification-metadata.xml` | `4d2a286c4697a2e6213d1d6760bce4e5c89f5ea819761054ad0ee4c3ace63f3d` |
+| `build-logic/gradle/verification-metadata.xml` | `8e50862798c5efdabb2c732fe2ec76ab1883f5ad130017007b7297f6bd5f619b` |
+| `settings.gradle.kts` | `3baa0b81f46e671162bec3f8316f9feb6a796ecd9baa164fd5d958ef7ff5717d` |
+| `build-logic/settings.gradle.kts` | `0e4d1e1e04bea3c07a1cd3af6c0e0324832e71ddee0e373a24c4e2e0d3563737` |
+| `settings-gradle.lockfile` | `5e2d075903b5cd264613e7538c7c51b1484fe2ed489d4ead3e6b4ba0cf3911c4` |
+| `build-logic/settings-gradle.lockfile` | `5e2d075903b5cd264613e7538c7c51b1484fe2ed489d4ead3e6b4ba0cf3911c4` |
+| `build-logic/gradle.lockfile` | `564d5c86d27d37c61a668fd127cc118e0d92c00b343464d30591aea6ffd9ed52` |
+| `gradle/libs.versions.toml` | `ed02d81af900adef2380fd664ea66366f88ea12105cf80bda7088a7841c766f9` |
+
+Fresh downloads outside Gradle's dependency cache independently reproduced all three added
+artifact hashes from `https://plugins.gradle.org/m2`: the 327,154-byte resolver JAR is
+`78b86a47dfdf7697c9bd15da78983fd80da7247d6e02fc106bdf07e0388b60a8`, its 2,813-byte Gradle
+module metadata is `6190cf0e42e664c11e1ac0a785699ab02b549cea34392c679f36d8a2c550fcb9`, and the 715-byte
+convention-plugin marker POM is `f133249a18754ae6a1d2701d00d849b1afba7b0683ddb5fc1b18a70071cec2fa`.
+Both verification metadata files contain exactly one matching SHA-256 entry per plugin artifact.
+The root file verifies the included build's settings-plugin bootstrap in the composite build; the
+included-build file verifies its standalone settings bootstrap and the locked implementation
+dependency used by `jbsa.settings`.
+
+A fresh WSL resolution additionally requested 19 BOM, parent-POM, and Gradle-module artifacts that
+the included build's Windows resolution had not needed. Every one already appeared in the
+independently reviewed root metadata with the same component, artifact, and SHA-256. The first
+strict failure, `org.junit:junit-bom:6.1.3`'s 5,416-byte POM, was also freshly downloaded from Maven
+Central and independently reproduced the recorded
+`a9000043610a3e90c852e779a6b1a8eb724a9f312cf5f7ddd57862b010c65dc8` value. The complete Linux
+closure is now recorded in the included-build metadata so a fresh WSL cache fails only on genuinely
+unknown bytes.
+
+The managed JDK archives are executable toolchain inputs rather than Gradle dependency artifacts.
+Their platform-specific qualification hashes and the requirement to verify them before extraction
+are recorded separately in `jdk-provisioning-evaluation.md`; dependency verification must not be
+mistaken for that qualification check.

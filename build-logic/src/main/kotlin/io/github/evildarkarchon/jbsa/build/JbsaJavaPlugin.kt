@@ -9,7 +9,6 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.api.tasks.testing.Test
 import org.gradle.external.javadoc.StandardJavadocDocletOptions
-import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 /** Provides Java 25 compilation, deterministic archives, and the shared JBSA test lifecycle. */
@@ -26,7 +25,7 @@ class JbsaJavaPlugin : Plugin<Project> {
     /** Retains the Java release, parameter metadata, encoding, lint, and module-path contracts. */
     private fun configureCompilation(project: Project) {
         project.extensions.getByType(JavaPluginExtension::class.java).apply {
-            toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+            JdkPolicy.configureToolchain(toolchain)
             modularity.inferModulePath.set(true)
         }
         project.tasks.withType(JavaCompile::class.java).configureEach {

@@ -41,8 +41,8 @@ specifications. General BA2 split planning follows `JBSA-IO-008`.
 
 ## Verification
 
-Use an installed Java 25 JDK, the checked-in Gradle wrapper, PowerShell 7, and
-Python 3.11 or newer:
+Use Java 17 or newer, the checked-in Gradle wrapper, PowerShell 7, and Python 3.11 or newer. Gradle
+supplies the Temurin Java 25 toolchain:
 
 ```powershell
 .\gradlew.bat :jbsa:test --tests '*Ba2ReaderTest' --tests '*Ba2PackTest'

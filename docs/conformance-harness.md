@@ -13,8 +13,9 @@ Unsupported combinations are negative cases. There are no waived cases or aggreg
 scores. The immutable scenario descriptors describe inputs that later archive slices
 must materialize; a descriptor is never evidence that the scenario ran.
 
-Run the harness checks with an installed Java 25 JDK. Qualification evidence uses the exact
-Eclipse Temurin `25.0.4+7.0.LTS` release:
+Run the harness checks with Java 17 or newer; Gradle provisions its Adoptium Java 25 toolchain when
+needed. Qualification evidence uses the exact, separately verified Eclipse Temurin `25.0.4.1+1`
+platform archive:
 
 ```powershell
 .\gradlew.bat :jbsa-conformance-tests:conformanceHarnessTest

@@ -1,16 +1,31 @@
 package io.github.evildarkarchon.jbsa.build
 
-/** Validates that Gradle runs on a complete installed Java 25 development kit. */
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.jvm.toolchain.JavaToolchainSpec
+import org.gradle.jvm.toolchain.JvmVendorSpec
+
+/** Validates that the Gradle runtime can load the managed Java 25 toolchain resolver. */
 internal object JdkPolicy {
     /**
-     * Validates the runtime major version and compiler availability.
+     * Applies the single Java language and vendor request used by every toolchain consumer.
      *
-     * @throws IllegalArgumentException when Gradle is not running on a complete Java 25 JDK
+     * @param spec toolchain request to bind to Java 25 from Eclipse Adoptium
      */
-    fun validate(majorVersion: String, compilerAvailable: Boolean) {
-        require(majorVersion == "25" && compilerAvailable) {
-            "JBSA requires an installed Java 25 JDK with javac and does not provision JDKs automatically; " +
-                "running Java $majorVersion with compilerAvailable=$compilerAvailable."
+    fun configureToolchain(spec: JavaToolchainSpec) {
+        spec.languageVersion.set(JavaLanguageVersion.of(25))
+        spec.vendor.set(JvmVendorSpec.ADOPTIUM)
+    }
+
+    /**
+     * Validates the Gradle runtime major version.
+     *
+     * @throws IllegalArgumentException when the major version is non-numeric or older than 17
+     */
+    fun validateRuntime(majorVersion: String) {
+        val parsed = majorVersion.toIntOrNull()
+        require(parsed != null && parsed >= 17) {
+            "JBSA requires Java 17 or newer to run Gradle and provision its Temurin Java 25 toolchain; " +
+                "running Java $majorVersion."
         }
     }
 }

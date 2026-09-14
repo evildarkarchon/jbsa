@@ -14,7 +14,11 @@ import org.junit.jupiter.api.io.TempDir;
 /** Verifies the stable CI-gate launcher and hosted workflow at their public repository seams. */
 @Tag("build-policy")
 final class CiGatePolicyIT {
-  private static final String PINNED_JAVA = "java-version: '25.0.4+7.0.LTS'";
+  private static final String PINNED_JAVA = "java-version: '25.0.4.1+1'";
+  private static final String WINDOWS_JDK_SHA256 =
+      "00c847d804f4a78e9f04f2683faf14fed898535b177b7fc704486cb0284e9283";
+  private static final String LINUX_JDK_SHA256 =
+      "dbb698396d478e7fa2b1e50f4103324b2a99b90569ee27c33f2261f9215cf41e";
 
   /**
    * Executes every stable gate against an isolated wrapper and checks failure propagation.
@@ -54,6 +58,8 @@ final class CiGatePolicyIT {
   void hostedWorkflowSeparatesAuthoritativeWindowsAndPortableLinuxGates() throws Exception {
     Path root = Path.of(System.getProperty("jbsa.reactor.root"));
     String workflow = Files.readString(root.resolve(".github/workflows/build.yml"));
+    String setupAction = Files.readString(root.resolve(".github/actions/setup-qualified-jdk/action.yml"));
+    String provisioner = Files.readString(root.resolve("build/provision-qualified-jdk.ps1"));
 
     for (String gate :
         java.util.List.of(
@@ -61,7 +67,19 @@ final class CiGatePolicyIT {
       assertTrue(workflow.contains("          - " + gate), () -> "Missing stable CI gate " + gate);
     }
     assertEquals(
-        3, count(workflow, PINNED_JAVA), "Every build job must use the pinned Temurin JDK");
+        1, count(setupAction, PINNED_JAVA), "The shared action must use the pinned Temurin JDK");
+    assertEquals(3, count(workflow, "uses: ./.github/actions/setup-qualified-jdk"));
+    assertEquals(2, count(workflow, "platform: windows-x64"));
+    assertEquals(1, count(workflow, "platform: linux-x64"));
+    assertEquals(1, count(setupAction, "distribution: jdkfile"));
+    assertEquals(1, count(setupAction, "jdk-file: ${{ env.JBSA_JDK_ARCHIVE }}"));
+    assertEquals(1, count(setupAction, "provision-qualified-jdk.ps1"));
+    assertEquals(1, count(provisioner, WINDOWS_JDK_SHA256));
+    assertEquals(1, count(provisioner, LINUX_JDK_SHA256));
+    assertTrue(provisioner.contains("OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1.zip"));
+    assertTrue(provisioner.contains("OpenJDK25U-jdk_x64_linux_hotspot_25.0.4.1_1.tar.gz"));
+    assertTrue(provisioner.contains("Get-FileHash -Algorithm SHA256"));
+    assertTrue(provisioner.contains("if ($actual -cne $distribution.Sha256)"));
     assertTrue(workflow.contains("run: .\\gradlew.bat clean verify --no-daemon"));
     assertTrue(workflow.contains("runs-on: windows-2025"));
     assertTrue(workflow.contains("runs-on: ubuntu-latest"));
@@ -71,17 +89,20 @@ final class CiGatePolicyIT {
     assertTrue(workflow.contains("./gradlew -p build-logic test --no-daemon"));
     assertTrue(workflow.contains("./gradlew --no-daemon :jbsa:integrationTest"));
 
-    assertTrue(workflow.contains("cache: gradle"));
-    assertFalse(workflow.contains("cache: maven"));
-    assertTrue(workflow.contains("gradle/verification-metadata.xml"));
-    assertTrue(workflow.contains("gradle/wrapper/gradle-wrapper.properties"));
+    assertTrue(setupAction.contains("cache: gradle"));
+    assertFalse(setupAction.contains("cache: maven"));
+    assertTrue(setupAction.contains("gradle/verification-metadata.xml"));
+    assertTrue(setupAction.contains("gradle/wrapper/gradle-wrapper.properties"));
     assertFalse(workflow.contains("gradle/actions/setup-gradle"));
     assertFalse(workflow.contains("--scan"));
     assertFalse(workflow.toLowerCase(java.util.Locale.ROOT).contains("develocity"));
     assertFalse(workflow.toLowerCase(java.util.Locale.ROOT).contains("telemetry"));
 
     java.util.List<String> actionLines =
-        workflow.lines().map(String::trim).filter(line -> line.startsWith("uses: ")).toList();
+        java.util.stream.Stream.concat(workflow.lines(), setupAction.lines())
+            .map(String::trim)
+            .filter(line -> line.startsWith("uses: ") && !line.startsWith("uses: ./"))
+            .toList();
     assertFalse(actionLines.isEmpty());
     actionLines.forEach(
         line -> assertTrue(line.matches("uses: [^@\\s]+@[0-9a-f]{40}(?:\\s+#.*)?"), line));

@@ -17,6 +17,7 @@ org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath
 org.codehaus.plexus:plexus-utils:4.0.3=runtimeClasspath,testRuntimeClasspath
 org.codehaus.plexus:plexus-xml:4.1.1=runtimeClasspath,testRuntimeClasspath
 org.codehaus.woodstox:stax2-api:4.2.2=runtimeClasspath,testRuntimeClasspath
+org.gradle.toolchains:foojay-resolver:1.0.0=compileClasspath,runtimeClasspath,testCompileClasspath,testRuntimeClasspath
 org.jdom:jdom2:2.0.6.1=runtimeClasspath,testRuntimeClasspath
 org.jetbrains.kotlin:kotlin-assignment-compiler-plugin-embeddable:2.4.0=kotlinCompilerPluginClasspathMain,kotlinCompilerPluginClasspathTest
 org.jetbrains.kotlin:kotlin-build-tools-api:2.4.0=kotlinBuildToolsApiClasspath,kotlinCompilerClasspath,kotlinKlibCommonizerClasspath

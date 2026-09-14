@@ -80,7 +80,17 @@ class GradleFoundationFilesTest {
     @Test
     fun `commits deterministic catalog lock and verification policy`() {
         val catalog = Files.readString(repositoryRoot.resolve("gradle/libs.versions.toml"))
-        listOf("cyclonedx", "google-java-format", "jmh", "junit", "kotlin", "lwjgl", "shadow", "spotless")
+        listOf(
+                "cyclonedx",
+                "foojay-toolchains",
+                "google-java-format",
+                "jmh",
+                "junit",
+                "kotlin",
+                "lwjgl",
+                "shadow",
+                "spotless",
+            )
             .forEach { alias -> assertTrue(catalog.contains("$alias = \""), "Missing pinned version $alias") }
         assertFalse(catalog.contains("latest."))
         assertFalse(catalog.contains("+\""))
@@ -88,7 +98,24 @@ class GradleFoundationFilesTest {
             .forEach { pluginId -> assertTrue(catalog.contains("id = \"$pluginId\"")) }
         val includedBuild = Files.readString(repositoryRoot.resolve("build-logic/build.gradle.kts"))
         val rootBuild = Files.readString(repositoryRoot.resolve("build.gradle.kts"))
+        val rootSettings = Files.readString(repositoryRoot.resolve("settings.gradle.kts"))
         val includedSettings = Files.readString(repositoryRoot.resolve("build-logic/settings.gradle.kts"))
+        val foojayPlugin =
+            "id(\"org.gradle.toolchains.foojay-resolver-convention\") version \"1.0.0\""
+        assertFalse(rootSettings.contains(foojayPlugin))
+        assertTrue(includedSettings.contains(foojayPlugin))
+        assertTrue(includedBuild.contains("implementation(libs.foojay.resolver)"))
+        val settingsPlugin =
+            Files.readString(
+                repositoryRoot.resolve(
+                    "build-logic/src/main/kotlin/io/github/evildarkarchon/jbsa/build/JbsaSettingsPlugin.kt"
+                )
+            )
+        assertTrue(
+            settingsPlugin.contains(
+                "settings.pluginManager.apply(\"org.gradle.toolchains.foojay-resolver-convention\")"
+            )
+        )
         assertTrue(catalog.contains("shadow-gradle-plugin = { module = \"com.gradleup.shadow:shadow-gradle-plugin\""))
         assertTrue(includedBuild.contains("implementation(libs.shadow.gradle.plugin)"))
         assertTrue(rootBuild.contains("alias(libs.plugins.cyclonedx)"))
@@ -103,11 +130,34 @@ class GradleFoundationFilesTest {
                 assertTrue(properties.contains("org.gradle.parallel=false"))
                 assertTrue(properties.contains("org.gradle.configuration-cache=false"))
                 assertTrue(properties.contains("org.gradle.caching=false"))
-                assertTrue(properties.contains("org.gradle.java.installations.auto-download=false"))
+                assertTrue(properties.contains("org.gradle.java.installations.auto-download=true"))
                 assertFalse(properties.contains("develocity", ignoreCase = true))
                 assertFalse(properties.contains("scan", ignoreCase = true))
                 assertFalse(properties.contains("telemetry", ignoreCase = true))
             }
+
+        val javaPlugin =
+            Files.readString(
+                repositoryRoot.resolve(
+                    "build-logic/src/main/kotlin/io/github/evildarkarchon/jbsa/build/JbsaJavaPlugin.kt"
+                )
+            )
+        val benchmarkPlugin =
+            Files.readString(
+                repositoryRoot.resolve(
+                    "build-logic/src/main/kotlin/io/github/evildarkarchon/jbsa/build/JbsaBenchmarkPlugin.kt"
+                )
+            )
+        val jdkPolicy =
+            Files.readString(
+                repositoryRoot.resolve(
+                    "build-logic/src/main/kotlin/io/github/evildarkarchon/jbsa/build/JdkPolicy.kt"
+                )
+            )
+        assertTrue(javaPlugin.contains("JdkPolicy.configureToolchain(toolchain)"))
+        assertTrue(benchmarkPlugin.contains("JdkPolicy.configureToolchain(this)"))
+        assertTrue(jdkPolicy.contains("languageVersion.set(JavaLanguageVersion.of(25))"))
+        assertTrue(jdkPolicy.contains("vendor.set(JvmVendorSpec.ADOPTIUM)"))
 
         val includedLock = Files.readString(repositoryRoot.resolve("build-logic/gradle.lockfile"))
         val rootLock = Files.readString(repositoryRoot.resolve("gradle.lockfile"))
@@ -115,6 +165,7 @@ class GradleFoundationFilesTest {
         assertTrue(rootLock.contains("empty=cyclonedxBom"))
         assertTrue(verificationMetadata.contains("cyclonedx-gradle-plugin-3.4.1.jar"))
         assertTrue(includedLock.contains("junit-jupiter:6.1.3"))
+        assertTrue(includedLock.contains("foojay-resolver:1.0.0"))
         assertTrue(includedLock.contains("shadow-gradle-plugin:9.6.1"))
         val benchmarkLock = Files.readString(repositoryRoot.resolve("jbsa-benchmarks/gradle.lockfile"))
         assertTrue(benchmarkLock.contains("jmh-core:1.37"))

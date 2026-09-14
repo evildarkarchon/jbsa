@@ -41,7 +41,7 @@ Develop and validate Gradle alongside Maven on one migration branch. Use Maven a
 19. As a qualification operator, I want a verified-cache offline build to pass, so that every build input is known before evidence is produced.
 20. As a maintainer, I want candidate versions supplied explicitly to every project, so that all artifacts in one build share an identical version.
 21. As a contributor, I want the default snapshot version declared once, so that local builds require no manual version setup.
-22. As a qualification operator, I want ordinary builds to require Java 25 and qualification to use the exact pinned Temurin release, so that byte-producing evidence has a known toolchain identity.
+22. As a qualification operator, I want Java tasks to use Java 25 even when Gradle bootstraps on Java 17 or newer, and qualification to use the exact pinned Temurin release, so that byte-producing evidence has a known toolchain identity.
 23. As a contributor, I want Java compilation to retain release level, parameter metadata, encoding, and lint behavior, so that class files and diagnostics remain compatible.
 24. As a test maintainer, I want unit and integration tests executed separately without relocating existing sources, so that migration churn stays focused.
 25. As a test maintainer, I want test class ordering, locale, time zone, encoding, and fork behavior deterministic, so that observations are repeatable.
@@ -107,7 +107,7 @@ Develop and validate Gradle alongside Maven on one migration branch. Use Maven a
 - Gradle emits deterministic, schema-versioned internal manifests for build layout and resolved production dependencies. These manifests are not release assets or public API.
 - The dependency manifest records source project, usage or configuration, requested and resolved coordinates, classifier or selected variant, and artifact SHA-256.
 - The version defaults to `0.1.0-SNAPSHOT`, can be overridden explicitly with `-Pversion=<candidate>`, is validated once, and is identical across every project.
-- Ordinary builds accept an installed Java 25 JDK. Toolchain auto-download is disabled. Hosted qualification and reproducibility use the exact pinned Temurin `25.0.4+7.0.LTS` release.
+- Developer builds request an Adoptium Java 25 toolchain and use the pinned Foojay resolver to provision it when no matching installation exists. Windows and Linux/WSL qualification and reproducibility independently bind the exact Temurin `25.0.4.1+1` platform archive and its reviewed SHA-256 rather than trusting mutable remote resolution.
 - Java compilation retains `--release 25`, parameter metadata, UTF-8, and all lint diagnostics.
 - Normal compilation and tests use Gradle module-path inference. Exceptional classpath or native launches retain explicit arguments and remain covered by black-box tests.
 - Existing test source directories remain intact. Unit and integration classes compile once and execute through separate tasks selected by their established naming conventions.

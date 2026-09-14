@@ -1,5 +1,6 @@
 [versions]
 cyclonedx = "3.4.1"
+foojay-toolchains = "1.0.0"
 google-java-format = "1.36.0"
 jackson = "2.22.1"
 jmh = "1.37"
@@ -11,6 +12,7 @@ snakeyaml = "2.5"
 spotless = "8.10.2"
 
 [libraries]
+foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay-toolchains" }
 jackson-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
 jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }

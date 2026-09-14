@@ -17,8 +17,9 @@ Neither harness unit tests nor a successful JMH build claims qualification.
 
 ## Build and harness checks
 
-Use an installed Java 25 JDK, PowerShell 7, and Python 3.11 or later. Exact
-qualification uses Eclipse Temurin `25.0.4+7.0.LTS` through the checked-in Gradle wrapper.
+Use Java 17 or newer to run the checked-in Gradle wrapper, PowerShell 7, and Python 3.11 or later.
+Gradle provisions the Adoptium Java 25 toolchain when necessary. Exact qualification uses the
+separately checksummed Eclipse Temurin `25.0.4.1+1` platform archive.
 Python uses only its standard library. Java source and tests compile during the
 ordinary multi-project build; the standalone JMH 1.37 JAR is build-only evidence tooling.
 

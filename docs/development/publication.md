@@ -83,7 +83,7 @@ guarantee is made.
 
 ## Verification
 
-Run with an installed Java 25 JDK on Windows:
+Run on Windows with Java 17 or newer; Gradle supplies the Temurin Java 25 toolchain:
 
 ```powershell
 .\gradlew.bat :jbsa:test --tests '*SpillBufferTest' --tests '*ResourceBudgetTest' --tests '*WindowsPathIdentityTest' --tests '*ExtractionPathsTest' --tests '*PublicationTransactionTest' --tests '*PublicationFailuresTest' --tests '*PublicationDriveRootTest'
