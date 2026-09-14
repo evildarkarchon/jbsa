@@ -1,22 +1,22 @@
 # Implement BSA for Skyrim SE and AE
 
-Status: ready-for-agent
-State: open
+Status: none
+State: closed
 GitHub issue: #44
 Source: https://github.com/evildarkarchon/jbsa/issues/44
 Author: evildarkarchon
 Created: 2026-09-03T06:54:08Z
 Source updated: 2026-09-03T06:54:08Z
-Closed: none
+Closed: 2026-09-14
 Migrated: 2026-09-10
-Labels: ready-for-agent
+Labels: none
 Assignees: none
 Blocked by: [#42](../issues/42-implement-bsa-for-fallout-3-new-vegas-and-skyrim-le.md), [#43](../issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-11
-Triage rationale: Both #42 and #43 are closed. Acceptance remains current under specification 0.14.0; ready for agent implementation. The family consumer still requires its conformance and targeted performance qualification before merge.
+Triage reviewed: 2026-09-14
+Triage rationale: Closed after complete BSA 0x69 Assurance v2 data and fresh focused library, CLI, oracle, validator, and performance qualification.
 
 ## Original issue body
 
@@ -102,3 +102,51 @@ active catalog and approved rebaselines were not changed. This ticket remains
 open until its acceptance text is updated; the implementation, focused
 independent validation, pinned-oracle differential, and development performance
 checkpoint remain recorded above.
+
+### Assurance v2 completion authority — 2026-09-13
+
+The maintainer confirmed that the BSA 0x69 CV1 and performance-v1 work was
+interrupted and may be incomplete. In particular, neither the abandoned 52-case
+golden proposal nor the 126 retained performance assignments should be treated
+as completed evidence or as a migration checklist.
+
+The implementation candidate, project-authored fixtures, independent wire/LZ4
+validation, both pinned-oracle differential directions, and the recorded
+development performance checkpoint remain valid focused evidence. No legacy
+CV1 rebaseline packet or exhaustive performance-v1 packet is required to finish
+this ticket. Completion will instead be assessed against the applicable compact
+generated conformance and risk-based performance obligations established by
+[#61](../issues/61-implement-assurance-v2.md). This current decision supersedes
+conflicting qualification wording above while preserving it as history.
+
+### Assurance v2 candidate data — 2026-09-13
+
+The compact plan now contains six BSA 0x69 candidate scenarios and one focused
+LZ4 performance lane, all marked `incomplete`. They reference the existing
+family tests, independent fixture/validator inputs, pinned-oracle differential,
+and development checkpoint measurements without claiming that the interrupted
+CV1/performance-v1 work completed. Promotion remains blocked on #61's gap review
+and explicit capability qualification.
+
+### Closed with complete Assurance v2 data — 2026-09-14
+
+The maintainer confirmed that the product implementation is complete and
+authorized family-level closure independently of the unfinished global #61
+migration. Assurance v2 now marks BSA 0x69 `qualified` with 16 executable
+scenarios covering supported and rejected codecs, 24-byte layout and padding,
+embedded names, flags, malformed input, extraction safety, sharing, splitting,
+ordering, bounded LZ4 resources, cancellation, CLI selection, independent
+validation, the pinned-oracle differential, and the focused performance
+checkpoint.
+
+The shadow comparison accounts for all 32 historical BSA 0x69 rows: 31 map to
+executable scenario archetypes and the archive-level harmless-trailing-bytes row
+is explicitly retired as structurally inapplicable because the owning Versioned
+BSA specification defines no such behavior. No row is unmapped. The qualified
+performance lane remains a development checkpoint and is not a release-wide
+Performance Qualification or Binary Conformance claim.
+
+Fresh targeted execution passed the BSA 0x69 library and LZ4 tests, SSE CLI
+tests, all focused independent conformance tests with the digest-pinned local
+BSArch oracle enabled, and the local versioned-BSA performance checkpoint. No
+Binary Conformance claim is made. Ticket #44 is complete.

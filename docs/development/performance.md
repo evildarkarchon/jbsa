@@ -1,4 +1,16 @@
-# Local performance-v1 harness
+# Assurance v2 performance qualification
+
+The [normative Assurance v2 plan](../spec/assurance-v2.md) replaces the frozen
+1,384-row inventory with 24 curated implementation-path scenarios. The plan
+records each lane's represented risk, carries worker counts as one vector, and
+derives output size from the associated pack operation. Release qualification
+remains ticket #55 work; a planned lane cannot produce a passing release capsule.
+
+## Frozen performance-v1 implementation reference
+
+The commands and schema below are non-normative historical documentation for
+the digest-indexed v1 harness. Its compact Benchmark Corpus recipes remain valid
+inputs where an Assurance v2 lane selects them.
 
 Issue #32 implements the foundation for [performance-v1](../spec/performance-v1.md).
 The permanent registry assigns `JBSA-PERF-001`–`003` and `005`–`013` to this issue.

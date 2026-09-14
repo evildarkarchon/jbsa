@@ -55,6 +55,19 @@ final class ExtractionPathsTest {
         "\ud800"
       })
   void rejectsUnsafeNamesBeforeDestinationEffects(String name) throws Exception {
+    assertUnsafeNameRejected(name);
+  }
+
+  /** Exercises stable representatives of every unsafe-name category used by Assurance v2. */
+  @Test
+  void rejectsRepresentativeUnsafeNamesBeforeDestinationEffects() throws Exception {
+    for (String name : List.of("../escape", "C:stream", "a/CON.txt", "a?b")) {
+      assertUnsafeNameRejected(name);
+    }
+  }
+
+  /** Requires one unsafe name to fail before the extraction root receives any effects. */
+  private void assertUnsafeNameRejected(String name) throws Exception {
     Path root = directory.resolve("missing");
     ArchiveException failure =
         assertThrows(

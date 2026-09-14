@@ -11,12 +11,12 @@ Closed: none
 Migrated: 2026-09-10
 Labels: needs-triage
 Assignees: none
-Blocked by: [#49](../issues/49-complete-the-cross-family-bsarch-compatible-cli.md), [#31](../issues/31-build-the-pinned-oracle-and-conformance-case-harness.md), [#48](../issues/48-introduce-bounded-deterministic-parallel-archive-operations.md), [#47](../issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md)
+Blocked by: [#49](../issues/49-complete-the-cross-family-bsarch-compatible-cli.md), [#31](../issues/31-build-the-pinned-oracle-and-conformance-case-harness.md), [#48](../issues/48-introduce-bounded-deterministic-parallel-archive-operations.md), [#47](../issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md), [#61](../issues/61-implement-assurance-v2.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #49, #48, #47.
+Triage reviewed: 2026-09-13
+Triage rationale: #61 is closed. Reassess readiness after open prerequisites close: #49, #48, #47. The current gate is compact generated conformance, not completion of every historical committed CV1 row.
 
 ## Original issue body
 
@@ -55,3 +55,23 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+### Assurance v2 gate — 2026-09-13
+
+This ticket now closes the compact generated Automated Conformance gate defined
+by [#61](../issues/61-implement-assurance-v2.md). It does not require completion,
+rebinding, or case-level publication of every row in the historical committed
+CV1 catalog.
+
+At completion, the compact capability and semantic-scenario sources must
+deterministically generate every applicable required case; the run must pass all
+required generated assertions and retain a compact traceability/result capsule.
+The gate continues to cover decode and encode differentials, independent
+validators, malformed inputs, interactions, warnings and errors, resource
+limits, cancellation, rollback, extraction containment, sequential/parallel
+equivalence, and JBSA determinism. Unknown impact remains fail-closed. Binary
+Conformance may be claimed only for individually supported cases, but earning a
+Binary Conformance claim is not mandatory for this gate.
+
+This current acceptance supersedes conflicting expanded-CV1 wording in the
+original body while retaining that text as historical context.

@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Runs one deterministic JBSA build gate through its migration-stage build implementation.
+Runs one deterministic JBSA build gate through the authoritative Gradle implementation.
 
 .PARAMETER Gate
-The compile, unit, architecture, formatting, policy, or conformance harness gate to run.
+The compile, unit, architecture, formatting, policy, or Assurance v2 conformance gate to run.
 
 .NOTES
 These gates produce hosted build evidence only. They do not perform or claim Release Qualification.
@@ -31,11 +31,44 @@ $gradleArguments = switch ($Gate) {
     'architecture' { @('--no-daemon', ':jbsa-conformance-tests:architectureTest') }
     'formatting' { @('--no-daemon', 'spotlessCheck') }
     'policy' { @('--no-daemon', ':jbsa-conformance-tests:buildPolicyTest') }
-    'conformance' { @('--no-daemon', ':jbsa-conformance-tests:automatedConformance') }
+    'conformance' { @('--no-daemon', ':jbsa-conformance-tests:automatedAssurance') }
 }
 
 Push-Location $reactorRoot
 try {
+    if ($Gate -eq 'conformance') {
+        $selection = Join-Path $reactorRoot 'target/assurance/selection.json'
+        $tier = if ($env:GITHUB_EVENT_NAME -ceq 'pull_request') { 'affected' } else { 'full' }
+        $selectionArguments = @(
+            'build/assurance/plan.py',
+            'select',
+            'tests/assurance/plan.json',
+            '--output',
+            $selection,
+            '--tier',
+            $tier,
+            '--environment',
+            'hosted'
+        )
+        if ($tier -ceq 'affected') {
+            if ($env:JBSA_BASE_REVISION -cnotmatch '^[0-9a-f]{40}$') {
+                throw 'Pull-request assurance selection requires an exact base revision.'
+            }
+            $changedPaths = @(git diff --name-only "$($env:JBSA_BASE_REVISION)...HEAD")
+            if ($LASTEXITCODE -ne 0) {
+                throw 'Unable to determine Assurance v2 impact from the pull-request base.'
+            }
+            foreach ($changedPath in $changedPaths) {
+                $selectionArguments += @('--changed', $changedPath)
+            }
+        }
+        & python @selectionArguments
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Assurance v2 impact selection failed.'
+        }
+        $gradleArguments += "-PjbsaAssuranceSelection=$selection"
+    }
+
     & $gradleWrapper @gradleArguments
     if ($LASTEXITCODE -ne 0) {
         throw "The $Gate Gradle gate failed with exit code $LASTEXITCODE."

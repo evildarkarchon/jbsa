@@ -5,6 +5,7 @@ internal object JbsaConformanceIdentity {
     const val PROJECT_PATH = ":jbsa-conformance-tests"
     const val CAPTURE_TASK = "captureAutomatedConformance"
     const val AUTOMATED_TASK = "automatedConformance"
+    const val AUTOMATED_ASSURANCE_TASK = "automatedAssurance"
     const val EXIT_CODE_FILE = "conformance-exit-code.txt"
     const val EVIDENCE_DIRECTORY = "conformance"
     val TAGGED_TESTS =
@@ -12,6 +13,7 @@ internal object JbsaConformanceIdentity {
             "architectureTest" to "architecture",
             "buildPolicyTest" to "build-policy",
             "conformanceHarnessTest" to "conformance-harness",
+            "assurancePlanTest" to "assurance-plan",
             "tes3ConformanceTest" to "tes3",
             "bsaConformanceTest" to "bsa",
             "ba2ConformanceTest" to "ba2",

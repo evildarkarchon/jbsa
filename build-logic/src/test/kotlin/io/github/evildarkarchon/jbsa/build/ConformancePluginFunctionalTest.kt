@@ -65,6 +65,7 @@ class ConformancePluginFunctionalTest {
         writeTaggedTest("Tes3FixtureIT", "tes3")
         writeTaggedTest("BsaFixtureIT", "bsa")
         writeTaggedTest("HarnessFixtureIT", "conformance-harness")
+        writeTaggedTest("AssuranceFixtureIT", "assurance-plan")
         writeTaggedTest("PerformanceFixtureIT", "performance-harness")
         write("tests/conformance/catalog.json", "{}\n")
         write("tests/conformance/contradictions.json", "{}\n")
@@ -107,6 +108,56 @@ class ConformancePluginFunctionalTest {
                 "performanceHarnessTest",
             )
             .forEach { task -> assertTrue(result.task(":jbsa-conformance-tests:$task") != null, task) }
+    }
+
+    /** Runs the compact assurance shadow gate from the plan and available Archive Family checks. */
+    @Test
+    fun `automated assurance aggregates the compact plan and available family tests`() {
+        val result = run("--write-locks", ":jbsa-conformance-tests:automatedAssurance")
+
+        val executions = Files.readAllLines(projectDir.resolve("conformance-executions.txt"))
+        assertEquals(
+            setOf("ContractFixtureIT", "AssuranceFixtureIT", "Tes3FixtureIT", "BsaFixtureIT"),
+            executions.toSet(),
+        )
+        assertEquals(4, executions.size)
+        listOf("assurancePlanTest", "tes3ConformanceTest", "bsaConformanceTest")
+            .forEach { task -> assertTrue(result.task(":jbsa-conformance-tests:$task") != null, task) }
+        assertTrue(result.task(":jbsa:test") != null)
+        assertTrue(result.task(":jbsa-cli:test") != null)
+        listOf(
+                "assurancePlanValidation",
+                "assuranceCoverageComparison",
+                "assuranceHistoryVerification",
+                "assuranceEvidenceCapsule",
+            )
+            .forEach { task -> assertTrue(result.task(":jbsa-conformance-tests:$task") != null, task) }
+        assertTrue(result.task(":jbsa-conformance-tests:automatedAssurance") != null)
+        assertTrue(result.task(":jbsa-conformance-tests:captureAutomatedConformance") == null)
+    }
+
+    /** Runs only the Archive Family task selected by a validated affected-tier manifest. */
+    @Test
+    fun `automated assurance consumes an affected family selection`() {
+        write(
+            "target/assurance-selection.json",
+            """
+            {"assurance_scenarios":[{"family":"tes3","assurance_scenario_id":"tes3:decode-entries"}]}
+            """.trimIndent(),
+        )
+
+        val result =
+            run(
+                "--write-locks",
+                "-PjbsaAssuranceSelection=target/assurance-selection.json",
+                ":jbsa-conformance-tests:automatedAssurance",
+            )
+
+        val executions = Files.readAllLines(projectDir.resolve("conformance-executions.txt"))
+        assertEquals(setOf("ContractFixtureIT", "AssuranceFixtureIT", "Tes3FixtureIT"), executions.toSet())
+        assertTrue(result.task(":jbsa-conformance-tests:tes3ConformanceTest") != null)
+        assertTrue(result.task(":jbsa-conformance-tests:bsaConformanceTest") == null)
+        assertTrue(result.task(":jbsa-conformance-tests:ba2ConformanceTest") == null)
     }
 
     /** Verifies explicit local-evidence opt-ins reach the forked JVM selected by a Gradle task. */

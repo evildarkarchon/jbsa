@@ -67,3 +67,17 @@ implementation; it does not qualify this consumer. The
 retains 84 Starfield DDS method-3 raw-LZ4 assignments. This ticket's formal
 targeted conformance/performance evidence remains required before merge. #45
 remains its prerequisite.
+
+### Assurance v2 completion contract — 2026-09-14
+
+The active assurance namespace is `JBSA-ASR-*`; `JBSA-CONF-*` and
+`JBSA-PERF-*` are frozen historical mappings. This Archive Family must extend
+the compact capability and scenario sources with its stable DDS behavioral
+variants and cover bidirectional oracle differentials, DirectXTex or equivalent
+independent validation, malformed and bounded-resource behavior, reconstruction,
+and applicable interactions through generated Assurance Scenarios.
+
+Performance work is limited to the curated DDS zlib/raw-LZ4 chunk,
+reconstruction, random-access, peak-memory, and associated pack output-size
+lanes. No expanded CV1 or performance-v1 packet is required. The dependency on
+#45 remains unchanged.

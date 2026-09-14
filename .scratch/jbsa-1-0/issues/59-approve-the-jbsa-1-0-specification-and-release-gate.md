@@ -11,12 +11,12 @@ Closed: none
 Migrated: 2026-09-10
 Labels: needs-triage
 Assignees: none
-Blocked by: [#56](../issues/56-qualify-binary-conformance-cases-on-a-second-windows-x64-cpu.md), [#51](../issues/51-freeze-the-jbsa-1-0-public-archive-interface.md), [#58](../issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md), [#55](../issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md), [#57](../issues/57-audit-release-bytes-licenses-notices-sbom-and-provenance.md)
+Blocked by: [#51](../issues/51-freeze-the-jbsa-1-0-public-archive-interface.md), [#58](../issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md), [#55](../issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md), [#57](../issues/57-audit-release-bytes-licenses-notices-sbom-and-provenance.md)
 Parent: [#23](../map.md)
 
 Intended owner: human
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #51, #58, #55, #57.
+Triage reviewed: 2026-09-13
+Triage rationale: Reassess readiness after open prerequisites close: #51, #58, #55, #57. Final review uses the compact Assurance v2 traceability and result capsule; Binary Conformance is optional and case-scoped.
 
 ## Original issue body
 
@@ -53,3 +53,22 @@ Human-driven when unblocked. Preparation may be automated, but the named evidenc
 ## Comments
 
 No comments at migration time.
+
+### Assurance v2 final review — 2026-09-13
+
+The final human gate will review the compact Assurance v2 traceability and
+release-evidence capsule produced by [#50](../issues/50-complete-the-mandatory-automated-conformance-matrix.md)
+and [#55](../issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md),
+not an expanded per-row CV1/performance-v1 proof archive.
+
+Approval must confirm that each release-relevant requirement maps to its
+applicable implementation, generated scenario, test or validator, curated
+performance scenario, packaging evidence, or manual qualification; that all
+required generated conformance scenarios pass; that all selected performance
+metrics pass; and that artifact identities, limitations, deviations, and claims
+are precise. Binary Conformance remains an optional, case-level claim. The lack
+of a Binary Conformance claim is not by itself a release blocker, and this ticket
+must not imply binary identity beyond any cases that were actually qualified.
+
+This current acceptance supersedes conflicting mandatory-binary or expanded
+proof-catalog implications above while retaining the original text as history.

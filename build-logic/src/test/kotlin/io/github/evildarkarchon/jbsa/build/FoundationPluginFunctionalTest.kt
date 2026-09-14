@@ -462,6 +462,8 @@ class FoundationPluginFunctionalTest {
         assertTaskPrecedes(taskPaths, ":jbsa-dist:stageReleaseInputs", ":jbsa-dist:verifyStagedReleaseInputs")
         assertTaskPrecedes(taskPaths, ":jbsa-dist:verifyStagedReleaseInputs", ":verify")
         assertTaskPrecedes(taskPaths, ":verifyActiveReferences", ":verify")
+        assertTaskPrecedes(taskPaths, ":jbsa-conformance-tests:automatedAssurance", ":verify")
+        assertFalse(taskPaths.contains(":jbsa-conformance-tests:automatedConformance"), taskPaths.toString())
     }
 
     /** Verifies ordinary Gradle lifecycles do not silently expand into full release qualification. */

@@ -233,8 +233,9 @@ code.
   - [Compatibility profiles](compatibility-profiles.md)
   - [BSArch-compatible CLI](bsarch-cli.md)
 - Qualification and release:
-  - [Conformance v1](conformance-v1.md)
-  - [Performance v1](performance-v1.md)
+  - [Assurance v2](assurance-v2.md)
+  - [Conformance v1 frozen history](conformance-v1.md)
+  - [Performance v1 frozen history](performance-v1.md)
   - [Distribution](distribution.md)
   - [Release gates](release-gates.md)
 - Archive formats:

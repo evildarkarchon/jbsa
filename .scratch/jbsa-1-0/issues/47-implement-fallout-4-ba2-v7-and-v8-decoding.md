@@ -57,3 +57,13 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+### Assurance v2 completion contract — 2026-09-14
+
+The active assurance namespace is `JBSA-ASR-*`; `JBSA-CONF-*` is frozen
+historical provenance. The General and DDS v7/v8 capabilities must generate the
+applicable decode, explicit encode-rejection, CLI, malformed, resource,
+Independent Validator, oracle, and interaction Assurance Scenarios. Curated
+unpack, metadata, DDS reconstruction, random-access, and peak-memory lanes cover
+the materially distinct performance paths without recreating the expanded v1
+matrices. The dependency on #46 remains unchanged.

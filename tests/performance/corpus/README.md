@@ -1,5 +1,10 @@
 # Performance v1 Benchmark Corpus
 
+> Assurance v2 retains these compact Benchmark Corpus recipes and materializes
+> detailed manifests as build or release evidence. The expanded performance-v1
+> catalog and results are frozen historical inputs identified by
+> `tests/assurance/history.json`.
+
 These inputs are independently generated project-owned synthetic material.
 They contain no game files, proprietary archives, or Reference Snapshot code.
 The versioned generator is [`corpus.py`](../../../build/performance/corpus.py).

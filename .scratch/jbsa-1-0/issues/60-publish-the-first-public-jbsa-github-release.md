@@ -54,3 +54,12 @@ Human-driven when unblocked. Preparation may be automated, but the named evidenc
 ## Comments
 
 No comments at migration time.
+
+### Assurance v2 publication evidence — 2026-09-14
+
+Publication must attach or link the concise accepted Assurance v2 release
+Evidence Capsule and the content-addressed CI or release artifacts containing
+voluminous raw evidence. Public claims must distinguish Automated, Decode,
+Encode, Performance, manual Release Qualification, and any optional case-level
+Binary Conformance actually earned. Frozen CV1/performance-v1 catalogs and
+review packets remain historical provenance and are not required release assets.

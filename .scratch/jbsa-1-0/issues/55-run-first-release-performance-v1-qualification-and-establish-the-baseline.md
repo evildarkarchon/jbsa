@@ -15,8 +15,8 @@ Blocked by: [#32](../issues/32-build-the-performance-v1-harness-and-benchmark-co
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #53, #50.
+Triage reviewed: 2026-09-13
+Triage rationale: Reassess readiness after open prerequisites close: #53, #50. Qualification will use the curated Assurance v2 hot-path plan rather than the historical 1,384-case product matrix.
 
 ## Original issue body
 
@@ -65,3 +65,25 @@ Reconcile that inventory with the final corpus, configuration and applicability
 rules, bind the exact candidate and comparators, and pass every required case
 before release. Supplemental adapter measurements and historical results from
 another identity cannot satisfy this ticket.
+
+### Assurance v2 performance baseline — 2026-09-13
+
+The historical 1,384-case inventory is no longer the release gate. This ticket
+now establishes the first baseline from the curated, risk-based release hot-path
+plan implemented by [#61](../issues/61-implement-assurance-v2.md), expected to be
+approximately 20–30 distinct implementation-path scenarios.
+
+The final release candidate must still be measured on a controlled machine for
+representative throughput, random access, peak memory, worker scaling, and
+output-size behavior across the applicable archive, codec, and workload paths.
+Each scaling scenario records one experiment containing the full worker vector,
+and output-size results are derived from the corresponding pack run. Session
+identity and validity are checked once where possible. Compact definitions,
+digests, thresholds, metric outcomes, and the baseline result capsule remain in
+version control; voluminous raw samples may be retained as release or CI
+artifacts.
+
+Every selected metric must pass its explicit bound independently, and every
+invalid or regressing selected scenario must be investigated. No run of all
+historical performance-v1 assignments is required. This current acceptance
+supersedes conflicting full-matrix wording above while preserving it as history.

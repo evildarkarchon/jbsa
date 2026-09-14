@@ -1,4 +1,10 @@
-# Conformance v1
+# Conformance v1 — frozen historical contract
+
+This document is non-normative historical evidence. Assurance v2 superseded its
+expanded catalog and release-wide Binary Conformance wording in specification
+`0.17.0`; see [Assurance v2](assurance-v2.md). The sections below are retained
+unchanged as the restoration and migration source identified by
+`tests/assurance/history.json`.
 
 This specification owns the `conformance-v1` verification contract: Conformance
 Case identity, authority, fixtures, comparisons, evidence, and the claims that

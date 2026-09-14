@@ -74,7 +74,7 @@ Implement and qualify the Windows-first Java 25 Bethesda archive library and thi
 | [#41 — Establish the Interface Candidate after representative Archive Families](issues/41-establish-the-interface-candidate-after-representative-archive-families.md) | closed |
 | [#42 — Implement BSA for Fallout 3, New Vegas, and Skyrim LE](issues/42-implement-bsa-for-fallout-3-new-vegas-and-skyrim-le.md) | closed |
 | [#43 — Integrate and qualify the Windows x64 LZ4 runtime](issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md) | closed |
-| [#44 — Implement BSA for Skyrim SE and AE](issues/44-implement-bsa-for-skyrim-se-and-ae.md) | open |
+| [#44 — Implement BSA for Skyrim SE and AE](issues/44-implement-bsa-for-skyrim-se-and-ae.md) | closed |
 | [#45 — Implement Starfield General BA2](issues/45-implement-starfield-general-ba2.md) | open |
 | [#46 — Implement Starfield DDS BA2](issues/46-implement-starfield-dds-ba2.md) | open |
 | [#47 — Implement Fallout 4 BA2 v7 and v8 decoding](issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md) | open |
@@ -91,6 +91,7 @@ Implement and qualify the Windows-first Java 25 Bethesda archive library and thi
 | [#58 — Run writable-family Release Qualification with games and official tools](issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md) | open |
 | [#59 — Approve the JBSA 1.0 specification and release gate](issues/59-approve-the-jbsa-1-0-specification-and-release-gate.md) | open |
 | [#60 — Publish the first public JBSA GitHub Release](issues/60-publish-the-first-public-jbsa-github-release.md) | open |
+| [#61 — Implement compact generated conformance and risk-based performance assurance](issues/61-implement-assurance-v2.md) | closed |
 
 ## Comments
 

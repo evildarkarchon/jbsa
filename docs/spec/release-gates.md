@@ -83,18 +83,17 @@ _Source decisions: [accepted Interface Candidate milestone and representative-sl
 
 ## JBSA-REL-005
 
-The Automated Conformance Gate **MUST** require every applicable mandatory
-`conformance-v1` case to report an independent pass for the exact candidate in
-both sequential and applicable parallel modes. Its evidence **MUST** include the
-safe default, the complete immutable `bsarch-1.0/v1` profile, every Archive
-Family and direction, CLI behavior, malformed and resource-limit behavior,
-filesystem safety, cancellation, rollback, deterministic output, and all
-required differential and independent-validator directions defined by the
-[conformance-v1 specification](conformance-v1.md). Only this gate **MAY** carry
-the hosted-CI Automated Conformance claim governed by
-[JBSA-SCOPE-007](scope.md#jbsa-scope-007).
+The Automated Conformance Gate **MUST** run the `full` tier of the
+[Assurance Plan](assurance-v2.md) for the exact candidate and require every
+selected Assurance Scenario to report `PASS`. Its Evidence Capsule **MUST** bind
+the safe default, the complete immutable `bsarch-1.0/v1` profile, every
+implemented Archive Family and direction, CLI behavior, malformed and
+resource-limit behavior, filesystem safety, cancellation, rollback,
+deterministic output, and every applicable differential and Independent
+Validator direction. Only this gate **MAY** carry the hosted-CI Automated
+Conformance claim governed by [JBSA-SCOPE-007](scope.md#jbsa-scope-007).
 
-_Source decisions: [accepted complete automated-conformance gate](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [mandatory matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/50)._
+_Source decisions: [accepted complete automated-conformance gate](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [mandatory matrix acceptance](https://github.com/evildarkarchon/jbsa/issues/50), [Assurance v2 supersession](../../.scratch/jbsa-1-0/issues/61-implement-assurance-v2.md)._
 
 ## JBSA-REL-006
 
@@ -166,30 +165,30 @@ _Source decisions: [accepted release documentation gate](https://github.com/evil
 ## JBSA-REL-011
 
 The Performance Gate **MUST** require the Automated Conformance and Packaging
-Gates and run the complete [performance-v1 specification](performance-v1.md)
-against the final candidate, Conformance Oracle, Benchmark Corpus, JVM,
-runtime, codec profile, protocol, and qualification machine identities. Every
-applicable throughput, random-access latency, peak-memory, parallel-scaling,
-output-size, and regression outcome **MUST** pass independently; an invalid or
-noisy run **MUST** be rerun after correction and **MUST NOT** be averaged into a
-pass. The first public release **MUST** publish the resulting immutable first
-Performance Baseline with its complete identity and raw evidence.
+Gates and run every release Performance Lane selected by the
+[Assurance Plan](assurance-v2.md) against the final candidate and its bound
+Benchmark Corpus, JVM, runtime, codec profile, protocol, and qualification
+machine identities. Each throughput, random-access latency, peak-memory,
+parallel-scaling, output-size, and regression result **MUST** pass independently;
+an invalid or noisy run **MUST** be rerun after correction and **MUST NOT** be
+averaged into a pass. The first public release **MUST** publish the resulting
+immutable first Performance Baseline with its complete identity and raw evidence.
 
-_Source decisions: [accepted full-performance gate and first baseline](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [first-release performance acceptance](https://github.com/evildarkarchon/jbsa/issues/55)._
+_Source decisions: [accepted full-performance gate and first baseline](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [first-release performance acceptance](https://github.com/evildarkarchon/jbsa/issues/55), [Assurance v2 supersession](../../.scratch/jbsa-1-0/issues/61-implement-assurance-v2.md)._
 
 ## JBSA-REL-012
 
-The Binary Conformance Confirmation Gate **MUST** follow the Automated
-Conformance and Packaging Gates and evaluate only cases designated by the
-[conformance-v1 specification](conformance-v1.md). It **MUST** bind every
-published case-level result to the final ordered-file configuration, fixtures,
-codec profile, toolchain, candidate digests, five fresh identical Conformance
-Oracle runs, required cross-decoding, and both the primary qualification machine
-and a second Windows x64 CPU. A case that does not earn repeatable byte identity
-**MUST** be omitted from the Binary Conformance claim without weakening its
-semantic conformance requirements.
+Binary Conformance Confirmation is an optional case-level qualification, not a
+release-wide gate. A claimed case **MUST** follow Automated Conformance and
+Packaging and bind the final ordered-file configuration, fixtures, codec
+profile, toolchain, candidate digests, repeatable Conformance Oracle runs,
+required cross-decoding, and each qualification machine. A case that does not
+earn repeatable byte identity **MUST** be omitted from the Binary Conformance
+claim without weakening its semantic conformance requirements. Absence of a
+Binary Conformance claim **MUST NOT** block a release whose semantic, safety,
+performance, packaging, compliance, and manual qualification gates pass.
 
-_Source decisions: [accepted case-scoped Binary Conformance gate](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [second-CPU qualification acceptance](https://github.com/evildarkarchon/jbsa/issues/56)._
+_Source decisions: [accepted case-scoped Binary Conformance gate](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [second-CPU qualification acceptance](https://github.com/evildarkarchon/jbsa/issues/56), [Assurance v2 supersession](../../.scratch/jbsa-1-0/issues/61-implement-assurance-v2.md)._
 
 ## JBSA-REL-013
 
@@ -233,9 +232,9 @@ _Source decision: [accepted Release Candidate milestone](https://github.com/evil
 
 ## JBSA-REL-016
 
-The JBSA 1.0 Approval Gate **MUST** require Release Candidate status, the Binary
-Conformance Confirmation Gate, the writable-family Release Qualification Gate,
-and complete evidence for every active requirement registry row. The human
+The JBSA 1.0 Approval Gate **MUST** require Release Candidate status, the
+writable-family Release Qualification Gate, and complete evidence for every
+active requirement registry row. The human
 approver **MUST** review and explicitly accept the exact specification `1.0.0`,
 public-interface baseline, immutable compatibility and codec profiles,
 deviations, limitations, documentation, artifact digests, conformance claim set,
@@ -243,7 +242,7 @@ independently passing performance metrics and baseline, packaging, compliance,
 and manual qualification. The recorded result **MUST** either approve one exact
 candidate or name the gates returned to `OPEN` and required remediation.
 
-_Source decisions: [accepted human approval gate](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [JBSA 1.0 approval acceptance](https://github.com/evildarkarchon/jbsa/issues/59)._
+_Source decisions: [accepted human approval gate](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [JBSA 1.0 approval acceptance](https://github.com/evildarkarchon/jbsa/issues/59), [Assurance v2 supersession](../../.scratch/jbsa-1-0/issues/61-implement-assurance-v2.md)._
 
 ## JBSA-REL-017
 
@@ -309,15 +308,15 @@ same immutable packaged-candidate identity recorded by the Packaging Gate.
 | 1 | Specification Gate | Accepted decisions |
 | 2 | Contract Baseline | Specification Gate |
 | 3 | Interface Candidate | Contract Baseline and representative slice evidence |
-| 4 | Automated Conformance | Complete implementation and mandatory `conformance-v1` matrix |
+| 4 | Automated Conformance | Complete implementation and the Assurance Plan `full` tier |
 | 5 | Interface Freeze | Automated Conformance and complete consumers/families/scheduling |
 | 6 | Final Profile | Interface Freeze and provider qualification or deferral |
 | 7 | Packaging | Final Profile |
 | 8a | Documentation and Provenance | Packaging and frozen interface/profiles |
 | 8b | Performance | Packaging and Automated Conformance |
-| 8c | Binary Conformance Confirmation | Packaging and Automated Conformance |
+| 8c | Optional case-level Binary Conformance Confirmation | Packaging and Automated Conformance |
 | 8d | Compliance | Packaging |
 | 8e | Writable-family Release Qualification | Packaging |
 | 9 | Release Candidate | Packaging, Documentation and Provenance, Performance, Compliance |
-| 10 | JBSA 1.0 Approval | Release Candidate, Binary confirmation, writable-family qualification |
+| 10 | JBSA 1.0 Approval | Release Candidate and writable-family qualification |
 | 11 | Publication | JBSA 1.0 Approval |

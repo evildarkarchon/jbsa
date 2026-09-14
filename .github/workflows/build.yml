@@ -52,43 +52,40 @@ jobs:
         with:
           platform: windows-x64
 
-      - name: Verify immutable case history and deliberate golden rebaselines
+      - name: Verify frozen v1 history and digest index
         if: matrix.gate == 'conformance'
         shell: pwsh
         env:
           JBSA_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           if ($env:JBSA_BASE_REVISION -cnotmatch '^[0-9a-f]{40}$' -or $env:JBSA_BASE_REVISION -eq ('0' * 40)) {
-            throw 'An exact historical revision is required for the rebaseline audit.'
+            throw 'An exact historical revision is required for the frozen-history audit.'
           }
           git cat-file -e "$env:JBSA_BASE_REVISION^{commit}"
           if ($LASTEXITCODE -ne 0) { throw 'Historical commit is unavailable.' }
-          $entry = git ls-tree $env:JBSA_BASE_REVISION -- tests/conformance/catalog.json
-          if ($LASTEXITCODE -ne 0) { throw 'Historical catalog lookup failed.' }
-          New-Item -ItemType Directory -Path target -Force | Out-Null
-          $baseline = if ($entry) {
-            git show "${env:JBSA_BASE_REVISION}:tests/conformance/catalog.json"
-          } else {
-            '{"schema_version":1,"contract":"conformance-v1","cases":[]}'
-          }
-          if ($LASTEXITCODE -ne 0) { throw 'Historical catalog could not be read.' }
-          $baseline | Set-Content -LiteralPath target/conformance-baseline.json -Encoding utf8
-          .\build\verify-conformance-rebaseline.ps1 -BaselineCatalog target/conformance-baseline.json
+          python build/assurance/history.py verify --repository . --baseline=$env:JBSA_BASE_REVISION --index tests/assurance/history.json
 
       - name: Run ${{ matrix.gate }} gate
         shell: pwsh
+        env:
+          JBSA_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: .\build\run-ci-gate.ps1 -Gate '${{ matrix.gate }}'
 
-      - name: Retain per-case conformance evidence
+      - name: Retain Assurance v2 evidence
         if: always() && matrix.gate == 'conformance'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: conformance-v1-hosted-evidence
+          name: assurance-v2-hosted-evidence
           path: |
-            target/conformance/**
-            target/conformance-check-*.log
-            jbsa-conformance-tests/target/test-results/conformanceHarnessTest/**
-            jbsa-conformance-tests/target/reports/tests/conformanceHarnessTest/**
+            target/assurance/**
+            jbsa/target/test-results/test/**
+            jbsa-cli/target/test-results/test/**
+            jbsa-conformance-tests/target/test-results/assurancePlanTest/**
+            jbsa-conformance-tests/target/reports/tests/assurancePlanTest/**
+            jbsa-conformance-tests/target/test-results/integrationTest/**
+            jbsa-conformance-tests/target/test-results/tes3ConformanceTest/**
+            jbsa-conformance-tests/target/test-results/bsaConformanceTest/**
+            jbsa-conformance-tests/target/test-results/ba2ConformanceTest/**
           if-no-files-found: error
 
   windows-authoritative:
@@ -107,42 +104,37 @@ jobs:
         with:
           platform: windows-x64
 
-      - name: Verify immutable case history and deliberate golden rebaselines
+      - name: Verify frozen v1 history and digest index
         shell: pwsh
         env:
           JBSA_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           if ($env:JBSA_BASE_REVISION -cnotmatch '^[0-9a-f]{40}$' -or $env:JBSA_BASE_REVISION -eq ('0' * 40)) {
-            throw 'An exact historical revision is required for the rebaseline audit.'
+            throw 'An exact historical revision is required for the frozen-history audit.'
           }
           git cat-file -e "$env:JBSA_BASE_REVISION^{commit}"
           if ($LASTEXITCODE -ne 0) { throw 'Historical commit is unavailable.' }
-          $entry = git ls-tree $env:JBSA_BASE_REVISION -- tests/conformance/catalog.json
-          if ($LASTEXITCODE -ne 0) { throw 'Historical catalog lookup failed.' }
-          New-Item -ItemType Directory -Path target -Force | Out-Null
-          $baseline = if ($entry) {
-            git show "${env:JBSA_BASE_REVISION}:tests/conformance/catalog.json"
-          } else {
-            '{"schema_version":1,"contract":"conformance-v1","cases":[]}'
-          }
-          if ($LASTEXITCODE -ne 0) { throw 'Historical catalog could not be read.' }
-          $baseline | Set-Content -LiteralPath target/conformance-baseline.json -Encoding utf8
-          .\build\verify-conformance-rebaseline.ps1 -BaselineCatalog target/conformance-baseline.json
+          python build/assurance/history.py verify --repository . --baseline=$env:JBSA_BASE_REVISION --index tests/assurance/history.json
 
       - name: Run the complete authoritative Windows gate
         shell: pwsh
         run: .\gradlew.bat clean verify --no-daemon
 
-      - name: Retain complete-gate conformance evidence
+      - name: Retain complete-gate Assurance v2 evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: conformance-v1-windows-authoritative-evidence
+          name: assurance-v2-windows-authoritative-evidence
           path: |
-            target/conformance/**
-            target/conformance-check-*.log
-            jbsa-conformance-tests/target/test-results/conformanceHarnessTest/**
-            jbsa-conformance-tests/target/reports/tests/conformanceHarnessTest/**
+            target/assurance/**
+            jbsa/target/test-results/test/**
+            jbsa-cli/target/test-results/test/**
+            jbsa-conformance-tests/target/test-results/assurancePlanTest/**
+            jbsa-conformance-tests/target/reports/tests/assurancePlanTest/**
+            jbsa-conformance-tests/target/test-results/integrationTest/**
+            jbsa-conformance-tests/target/test-results/tes3ConformanceTest/**
+            jbsa-conformance-tests/target/test-results/bsaConformanceTest/**
+            jbsa-conformance-tests/target/test-results/ba2ConformanceTest/**
           if-no-files-found: error
 
   linux-portability:

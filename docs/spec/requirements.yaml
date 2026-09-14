@@ -1,9 +1,110 @@
 schema_version: 2
 specification:
-  version: 0.16.0
+  version: 0.17.0
   status: normative
   authority: docs/spec/README.md
 requirements:
+  - id: JBSA-ASR-001
+    owner:
+      document: docs/spec/assurance-v2.md
+      anchor: jbsa-asr-001
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    lifecycle_state: active
+    verification_class: automated-test
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    test_evidence:
+      - tests/assurance/test_assurance_plan.py
+  - id: JBSA-ASR-002
+    owner:
+      document: docs/spec/assurance-v2.md
+      anchor: jbsa-asr-002
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    lifecycle_state: active
+    verification_class: automated-test
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    test_evidence:
+      - tests/assurance/test_assurance_plan.py
+  - id: JBSA-ASR-003
+    owner:
+      document: docs/spec/assurance-v2.md
+      anchor: jbsa-asr-003
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
+    test_evidence:
+      - tests/assurance/plan.json
+      - tests/assurance/test_compare.py
+  - id: JBSA-ASR-004
+    owner:
+      document: docs/spec/assurance-v2.md
+      anchor: jbsa-asr-004
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    lifecycle_state: active
+    verification_class: automated-test
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    test_evidence:
+      - tests/assurance/test_assurance_plan.py
+  - id: JBSA-ASR-005
+    owner:
+      document: docs/spec/assurance-v2.md
+      anchor: jbsa-asr-005
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    lifecycle_state: active
+    verification_class: performance-case
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
+    test_evidence:
+      - tests/assurance/plan.json
+  - id: JBSA-ASR-006
+    owner:
+      document: docs/spec/assurance-v2.md
+      anchor: jbsa-asr-006
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    lifecycle_state: active
+    verification_class: automated-test
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    test_evidence:
+      - tests/assurance/test_capsule.py
+  - id: JBSA-ASR-007
+    owner:
+      document: docs/spec/assurance-v2.md
+      anchor: jbsa-asr-007
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      - .scratch/jbsa-1-0/issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md
+    test_evidence:
+      - docs/spec/release-gates.md
+  - id: JBSA-ASR-008
+    owner:
+      document: docs/spec/assurance-v2.md
+      anchor: jbsa-asr-008
+    source_decisions:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    lifecycle_state: active
+    verification_class: release-audit
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+    test_evidence:
+      - tests/assurance/history.json
+      - tests/assurance/test_history.py
   - id: JBSA-BSA-001
     owner:
       document: docs/spec/formats/versioned-bsa.md
@@ -760,7 +861,10 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/27
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
@@ -772,7 +876,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/27
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
@@ -784,7 +891,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: document-review
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
@@ -796,7 +906,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -807,7 +920,10 @@ requirements:
       anchor: jbsa-conf-005
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
@@ -819,7 +935,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
@@ -831,7 +950,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
@@ -844,7 +966,10 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/27
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -872,7 +997,10 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -885,7 +1013,10 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179540
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -897,7 +1028,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179549
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -914,7 +1048,10 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812819
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -925,7 +1062,10 @@ requirements:
       anchor: jbsa-conf-013
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -936,7 +1076,10 @@ requirements:
       anchor: jbsa-conf-014
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -948,7 +1091,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/27
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/56-qualify-binary-conformance-cases-on-a-second-windows-x64-cpu.md
@@ -960,7 +1106,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -972,7 +1121,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/27
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/31-build-the-pinned-oracle-and-conformance-case-harness.md
@@ -984,7 +1136,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
@@ -996,7 +1151,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md
@@ -2419,7 +2577,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/27
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2431,7 +2592,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/27
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2444,7 +2608,10 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/27
       - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md#accepted-sequencing-and-completion
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2458,7 +2625,10 @@ requirements:
       anchor: jbsa-perf-004
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2469,7 +2639,10 @@ requirements:
       anchor: jbsa-perf-005
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2481,7 +2654,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2492,7 +2668,10 @@ requirements:
       anchor: jbsa-perf-007
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2504,7 +2683,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/27
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2515,7 +2697,10 @@ requirements:
       anchor: jbsa-perf-009
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2526,7 +2711,10 @@ requirements:
       anchor: jbsa-perf-010
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2537,7 +2725,10 @@ requirements:
       anchor: jbsa-perf-011
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2548,7 +2739,10 @@ requirements:
       anchor: jbsa-perf-012
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2561,7 +2755,10 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812800
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md
@@ -2572,7 +2769,10 @@ requirements:
       anchor: jbsa-perf-014
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2585,7 +2785,10 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924812800
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5532860947
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2596,7 +2799,10 @@ requirements:
       anchor: jbsa-perf-016
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2607,7 +2813,10 @@ requirements:
       anchor: jbsa-perf-017
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2618,7 +2827,10 @@ requirements:
       anchor: jbsa-perf-018
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2629,7 +2841,10 @@ requirements:
       anchor: jbsa-perf-019
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2641,7 +2856,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md
@@ -2653,7 +2871,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2665,7 +2886,10 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/14#issuecomment-5518983706
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      ticket: .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      reason: Superseded by the compact Assurance v2 plan and retained only as frozen historical provenance.
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
@@ -2729,6 +2953,7 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
       - https://github.com/evildarkarchon/jbsa/issues/50
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
     lifecycle_state: active
     verification_class: conformance-case
     implementation_tickets:
@@ -2801,6 +3026,7 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
       - https://github.com/evildarkarchon/jbsa/issues/55
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
     lifecycle_state: active
     verification_class: performance-case
     implementation_tickets:
@@ -2813,6 +3039,7 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
       - https://github.com/evildarkarchon/jbsa/issues/56
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
     lifecycle_state: active
     verification_class: conformance-case
     implementation_tickets:
@@ -2860,6 +3087,7 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241
       - https://github.com/evildarkarchon/jbsa/issues/59
+      - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
     lifecycle_state: active
     verification_class: release-audit
     implementation_tickets:

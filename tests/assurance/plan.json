@@ -1,0 +1,778 @@
+{
+  "version": "assurance-v2",
+  "legacy_conformance_digest": "sha256:17a573a623e30ba2287b9cb514e01f7257fbf29d99de90bf4c0cc3efadc9c6ba",
+  "capabilities": [
+    {
+      "id": "tes3",
+      "family": "tes3",
+      "behavioral_variant": "tes3-stored-v1",
+      "status": "qualified",
+      "risk_tags": ["legacy-layout", "stored"]
+    },
+    {
+      "id": "bsa-067",
+      "family": "bsa-067",
+      "behavioral_variant": "bsa-067-v1",
+      "status": "qualified",
+      "risk_tags": ["legacy-layout", "zlib"]
+    },
+    {
+      "id": "bsa-068",
+      "family": "bsa-068",
+      "behavioral_variant": "bsa-068-v1",
+      "status": "qualified",
+      "risk_tags": ["embedded-names", "zlib"]
+    },
+    {
+      "id": "bsa-069",
+      "family": "bsa-069",
+      "behavioral_variant": "bsa-069-v1",
+      "status": "qualified",
+      "risk_tags": ["embedded-names", "lz4-frame"]
+    }
+  ],
+  "requirements": [
+    {"id": "JBSA-ASR-001"},
+    {"id": "JBSA-ASR-002"},
+    {"id": "JBSA-ASR-003"},
+    {"id": "JBSA-ASR-004"},
+    {"id": "JBSA-ASR-005"},
+    {"id": "JBSA-ASR-006"},
+    {"id": "JBSA-ASR-007"},
+    {"id": "JBSA-ASR-008"},
+    {"id": "JBSA-BSA-001"},
+    {"id": "JBSA-BSA-004"},
+    {"id": "JBSA-BSA-009"},
+    {"id": "JBSA-BSA-010"},
+    {"id": "JBSA-BSA-011"},
+    {"id": "JBSA-BSA-013"},
+    {"id": "JBSA-BSA-014"},
+    {"id": "JBSA-BSA-015"},
+    {"id": "JBSA-CLI-004"},
+    {"id": "JBSA-CLI-005"},
+    {"id": "JBSA-CODEC-008"},
+    {"id": "JBSA-LIB-010"},
+    {"id": "JBSA-SCHED-006"},
+    {"id": "JBSA-SCHED-010"},
+    {"id": "JBSA-TES3-001"},
+    {"id": "JBSA-TES3-004"}
+  ],
+  "scenarios": [
+    {
+      "id": "decode-entries",
+      "expected": "Recognized archives expose the specified ordered names, metadata, diagnostics, and decoded bytes.",
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069"]},
+      "requirements": ["JBSA-ASR-001", "JBSA-ASR-002", "JBSA-ASR-003", "JBSA-ASR-006", "JBSA-ASR-007", "JBSA-ASR-008"],
+      "capability_requirements": {
+        "tes3": ["JBSA-TES3-001"],
+        "bsa-067": ["JBSA-BSA-001"],
+        "bsa-068": ["JBSA-BSA-001"],
+        "bsa-069": ["JBSA-BSA-001"]
+      },
+      "test_selectors": {
+        "tes3": ["io.github.evildarkarchon.jbsa.verification.Tes3ConformanceIT#readsIndependentStoredWireFixture"],
+        "bsa-067": ["io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#readsAndExtractsIndependentWireVectors"],
+        "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#readsAndExtractsIndependentGameVectors"],
+        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#readsAndExtractsIndependentGameVectors"]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java",
+          "tests/fixtures/bsa069/manifest.json"
+        ]
+      }
+    },
+    {
+      "id": "embedded-name-round-trip",
+      "expected": "Embedded names remain bounded, independently represented, and semantically identical after round trip.",
+      "applies_to": {"risk_tags": ["embedded-names"]},
+      "requirements": ["JBSA-ASR-003"],
+      "capability_requirements": {
+        "bsa-068": ["JBSA-BSA-011"],
+        "bsa-069": ["JBSA-BSA-011"]
+      },
+      "test_selectors": {
+        "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#independentlyValidatesStoredZlibMixedAndEmbeddedOutput"],
+        "bsa-069": ["io.github.evildarkarchon.jbsa.Bsa69ReaderTest#warnsForStoredEmbeddedNames"]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java",
+          "tests/fixtures/bsa069/skyrim-se-stored-embedded.hex"
+        ]
+      }
+    },
+    {
+      "id": "malformed-input",
+      "expected": "Malformed structures are rejected or classified as the specified tolerated noncanonical disposition without unbounded reads.",
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069"]},
+      "requirements": ["JBSA-ASR-003"],
+      "capability_requirements": {
+        "tes3": ["JBSA-TES3-004"],
+        "bsa-067": ["JBSA-BSA-014"],
+        "bsa-068": ["JBSA-BSA-014"],
+        "bsa-069": ["JBSA-BSA-014"]
+      },
+      "test_selectors": {
+        "tes3": [
+          "io.github.evildarkarchon.jbsa.Tes3ReadTest#permitsExactSharingAndRejectsPartialOverlap",
+          "io.github.evildarkarchon.jbsa.Tes3ReadTest#rejectsTruncationUnterminatedNamesAndImpossibleCounts",
+          "io.github.evildarkarchon.jbsa.Tes3ReadTest#retainsOffsetHashAndTrailingWarnings",
+          "io.github.evildarkarchon.jbsa.Tes3ReadTest#retainsUndecodableAndNonAsciiNamesWithoutHashJudgment",
+          "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest#unsafeNamesRemainInspectableWithAllApplicableWarnings",
+          "io.github.evildarkarchon.jbsa.verification.Tes3ConformanceIT#rejectsIndependentMalformedSpans"
+        ],
+        "bsa-067": [
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#diagnosesHashesAndUndecodableComponents",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#opensMixedRecordsAndDistinguishesExactSharedSpans",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsChecksumTrailingTruncationAndDecodedSizeMismatch",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsMalformedIndexAndUnsignedSizeSpans",
+          "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest#unsafeNamesRemainInspectableWithAllApplicableWarnings",
+          "io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#rejectsIndependentMalformedPayloads"
+        ],
+        "bsa-068": [
+          "io.github.evildarkarchon.jbsa.Bsa68ReaderTest#diagnosesEmbeddedMismatchAndNontexture",
+          "io.github.evildarkarchon.jbsa.Bsa68ReaderTest#keepsEmbeddedNamesSeparateFromAbsentIndexComponents",
+          "io.github.evildarkarchon.jbsa.Bsa68ReaderTest#rejectsEmbeddedFramingOutsideItsRecord",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#diagnosesHashesAndUndecodableComponents",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#opensMixedRecordsAndDistinguishesExactSharedSpans",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsChecksumTrailingTruncationAndDecodedSizeMismatch",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsMalformedIndexAndUnsignedSizeSpans",
+          "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest#unsafeNamesRemainInspectableWithAllApplicableWarnings"
+        ],
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsMalformedLz4FramesAtContentEof",
+          "io.github.evildarkarchon.jbsa.Bsa69ReaderTest#treatsNonzeroFolderPaddingAsNoncanonical",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#diagnosesHashesAndUndecodableComponents",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#opensMixedRecordsAndDistinguishesExactSharedSpans",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsMalformedIndexAndUnsignedSizeSpans",
+          "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest#unsafeNamesRemainInspectableWithAllApplicableWarnings"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/BsaReaderTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/OwnedArchiveValidationTest.java",
+          "build/test-bsa069-validator.py"
+        ]
+      }
+    },
+    {
+      "id": "unsupported-codec-decode",
+      "expected": "Unsupported compressed payload encodings fail with a stable unsupported or format outcome before unsafe consumption.",
+      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069"]},
+      "requirements": ["JBSA-ASR-003"],
+      "capability_requirements": {
+        "bsa-067": ["JBSA-BSA-001"],
+        "bsa-068": ["JBSA-BSA-001"],
+        "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"]
+      },
+      "test_selectors": {
+        "bsa-067": ["io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsChecksumTrailingTruncationAndDecodedSizeMismatch"],
+        "bsa-068": ["io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsChecksumTrailingTruncationAndDecodedSizeMismatch"],
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsMalformedLz4FramesAtContentEof",
+          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#rejectsCorruptionTruncationTrailingFramesAndWrongOutputSize"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4FrameTest.java",
+          "jbsa/src/main/resources/META-INF/jbsa-bsa-069-lz4-profile.json"
+        ]
+      }
+    },
+    {
+      "id": "unsupported-codec-encode",
+      "expected": "Unsupported encode codecs are rejected before opening sources or publishing destination artifacts.",
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069"]},
+      "requirements": ["JBSA-ASR-004"],
+      "capability_requirements": {
+        "tes3": ["JBSA-TES3-001"],
+        "bsa-067": ["JBSA-BSA-001"],
+        "bsa-068": ["JBSA-BSA-001"],
+        "bsa-069": ["JBSA-BSA-001", "JBSA-CLI-005"]
+      },
+      "test_selectors": {
+        "tes3": ["io.github.evildarkarchon.jbsa.BsaPackTest#rejectsTes3CompressionOverrides"],
+        "bsa-067": ["io.github.evildarkarchon.jbsa.BsaPackTest#rejectsInvalidCompressionOverridesBeforePayloads"],
+        "bsa-068": ["io.github.evildarkarchon.jbsa.BsaPackTest#rejectsInvalidCompressionOverridesBeforePayloads"],
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsForeignCodecsBeforeSourceEffects",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#rejectsInvalidSseCodecCombinations"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
+          "jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java"
+        ]
+      }
+    },
+    {
+      "id": "stored-mixed-round-trip",
+      "expected": "Stored and mixed-compression inputs encode canonically and decode to the original ordered entries.",
+      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-067": ["JBSA-BSA-001", "JBSA-BSA-009"],
+        "bsa-068": ["JBSA-BSA-001", "JBSA-BSA-009"],
+        "bsa-069": ["JBSA-BSA-001"]
+      },
+      "test_selectors": {
+        "bsa-067": ["io.github.evildarkarchon.jbsa.BsaPackTest#packsMixedCompressionOverridesAndRoundTrips", "io.github.evildarkarchon.jbsa.BsaPackTest#packsCanonicalStoredArchive"],
+        "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#independentlyValidatesStoredZlibMixedAndEmbeddedOutput"],
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#packsAndReadsLz4FrameAndMixedEntries",
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#packsStoredWithTwentyFourByteFolderRecords",
+          "io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#independentlyValidatesEveryEncodeMode"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java",
+          "tests/fixtures/bsa069/manifest.json"
+        ]
+      }
+    },
+    {
+      "id": "unsafe-extraction",
+      "expected": "Unsafe or colliding entry names are rejected before destination effects and cannot escape the extraction root.",
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069"]},
+      "requirements": ["JBSA-ASR-003"],
+      "capability_requirements": {
+        "tes3": ["JBSA-TES3-004"],
+        "bsa-067": ["JBSA-BSA-014"],
+        "bsa-068": ["JBSA-BSA-014"],
+        "bsa-069": ["JBSA-BSA-014"]
+      },
+      "test_selectors": {
+        "tes3": ["io.github.evildarkarchon.jbsa.Tes3ExtractTest#rejectsIneligibleNameBeforeDestinationEffects"],
+        "bsa-067": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "bsa-068": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects",
+          "io.github.evildarkarchon.jbsa.verification.PublicMetadataContractIT#normalizedIdentityPreservesNonAsciiSpellingAndRejectsUnsafeOrUnmappableNames"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/ExtractionPathsTest.java",
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicMetadataContractIT.java"
+        ]
+      }
+    },
+    {
+      "id": "stored-round-trip",
+      "expected": "Stored entries encode canonically and decode to the original ordered names and bytes.",
+      "applies_to": {"risk_tags": ["stored"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "tes3": ["JBSA-TES3-001"]
+      },
+      "test_selectors": {
+        "tes3": ["io.github.evildarkarchon.jbsa.verification.Tes3ConformanceIT#packsCanonicalStoredWireVector"]
+      }
+    },
+    {
+      "id": "zlib-round-trip",
+      "expected": "Zlib entries round trip through the independent wire validator with exact decoded content.",
+      "applies_to": {"risk_tags": ["zlib"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-067": ["JBSA-BSA-009"],
+        "bsa-068": ["JBSA-BSA-009"]
+      },
+      "test_selectors": {
+        "bsa-067": ["io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#independentlyValidatesPackedArchives"],
+        "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#independentlyValidatesStoredZlibMixedAndEmbeddedOutput"]
+      }
+    },
+    {
+      "id": "lz4-frame-round-trip",
+      "expected": "LZ4-frame entries use the qualified profile and round trip with exact decoded content.",
+      "applies_to": {"risk_tags": ["lz4-frame"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-BSA-010"]
+      },
+      "test_selectors": {
+        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#independentlyValidatesEveryEncodeMode"]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "build/generate-bsa069-fixtures.py",
+          "jbsa/src/main/resources/META-INF/jbsa-bsa-069-lz4-profile.json"
+        ]
+      }
+    },
+    {
+      "id": "oracle-differential",
+      "expected": "JBSA and the digest-pinned Conformance Oracle cross-decode equivalent semantic content in both applicable directions.",
+      "environments": ["local", "release"],
+      "applies_to": {"families": ["bsa-069"]},
+      "requirements": ["JBSA-ASR-003"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"]
+      },
+      "test_selectors": {
+        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#pinnedOracleCrossDecodesEveryFraming"]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "build/run-bsa-oracle.ps1",
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java"
+        ]
+      }
+    },
+    {
+      "id": "sse-layout-padding",
+      "expected": "BSA 0x69 uses 24-byte folder records and diagnoses nonzero padding without losing inspectability.",
+      "applies_to": {"families": ["bsa-069"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-BSA-004"]
+      },
+      "test_selectors": {
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#packsStoredWithTwentyFourByteFolderRecords",
+          "io.github.evildarkarchon.jbsa.Bsa69ReaderTest#opensStoredVersion69FolderRecords",
+          "io.github.evildarkarchon.jbsa.Bsa69ReaderTest#treatsNonzeroFolderPaddingAsNoncanonical"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java",
+          "build/validate-bsa-wire.py"
+        ]
+      }
+    },
+    {
+      "id": "sse-flags",
+      "expected": "BSA 0x69 automatic, explicit Xbox, and cleared miscellaneous flags match the specified profile behavior.",
+      "applies_to": {"families": ["bsa-069"]},
+      "requirements": ["JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-BSA-013"]
+      },
+      "test_selectors": {
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#acceptsExplicitXboxArchiveFlag",
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#clearsSseMiscellaneousFileFlag",
+          "io.github.evildarkarchon.jbsa.BsaPackTest#classifiesAutomaticFlagsByOrderedRoots"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/BsaPackTest.java",
+          "tests/fixtures/bsa069/manifest.json"
+        ]
+      }
+    },
+    {
+      "id": "sse-sharing-splitting-ordering",
+      "expected": "BSA 0x69 sharing, splitting, and logical ordering publish readable deterministic archive parts.",
+      "applies_to": {"families": ["bsa-069"]},
+      "requirements": ["JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-BSA-015"]
+      },
+      "test_selectors": {
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#sharesEqualRecordsAndPublishesReadableSplitParts",
+          "io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#independentlyValidatesEveryEncodeMode"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java"
+        ]
+      }
+    },
+    {
+      "id": "sse-cli-selection",
+      "expected": "The thin CLI selects BSA 0x69 explicitly and rejects incompatible codec and family combinations.",
+      "applies_to": {"families": ["bsa-069"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-BSA-001", "JBSA-CLI-004", "JBSA-CLI-005"]
+      },
+      "test_selectors": {
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.cli.MainTest#packsAndUnpacksSseLz4Frame",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileSelectsSseBetweenVersion104AndFallout4",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#rejectsInvalidSseCodecCombinations"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java"]
+      }
+    },
+    {
+      "id": "sse-lz4-bounded-resources",
+      "expected": "LZ4-frame processing remains within admitted heap, native, scratch, and output bounds.",
+      "applies_to": {"families": ["bsa-069"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-BSA-010", "JBSA-CODEC-008", "JBSA-SCHED-006"]
+      },
+      "test_selectors": {
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#refusesUnadmittedMemoryBeforeReadingOrWriting",
+          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#streamsUpstreamFourMegabyteBlocksThroughSmallOutputWindows"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4FrameTest.java",
+          "jbsa/src/main/resources/META-INF/jbsa-bsa-069-lz4-profile.json"
+        ]
+      }
+    },
+    {
+      "id": "sse-lz4-cancellation",
+      "expected": "Cancellation is observed before publication and all LZ4 credits and owned resources are released.",
+      "applies_to": {"families": ["bsa-069"]},
+      "requirements": ["JBSA-ASR-004"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-LIB-010", "JBSA-SCHED-010"]
+      },
+      "test_selectors": {
+        "bsa-069": [
+          "io.github.evildarkarchon.jbsa.Bsa69PackTest#cancelsLz4BeforePublication",
+          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#releasesDecoderCreditsAfterCancellationAndPreservesCallbackFailure",
+          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#returnsCreditsAfterCancellationAndChecksBetweenWindows"
+        ]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4FrameTest.java"
+        ]
+      }
+    },
+    {
+      "id": "performance-checkpoint",
+      "expected": "The focused BSA 0x69 checkpoint records throughput and derived output size under bound conditions.",
+      "environments": ["local"],
+      "applies_to": {"families": ["bsa-069"]},
+      "requirements": ["JBSA-ASR-005"],
+      "capability_requirements": {
+        "bsa-069": ["JBSA-BSA-010"]
+      },
+      "test_selectors": {
+        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.BsaPerformanceCheckpointIT#recordsCurrentMachineCheckpoint"]
+      },
+      "evidence_refs": {
+        "bsa-069": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BsaPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue44-performance/measurements.csv",
+          "docs/development/evidence/issue44-performance/conditions.txt"
+        ]
+      }
+    },
+    {
+      "id": "behavioral-interactions",
+      "expected": "Family-specific naming, hashing, flags, compression boundaries, source overlays, sharing, splitting, determinism, and empty or multi-entry interactions match their owning specifications.",
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "tes3": ["JBSA-TES3-001", "JBSA-TES3-004"],
+        "bsa-067": ["JBSA-BSA-001", "JBSA-BSA-015"],
+        "bsa-068": ["JBSA-BSA-001", "JBSA-BSA-011", "JBSA-BSA-013", "JBSA-BSA-015"]
+      },
+      "test_selectors": {
+        "tes3": [
+          "io.github.evildarkarchon.jbsa.Tes3PackTest#expandsDirectoryAndArchiveSourcesAndAppliesLaterOverlay",
+          "io.github.evildarkarchon.jbsa.Tes3PackTest#hashCollisionsKeepDistinctNamesAndUseCanonicalByteTieOrder",
+          "io.github.evildarkarchon.jbsa.Tes3PackTest#splitsInCanonicalOrderAndIgnoresCompressionHints"
+        ],
+        "bsa-067": [
+          "io.github.evildarkarchon.jbsa.BsaPackTest#classifiesAutomaticFlagsByOrderedRoots",
+          "io.github.evildarkarchon.jbsa.BsaPackTest#splitsOnPackedBytesAndSharesExactRecords"
+        ],
+        "bsa-068": [
+          "io.github.evildarkarchon.jbsa.Bsa68PackTest#clearsLegacyFileFlags",
+          "io.github.evildarkarchon.jbsa.Bsa68PackTest#retainsMixedRecordsAndDoesNotShareDifferentPrefixes",
+          "io.github.evildarkarchon.jbsa.BsaReaderTest#preservesAuthoritativeNonAsciiAndEmptyStemHashes"
+        ]
+      }
+    }
+  ],
+  "impact_rules": [
+    {
+      "paths": ["jbsa/src/main/java/**/tes3/**", "jbsa/src/test/java/**/Tes3*.java", "tests/fixtures/tes3/**"],
+      "capabilities": ["tes3"]
+    },
+    {
+      "paths": ["jbsa/src/main/java/**/bsa/**", "jbsa/src/test/java/**/Bsa*.java", "tests/fixtures/bsa*/**"],
+      "capabilities": ["bsa-067", "bsa-068", "bsa-069"]
+    },
+    {
+      "paths": ["build/assurance/**", "tests/assurance/**", "build-logic/**", "jbsa/src/main/java/io/github/evildarkarchon/jbsa/*.java", "jbsa-cli/**", "jbsa-conformance-tests/**", "docs/spec/**", ".github/workflows/**"],
+      "capabilities": "full"
+    }
+  ],
+  "performance": {
+    "lanes": [
+      {
+        "id": "bsa-metadata-scan",
+        "surface": "throughput",
+        "workload": "metadata-heavy",
+        "implementation_path": "metadata-heavy",
+        "risks": ["large-entry-count", "name-table-scan"],
+        "metrics": ["operations-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "general-ba2-metadata-scan",
+        "surface": "throughput",
+        "workload": "metadata-heavy-general-ba2",
+        "implementation_path": "general-ba2",
+        "risks": ["large-entry-count", "name-table-scan"],
+        "metrics": ["operations-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "dds-metadata-scan",
+        "surface": "throughput",
+        "workload": "metadata-heavy-dds",
+        "implementation_path": "dds",
+        "risks": ["chunk-count", "texture-metadata"],
+        "metrics": ["operations-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "tes3-stored-pack",
+        "surface": "throughput",
+        "workload": "bulk-stored-tes3",
+        "implementation_path": "stored",
+        "risks": ["bulk", "hash-ordering"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "tes3-stored-unpack",
+        "surface": "throughput",
+        "workload": "bulk-stored-tes3",
+        "implementation_path": "bulk",
+        "risks": ["bulk", "filesystem-publication"],
+        "metrics": ["bytes-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "bsa-stored-pack",
+        "surface": "throughput",
+        "workload": "bulk-stored-bsa",
+        "implementation_path": "stored",
+        "risks": ["bulk", "split-boundary"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "bsa-stored-unpack",
+        "surface": "throughput",
+        "workload": "bulk-stored-bsa",
+        "implementation_path": "bulk",
+        "risks": ["bulk", "filesystem-publication"],
+        "metrics": ["bytes-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "bsa-zlib-pack",
+        "surface": "throughput",
+        "workload": "bulk-zlib-bsa",
+        "implementation_path": "zlib",
+        "risks": ["compression-throughput", "output-size"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "bsa-zlib-unpack",
+        "surface": "throughput",
+        "workload": "bulk-zlib-bsa",
+        "implementation_path": "zlib",
+        "risks": ["decompression-throughput", "malformed-boundary"],
+        "metrics": ["bytes-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "bsa-lz4-frame-pack",
+        "surface": "throughput",
+        "workload": "bulk-lz4-frame-bsa",
+        "implementation_path": "lz4-frame",
+        "risks": ["native-codec", "output-size"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "bsa-lz4-frame-unpack",
+        "surface": "throughput",
+        "workload": "bulk-lz4-frame-bsa",
+        "implementation_path": "lz4-frame",
+        "risks": ["native-codec", "windowing"],
+        "metrics": ["bytes-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "general-ba2-stored-pack",
+        "surface": "throughput",
+        "workload": "bulk-stored-general-ba2",
+        "implementation_path": "general-ba2",
+        "risks": ["bulk", "record-layout"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "general-ba2-zlib-pack",
+        "surface": "throughput",
+        "workload": "bulk-zlib-general-ba2",
+        "implementation_path": "zlib",
+        "risks": ["compression-throughput", "record-layout"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "general-ba2-raw-lz4-pack",
+        "surface": "throughput",
+        "workload": "bulk-raw-lz4-general-ba2",
+        "implementation_path": "raw-lz4",
+        "risks": ["native-codec", "method-field"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "general-ba2-mixed-unpack",
+        "surface": "throughput",
+        "workload": "bulk-mixed-general-ba2",
+        "implementation_path": "general-ba2",
+        "risks": ["codec-dispatch", "large-entry-count"],
+        "metrics": ["bytes-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "dds-zlib-pack",
+        "surface": "throughput",
+        "workload": "bulk-zlib-dds",
+        "implementation_path": "dds",
+        "risks": ["chunk-partition", "reconstruction"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "dds-raw-lz4-pack",
+        "surface": "throughput",
+        "workload": "bulk-raw-lz4-dds",
+        "implementation_path": "raw-lz4",
+        "risks": ["native-codec", "chunk-partition"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "dds-reconstruction",
+        "surface": "throughput",
+        "workload": "dds-reconstruction",
+        "implementation_path": "dds",
+        "risks": ["mip-layout", "header-reconstruction"],
+        "metrics": ["bytes-per-second"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "general-ba2-random-access",
+        "surface": "random-access",
+        "workload": "mixed-entry-reads-general-ba2",
+        "implementation_path": "random-access",
+        "risks": ["seek-amplification", "codec-dispatch"],
+        "metrics": ["latency"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "dds-random-access",
+        "surface": "random-access",
+        "workload": "mixed-mip-reads-dds",
+        "implementation_path": "random-access",
+        "risks": ["chunk-seeks", "partial-reconstruction"],
+        "metrics": ["latency"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "zlib-peak-memory",
+        "surface": "memory",
+        "workload": "bulk-zlib",
+        "implementation_path": "peak-memory",
+        "risks": ["heap-credits", "whole-buffer-dispatch"],
+        "metrics": ["peak-working-set"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "lz4-peak-memory",
+        "surface": "memory",
+        "workload": "bulk-lz4",
+        "implementation_path": "peak-memory",
+        "risks": ["native-credits", "windowing"],
+        "metrics": ["peak-working-set"],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "worker-scaling",
+        "surface": "scaling",
+        "workload": "bulk-mixed",
+        "implementation_path": "bulk",
+        "risks": ["parallel-saturation", "deterministic-order"],
+        "metrics": ["bytes-per-second"],
+        "workers": [1, 2, 4, 8, 16],
+        "status": "planned",
+        "release_gate": true
+      },
+      {
+        "id": "bsa-069-lz4-checkpoint",
+        "surface": "throughput",
+        "workload": "bulk-lz4-frame",
+        "implementation_path": "lz4-frame",
+        "risks": ["native-codec", "first-family-checkpoint"],
+        "metrics": ["bytes-per-second", "output-size"],
+        "capability_id": "bsa-069",
+        "codec": "lz4-frame",
+        "status": "qualified",
+        "qualification_scope": "development-checkpoint",
+        "environments": ["local"],
+        "release_gate": false,
+        "test_selectors": ["io.github.evildarkarchon.jbsa.verification.BsaPerformanceCheckpointIT#recordsCurrentMachineCheckpoint"],
+        "evidence_refs": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BsaPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue44-performance/measurements.csv",
+          "docs/development/evidence/issue44-performance/conditions.txt"
+        ]
+      }
+    ]
+  }
+}

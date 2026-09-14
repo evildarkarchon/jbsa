@@ -1,6 +1,6 @@
 # Implement Starfield General BA2
 
-Status: needs-triage
+Status: ready-for-agent
 State: open
 GitHub issue: #45
 Source: https://github.com/evildarkarchon/jbsa/issues/45
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:11Z
 Source updated: 2026-09-03T06:54:11Z
 Closed: none
 Migrated: 2026-09-10
-Labels: needs-triage
+Labels: ready-for-agent
 Assignees: none
-Blocked by: [#44](../issues/44-implement-bsa-for-skyrim-se-and-ae.md)
+Blocked by: [#44](../issues/44-implement-bsa-for-skyrim-se-and-ae.md), [#61](../issues/61-implement-assurance-v2.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #44.
+Triage reviewed: 2026-09-14
+Triage rationale: #44 and #61 are closed. The current Assurance v2 acceptance is complete and this ticket is ready for agent implementation.
 
 ## Original issue body
 
@@ -66,3 +66,24 @@ implementation; it does not qualify this consumer. The
 retains 126 Starfield General method-3 raw-LZ4 assignments. This ticket's formal
 targeted conformance/performance evidence remains required before merge. #44
 remains its prerequisite.
+
+### Dependency reassessment after #44 — 2026-09-14
+
+Ticket #44 is closed with complete family-level Assurance v2 data. This ticket
+remains `needs-triage` and is now blocked by #61 because its historical
+acceptance still requires the expanded CV1 and 126-case performance-v1 model.
+Once migrated to compact generated conformance and risk-based performance, it
+will be eligible for `ready-for-agent` reassessment.
+
+### Assurance v2 completion contract — 2026-09-14
+
+This Archive Family must add its capability and stable behavioral variants to
+the Assurance Plan, supply selectors for every applicable semantic, malformed,
+resource, extraction, CLI, Independent Validator, and bidirectional-oracle
+scenario, and run the affected generated tier. Its performance work consists of
+the curated General BA2 zlib and raw-LZ4 implementation-path lanes, including
+derived output size, memory, native-loading, and regression evidence. No new CV1
+expansion, rebaseline packet, or performance-v1 product matrix is required.
+
+Ticket #61 is closed; this current contract supersedes the historical expanded
+catalog wording above. Ticket #45 is unblocked and ready for an agent.

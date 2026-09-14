@@ -518,7 +518,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 project
                     .project(JbsaConformanceIdentity.PROJECT_PATH)
                     .tasks
-                    .named(JbsaConformanceIdentity.AUTOMATED_TASK),
+                    .named(JbsaConformanceIdentity.AUTOMATED_ASSURANCE_TASK),
                 project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named("check"),
                 JbsaConformanceIdentity.ARCHIVE_FAMILY_TASKS.map { taskName ->
                     project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named(taskName)

@@ -1,4 +1,23 @@
-# Conformance Case harness
+# Assurance v2 conformance harness
+
+Assurance v2 is authoritative. `automatedAssurance` validates and expands the
+compact plan, runs its Python integrity suite, verifies the digest-pinned v1
+comparison and frozen-history index, executes the owning library, CLI, and
+Archive Family tests in one Gradle task graph, and derives a content-addressed
+Evidence Capsule from the resulting JUnit reports.
+
+```powershell
+.\gradlew.bat :jbsa-conformance-tests:automatedAssurance
+```
+
+Generated outputs live under `target/assurance/`; CI retains them with the
+module test reports. The `affected`, `full`, and `release` selection behavior is
+implemented by `build/assurance/plan.py`. Unknown impact fails closed to `full`.
+
+## Frozen v1 implementation reference
+
+The remaining CV1 commands and data model below are non-normative historical
+documentation for the frozen inputs identified by `tests/assurance/history.json`.
 
 Issue #31 implements the build-only CV1 runner. The permanent trace is
 `docs/spec/requirements.yaml`: JBSA-CONF-001/002/003/005/006/007/017 own this
@@ -21,7 +40,7 @@ platform archive:
 .\gradlew.bat :jbsa-conformance-tests:conformanceHarnessTest
 ```
 
-Produce a complete product case report for the exact Gradle-built candidate. The task replaces
+Historically, a complete product case report for the exact Gradle-built candidate was produced as follows. The task replaces
 `target/conformance` with fresh evidence and retains trustworthy non-passing case results:
 
 ```powershell

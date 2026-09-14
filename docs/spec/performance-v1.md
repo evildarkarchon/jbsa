@@ -1,4 +1,10 @@
-# Performance v1
+# Performance v1 — frozen historical contract
+
+This document is non-normative historical evidence. Assurance v2 superseded its
+expanded product matrix in specification `0.17.0`; see
+[Assurance v2](assurance-v2.md). The sections below are retained unchanged as
+the restoration and migration source identified by
+`tests/assurance/history.json`.
 
 This specification owns the local `performance-v1` qualification contract:
 Performance Case identity, the deterministic Benchmark Corpus, paired execution,

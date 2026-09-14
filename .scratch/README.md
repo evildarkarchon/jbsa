@@ -42,8 +42,8 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | [#41](https://github.com/evildarkarchon/jbsa/issues/41) | [Establish the Interface Candidate after representative Archive Families](jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md) | closed | none |
 | [#42](https://github.com/evildarkarchon/jbsa/issues/42) | [Implement BSA for Fallout 3, New Vegas, and Skyrim LE](jbsa-1-0/issues/42-implement-bsa-for-fallout-3-new-vegas-and-skyrim-le.md) | closed | none |
 | [#43](https://github.com/evildarkarchon/jbsa/issues/43) | [Integrate and qualify the Windows x64 LZ4 runtime](jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md) | closed | none |
-| [#44](https://github.com/evildarkarchon/jbsa/issues/44) | [Implement BSA for Skyrim SE and AE](jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md) | open | ready-for-agent |
-| [#45](https://github.com/evildarkarchon/jbsa/issues/45) | [Implement Starfield General BA2](jbsa-1-0/issues/45-implement-starfield-general-ba2.md) | open | needs-triage |
+| [#44](https://github.com/evildarkarchon/jbsa/issues/44) | [Implement BSA for Skyrim SE and AE](jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md) | closed | none |
+| [#45](https://github.com/evildarkarchon/jbsa/issues/45) | [Implement Starfield General BA2](jbsa-1-0/issues/45-implement-starfield-general-ba2.md) | open | ready-for-agent |
 | [#46](https://github.com/evildarkarchon/jbsa/issues/46) | [Implement Starfield DDS BA2](jbsa-1-0/issues/46-implement-starfield-dds-ba2.md) | open | needs-triage |
 | [#47](https://github.com/evildarkarchon/jbsa/issues/47) | [Implement Fallout 4 BA2 v7 and v8 decoding](jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md) | open | needs-triage |
 | [#48](https://github.com/evildarkarchon/jbsa/issues/48) | [Introduce bounded deterministic parallel archive operations](jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md) | open | needs-triage |
@@ -59,5 +59,6 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | [#58](https://github.com/evildarkarchon/jbsa/issues/58) | [Run writable-family Release Qualification with games and official tools](jbsa-1-0/issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md) | open | needs-triage |
 | [#59](https://github.com/evildarkarchon/jbsa/issues/59) | [Approve the JBSA 1.0 specification and release gate](jbsa-1-0/issues/59-approve-the-jbsa-1-0-specification-and-release-gate.md) | open | needs-triage |
 | [#60](https://github.com/evildarkarchon/jbsa/issues/60) | [Publish the first public JBSA GitHub Release](jbsa-1-0/issues/60-publish-the-first-public-jbsa-github-release.md) | open | needs-triage |
+| local | [Implement compact generated conformance and risk-based performance assurance](jbsa-1-0/issues/61-implement-assurance-v2.md) | closed | none |
 
 Migrated on 2026-09-10: #62 plus #23 and all 37 of its sub-issues. Local files are authoritative; update the index when states change. Original GitHub states remain unchanged. Source snapshots are retained alongside the tickets. Triage was reviewed against ownership, acceptance criteria, and native blockers: #41 is ready for an agent; blocked open children need readiness reassessment after prerequisites close. Closed history and the parent map have no active triage label. Intended owners and rationales are recorded in each ticket.
