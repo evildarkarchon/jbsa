@@ -76,7 +76,7 @@ public final class Ba2Reader {
     if ((version < 1 || version > 3) || header.getInt() != 0x4c524e47)
       throw malformed("ba2.invalid-selector");
     long count = u32(header), nameOffset = header.getLong();
-    long headerSize = GeneralBa2Layout.headerSize(version);
+    long headerSize = Ba2Layout.headerSize(version);
     OptionalLong extraHeader = OptionalLong.empty();
     OptionalLong compressionMethod = OptionalLong.empty();
     boolean rawLz4 = false;

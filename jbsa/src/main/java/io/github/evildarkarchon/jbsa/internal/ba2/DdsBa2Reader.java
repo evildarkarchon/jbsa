@@ -10,15 +10,13 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.*;
 
-/** Bounded FO4 DDS BA2 v1 index reader with parent-owned lazy payload access. */
+/** Bounded DDS BA2 index reader with parent-owned lazy payload access. */
 public final class DdsBa2Reader {
-  private static final ArchiveEncoding ENCODING =
-      new ArchiveEncoding(
-          Optional.of(new WireVersion(1)), Optional.of(Ba2Subtype.DX10), OptionalLong.empty());
   private final OwnedArchive.IndexBuilder builder;
   private final IoContext context;
   private final Charset encoding;
   private final DdsTarget target;
+  private final Optional<CompatibilityProfile> compatibilityProfile;
   private final FailureRetention retention;
   private boolean noncanonical;
 
@@ -33,6 +31,7 @@ public final class DdsBa2Reader {
     this.builder = builder;
     context = IoContext.of(path, operation);
     encoding = Tes3Names.encoding(options.compatibilityProfile(), context);
+    compatibilityProfile = options.compatibilityProfile();
     // Filename inference is an explicit profile deviation; operation target data always wins.
     target =
         options
@@ -82,11 +81,52 @@ public final class DdsBa2Reader {
   /** Bounds every metadata and payload span before admitting the serialized entry index. */
   private ArchiveInspection parse() throws IOException {
     ByteBuffer header = builder.readMetadata(0, 24);
-    if (header.getInt() != 0x58445442 || header.getInt() != 1 || header.getInt() != 0x30315844)
+    if (header.getInt() != 0x58445442) throw malformed("ba2.invalid-selector");
+    long version = u32(header);
+    if ((version < 1 || version > 3) || header.getInt() != 0x30315844)
       throw malformed("ba2.invalid-selector");
     long count = u32(header), nameOffset = header.getLong();
-    ExactIo.end(24, ExactIo.multiply(count, 48, context), builder.size(), context);
-    long recordsEnd = 24;
+    long headerSize = Ba2Layout.headerSize(version);
+    OptionalLong extraHeader = OptionalLong.empty();
+    OptionalLong compressionMethod = OptionalLong.empty();
+    boolean rawLz4 = false;
+    if (version >= 2) {
+      long storedExtra = builder.readMetadata(24, 8).getLong();
+      extraHeader = OptionalLong.of(storedExtra);
+      if (storedExtra != 1)
+        mismatch(
+            "ba2.extra-header-value",
+            -1,
+            null,
+            "unknownValueAt24",
+            24,
+            8,
+            Long.toUnsignedString(storedExtra),
+            "1");
+    }
+    if (version == 3) {
+      long method = u32(builder.readMetadata(32, 4));
+      compressionMethod = OptionalLong.of(method);
+      rawLz4 = method == 3;
+      if (!rawLz4) {
+        if (compatibilityProfile.isEmpty()) throw unsupported("archive.unsupported-encoding");
+        warning(
+            "ba2.sf3-zlib-fallback",
+            -1,
+            null,
+            "compressionMethod",
+            32,
+            4,
+            Map.of("stored", Long.toUnsignedString(method)));
+      }
+    }
+    ArchiveFamily family =
+        version == 1 ? ArchiveFamily.FO4_DDS_BA2 : ArchiveFamily.STARFIELD_DDS_BA2;
+    ArchiveEncoding archiveEncoding =
+        new ArchiveEncoding(
+            Optional.of(new WireVersion(version)), Optional.of(Ba2Subtype.DX10), compressionMethod);
+    ExactIo.end(headerSize, ExactIo.multiply(count, 48, context), builder.size(), context);
+    long recordsEnd = headerSize;
     builder.declareEntries(count);
     boolean named = nameOffset > 0 && nameOffset < builder.size();
     if (!named)
@@ -232,8 +272,8 @@ public final class DdsBa2Reader {
               width, height, mips, format, (flags & 1) != 0, tile, target, context);
       EntryMetadata metadata =
           new EntryMetadata(
-              ArchiveFamily.FO4_DDS_BA2,
-              ENCODING,
+              family,
+              archiveEncoding,
               ordinal,
               display,
               identity,
@@ -242,7 +282,11 @@ public final class DdsBa2Reader {
               stored,
               new EntryMetadata.DdsBa2(
                   prefix, height, width, mips, format, flags, tile, textureChunks));
-      builder.addDds(metadata, ddsHeader, textureChunks);
+      builder.addDds(
+          metadata,
+          ddsHeader,
+          textureChunks,
+          rawLz4 ? OwnedArchive.PayloadCodec.LZ4_RAW : OwnedArchive.PayloadCodec.ZLIB);
       entries.add(metadata);
     }
     if (named && nameOffset < recordsEnd) throw malformed("ba2.names-overlap-index");
@@ -280,16 +324,17 @@ public final class DdsBa2Reader {
     retention.latestAssessment(assessment);
     ArchiveDetection detection =
         new ArchiveDetection(
-            DetectionStatus.SUPPORTED_FAMILY,
+            version == 3 && !rawLz4
+                ? DetectionStatus.UNSUPPORTED_VARIANT
+                : DetectionStatus.SUPPORTED_FAMILY,
             new WireName(new byte[] {66, 84, 68, 88}),
-            Optional.of(ArchiveFamily.FO4_DDS_BA2),
-            ENCODING.wireVersion(),
+            version == 3 && !rawLz4 ? Optional.empty() : Optional.of(family),
+            archiveEncoding.wireVersion(),
             Optional.of(Ba2Subtype.DX10),
-            OptionalLong.empty());
+            archiveEncoding.compressionMethod());
     return new ArchiveInspection(
         detection,
-        new ArchiveMetadata.DdsBa2(
-            ArchiveFamily.FO4_DDS_BA2, ENCODING, count, nameOffset, OptionalLong.empty()),
+        new ArchiveMetadata.DdsBa2(family, archiveEncoding, count, nameOffset, extraHeader),
         assessment,
         entries);
   }
@@ -390,6 +435,10 @@ public final class DdsBa2Reader {
 
   private ArchiveException malformed(String id) {
     return context.failure(FailureKind.FORMAT, id, null);
+  }
+
+  private ArchiveException unsupported(String id) {
+    return context.failure(FailureKind.UNSUPPORTED, id, null);
   }
 
   private record Span(long start, long end) {}

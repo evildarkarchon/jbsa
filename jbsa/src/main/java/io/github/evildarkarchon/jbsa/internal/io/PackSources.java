@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.ba2.Ba2Layout;
 import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -229,7 +230,7 @@ public final class PackSources {
                       .count()
                   * 4;
       case ArchiveMetadata.GeneralBa2 value ->
-          24
+          Ba2Layout.headerSize(value.encoding().wireVersion().orElseThrow().value())
               + value.entryCount() * 36
               + inspection.entries().stream()
                   .mapToLong(
@@ -238,8 +239,8 @@ public final class PackSources {
                               ? 2 + entry.wireNames().get("complete").length()
                               : 0)
                   .sum();
-      case ArchiveMetadata.DdsBa2 ignored ->
-          24
+      case ArchiveMetadata.DdsBa2 value ->
+          Ba2Layout.headerSize(value.encoding().wireVersion().orElseThrow().value())
               + inspection.entries().stream()
                   .mapToLong(
                       entry ->

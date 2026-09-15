@@ -2,8 +2,8 @@
 
 The reviewed legacy input is `tests/conformance/catalog.json` at SHA-256
 `17a573a623e30ba2287b9cb514e01f7257fbf29d99de90bf4c0cc3efadc9c6ba`.
-The deterministic comparison accounts for all 219 cases in the six qualified
-Archive Families: 213 map to generated Assurance Scenarios, six are retired, and
+The deterministic comparison accounts for all 281 cases in the eight qualified
+Archive Families: 275 map to generated Assurance Scenarios, six are retired, and
 none remain unmapped.
 
 | Archive Family | Legacy | Mapped | Retired | Unmapped |
@@ -12,6 +12,8 @@ none remain unmapped.
 | BSA 0x67 | 32 | 32 | 0 | 0 |
 | BSA 0x68 | 52 | 52 | 0 | 0 |
 | BSA 0x69 | 32 | 31 | 1 | 0 |
+| Starfield DDS BA2 v2 | 31 | 31 | 0 | 0 |
+| Starfield DDS BA2 v3/method 3 | 31 | 31 | 0 | 0 |
 | Starfield General BA2 v2 | 31 | 31 | 0 | 0 |
 | Starfield General BA2 v3/method 3 | 33 | 33 | 0 | 0 |
 
@@ -33,6 +35,10 @@ stable behavioral archetypes:
 - Starfield General retains separate v2 and v3/method-3 capabilities plus
   header/method selection, independent wire validation, CLI, native-resource,
   cancellation, oracle, and performance-checkpoint scenarios.
+- Starfield DDS retains separate v2 zlib and v3/method-3 raw-LZ4 capabilities,
+  independent chunk framing, stored/mixed decode disposition, DDS reconstruction,
+  bounded-resource, CLI, independent-validation, bidirectional-oracle, and focused
+  performance-checkpoint scenarios.
 
 The BSA 0x69 retirement is
 `CV1-bsa-069.decode.malformed-harmless-trailing-bytes.stored.standard-v1`.

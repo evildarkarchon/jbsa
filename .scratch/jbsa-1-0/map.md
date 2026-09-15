@@ -76,7 +76,7 @@ Implement and qualify the Windows-first Java 25 Bethesda archive library and thi
 | [#43 — Integrate and qualify the Windows x64 LZ4 runtime](issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md) | closed |
 | [#44 — Implement BSA for Skyrim SE and AE](issues/44-implement-bsa-for-skyrim-se-and-ae.md) | closed |
 | [#45 — Implement Starfield General BA2](issues/45-implement-starfield-general-ba2.md) | closed |
-| [#46 — Implement Starfield DDS BA2](issues/46-implement-starfield-dds-ba2.md) | open |
+| [#46 — Implement Starfield DDS BA2](issues/46-implement-starfield-dds-ba2.md) | closed |
 | [#47 — Implement Fallout 4 BA2 v7 and v8 decoding](issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md) | open |
 | [#48 — Introduce bounded deterministic parallel archive operations](issues/48-introduce-bounded-deterministic-parallel-archive-operations.md) | open |
 | [#49 — Complete the cross-family BSArch-compatible CLI](issues/49-complete-the-cross-family-bsarch-compatible-cli.md) | open |

@@ -17,6 +17,102 @@ import org.junit.jupiter.api.io.TempDir;
 class DdsBa2PackTest {
   @TempDir Path temporary;
 
+  /** Starfield DDS defaults to raw LZ4 while explicit zlib selects the v2 wire envelope. */
+  @Test
+  void selectsStarfieldCodecEnvelopeAndRoundTrips() throws Exception {
+    byte[] source = bc1(5, 7, 1, 32);
+    for (PackOptions.Compression compression :
+        List.of(
+            PackOptions.Compression.FAMILY_DEFAULT,
+            PackOptions.Compression.LZ4_RAW,
+            PackOptions.Compression.ZLIB)) {
+      boolean raw = compression != PackOptions.Compression.ZLIB;
+      Path target = temporary.resolve("starfield-" + compression.name() + ".ba2");
+      BethesdaArchives.standard()
+          .pack(starfieldRequest(target, source, compression), OperationControl.standard());
+      ByteBuffer wire = ByteBuffer.wrap(Files.readAllBytes(target)).order(ByteOrder.LITTLE_ENDIAN);
+      assertEquals(raw ? 3 : 2, wire.getInt(4));
+      assertEquals(0x30315844, wire.getInt(8));
+      assertEquals(1, wire.getLong(24));
+      if (raw) assertEquals(3, wire.getInt(32));
+      try (var archive = BethesdaArchives.standard().open(target, OpenOptions.standard());
+          var content = archive.entry(0).openContent()) {
+        assertEquals(ArchiveFamily.STARFIELD_DDS_BA2, archive.inspection().metadata().family());
+        byte[] reconstructed = Channels.newInputStream(content).readAllBytes();
+        assertArrayEquals(
+            Arrays.copyOfRange(source, 128, source.length),
+            Arrays.copyOfRange(reconstructed, 128, reconstructed.length));
+      }
+    }
+  }
+
+  /** Mixed Starfield DDS chunk codecs fail before a source factory or destination is touched. */
+  @Test
+  void rejectsMixedStarfieldChunkCodecsBeforeSourceEffects() throws Exception {
+    Path target = temporary.resolve("mixed-codecs.ba2");
+    var opens = new java.util.concurrent.atomic.AtomicInteger();
+    byte[] source = bc1(4, 4, 1, 8);
+    PackRequest base = starfieldRequest(target, source, PackOptions.Compression.LZ4_RAW);
+    PackOptions mixed =
+        new PackOptions(
+            List.of(),
+            PackOptions.Compression.LZ4_RAW,
+            true,
+            new PackOptions.Splitting.FamilyDefault(),
+            FlagSelection.AUTOMATIC,
+            FlagSelection.AUTOMATIC,
+            Map.of(
+                new NormalizedNameIdentity("textures\\example.dds"), PackOptions.Compression.ZLIB));
+    PackRequest invalid =
+        new PackRequest(
+            target,
+            base.family(),
+            base.encoding(),
+            base.compatibilityProfile(),
+            List.of(
+                new PackSource.GeneratedEntry(
+                    "Textures/Example.dds",
+                    source.length,
+                    () -> {
+                      opens.incrementAndGet();
+                      return Channels.newChannel(new ByteArrayInputStream(source));
+                    })),
+            base.targetPolicy(),
+            base.diagnosticPolicy(),
+            base.resourceLimits(),
+            base.workerSelection(),
+            mixed,
+            base.ddsTarget());
+    assertEquals(
+        FailureKind.UNSUPPORTED,
+        assertThrows(
+                ArchiveException.class,
+                () -> BethesdaArchives.standard().pack(invalid, OperationControl.standard()))
+            .kind());
+    assertEquals(0, opens.get());
+    assertFalse(Files.exists(target));
+  }
+
+  /** A raw-LZ4 mip chunk above the qualified dispatch limit fails before publication. */
+  @Test
+  void rejectsOversizeStarfieldRawChunkBeforePublication() throws Exception {
+    int payloadSize = 2048 * 1025 * 8;
+    byte[] source = bc1(8192, 4097, 1, payloadSize);
+    Path target = temporary.resolve("oversize-raw.ba2");
+    ArchiveException failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                BethesdaArchives.standard()
+                    .pack(
+                        starfieldRequest(target, source, PackOptions.Compression.FAMILY_DEFAULT),
+                        OperationControl.standard()));
+    assertEquals(FailureKind.POLICY, failure.kind());
+    assertEquals(
+        "codec.dispatch-limit", failure.primaryFailure().diagnosticIdentifier().orElseThrow());
+    assertFalse(Files.exists(target));
+  }
+
   /** An existing DDS archive is a valid ordered pack source with canonical entry bytes. */
   @Test
   void repacksDdsArchiveThroughDetectedSource() throws Exception {
@@ -312,6 +408,34 @@ class DdsBa2PackTest {
                 "Textures/Example.dds",
                 source.length,
                 () -> Channels.newChannel(new ByteArrayInputStream(source)))),
+        Optional.of(DdsTarget.PC));
+  }
+
+  /** Builds a public Starfield DDS request whose selector tuple follows its chunk codec. */
+  private static PackRequest starfieldRequest(
+      Path target, byte[] source, PackOptions.Compression compression) {
+    boolean raw = compression != PackOptions.Compression.ZLIB;
+    var standard = request(target, source);
+    return new PackRequest(
+        target,
+        ArchiveFamily.STARFIELD_DDS_BA2,
+        new ArchiveEncoding(
+            Optional.of(new WireVersion(raw ? 3 : 2)),
+            Optional.of(Ba2Subtype.DX10),
+            raw ? OptionalLong.of(3) : OptionalLong.empty()),
+        Optional.empty(),
+        standard.sources(),
+        standard.targetPolicy(),
+        standard.diagnosticPolicy(),
+        standard.resourceLimits(),
+        standard.workerSelection(),
+        new PackOptions(
+            List.of(),
+            compression,
+            true,
+            new PackOptions.Splitting.FamilyDefault(),
+            FlagSelection.AUTOMATIC,
+            FlagSelection.AUTOMATIC),
         Optional.of(DdsTarget.PC));
   }
 }

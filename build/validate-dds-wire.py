@@ -1,4 +1,4 @@
-"""Independent specification-based DDS and FO4 DX10 v1 validator.
+"""Independent specification-based DDS and canonical DX10 BA2 validator.
 
 Imports neither JBSA nor Reference Snapshot code. This bounded development scanner
 checks opaque texture sizes and chunk metadata; it does not decode pixels and is
@@ -92,14 +92,72 @@ def inspect_dds(raw):
             'payload_size': required, 'payload_sha256': hashlib.sha256(raw[envelope:]).hexdigest()}
 
 
+def decode_raw_lz4(block, expected_size):
+    """Decode one raw-LZ4 block while requiring complete input and exact bounded output."""
+    source, output = 0, bytearray()
+
+    def extended_length(base):
+        """Consume one bounded LZ4 literal or match extension chain."""
+        nonlocal source
+        length = base
+        if base == 15:
+            while True:
+                if source >= len(block):
+                    raise ValueError('Truncated raw-LZ4 length')
+                value = block[source]
+                source += 1
+                length += value
+                if value != 255:
+                    break
+        return length
+
+    while source < len(block):
+        token = block[source]
+        source += 1
+        literal_length = extended_length(token >> 4)
+        literal_end = source + literal_length
+        if literal_end > len(block) or len(output) + literal_length > expected_size:
+            raise ValueError('Raw-LZ4 literal exceeds bounded input or output')
+        output.extend(block[source:literal_end])
+        source = literal_end
+        if source == len(block):
+            break
+        if source + 2 > len(block):
+            raise ValueError('Truncated raw-LZ4 match offset')
+        distance = block[source] | block[source + 1] << 8
+        source += 2
+        if distance == 0 or distance > len(output):
+            raise ValueError('Invalid raw-LZ4 match offset')
+        match_length = extended_length(token & 0x0f) + 4
+        if len(output) + match_length > expected_size:
+            raise ValueError('Raw-LZ4 match exceeds bounded output')
+        for _ in range(match_length):
+            output.append(output[-distance])
+    if source != len(block) or len(output) != expected_size:
+        raise ValueError('Raw-LZ4 trailing input or decoded-size mismatch')
+    return bytes(output)
+
+
 def inspect_archive(raw):
-    """Validate canonical DX10 v1 structure, hashes, independent zlib frames and mip spans."""
+    """Validate canonical DX10 structure, hashes, independent codec frames and mip spans."""
     if len(raw) < 24:
         raise ValueError('Truncated BA2 header')
     magic, version, kind, count, names_offset = struct.unpack_from('<4sI4sIq', raw)
-    if (magic, version, kind) != (b'BTDX', 1, b'DX10') or count > 100000:
+    if magic != b'BTDX' or kind != b'DX10' or version not in (1, 2, 3) or count > 100000:
         raise ValueError('Unsupported archive envelope')
-    cursor, records = 24, []
+    header_size = {1: 24, 2: 32, 3: 36}[version]
+    if len(raw) < header_size:
+        raise ValueError('Truncated Starfield extra header')
+    method = None
+    if version >= 2:
+        extra, = struct.unpack_from('<Q', raw, 24)
+        if extra != 1:
+            raise ValueError('Noncanonical Starfield extra header')
+    if version == 3:
+        method, = struct.unpack_from('<I', raw, 32)
+        if method != 3:
+            raise ValueError('Unsupported Starfield compression method')
+    cursor, records = header_size, []
     for _ in range(count):
         if cursor + 24 > len(raw):
             raise ValueError('Truncated texture record')
@@ -157,10 +215,14 @@ def inspect_archive(raw):
             total += unpacked
             if total > LIMIT:
                 raise ValueError('Scanner decoded byte limit exceeded')
-            decoder = zlib.decompressobj()
-            decoded = decoder.decompress(raw[offset:offset + packed], unpacked + 1)
-            if not decoder.eof or decoder.unused_data or decoder.unconsumed_tail or len(decoded) != unpacked:
-                raise ValueError('Invalid zlib chunk framing or decoded size')
+            content = raw[offset:offset + packed]
+            if method == 3:
+                decoded = decode_raw_lz4(content, unpacked)
+            else:
+                decoder = zlib.decompressobj()
+                decoded = decoder.decompress(content, unpacked + 1)
+                if not decoder.eof or decoder.unused_data or decoder.unconsumed_tail or len(decoded) != unpacked:
+                    raise ValueError('Invalid zlib chunk framing or decoded size')
             digest.update(decoded)
             spans.add((offset, offset + packed))
             chunk_projection.append({'start_mip': start, 'end_mip': end, 'unpacked_size': unpacked})
@@ -177,7 +239,11 @@ def inspect_archive(raw):
         previous = end
     if previous != names_offset:
         raise ValueError('Unreferenced payload bytes')
-    return {'family': 'fo4-dx10-v1', 'entries': entries}
+    family = 'fo4-dx10-v1' if version == 1 else f'sf-dx10-v{version}' + ('-m3' if method == 3 else '')
+    projection = {'family': family, 'entries': entries}
+    if version >= 2:
+        projection.update({'version': version, 'compression_method': method})
+    return projection
 
 
 def main():

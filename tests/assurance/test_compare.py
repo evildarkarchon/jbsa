@@ -62,7 +62,16 @@ class AssuranceComparisonTests(unittest.TestCase):
             if retirement["family"] == "bsa-069"
         ]
         self.assertEqual(
-            ["bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3", "tes3"],
+            [
+                "bsa-067",
+                "bsa-068",
+                "bsa-069",
+                "sf-dx10-v2",
+                "sf-dx10-v3-m3",
+                "sf-gnrl-v2",
+                "sf-gnrl-v3-m3",
+                "tes3",
+            ],
             report["scope_families"],
         )
         self.assertEqual(
@@ -70,6 +79,8 @@ class AssuranceComparisonTests(unittest.TestCase):
                 "bsa-067": 32,
                 "bsa-068": 52,
                 "bsa-069": 32,
+                "sf-dx10-v2": 31,
+                "sf-dx10-v3-m3": 31,
                 "sf-gnrl-v2": 31,
                 "sf-gnrl-v3-m3": 33,
                 "tes3": 39,
@@ -146,6 +157,15 @@ class AssuranceComparisonTests(unittest.TestCase):
         self.assertFalse(report["unmapped_legacy_cases"])
         self.assertFalse(report["gaps"])
         self.assertTrue(all(family["equivalent"] for family in report["families"]))
+        for family_id in ("sf-dx10-v2", "sf-dx10-v3-m3"):
+            family = next(
+                item for item in report["families"] if item["family"] == family_id
+            )
+            self.assertEqual("mapped-equivalent", family["comparison_status"])
+            self.assertEqual(31, family["legacy_case_count"])
+            self.assertEqual(31, family["mapped_legacy_case_count"])
+            self.assertEqual(0, family["retired_legacy_case_count"])
+            self.assertEqual(0, family["unmapped_legacy_case_count"])
 
     def test_classifies_supported_archetypes_and_excludes_out_of_scope_cases(self) -> None:
         """Map justified legacy behavior signatures without importing other families."""

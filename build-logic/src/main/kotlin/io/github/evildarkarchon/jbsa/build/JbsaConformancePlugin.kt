@@ -330,7 +330,8 @@ class JbsaConformancePlugin : Plugin<Project> {
                         when {
                             family == "tes3" -> "tes3ConformanceTest"
                             family.startsWith("bsa-") -> "bsaConformanceTest"
-                            "gnrl" in family || "dx10" in family -> "ba2ConformanceTest"
+                            "gnrl" in family -> "ba2ConformanceTest"
+                            "dx10" in family -> "ddsConformanceTest"
                             else -> throw GradleException("Unknown Assurance Plan family: $family")
                         }
                     }

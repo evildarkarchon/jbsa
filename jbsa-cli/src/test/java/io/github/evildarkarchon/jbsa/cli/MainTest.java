@@ -1,5 +1,6 @@
 package io.github.evildarkarchon.jbsa.cli;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -288,6 +289,54 @@ class MainTest {
       Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
       assertEquals(0, unpacked.status(), unpacked.error());
       assertEquals(payload, Files.readString(destination.resolve("Data/Entry.bin")));
+    }
+  }
+
+  /** Starfield DDS CLI defaults to raw LZ4 and retains the explicit v2 zlib alternative. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void packsAndUnpacksStarfieldDdsVariants() throws Exception {
+    Path textures = Files.createDirectories(temporary.resolve("sf-dds-input/Textures"));
+    var source = java.nio.ByteBuffer.allocate(160).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+    source
+        .putInt(0, 0x20534444)
+        .putInt(4, 124)
+        .putInt(12, 7)
+        .putInt(16, 5)
+        .putInt(28, 1)
+        .putInt(76, 32)
+        .putInt(80, 4)
+        .putInt(84, 0x31545844);
+    for (int index = 128; index < source.capacity(); index++) source.put(index, (byte) index);
+    Files.write(textures.resolve("Small.dds"), source.array());
+    List<String> codecs = java.util.Arrays.asList(null, "-z", "-z:lz4", "-z:zlib");
+    for (int index = 0; index < codecs.size(); index++) {
+      String codec = codecs.get(index);
+      Path archive = temporary.resolve("sf-dds-" + index + ".ba2");
+      var arguments =
+          new ArrayList<>(
+              List.of(
+                  "pack",
+                  textures.getParent().toString(),
+                  archive.toString(),
+                  "-sf1dds",
+                  "--no-progress"));
+      if (codec != null) arguments.add(4, codec);
+      Result packed = run(arguments.toArray(String[]::new));
+      assertEquals(0, packed.status(), packed.error());
+      var wire =
+          java.nio.ByteBuffer.wrap(Files.readAllBytes(archive))
+              .order(java.nio.ByteOrder.LITTLE_ENDIAN);
+      boolean raw = codec == null || codec.equals("-z") || codec.equals("-z:lz4");
+      assertEquals(raw ? 3 : 2, wire.getInt(4));
+      if (raw) assertEquals(3, wire.getInt(32));
+      Path destination = Files.createDirectory(temporary.resolve("sf-dds-output-" + index));
+      Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
+      assertEquals(0, unpacked.status(), unpacked.error());
+      byte[] reconstructed = Files.readAllBytes(destination.resolve("Textures/Small.dds"));
+      assertArrayEquals(
+          java.util.Arrays.copyOfRange(source.array(), 128, source.capacity()),
+          java.util.Arrays.copyOfRange(reconstructed, 128, reconstructed.length));
     }
   }
 

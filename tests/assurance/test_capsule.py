@@ -130,7 +130,15 @@ class EvidenceCapsuleTests(unittest.TestCase):
 
     def test_retained_issue45_local_capsule_is_content_addressed_and_complete(self) -> None:
         """Retain the accepted local Starfield oracle/performance session as canonical evidence."""
-        path = ROOT / "tests" / "assurance" / "issue45-local-capsule.json"
+        self.assert_retained_capsule("issue45-local-capsule.json", 30)
+
+    def test_retained_issue46_local_capsule_is_content_addressed_and_complete(self) -> None:
+        """Retain the Starfield DDS oracle and targeted performance session as evidence."""
+        self.assert_retained_capsule("issue46-local-capsule.json", 60)
+
+    def assert_retained_capsule(self, name: str, scenario_count: int) -> None:
+        """Verify one committed local capsule's digest, outcomes, scope, and runtime identity."""
+        path = ROOT / "tests" / "assurance" / name
         capsule = json.loads(path.read_text(encoding="utf-8"))
         digest = capsule.pop("capsule_digest")
         encoded = json.dumps(
@@ -140,7 +148,7 @@ class EvidenceCapsuleTests(unittest.TestCase):
         self.assertEqual("PASS", capsule["outcome"])
         self.assertEqual("local", capsule["environment"])
         self.assertEqual("affected", capsule["selected_tier"])
-        self.assertEqual(30, len(capsule["selected_scenario_ids"]))
+        self.assertEqual(scenario_count, len(capsule["selected_scenario_ids"]))
         self.assertTrue(
             all(result["outcome"] == "PASS" for result in capsule["results"])
         )

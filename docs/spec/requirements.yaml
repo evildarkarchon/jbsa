@@ -39,6 +39,7 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence:
       - tests/assurance/plan.json
       - tests/assurance/test_compare.py
@@ -52,6 +53,7 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence:
       - tests/assurance/test_assurance_plan.py
   - id: JBSA-ASR-005
@@ -65,6 +67,7 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence:
       - tests/assurance/plan.json
   - id: JBSA-ASR-006
@@ -77,6 +80,7 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence:
       - tests/assurance/test_capsule.py
   - id: JBSA-ASR-007
@@ -102,6 +106,7 @@ requirements:
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence:
       - tests/assurance/history.json
       - tests/assurance/test_history.py
@@ -486,6 +491,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-CLI-005
     owner:
@@ -498,6 +504,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-CLI-006
     owner:
@@ -664,6 +671,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-CODEC-005
     owner:
@@ -709,6 +717,7 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-CODEC-009
     owner:
@@ -720,6 +729,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-CODEC-010
     owner:
@@ -732,6 +742,7 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-CODEC-011
     owner:
@@ -743,6 +754,7 @@ requirements:
     verification_class: build-verification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-CODEC-012
     owner:
@@ -755,6 +767,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-CODEC-013
     owner:
@@ -1170,6 +1183,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-002
     owner:
@@ -1185,6 +1199,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-003
     owner:
@@ -1197,6 +1212,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-004
     owner:
@@ -1209,6 +1225,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-005
     owner:
@@ -1220,6 +1237,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-006
     owner:
@@ -1231,6 +1249,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-007
     owner:
@@ -1259,6 +1278,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-009
     owner:
@@ -1271,6 +1291,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-010
     owner:
@@ -1284,6 +1305,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-011
     owner:
@@ -1296,6 +1318,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-012
     owner:
@@ -1308,6 +1331,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DDS-013
     owner:
@@ -1321,6 +1345,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DET-001
     owner:
@@ -1592,7 +1617,14 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
-    test_evidence: []
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java
+      - jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java
+      - build/validate-dds-wire.py
+      - tests/assurance/plan.json
   - id: JBSA-DX10-002
     owner:
       document: docs/spec/formats/dds-ba2.md
@@ -1603,6 +1635,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DX10-003
     owner:
@@ -1614,6 +1647,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DX10-004
     owner:
@@ -1626,7 +1660,13 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
-    test_evidence: []
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java
+      - build/validate-dds-wire.py
+      - tests/fixtures/starfield-dds/manifest.json
+      - tests/assurance/plan.json
   - id: JBSA-DX10-005
     owner:
       document: docs/spec/formats/dds-ba2.md
@@ -1637,6 +1677,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DX10-006
     owner:
@@ -1650,6 +1691,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DX10-007
     owner:
@@ -1665,6 +1707,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-DX10-008
     owner:
@@ -1677,6 +1720,7 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
+      - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
     test_evidence: []
   - id: JBSA-GNRL-001
     owner:

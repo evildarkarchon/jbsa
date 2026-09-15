@@ -21,5 +21,5 @@ internal object JbsaConformanceIdentity {
             "performanceHarnessTest" to "performance-harness",
         )
     val ARCHIVE_FAMILY_TASKS =
-        TAGGED_TESTS.filterValues { tag -> tag in setOf("tes3", "bsa", "ba2") }.keys
+        TAGGED_TESTS.filterValues { tag -> tag in setOf("tes3", "bsa", "ba2", "dds") }.keys
 }

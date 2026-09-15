@@ -59,7 +59,7 @@ class AssurancePlanTests(unittest.TestCase):
             self.assertFalse(output_path.exists())
 
     def test_compact_plan_expands_all_qualified_assurance_work(self) -> None:
-        """Expand every completed family, including both Starfield General wire variants."""
+        """Expand every completed family, including all qualified Starfield variants."""
         with tempfile.TemporaryDirectory() as temporary:
             first_path = Path(temporary) / "first.json"
             second_path = Path(temporary) / "second.json"
@@ -71,7 +71,16 @@ class AssurancePlanTests(unittest.TestCase):
             expanded = json.loads(first_path.read_text(encoding="utf-8"))
 
         self.assertEqual(
-            {"bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3", "tes3"},
+            {
+                "bsa-067",
+                "bsa-068",
+                "bsa-069",
+                "sf-dx10-v2",
+                "sf-dx10-v3-m3",
+                "sf-gnrl-v2",
+                "sf-gnrl-v3-m3",
+                "tes3",
+            },
             {scenario["capability_id"] for scenario in expanded["assurance_scenarios"]},
         )
         self.assertFalse(expanded["incomplete_scenarios"])
@@ -138,9 +147,9 @@ class AssurancePlanTests(unittest.TestCase):
             self.assertEqual(first_path.read_bytes(), second_path.read_bytes())
             self.assertEqual(
                 {
-                    "capability_count": 6,
-                    "performance_lane_count": 26,
-                    "scenario_count": 25,
+                    "capability_count": 8,
+                    "performance_lane_count": 28,
+                    "scenario_count": 30,
                     "status": "valid",
                     "version": "assurance-v2",
                 },
@@ -336,6 +345,8 @@ class AssurancePlanTests(unittest.TestCase):
         self.assertEqual(
             [
                 "bsa-069-lz4-checkpoint",
+                "sf-dx10-v2-zlib-checkpoint",
+                "sf-dx10-v3-raw-lz4-checkpoint",
                 "sf-gnrl-v2-zlib-checkpoint",
                 "sf-gnrl-v3-raw-lz4-checkpoint",
             ],
@@ -582,6 +593,79 @@ class AssurancePlanTests(unittest.TestCase):
         ):
             self.assertEqual("qualified", lanes[lane_id]["status"])
             self.assertFalse(lanes[lane_id]["release_gate"])
+            self.assertTrue(
+                all((ROOT / reference).is_file() for reference in lanes[lane_id]["evidence_refs"])
+            )
+
+    def test_qualified_starfield_dds_inventory_is_executable(self) -> None:
+        """Keep both Starfield DDS codec variants complete and evidence-backed."""
+        with tempfile.TemporaryDirectory() as temporary:
+            output_path = Path(temporary) / "expanded.json"
+            result = self.run_command("expand", output_path)
+            self.assertEqual(0, result.returncode, result.stderr)
+            expanded = json.loads(output_path.read_text(encoding="utf-8"))
+
+        capability_ids = {"sf-dx10-v2", "sf-dx10-v3-m3"}
+        scenarios = [
+            scenario
+            for scenario in expanded["assurance_scenarios"]
+            if scenario["capability_id"] in capability_ids
+        ]
+        self.assertFalse(
+            any(
+                scenario["capability_id"] in capability_ids
+                for scenario in expanded["incomplete_scenarios"]
+            )
+        )
+        self.assertTrue(all(scenario["test_selectors"] for scenario in scenarios))
+        self.assertTrue(all(scenario["evidence_refs"] for scenario in scenarios))
+        self.assertTrue(
+            all(
+                (ROOT / reference).is_file()
+                for scenario in scenarios
+                for reference in scenario["evidence_refs"]
+            )
+        )
+        scenario_ids = {scenario["assurance_scenario_id"] for scenario in scenarios}
+        for capability_id in capability_ids:
+            for scenario_id in (
+                "decode-entries",
+                "malformed-input",
+                "oracle-differential",
+                "performance-checkpoint",
+                "starfield-dds-bounded-resources",
+                "starfield-dds-chunk-reconstruction",
+                "starfield-dds-cli-selection",
+                "starfield-dds-independent-validation",
+                "starfield-dds-stored-mixed-decode",
+                "unsupported-codec-decode",
+                "unsupported-codec-encode",
+            ):
+                self.assertIn(f"{capability_id}:{scenario_id}", scenario_ids)
+        self.assertIn("sf-dx10-v2:zlib-round-trip", scenario_ids)
+        self.assertIn("sf-dx10-v3-m3:raw-lz4-round-trip", scenario_ids)
+
+        selectors = {selector for scenario in scenarios for selector in scenario["test_selectors"]}
+        for method in (
+            "readsAndExtractsProjectAuthoredVersions",
+            "writesCodecSelectedHeadersAndRoundTrips",
+            "independentlyValidatesStarfieldWireVersions",
+            "rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits",
+            "reconstructsOpaqueMipPayloadAcrossVersionAndCodecInteractions",
+            "packagedProfileIdentifiesLevelTwelveRawLz4",
+            "pinnedLocalOracleCrossDecodesBothDirections",
+        ):
+            self.assertTrue(any(selector.endswith("#" + method) for selector in selectors), method)
+
+        lanes = {lane["lane_id"]: lane for lane in expanded["performance_lanes"]}
+        for lane_id in (
+            "sf-dx10-v2-zlib-checkpoint",
+            "sf-dx10-v3-raw-lz4-checkpoint",
+        ):
+            self.assertEqual("qualified", lanes[lane_id]["status"])
+            self.assertEqual("development-checkpoint", lanes[lane_id]["qualification_scope"])
+            self.assertFalse(lanes[lane_id]["release_gate"])
+            self.assertIn("output-size", lanes[lane_id]["metrics"])
             self.assertTrue(
                 all((ROOT / reference).is_file() for reference in lanes[lane_id]["evidence_refs"])
             )

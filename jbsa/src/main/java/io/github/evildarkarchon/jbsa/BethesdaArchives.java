@@ -15,9 +15,9 @@ import java.util.OptionalLong;
 /**
  * The synchronous, stateless Bethesda Archive module, at pre-1.0 Contract Baseline.
  *
- * <p>Queries check source access and selectors before family dispatch. TES3, TES4, and Fallout 4
- * General BA2 v1 support inspection, owned content, extraction, and packing; TES4 and BA2 also
- * support zlib content. Other family slices report checked capability failures. This object owns no
+ * <p>Queries check source access and selectors before family dispatch. Implemented Archive Families
+ * support inspection, owned content, extraction, and their specified encoding directions through
+ * internal zlib and LZ4 codecs. Unsupported directions report checked failures. This object owns no
  * resource lifetime.
  */
 public final class BethesdaArchives {
@@ -133,7 +133,8 @@ public final class BethesdaArchives {
       return io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
     if (request.family() == ArchiveFamily.FO4_GENERAL_BA2
         || request.family() == ArchiveFamily.FO4_DDS_BA2
-        || request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2)
+        || request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2
+        || request.family() == ArchiveFamily.STARFIELD_DDS_BA2)
       return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Packer.pack(request, control);
     return unavailableMutation(
         Operation.PACK,

@@ -1,6 +1,6 @@
 # Implement Fallout 4 BA2 v7 and v8 decoding
 
-Status: needs-triage
+Status: ready-for-agent
 State: open
 GitHub issue: #47
 Source: https://github.com/evildarkarchon/jbsa/issues/47
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:15Z
 Source updated: 2026-09-03T06:54:15Z
 Closed: none
 Migrated: 2026-09-10
-Labels: needs-triage
+Labels: ready-for-agent
 Assignees: none
 Blocked by: [#46](../issues/46-implement-starfield-dds-ba2.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #46.
+Triage reviewed: 2026-09-14
+Triage rationale: #46 is closed; the v7/v8 decode-only Assurance v2 contract is current, fully specified, and has no remaining open prerequisites.
 
 ## Original issue body
 

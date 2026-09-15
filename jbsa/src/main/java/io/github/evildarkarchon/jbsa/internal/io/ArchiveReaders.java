@@ -55,8 +55,20 @@ public final class ArchiveReaders {
             return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Reader.load(
                 builder, path, options, operation, policy);
           IoContext context = IoContext.of(path, operation);
-          if (detection.family().filter(ArchiveFamily.FO4_DDS_BA2::equals).isPresent()
-              && detection.wireVersion().orElseThrow().value() == 1)
+          boolean ddsBa2 =
+              detection.ba2Subtype().filter(Ba2Subtype.DX10::equals).isPresent()
+                  && detection.wireVersion().isPresent()
+                  && detection.wireVersion().orElseThrow().value() >= 1
+                  && detection.wireVersion().orElseThrow().value() <= 3;
+          if (ddsBa2
+              && (detection
+                      .family()
+                      .filter(
+                          family ->
+                              family == ArchiveFamily.FO4_DDS_BA2
+                                  || family == ArchiveFamily.STARFIELD_DDS_BA2)
+                      .isPresent()
+                  || qualifiedFallback))
             return io.github.evildarkarchon.jbsa.internal.ba2.DdsBa2Reader.load(
                 builder, path, options, operation, policy);
           throw switch (detection.status()) {

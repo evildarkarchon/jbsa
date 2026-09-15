@@ -100,6 +100,13 @@ def archetype_for(case: dict[str, Any], available_scenarios: set[str]) -> str | 
         and "malformed-" in fixture
     ):
         scenario_id = "malformed-input"
+    elif (
+        family in {"sf-dx10-v2", "sf-dx10-v3-m3"}
+        and operation == "decode"
+        and expected == "assert-specified-outcome"
+        and codec in {"stored", "mixed"}
+    ):
+        scenario_id = "starfield-dds-stored-mixed-decode"
     elif operation == "encode" and expected == "accept":
         scenario_id = {
             "stored": "stored-mixed-round-trip",

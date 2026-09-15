@@ -221,3 +221,35 @@ after the fix and qualification adapters. The performance harness tests and DDS
 benchmark adapter tests also passed. PV1 inputs and runtime bindings are prepared
 separately; no normative performance samples or passing performance qualification
 are claimed.
+
+## Starfield DDS BA2 extension
+
+Issue [#46](../../.scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md) extends the shared DDS
+record, envelope, reconstruction, sharing, and splitting paths to Starfield. Version 2 independently
+frames every chunk with zlib. Version 3 method 3 independently frames every chunk as a complete raw
+LZ4 block using the pinned level-12 consumer profile. The Starfield DDS family default and CLI
+`-sf1dds` default select raw LZ4; explicit zlib selects version 2. Stored encode remains prohibited,
+while bounded stored decode retains the existing noncanonical warning.
+
+The permanent registry trace for this extension is:
+
+| Requirement set | Issue 46 responsibility |
+| --- | --- |
+| `JBSA-DX10-001–008` | Starfield selector matrix, v2/v3 headers, independent chunk framing, codec dispatch, mip order, mandatory compression, malformed bounds, sharing, and splitting |
+| `JBSA-DDS-001–006`, `JBSA-DDS-008–013` | Shared envelope analysis, explicit PC target, format and mip math, normalization, partitioning, canonical reconstruction, writable formats, and payload extents; retired `JBSA-DDS-007` remains excluded |
+| `JBSA-CODEC-004`, `JBSA-CODEC-008–012` | Internal DDS implementation plus pinned, bounded, resource-accounted raw-LZ4 provider behavior |
+| `JBSA-CLI-004/005` | `-sf1dds`, default raw LZ4, explicit zlib, PC target, and stored-output rejection |
+| `JBSA-ASR-003–006`, `JBSA-ASR-008` | Generated behavioral, malformed, oracle, validator, performance, evidence-capsule, and frozen-history coverage |
+
+The historical `JBSA-CONF-*` and `JBSA-PERF-*` catalogs remain unchanged. Their
+applicable Starfield DDS rows map through Assurance v2; no expanded v1 packet or
+historical rebaseline is created.
+
+The project-authored CC0 vectors and bounded independent scanner live under
+`tests/fixtures/starfield-dds/` and `build/validate-dds-wire.py`. The
+[development evidence](evidence/issue46-starfield-dds/README.md) records successful public-seam
+conformance, both digest-pinned oracle directions for zlib and raw LZ4, and the curated zlib/raw-LZ4
+chunk, reconstruction, random-access, heap-peak, and output-size checkpoint. DirectXTex was not
+provisioned for this run; the independent wire and reconstructed-envelope scanner supplied the
+accepted equivalent validation. These are Assurance v2 development results, not Binary Conformance
+or release-wide Performance Qualification claims.

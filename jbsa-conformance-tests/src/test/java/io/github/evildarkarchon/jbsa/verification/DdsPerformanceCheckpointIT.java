@@ -35,7 +35,7 @@ final class DdsPerformanceCheckpointIT {
     Files.createDirectories(evidence);
     StringBuilder rows =
         new StringBuilder(
-            "round,entries,input_bytes,archive_bytes,pack_seconds,reconstruction_seconds,inspect_seconds,random_prefix_seconds,random_prefix_count,heap_pool_peak_sum_bytes\n");
+            "lane,codec,round,entries,input_bytes,archive_bytes,pack_seconds,reconstruction_seconds,inspect_seconds,random_prefix_seconds,random_prefix_count,heap_pool_peak_sum_bytes\n");
     long inputBytes;
     try (var files = Files.walk(source)) {
       inputBytes =
@@ -51,26 +51,66 @@ final class DdsPerformanceCheckpointIT {
                   })
               .sum();
     }
+    for (Lane lane :
+        List.of(
+            new Lane(
+                "fo4-dx10-v1",
+                "zlib",
+                ArchiveFamily.FO4_DDS_BA2,
+                new ArchiveEncoding(
+                    Optional.of(new WireVersion(1)),
+                    Optional.of(Ba2Subtype.DX10),
+                    OptionalLong.empty()),
+                PackOptions.Compression.ZLIB),
+            new Lane(
+                "sf-dx10-v2",
+                "zlib",
+                ArchiveFamily.STARFIELD_DDS_BA2,
+                new ArchiveEncoding(
+                    Optional.of(new WireVersion(2)),
+                    Optional.of(Ba2Subtype.DX10),
+                    OptionalLong.empty()),
+                PackOptions.Compression.ZLIB),
+            new Lane(
+                "sf-dx10-v3-m3",
+                "raw-lz4",
+                ArchiveFamily.STARFIELD_DDS_BA2,
+                new ArchiveEncoding(
+                    Optional.of(new WireVersion(3)),
+                    Optional.of(Ba2Subtype.DX10),
+                    OptionalLong.of(3)),
+                PackOptions.Compression.LZ4_RAW))) {
+      recordLane(lane, source, evidence, rows, inputBytes);
+    }
+    Files.writeString(
+        evidence.resolve("conditions.txt"),
+        "Development checkpoint only; not PV1. One discarded warmup, three retained rounds per lane.\n"
+            + "FO4 v1 zlib, Starfield v2 zlib, and Starfield v3 method-3 raw-LZ4.\n"
+            + "33 generated DDS inputs, 25 formats, 1-4 chunks, small/odd/non-square/cubemap.\n"
+            + "Public library explicit family codec; current machine with concurrent development.\n"
+            + "Random reads are 64 fresh entry opens, up to 4 KiB prefixes, not seeking.\n"
+            + "Heap pool peak sum is not simultaneous live heap or process peak memory.\n"
+            + "No oracle timing ratio, confidence bound, scratch peak, or JMH result.\n"
+            + "java.version="
+            + System.getProperty("java.version")
+            + "\n"
+            + "os.name="
+            + System.getProperty("os.name")
+            + "\n");
+  }
+
+  /** Records one warmup and three retained rounds for one family/codec implementation path. */
+  private void recordLane(
+      Lane lane, Path source, Path evidence, StringBuilder rows, long inputBytes) throws Exception {
     for (int round = 0; round < 4; round++) {
       ManagementFactory.getMemoryPoolMXBeans().stream()
           .filter(pool -> pool.getType() == MemoryType.HEAP)
           .forEach(pool -> pool.resetPeakUsage());
-      Path archive = directory.resolve("dds-" + round + ".ba2");
+      Path archive = directory.resolve(lane.id() + "-" + round + ".ba2");
       long started = System.nanoTime();
-      BethesdaArchives.standard()
-          .pack(
-              PackRequest.standard(
-                  archive,
-                  ArchiveFamily.FO4_DDS_BA2,
-                  new ArchiveEncoding(
-                      Optional.of(new WireVersion(1)),
-                      Optional.of(Ba2Subtype.DX10),
-                      OptionalLong.empty()),
-                  List.of(new PackSource.DetectedPath(source)),
-                  Optional.of(DdsTarget.PC)),
-              OperationControl.standard());
+      BethesdaArchives.standard().pack(request(lane, source, archive), OperationControl.standard());
       double pack = (System.nanoTime() - started) / 1e9;
-      Path extracted = directory.resolve("extracted-" + round);
+      Path extracted = directory.resolve("extracted-" + lane.id() + "-" + round);
       started = System.nanoTime();
       BethesdaArchives.standard()
           .extract(ExtractRequest.standard(archive, extracted), OperationControl.standard());
@@ -79,6 +119,7 @@ final class DdsPerformanceCheckpointIT {
       ArchiveInspection inspection = BethesdaArchives.standard().inspect(archive);
       double inspect = (System.nanoTime() - started) / 1e9;
       assertEquals(33, inspection.entries().size());
+      assertEquals(lane.family(), inspection.metadata().family());
       assertEquals(ArchiveDisposition.CONFORMING, inspection.assessment().disposition());
       // DDS envelopes normalize during packing. Compare opaque image bytes outside timing.
       for (EntryMetadata entry : inspection.entries()) {
@@ -116,7 +157,9 @@ final class DdsPerformanceCheckpointIT {
         rows.append(
             String.format(
                 Locale.ROOT,
-                "%d,33,%d,%d,%.9f,%.9f,%.9f,%.9f,64,%d%n",
+                "%s,%s,%d,33,%d,%d,%.9f,%.9f,%.9f,%.9f,64,%d%n",
+                lane.id(),
+                lane.codec(),
                 round,
                 inputBytes,
                 Files.size(archive),
@@ -128,19 +171,42 @@ final class DdsPerformanceCheckpointIT {
         Files.writeString(evidence.resolve("measurements.csv"), rows);
       }
     }
-    Files.writeString(
-        evidence.resolve("conditions.txt"),
-        "Development checkpoint only; not PV1. One discarded warmup, three retained rounds.\n"
-            + "33 generated DDS inputs, 25 formats, 1-4 chunks, small/odd/non-square/cubemap.\n"
-            + "Public library family-default zlib; current machine with concurrent development.\n"
-            + "Random reads are 64 fresh entry opens, up to 4 KiB prefixes, not seeking.\n"
-            + "Heap pool peak sum is not simultaneous live heap or process peak memory.\n"
-            + "No oracle timing ratio, confidence bound, scratch peak, or JMH result.\n"
-            + "java.version="
-            + System.getProperty("java.version")
-            + "\n"
-            + "os.name="
-            + System.getProperty("os.name")
-            + "\n");
   }
+
+  /** Builds an explicit public request so every retained row names its actual codec. */
+  private static PackRequest request(Lane lane, Path source, Path archive) {
+    PackRequest defaults =
+        PackRequest.standard(
+            archive,
+            lane.family(),
+            lane.encoding(),
+            List.of(new PackSource.DetectedPath(source)),
+            Optional.of(DdsTarget.PC));
+    return new PackRequest(
+        defaults.destination(),
+        defaults.family(),
+        defaults.encoding(),
+        defaults.compatibilityProfile(),
+        defaults.sources(),
+        defaults.targetPolicy(),
+        defaults.diagnosticPolicy(),
+        defaults.resourceLimits(),
+        new WorkerSelection.UpTo(1),
+        new PackOptions(
+            List.of(),
+            lane.compression(),
+            false,
+            new PackOptions.Splitting.UpToBytes(0),
+            FlagSelection.AUTOMATIC,
+            FlagSelection.AUTOMATIC),
+        defaults.ddsTarget());
+  }
+
+  /** Stable family, codec, and wire identity for one checkpoint lane. */
+  private record Lane(
+      String id,
+      String codec,
+      ArchiveFamily family,
+      ArchiveEncoding encoding,
+      PackOptions.Compression compression) {}
 }

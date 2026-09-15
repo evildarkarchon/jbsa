@@ -341,8 +341,14 @@ public final class OwnedArchive implements OpenArchive {
     }
 
     /** Admits a generated DDS envelope followed by independently bounded texture chunks. */
-    public void addDds(EntryMetadata metadata, byte[] header, List<EntryMetadata.DdsChunk> chunks)
+    public void addDds(
+        EntryMetadata metadata,
+        byte[] header,
+        List<EntryMetadata.DdsChunk> chunks,
+        PayloadCodec compressedCodec)
         throws ArchiveException {
+      if (compressedCodec != PayloadCodec.ZLIB && compressedCodec != PayloadCodec.LZ4_RAW)
+        throw context.failure(FailureKind.INTERNAL, "io.invalid-dds-codec", null);
       if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
         throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
       long decoded = header.length;
@@ -362,7 +368,7 @@ public final class OwnedArchive implements OpenArchive {
               0,
               0,
               chunks.stream().anyMatch(c -> c.packedSize() != 0)
-                  ? PayloadCodec.ZLIB
+                  ? compressedCodec
                   : PayloadCodec.STORED,
               header.clone(),
               List.copyOf(chunks)));
@@ -381,6 +387,16 @@ public final class OwnedArchive implements OpenArchive {
     private StoredEntry(EntryMetadata metadata, long offset, long streamSize, PayloadCodec codec) {
       this(metadata, offset, streamSize, codec, null, List.of());
     }
+  }
+
+  /** Charges whole General blocks but only the largest independently decoded DDS chunk. */
+  private static long rawLz4Heap(StoredEntry stored) {
+    if (stored.header() == null) return stored.metadata().decodedSize();
+    return stored.chunks().stream()
+        .filter(chunk -> chunk.packedSize() != 0)
+        .mapToLong(EntryMetadata.DdsChunk::unpackedSize)
+        .max()
+        .orElse(0);
   }
 
   /** Returns detached structural evidence, including after the owned input has closed. */
@@ -436,7 +452,7 @@ public final class OwnedArchive implements OpenArchive {
                           + switch (stored.codec()) {
                             case STORED -> 0;
                             case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
-                            case LZ4_RAW -> stored.metadata().decodedSize();
+                            case LZ4_RAW -> rawLz4Heap(stored);
                             case LZ4_FRAME -> Lz4Frame.HEAP_BYTES;
                           },
                       switch (stored.codec()) {
@@ -666,28 +682,8 @@ public final class OwnedArchive implements OpenArchive {
     private int readRawLz4(ByteBuffer destination) throws IOException {
       if (!destination.hasRemaining()) return 0;
       if (decodedRawLz4 == null) {
-        Lz4Raw.admitDecode(
-            stored.streamSize(),
-            stored.metadata().decodedSize(),
-            contentContext(stored.metadata().ordinal()));
-        decodedRawLz4 = ByteBuffer.allocate(Math.toIntExact(stored.metadata().decodedSize()));
-        ByteBuffer decoded = decodedRawLz4;
-        Lz4Raw.decode(
-            (relative, bytes) -> input.readExact(Math.addExact(stored.offset(), relative), bytes),
-            stored.streamSize(),
-            stored.metadata().decodedSize(),
-            (relative, bytes) -> {
-              if (relative != decoded.position())
-                throw contentContext(stored.metadata().ordinal())
-                    .failure(FailureKind.INTERNAL, "codec.nonsequential-output", null);
-              decoded.put(bytes);
-            },
-            () -> {
-              if (Thread.currentThread().isInterrupted()) throw new ClosedByInterruptException();
-            },
-            budget,
-            contentContext(stored.metadata().ordinal()));
-        decodedRawLz4.flip();
+        decodedRawLz4 =
+            decodeRawLz4(stored.offset(), stored.streamSize(), stored.metadata().decodedSize());
       }
       if (!decodedRawLz4.hasRemaining()) return -1;
       int count = Math.min(destination.remaining(), decodedRawLz4.remaining());
@@ -698,7 +694,31 @@ public final class OwnedArchive implements OpenArchive {
       return count;
     }
 
-    /** Streams the generated envelope and serialized chunks with at most one live zlib decoder. */
+    /** Decodes one exact raw-LZ4 span into the heap credit owned by this content cursor. */
+    private ByteBuffer decodeRawLz4(long offset, long streamSize, long decodedSize)
+        throws IOException {
+      IoContext payloadContext = contentContext(stored.metadata().ordinal());
+      Lz4Raw.admitDecode(streamSize, decodedSize, payloadContext);
+      ByteBuffer decoded = ByteBuffer.allocate(Math.toIntExact(decodedSize));
+      Lz4Raw.decode(
+          (relative, bytes) -> input.readExact(Math.addExact(offset, relative), bytes),
+          streamSize,
+          decodedSize,
+          (relative, bytes) -> {
+            if (relative != decoded.position())
+              throw payloadContext.failure(
+                  FailureKind.INTERNAL, "codec.nonsequential-output", null);
+            decoded.put(bytes);
+          },
+          () -> {
+            if (Thread.currentThread().isInterrupted()) throw new ClosedByInterruptException();
+          },
+          budget,
+          payloadContext);
+      return decoded.flip();
+    }
+
+    /** Streams the generated envelope with one live zlib decoder or decoded raw-LZ4 chunk. */
     private int readDds(ByteBuffer destination) throws IOException {
       if (!destination.hasRemaining()) return 0;
       if (position < stored.header().length) {
@@ -710,23 +730,38 @@ public final class OwnedArchive implements OpenArchive {
       while (chunkIndex < stored.chunks().size()) {
         EntryMetadata.DdsChunk chunk = stored.chunks().get(chunkIndex);
         if (chunk.packedSize() > 0) {
-          synchronized (lifetime) {
-            // Decoder creation shares close's lock so parent close cannot miss new native state.
-            if (!open || closed) throw new AsynchronousCloseException();
-            if (decoder == null)
-              decoder =
-                  JdkZlib.decoder(
-                      (offset, bytes) ->
-                          input.readExact(Math.addExact(chunk.payloadOffset(), offset), bytes),
-                      chunk.packedSize(),
-                      chunk.unpackedSize(),
-                      contentContext(stored.metadata().ordinal()));
-          }
-          int count = decoder.read(destination);
-          if (count >= 0) return count;
-          synchronized (lifetime) {
-            decoder.close();
-            decoder = null;
+          if (stored.codec() == PayloadCodec.LZ4_RAW) {
+            if (decodedRawLz4 == null)
+              decodedRawLz4 =
+                  decodeRawLz4(chunk.payloadOffset(), chunk.packedSize(), chunk.unpackedSize());
+            if (decodedRawLz4.hasRemaining()) {
+              int count = Math.min(destination.remaining(), decodedRawLz4.remaining());
+              ByteBuffer window = decodedRawLz4.slice();
+              window.limit(count);
+              destination.put(window);
+              decodedRawLz4.position(decodedRawLz4.position() + count);
+              return count;
+            }
+            decodedRawLz4 = null;
+          } else {
+            synchronized (lifetime) {
+              // Decoder creation shares close's lock so parent close cannot miss new native state.
+              if (!open || closed) throw new AsynchronousCloseException();
+              if (decoder == null)
+                decoder =
+                    JdkZlib.decoder(
+                        (offset, bytes) ->
+                            input.readExact(Math.addExact(chunk.payloadOffset(), offset), bytes),
+                        chunk.packedSize(),
+                        chunk.unpackedSize(),
+                        contentContext(stored.metadata().ordinal()));
+            }
+            int count = decoder.read(destination);
+            if (count >= 0) return count;
+            synchronized (lifetime) {
+              decoder.close();
+              decoder = null;
+            }
           }
         } else if (chunkPosition < chunk.unpackedSize()) {
           int count =

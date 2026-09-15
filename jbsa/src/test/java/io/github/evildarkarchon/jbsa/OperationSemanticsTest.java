@@ -10,9 +10,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Public mutation entry points must apply operation semantics even before a family is available.
- */
+/** Public mutation entry points apply operation semantics around every preflight rejection. */
 class OperationSemanticsTest {
   @TempDir Path directory;
 
@@ -32,9 +30,9 @@ class OperationSemanticsTest {
     assertFalse(Files.exists(directory.resolve("archive.bsa")));
   }
 
-  /** An operational preflight failure must still settle cleanup without completing preflight. */
+  /** An unsupported selector tuple must still settle cleanup without completing preflight. */
   @Test
-  void capabilityFailureEntersPreflightAndCompletesZeroCleanup() {
+  void unsupportedEncodingEntersPreflightAndCompletesZeroCleanup() {
     var snapshots = new ArrayList<ProgressSnapshot>();
     var failure =
         assertThrows(
@@ -42,7 +40,7 @@ class OperationSemanticsTest {
             () ->
                 BethesdaArchives.standard()
                     .pack(request(), new OperationControl(snapshots::add, () -> false)));
-    assertEquals(FailureKind.CAPABILITY, failure.kind());
+    assertEquals(FailureKind.UNSUPPORTED, failure.kind());
     assertEquals(
         List.of(
             new ProgressSnapshot(
@@ -90,7 +88,7 @@ class OperationSemanticsTest {
     assertEquals(1, count.get());
   }
 
-  /** Cleanup observer failure is retained without masking an earlier capability failure. */
+  /** Cleanup observer failure is retained without masking an earlier unsupported encoding. */
   @Test
   void cleanupObserverFailureRemainsSecondary() {
     var thrown = new IllegalStateException("cleanup observer");
@@ -106,14 +104,14 @@ class OperationSemanticsTest {
                               if (snapshot.phase() == OperationPhase.CLEANUP) throw thrown;
                             },
                             () -> false)));
-    assertEquals(FailureKind.CAPABILITY, failure.kind());
+    assertEquals(FailureKind.UNSUPPORTED, failure.kind());
     assertEquals(1, failure.secondaryFailures().size());
     assertEquals(FailureKind.OBSERVER, failure.secondaryFailures().getFirst().kind());
     assertSame(thrown, failure.secondaryFailures().getFirst().cause().orElseThrow());
     assertEquals(0, failure.getSuppressed().length);
   }
 
-  /** Constructs a real request for an Archive Family whose pack capability remains unavailable. */
+  /** Constructs a real request whose v2 selector conflicts with default v3 raw-LZ4 encoding. */
   private PackRequest request() {
     return PackRequest.standard(
         directory.resolve("archive.bsa"),

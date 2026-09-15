@@ -16,6 +16,67 @@ import org.junit.jupiter.api.io.TempDir;
 final class DdsBa2ReaderTest {
   @TempDir Path directory;
 
+  /** Independent Starfield wire vectors select zlib or raw LZ4 and preserve exact chunk bytes. */
+  @Test
+  void decodesIndependentStarfieldChunkProfiles() throws Exception {
+    byte[] zlib = java.util.HexFormat.of().parseHex("7801010800f7ff070000000000000000400008");
+    byte[] rawLz4 = java.util.HexFormat.of().parseHex("800700000000000000");
+    for (byte[] bytes :
+        new byte[][] {starfieldFixture(2, 0, zlib), starfieldFixture(3, 3, rawLz4)}) {
+      Path path = Files.write(directory.resolve("starfield-" + bytes[4] + ".ba2"), bytes);
+      try (OpenArchive archive = BethesdaArchives.standard().open(path, OpenOptions.standard());
+          EntryContent content = archive.entry(0).openContent()) {
+        assertEquals(ArchiveFamily.STARFIELD_DDS_BA2, archive.inspection().metadata().family());
+        assertEquals(
+            Byte.toUnsignedInt(bytes[4]),
+            archive.inspection().metadata().encoding().wireVersion().orElseThrow().value());
+        byte[] reconstructed = java.nio.channels.Channels.newInputStream(content).readAllBytes();
+        assertEquals(136, reconstructed.length);
+        assertEquals(7, reconstructed[128]);
+      }
+    }
+
+    rawLz4[0] = 0;
+    Path corrupt =
+        Files.write(directory.resolve("corrupt-starfield.ba2"), starfieldFixture(3, 3, rawLz4));
+    try (OpenArchive archive = BethesdaArchives.standard().open(corrupt, OpenOptions.standard());
+        EntryContent content = archive.entry(0).openContent()) {
+      assertEquals(
+          FailureKind.FORMAT,
+          assertThrows(
+                  ArchiveException.class,
+                  () -> java.nio.channels.Channels.newInputStream(content).readAllBytes())
+              .kind());
+    }
+  }
+
+  /** A Starfield v3 non-method-3 zlib stream is available only through the qualified profile. */
+  @Test
+  void confinesStarfieldV3ZlibFallbackToCompatibilityProfile() throws Exception {
+    byte[] zlib = java.util.HexFormat.of().parseHex("7801010800f7ff070000000000000000400008");
+    Path path = Files.write(directory.resolve("fallback.ba2"), starfieldFixture(3, 0, zlib));
+    assertEquals(
+        FailureKind.UNSUPPORTED,
+        assertThrows(ArchiveException.class, () -> BethesdaArchives.standard().inspect(path))
+            .kind());
+    OpenOptions profile =
+        new OpenOptions(
+            java.util.Optional.of(CompatibilityProfile.BSARCH_1_0_V1),
+            ResourceLimits.standard(),
+            java.util.Optional.empty());
+    try (OpenArchive archive = BethesdaArchives.standard().open(path, profile);
+        EntryContent content = archive.entry(0).openContent()) {
+      assertEquals(DetectionStatus.UNSUPPORTED_VARIANT, archive.inspection().detection().status());
+      assertEquals(
+          ArchiveDisposition.TOLERATED_NONCANONICAL,
+          archive.inspection().assessment().disposition());
+      assertTrue(
+          archive.inspection().assessment().diagnostics().stream()
+              .anyMatch(diagnostic -> diagnostic.identifier().equals("ba2.sf3-zlib-fallback")));
+      assertEquals(136, java.nio.channels.Channels.newInputStream(content).readAllBytes().length);
+    }
+  }
+
   /** A bounded stored BC1 texture reconstructs a canonical DDS header and opaque image bytes. */
   @Test
   void reconstructsStoredTexture() throws Exception {
@@ -309,6 +370,36 @@ final class DdsBa2ReaderTest {
         .put((byte) 0);
     b.putLong(72).putInt(0).putInt(8).putShort((short) 0).putShort((short) 0).putInt(0xbaadf00d);
     b.putLong(7);
+    return b.array();
+  }
+
+  /** Builds one independently framed Starfield DDS chunk without using the production packer. */
+  private static byte[] starfieldFixture(int version, int method, byte[] encoded) {
+    int headerSize = version == 2 ? 32 : 36;
+    int payloadOffset = headerSize + 48;
+    ByteBuffer b =
+        ByteBuffer.allocate(payloadOffset + encoded.length).order(ByteOrder.LITTLE_ENDIAN);
+    b.putInt(0x58445442).putInt(version).putInt(0x30315844).putInt(1).putLong(0).putLong(1);
+    if (version == 3) b.putInt(method);
+    b.putInt(0)
+        .putInt(0x00736464)
+        .putInt(0)
+        .put((byte) 0)
+        .put((byte) 1)
+        .putShort((short) 24)
+        .putShort((short) 4)
+        .putShort((short) 4)
+        .put((byte) 1)
+        .put((byte) 71)
+        .put((byte) 0)
+        .put((byte) 0)
+        .putLong(payloadOffset)
+        .putInt(encoded.length)
+        .putInt(8)
+        .putShort((short) 0)
+        .putShort((short) 0)
+        .putInt(0xbaadf00d)
+        .put(encoded);
     return b.array();
   }
 }

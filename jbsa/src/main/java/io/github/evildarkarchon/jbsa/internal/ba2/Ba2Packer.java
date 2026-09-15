@@ -26,16 +26,22 @@ public final class Ba2Packer {
     OperationReport result = null;
     var failures = new FailureRetention(request.resourceLimits(), Operation.PACK);
     ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context);
-    boolean dds = request.family() == ArchiveFamily.FO4_DDS_BA2;
-    boolean starfieldGeneral = request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2;
+    boolean dds =
+        request.family() == ArchiveFamily.FO4_DDS_BA2
+            || request.family() == ArchiveFamily.STARFIELD_DDS_BA2;
+    boolean starfield =
+        request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2
+            || request.family() == ArchiveFamily.STARFIELD_DDS_BA2;
     try {
       operation.begin();
       var encoding =
           io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names.encoding(
               request.compatibilityProfile(), context);
       boolean rawLz4 =
-          starfieldGeneral
+          starfield
               && (request.options().compression() == PackOptions.Compression.LZ4_RAW
+                  || (request.family() == ArchiveFamily.STARFIELD_DDS_BA2
+                      && request.options().compression() == PackOptions.Compression.FAMILY_DEFAULT)
                   || request
                       .options()
                       .entryCompression()
@@ -47,7 +53,7 @@ public final class Ba2Packer {
         throw context.failure(FailureKind.UNSUPPORTED, "ba2.mixed-compressed-codecs", null);
       ArchiveEncoding archiveEncoding =
           new ArchiveEncoding(
-              Optional.of(new WireVersion(starfieldGeneral ? (rawLz4 ? 3 : 2) : 1)),
+              Optional.of(new WireVersion(starfield ? (rawLz4 ? 3 : 2) : 1)),
               Optional.of(dds ? Ba2Subtype.DX10 : Ba2Subtype.GNRL),
               rawLz4 ? OptionalLong.of(3) : OptionalLong.empty());
       if (!request.encoding().equals(archiveEncoding))
@@ -58,13 +64,12 @@ public final class Ba2Packer {
       if (request.options().compression() != PackOptions.Compression.FAMILY_DEFAULT
           && request.options().compression() != PackOptions.Compression.STORED
           && request.options().compression() != PackOptions.Compression.ZLIB
-          && (!starfieldGeneral
-              || request.options().compression() != PackOptions.Compression.LZ4_RAW))
+          && (!starfield || request.options().compression() != PackOptions.Compression.LZ4_RAW))
         throw context.failure(FailureKind.UNSUPPORTED, "ba2.unsupported-codec", null);
       for (var choice : request.options().entryCompression().values())
         if (choice != PackOptions.Compression.STORED
             && choice != PackOptions.Compression.ZLIB
-            && (!starfieldGeneral || choice != PackOptions.Compression.LZ4_RAW))
+            && (!starfield || choice != PackOptions.Compression.LZ4_RAW))
           throw context.failure(FailureKind.UNSUPPORTED, "ba2.unsupported-entry-codec", null);
       if (dds
           && (request.options().compression() == PackOptions.Compression.STORED
@@ -167,7 +172,8 @@ public final class Ba2Packer {
           item.offset = item.rawOffset;
           item.size = item.source.size();
           if (dds) {
-            stabilizeDds(item, stable, request, operation, processing, budget, chunkCandidates);
+            stabilizeDds(
+                item, stable, request, operation, processing, budget, chunkCandidates, rawLz4);
             long entryDecoded =
                 item.texture.payloadSize()
                     + DdsEnvelope.canonicalHeader(
@@ -257,8 +263,7 @@ public final class Ba2Packer {
       }
       stable.seal();
       List<List<Item>> parts = split(items, request.options());
-      long headerSize =
-          GeneralBa2Layout.headerSize(archiveEncoding.wireVersion().orElseThrow().value());
+      long headerSize = Ba2Layout.headerSize(archiveEncoding.wireVersion().orElseThrow().value());
       for (var part : parts)
         budget.metadata(
             headerSize + part.stream().mapToLong(i -> i.recordSize() + i.name.length + 2L).sum());
@@ -419,7 +424,7 @@ public final class Ba2Packer {
       ArchiveEncoding encoding)
       throws IOException {
     long version = encoding.wireVersion().orElseThrow().value();
-    int headerSize = GeneralBa2Layout.headerSize(version);
+    int headerSize = Ba2Layout.headerSize(version);
     long payload = headerSize + items.stream().mapToLong(Item::recordSize).sum();
     output.reserve(payload);
     Map<Object, Long> emitted = new IdentityHashMap<>();
@@ -674,7 +679,8 @@ public final class Ba2Packer {
       OperationSession operation,
       IoContext context,
       ResourceBudget budget,
-      Map<String, List<Chunk>> candidates)
+      Map<String, List<Chunk>> candidates,
+      boolean rawLz4)
       throws IOException {
     ByteBuffer header = ByteBuffer.allocate((int) Math.min(164, item.source.size()));
     stable.read(item.rawOffset, header);
@@ -721,13 +727,24 @@ public final class Ba2Packer {
       }
       if (chunk.owner == chunk) {
         chunk.offset = stable.size();
-        try (var input = sliceChannel(stable, chunk.rawOffset, chunk.rawSize)) {
-          JdkZlib.encode(
-              input,
+        if (rawLz4) {
+          Lz4Raw.encode(
+              (offset, bytes) -> stable.read(chunk.rawOffset + offset, bytes),
               chunk.rawSize,
               (offset, bytes) -> stable.write(chunk.offset + offset, bytes),
               () -> operation.checkpoint(OperationPhase.PROCESSING, context.ordinal()),
-              context);
+              budget,
+              context,
+              12);
+        } else {
+          try (var input = sliceChannel(stable, chunk.rawOffset, chunk.rawSize)) {
+            JdkZlib.encode(
+                input,
+                chunk.rawSize,
+                (offset, bytes) -> stable.write(chunk.offset + offset, bytes),
+                () -> operation.checkpoint(OperationPhase.PROCESSING, context.ordinal()),
+                context);
+          }
         }
         chunk.size = stable.size() - chunk.offset;
         checkU32(chunk.size, context);

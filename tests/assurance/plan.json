@@ -31,6 +31,20 @@
       "risk_tags": ["embedded-names", "lz4-frame"]
     },
     {
+      "id": "sf-dx10-v2",
+      "family": "sf-dx10-v2",
+      "behavioral_variant": "starfield-dds-v2-zlib-v1",
+      "status": "qualified",
+      "risk_tags": ["dds-ba2", "extra-header", "zlib", "reconstruction", "random-access"]
+    },
+    {
+      "id": "sf-dx10-v3-m3",
+      "family": "sf-dx10-v3-m3",
+      "behavioral_variant": "starfield-dds-v3-method3-raw-lz4-v1",
+      "status": "qualified",
+      "risk_tags": ["dds-ba2", "extra-header", "method-field", "raw-lz4", "native-codec", "reconstruction", "random-access"]
+    },
+    {
       "id": "sf-gnrl-v2",
       "family": "sf-gnrl-v2",
       "behavioral_variant": "starfield-general-v2-zlib-v1",
@@ -71,6 +85,26 @@
     {"id": "JBSA-CODEC-010"},
     {"id": "JBSA-CODEC-011"},
     {"id": "JBSA-CODEC-012"},
+    {"id": "JBSA-DDS-001"},
+    {"id": "JBSA-DDS-002"},
+    {"id": "JBSA-DDS-003"},
+    {"id": "JBSA-DDS-004"},
+    {"id": "JBSA-DDS-005"},
+    {"id": "JBSA-DDS-006"},
+    {"id": "JBSA-DDS-008"},
+    {"id": "JBSA-DDS-009"},
+    {"id": "JBSA-DDS-010"},
+    {"id": "JBSA-DDS-011"},
+    {"id": "JBSA-DDS-012"},
+    {"id": "JBSA-DDS-013"},
+    {"id": "JBSA-DX10-001"},
+    {"id": "JBSA-DX10-002"},
+    {"id": "JBSA-DX10-003"},
+    {"id": "JBSA-DX10-004"},
+    {"id": "JBSA-DX10-005"},
+    {"id": "JBSA-DX10-006"},
+    {"id": "JBSA-DX10-007"},
+    {"id": "JBSA-DX10-008"},
     {"id": "JBSA-GNRL-001"},
     {"id": "JBSA-GNRL-002"},
     {"id": "JBSA-GNRL-003"},
@@ -94,13 +128,15 @@
     {
       "id": "decode-entries",
       "expected": "Recognized archives expose the specified ordered names, metadata, diagnostics, and decoded bytes.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-001", "JBSA-ASR-002", "JBSA-ASR-003", "JBSA-ASR-006", "JBSA-ASR-007", "JBSA-ASR-008"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-001"],
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
         "bsa-069": ["JBSA-BSA-001"],
+        "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-002", "JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DX10-005", "JBSA-DDS-011"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-002", "JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DX10-005", "JBSA-DDS-011"],
         "sf-gnrl-v2": ["JBSA-GNRL-001", "JBSA-GNRL-002", "JBSA-GNRL-004", "JBSA-GNRL-005", "JBSA-GNRL-006", "JBSA-GNRL-008", "JBSA-GNRL-009"],
         "sf-gnrl-v3-m3": ["JBSA-GNRL-001", "JBSA-GNRL-002", "JBSA-GNRL-004", "JBSA-GNRL-005", "JBSA-GNRL-006", "JBSA-GNRL-008", "JBSA-GNRL-009"]
       },
@@ -109,6 +145,8 @@
         "bsa-067": ["io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#readsAndExtractsIndependentWireVectors"],
         "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#readsAndExtractsIndependentGameVectors"],
         "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#readsAndExtractsIndependentGameVectors"],
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"]
       },
@@ -116,6 +154,16 @@
         "bsa-069": [
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java",
           "tests/fixtures/bsa069/manifest.json"
+        ],
+        "sf-dx10-v2": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "tests/fixtures/starfield-dds/manifest.json",
+          "tests/fixtures/starfield-dds/starfield-dds-v2-zlib.hex"
+        ],
+        "sf-dx10-v3-m3": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "tests/fixtures/starfield-dds/manifest.json",
+          "tests/fixtures/starfield-dds/starfield-dds-v3-raw-lz4.hex"
         ]
       }
     },
@@ -142,13 +190,15 @@
     {
       "id": "malformed-input",
       "expected": "Malformed structures are rejected or classified as the specified tolerated noncanonical disposition without unbounded reads.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-004"],
         "bsa-067": ["JBSA-BSA-014"],
         "bsa-068": ["JBSA-BSA-014"],
         "bsa-069": ["JBSA-BSA-014"],
+        "sf-dx10-v2": ["JBSA-DX10-004", "JBSA-DX10-007", "JBSA-DDS-011", "JBSA-CODEC-012"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-004", "JBSA-DX10-007", "JBSA-DDS-011", "JBSA-CODEC-008", "JBSA-CODEC-012"],
         "sf-gnrl-v2": ["JBSA-GNRL-010", "JBSA-CODEC-012"],
         "sf-gnrl-v3-m3": ["JBSA-GNRL-010", "JBSA-CODEC-008", "JBSA-CODEC-012"]
       },
@@ -187,6 +237,14 @@
           "io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsMalformedIndexAndUnsignedSizeSpans",
           "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest#unsafeNamesRemainInspectableWithAllApplicableWarnings"
         ],
+        "sf-dx10-v2": [
+          "io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits",
+          "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#decodesIndependentChunksAndRejectsCorruptTail"
+        ],
+        "sf-dx10-v3-m3": [
+          "io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits",
+          "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#decodesIndependentChunksAndRejectsCorruptTail"
+        ],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2ReaderTest#diagnosesNoncanonicalStarfieldExtraHeader"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#rejectsUnsupportedMethodAndInvalidRawLz4", "io.github.evildarkarchon.jbsa.Ba2ReaderTest#rejectsInvalidAndOversizeStarfieldRawBlocksWithoutOutputEffects"]
       },
@@ -197,18 +255,30 @@
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/BsaReaderTest.java",
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/OwnedArchiveValidationTest.java",
           "build/test-bsa069-validator.py"
+        ],
+        "sf-dx10-v2": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
+        ],
+        "sf-dx10-v3-m3": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
         ]
       }
     },
     {
       "id": "unsupported-codec-decode",
       "expected": "Unsupported compressed payload encodings fail with a stable unsupported or format outcome before unsafe consumption.",
-      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
         "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"],
+        "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-004"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-004"],
         "sf-gnrl-v2": ["JBSA-GNRL-002", "JBSA-GNRL-005"],
         "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-005"]
       },
@@ -219,6 +289,8 @@
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsMalformedLz4FramesAtContentEof",
           "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#rejectsCorruptionTruncationTrailingFramesAndWrongOutputSize"
         ],
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2ReaderTest#appliesQualifiedVersionThreeZlibFallbackWithoutChangingRecognition"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#rejectsUnsupportedMethodAndInvalidRawLz4"]
       },
@@ -227,19 +299,29 @@
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4FrameTest.java",
           "jbsa/src/main/resources/META-INF/jbsa-bsa-069-lz4-profile.json"
+        ],
+        "sf-dx10-v2": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
+        ],
+        "sf-dx10-v3-m3": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
         ]
       }
     },
     {
       "id": "unsupported-codec-encode",
       "expected": "Unsupported encode codecs are rejected before opening sources or publishing destination artifacts.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-004"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-001"],
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
         "bsa-069": ["JBSA-BSA-001", "JBSA-CLI-005"],
+        "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-006", "JBSA-CLI-005"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-006", "JBSA-CLI-005"],
         "sf-gnrl-v2": ["JBSA-GNRL-002", "JBSA-GNRL-011"],
         "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-011"]
       },
@@ -251,6 +333,8 @@
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsForeignCodecsBeforeSourceEffects",
           "io.github.evildarkarchon.jbsa.cli.MainTest#rejectsInvalidSseCodecCombinations"
         ],
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.DdsBa2PackTest#rejectsStoredInEveryProfileBeforeOpeningSource"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.DdsBa2PackTest#rejectsStoredInEveryProfileBeforeOpeningSource"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsInvalidStarfieldCodecCombinationsBeforePayloads"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsInvalidStarfieldCodecCombinationsBeforePayloads"]
       },
@@ -258,6 +342,14 @@
         "bsa-069": [
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
           "jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java"
+        ],
+        "sf-dx10-v2": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
+        ],
+        "sf-dx10-v3-m3": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
         ]
       }
     },
@@ -295,13 +387,15 @@
     {
       "id": "unsafe-extraction",
       "expected": "Unsafe or colliding entry names are rejected before destination effects and cannot escape the extraction root.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-004"],
         "bsa-067": ["JBSA-BSA-014"],
         "bsa-068": ["JBSA-BSA-014"],
         "bsa-069": ["JBSA-BSA-014"],
+        "sf-dx10-v2": ["JBSA-DX10-007"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-007"],
         "sf-gnrl-v2": ["JBSA-GNRL-008", "JBSA-GNRL-010", "JBSA-GNRL-011"],
         "sf-gnrl-v3-m3": ["JBSA-GNRL-008", "JBSA-GNRL-010", "JBSA-GNRL-011"]
       },
@@ -313,6 +407,8 @@
           "io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects",
           "io.github.evildarkarchon.jbsa.verification.PublicMetadataContractIT#normalizedIdentityPreservesNonAsciiSpellingAndRejectsUnsafeOrUnmappableNames"
         ],
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"]
       },
@@ -320,6 +416,14 @@
         "bsa-069": [
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/ExtractionPathsTest.java",
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicMetadataContractIT.java"
+        ],
+        "sf-dx10-v2": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/ExtractionPathsTest.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
+        ],
+        "sf-dx10-v3-m3": [
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/ExtractionPathsTest.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
         ]
       }
     },
@@ -343,12 +447,21 @@
       "capability_requirements": {
         "bsa-067": ["JBSA-BSA-009"],
         "bsa-068": ["JBSA-BSA-009"],
+        "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-004", "JBSA-DX10-006", "JBSA-DDS-013"],
         "sf-gnrl-v2": ["JBSA-GNRL-003", "JBSA-GNRL-005"]
       },
       "test_selectors": {
         "bsa-067": ["io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#independentlyValidatesPackedArchives"],
         "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#independentlyValidatesStoredZlibMixedAndEmbeddedOutput"],
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#writesCodecSelectedHeadersAndRoundTrips"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#independentlyValidatesStarfieldWireVersions"]
+      },
+      "evidence_refs": {
+        "sf-dx10-v2": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "tests/fixtures/starfield-dds/manifest.json",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
+        ]
       }
     },
     {
@@ -373,15 +486,19 @@
       "id": "oracle-differential",
       "expected": "JBSA and the digest-pinned Conformance Oracle cross-decode equivalent semantic content in both applicable directions.",
       "environments": ["local", "release"],
-      "applies_to": {"families": ["bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
         "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"],
+        "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-004", "JBSA-DDS-011"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-004", "JBSA-DDS-011"],
         "sf-gnrl-v2": ["JBSA-GNRL-002", "JBSA-GNRL-005"],
         "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-005"]
       },
       "test_selectors": {
         "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#pinnedOracleCrossDecodesEveryFraming"],
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#pinnedLocalOracleCrossDecodesBothDirections"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#pinnedLocalOracleCrossDecodesBothDirections"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#pinnedLocalOracleCrossDecodesEveryStarfieldCodec"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#pinnedLocalOracleCrossDecodesEveryStarfieldCodec"]
       },
@@ -389,6 +506,16 @@
         "bsa-069": [
           "build/run-bsa-oracle.ps1",
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java"
+        ],
+        "sf-dx10-v2": [
+          "build/run-dds-oracle.ps1",
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
+        ],
+        "sf-dx10-v3-m3": [
+          "build/run-dds-oracle.ps1",
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
+          "docs/development/evidence/issue46-starfield-dds/qualification.json"
         ],
         "sf-gnrl-v2": [
           "build/run-ba2-oracle.ps1",
@@ -533,15 +660,19 @@
       "id": "performance-checkpoint",
       "expected": "Focused Archive Family checkpoints record throughput, memory observations, and derived output size under bound conditions.",
       "environments": ["local"],
-      "applies_to": {"families": ["bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-005"],
       "capability_requirements": {
         "bsa-069": ["JBSA-BSA-010"],
+        "sf-dx10-v2": ["JBSA-DX10-004", "JBSA-DDS-011"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-004", "JBSA-DDS-011", "JBSA-CODEC-008"],
         "sf-gnrl-v2": ["JBSA-GNRL-003", "JBSA-GNRL-005"],
         "sf-gnrl-v3-m3": ["JBSA-GNRL-003", "JBSA-GNRL-005", "JBSA-CODEC-008"]
       },
       "test_selectors": {
         "bsa-069": ["io.github.evildarkarchon.jbsa.verification.BsaPerformanceCheckpointIT#recordsCurrentMachineCheckpoint"],
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT#recordsChunkingReconstructionAndRandomAccess"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT#recordsChunkingReconstructionAndRandomAccess"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralPerformanceCheckpointIT#recordsZlibAndRawLz4Checkpoint"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralPerformanceCheckpointIT#recordsZlibAndRawLz4Checkpoint"]
       },
@@ -550,6 +681,14 @@
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BsaPerformanceCheckpointIT.java",
           "docs/development/evidence/issue44-performance/measurements.csv",
           "docs/development/evidence/issue44-performance/conditions.txt"
+        ],
+        "sf-dx10-v2": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/DdsPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue46-starfield-dds/performance-checkpoint.json"
+        ],
+        "sf-dx10-v3-m3": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/DdsPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue46-starfield-dds/performance-checkpoint.json"
         ],
         "sf-gnrl-v2": [
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldGeneralPerformanceCheckpointIT.java",
@@ -600,12 +739,15 @@
       "applies_to": {"risk_tags": ["raw-lz4"]},
       "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
       "capability_requirements": {
+        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-004", "JBSA-DX10-006", "JBSA-DDS-013", "JBSA-CODEC-002"],
         "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-003", "JBSA-GNRL-005", "JBSA-CODEC-002"]
       },
       "test_selectors": {
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#writesCodecSelectedHeadersAndRoundTrips", "io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#packagedProfileIdentifiesLevelTwelveRawLz4"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#writesCodecSelectedHeadersAndRoundTrips", "io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#packagedProfileIdentifiesLevelTwelveRawLz4"]
       },
       "evidence_refs": {
+        "sf-dx10-v3-m3": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "tests/fixtures/starfield-dds/manifest.json", "docs/development/evidence/issue46-starfield-dds/qualification.json"],
         "sf-gnrl-v3-m3": ["jbsa/src/main/resources/META-INF/jbsa-starfield-general-lz4-profile.json", "tests/fixtures/synthetic/manifest.json"]
       }
     },
@@ -656,17 +798,110 @@
       }
     },
     {
+      "id": "starfield-dds-stored-mixed-decode",
+      "expected": "Bounded stored DDS chunks remain diagnosed noncanonical and mixed stored/compressed chunks reconstruct in serialized order.",
+      "applies_to": {"families": ["sf-dx10-v2", "sf-dx10-v3-m3"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-dx10-v2": ["JBSA-DX10-004", "JBSA-DX10-005", "JBSA-DX10-006", "JBSA-DDS-011"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-004", "JBSA-DX10-005", "JBSA-DX10-006", "JBSA-DDS-011"]
+      },
+      "test_selectors": {
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#reconstructsOpaqueMipPayloadAcrossVersionAndCodecInteractions"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#reconstructsOpaqueMipPayloadAcrossVersionAndCodecInteractions"]
+      },
+      "evidence_refs": {
+        "sf-dx10-v2": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "tests/fixtures/starfield-dds/manifest.json", "docs/development/evidence/issue46-starfield-dds/qualification.json"],
+        "sf-dx10-v3-m3": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "tests/fixtures/starfield-dds/manifest.json", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
+      }
+    },
+    {
+      "id": "starfield-dds-chunk-reconstruction",
+      "expected": "One through four independently framed DDS chunks retain contiguous mip ranges and reconstruct canonical envelopes with opaque payload bytes in serialized order.",
+      "applies_to": {"families": ["sf-dx10-v2", "sf-dx10-v3-m3"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-dx10-v2": ["JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DX10-005", "JBSA-DX10-008", "JBSA-DDS-001", "JBSA-DDS-002", "JBSA-DDS-003", "JBSA-DDS-004", "JBSA-DDS-005", "JBSA-DDS-006", "JBSA-DDS-008", "JBSA-DDS-009", "JBSA-DDS-010", "JBSA-DDS-011", "JBSA-DDS-012", "JBSA-DDS-013"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DX10-005", "JBSA-DX10-008", "JBSA-DDS-001", "JBSA-DDS-002", "JBSA-DDS-003", "JBSA-DDS-004", "JBSA-DDS-005", "JBSA-DDS-006", "JBSA-DDS-008", "JBSA-DDS-009", "JBSA-DDS-010", "JBSA-DDS-011", "JBSA-DDS-012", "JBSA-DDS-013"]
+      },
+      "test_selectors": {
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#reconstructsOpaqueMipPayloadAcrossVersionAndCodecInteractions", "io.github.evildarkarchon.jbsa.DdsBa2PackTest#partitionsAndSharesChunksWithoutChangingMipRanges"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#reconstructsOpaqueMipPayloadAcrossVersionAndCodecInteractions", "io.github.evildarkarchon.jbsa.DdsBa2PackTest#partitionsAndSharesChunksWithoutChangingMipRanges"]
+      },
+      "evidence_refs": {
+        "sf-dx10-v2": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java", "tests/fixtures/starfield-dds/manifest.json"],
+        "sf-dx10-v3-m3": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java", "tests/fixtures/starfield-dds/manifest.json"]
+      }
+    },
+    {
+      "id": "starfield-dds-independent-validation",
+      "expected": "An independent bounded scanner validates Starfield DDS v2 zlib and v3 method-3 raw-LZ4 chunk headers, payload consumption, and reconstructed DDS bytes.",
+      "applies_to": {"families": ["sf-dx10-v2", "sf-dx10-v3-m3"]},
+      "requirements": ["JBSA-ASR-003"],
+      "capability_requirements": {
+        "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-002", "JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DDS-011"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-002", "JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DDS-011", "JBSA-CODEC-012"]
+      },
+      "test_selectors": {
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#independentlyValidatesStarfieldWireVersions"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#independentlyValidatesStarfieldWireVersions"]
+      },
+      "evidence_refs": {
+        "sf-dx10-v2": ["build/validate-dds-wire.py", "tests/fixtures/starfield-dds/starfield-dds-v2-zlib.hex", "tests/fixtures/starfield-dds/manifest.json", "docs/development/evidence/issue46-starfield-dds/qualification.json"],
+        "sf-dx10-v3-m3": ["build/validate-dds-wire.py", "tests/fixtures/starfield-dds/starfield-dds-v3-raw-lz4.hex", "tests/fixtures/starfield-dds/manifest.json", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
+      }
+    },
+    {
+      "id": "starfield-dds-cli-selection",
+      "expected": "The thin CLI selects Starfield DDS v2 zlib or v3 method-3 raw-LZ4, rejects stored DDS encoding, and cross-decodes the result.",
+      "applies_to": {"families": ["sf-dx10-v2", "sf-dx10-v3-m3"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-006", "JBSA-CLI-004", "JBSA-CLI-005"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-006", "JBSA-CLI-004", "JBSA-CLI-005"]
+      },
+      "test_selectors": {
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.cli.MainTest#packsAndUnpacksStarfieldDdsVariants"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.cli.MainTest#packsAndUnpacksStarfieldDdsVariants"]
+      },
+      "evidence_refs": {
+        "sf-dx10-v2": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"],
+        "sf-dx10-v3-m3": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
+      }
+    },
+    {
+      "id": "starfield-dds-bounded-resources",
+      "expected": "DDS chunk decoding and reconstruction admit packed, decoded, entry, native, and output bounds before allocation or publication effects.",
+      "applies_to": {"families": ["sf-dx10-v2", "sf-dx10-v3-m3"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-dx10-v2": ["JBSA-DX10-004", "JBSA-DX10-007", "JBSA-DDS-011", "JBSA-SCHED-006"],
+        "sf-dx10-v3-m3": ["JBSA-DX10-004", "JBSA-DX10-007", "JBSA-DDS-011", "JBSA-CODEC-008", "JBSA-CODEC-010", "JBSA-SCHED-006"]
+      },
+      "test_selectors": {
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#enforcesEntryMetadataAndReconstructedContentLimits"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#enforcesEntryMetadataAndReconstructedContentLimits"]
+      },
+      "evidence_refs": {
+        "sf-dx10-v2": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"],
+        "sf-dx10-v3-m3": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
+      }
+    },
+    {
       "id": "starfield-native-resource-safety",
       "expected": "Raw-LZ4 native capability, size admission, memory credits, invalid input, and stable failure mapping are checked before output effects.",
       "applies_to": {"risk_tags": ["native-codec", "raw-lz4"]},
       "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
       "capability_requirements": {
+        "sf-dx10-v3-m3": ["JBSA-DX10-004", "JBSA-CODEC-008", "JBSA-CODEC-009", "JBSA-CODEC-010", "JBSA-CODEC-011", "JBSA-CODEC-012"],
         "sf-gnrl-v3-m3": ["JBSA-CODEC-008", "JBSA-CODEC-009", "JBSA-CODEC-010", "JBSA-CODEC-011", "JBSA-CODEC-012"]
       },
       "test_selectors": {
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#rejectsOversizedUnsplittableBlocksBeforeEffects", "io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#rejectsInvalidBlocksAndSizeMismatch", "io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts"]
       },
       "evidence_refs": {
+        "sf-dx10-v3-m3": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"],
         "sf-gnrl-v3-m3": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4RawTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java", "jbsa/src/main/resources/META-INF/jbsa-starfield-general-lz4-profile.json", "docs/development/evidence/issue45-qualification/results.txt"]
       }
     },
@@ -676,10 +911,15 @@
       "applies_to": {"risk_tags": ["raw-lz4"]},
       "requirements": ["JBSA-ASR-004"],
       "capability_requirements": {
+        "sf-dx10-v3-m3": ["JBSA-DX10-004", "JBSA-CODEC-010", "JBSA-SCHED-010"],
         "sf-gnrl-v3-m3": ["JBSA-CODEC-010", "JBSA-SCHED-010"]
       },
       "test_selectors": {
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#normalizesCallbackFaultsAndReturnsCreditOnCancellation"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#normalizesCallbackFaultsAndReturnsCreditOnCancellation"]
+      },
+      "evidence_refs": {
+        "sf-dx10-v3-m3": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4RawTest.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
       }
     }
   ],
@@ -693,8 +933,8 @@
       "capabilities": ["bsa-067", "bsa-068", "bsa-069"]
     },
     {
-      "paths": ["jbsa/src/main/java/**/ba2/**", "jbsa/src/test/java/**/Ba2*.java", "tests/fixtures/starfield-general/**", "tests/fixtures/synthetic/artifacts/archives/sf-gnrl-*.ba2"],
-      "capabilities": ["sf-gnrl-v2", "sf-gnrl-v3-m3"]
+      "paths": ["jbsa/src/main/java/**/ba2/**", "jbsa/src/test/java/**/Ba2*.java", "jbsa/src/test/java/**/Dds*.java", "tests/fixtures/starfield-dds/**", "tests/fixtures/starfield-general/**", "tests/fixtures/synthetic/artifacts/archives/sf-gnrl-*.ba2"],
+      "capabilities": ["sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]
     },
     {
       "paths": ["build/assurance/**", "tests/assurance/**", "build-logic/**", "jbsa/src/main/java/io/github/evildarkarchon/jbsa/*.java", "jbsa-cli/**", "jbsa-conformance-tests/**", "docs/spec/**", ".github/workflows/**"],
@@ -933,6 +1173,48 @@
         "workers": [1, 2, 4, 8, 16],
         "status": "planned",
         "release_gate": true
+      },
+      {
+        "id": "sf-dx10-v2-zlib-checkpoint",
+        "surface": "throughput",
+        "workload": "starfield-dds-zlib-chunk-reconstruction-random-access",
+        "implementation_path": "dds-zlib-v2",
+        "risks": ["chunk-partition", "zlib-throughput", "reconstruction", "random-access", "heap-peak", "output-size"],
+        "metrics": ["bytes-per-second", "latency", "peak-working-set", "output-size"],
+        "capability_id": "sf-dx10-v2",
+        "codec": "zlib",
+        "status": "qualified",
+        "qualification_scope": "development-checkpoint",
+        "environments": ["local"],
+        "release_gate": false,
+        "test_selectors": [
+          "io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT#recordsChunkingReconstructionAndRandomAccess"
+        ],
+        "evidence_refs": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/DdsPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue46-starfield-dds/performance-checkpoint.json"
+        ]
+      },
+      {
+        "id": "sf-dx10-v3-raw-lz4-checkpoint",
+        "surface": "throughput",
+        "workload": "starfield-dds-raw-lz4-chunk-reconstruction-random-access",
+        "implementation_path": "dds-raw-lz4-v3-method3",
+        "risks": ["chunk-partition", "method-dispatch", "native-loading", "native-credits", "reconstruction", "random-access", "heap-peak", "output-size"],
+        "metrics": ["bytes-per-second", "latency", "peak-working-set", "output-size"],
+        "capability_id": "sf-dx10-v3-m3",
+        "codec": "raw-lz4",
+        "status": "qualified",
+        "qualification_scope": "development-checkpoint",
+        "environments": ["local"],
+        "release_gate": false,
+        "test_selectors": [
+          "io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT#recordsChunkingReconstructionAndRandomAccess"
+        ],
+        "evidence_refs": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/DdsPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue46-starfield-dds/performance-checkpoint.json"
+        ]
       },
       {
         "id": "sf-gnrl-v2-zlib-checkpoint",

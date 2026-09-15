@@ -103,7 +103,8 @@ public final class Main {
                             ResourceLimits.standard(),
                             invocation.workers(),
                             invocation.packOptions(),
-                            invocation.family() == ArchiveFamily.FO4_DDS_BA2
+                            (invocation.family() == ArchiveFamily.FO4_DDS_BA2
+                                    || invocation.family() == ArchiveFamily.STARFIELD_DDS_BA2)
                                 ? Optional.of(io.github.evildarkarchon.jbsa.DdsTarget.PC)
                                 : Optional.empty()),
                         mutation.control())
@@ -197,8 +198,13 @@ public final class Main {
             Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.GNRL),
             raw ? java.util.OptionalLong.of(3) : java.util.OptionalLong.empty());
       }
-      case STARFIELD_DDS_BA2 ->
-          throw new IllegalArgumentException("Starfield DDS pack is not an implemented CLI target");
+      case STARFIELD_DDS_BA2 -> {
+        boolean raw = invocation.packOptions().compression() == PackOptions.Compression.LZ4_RAW;
+        yield new ArchiveEncoding(
+            Optional.of(new io.github.evildarkarchon.jbsa.WireVersion(raw ? 3 : 2)),
+            Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.DX10),
+            raw ? java.util.OptionalLong.of(3) : java.util.OptionalLong.empty());
+      }
     };
   }
 
@@ -384,6 +390,8 @@ public final class Main {
         "Fallout 4 General BA2 pack: -fo4 [-z|-z:zlib] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println(
         "Starfield General BA2 pack: -sf1 [-z|-z:zlib|-z:lz4] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
+    output.println(
+        "Starfield DDS BA2 pack: -sf1dds [-z|-z:zlib|-z:lz4] (PC DDS only; always compressed)");
     output.println(
         "jbsa [--compatibility-profile=bsarch-1.0/v1] pack <source1+source2+...> <archive> [options]");
     output.println(

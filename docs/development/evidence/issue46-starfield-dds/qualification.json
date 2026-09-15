@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "issue": 46,
+  "kind": "starfield-dds-development-qualification",
+  "recorded_on": "2026-09-14",
+  "automated_conformance": true,
+  "assurance_capsule": {
+    "path": "tests/assurance/issue46-local-capsule.json",
+    "result": "PASS",
+    "tier": "affected",
+    "scenario_count": 60,
+    "digest": "sha256:ecd228fd4001e55e3181f4a8b9c45d21949e7a60dd159eac5d96a6f84d914002"
+  },
+  "commands": [
+    {
+      "command": "python -m unittest build/test-dds-wire.py",
+      "result": "PASS",
+      "tests": 7
+    },
+    {
+      "command": ".\\gradlew.bat --no-daemon :jbsa-conformance-tests:ddsConformanceTest --tests io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT",
+      "result": "PASS",
+      "tests": 7,
+      "skipped": 1,
+      "skip": "local oracle opt-in exercised separately"
+    },
+    {
+      "command": ".\\gradlew.bat --no-daemon '-Djbsa.dds.local=true' :jbsa-conformance-tests:ddsConformanceTest --tests io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT.pinnedLocalOracleCrossDecodesBothDirections",
+      "result": "PASS",
+      "tests": 1
+    }
+  ],
+  "fixtures": [
+    "tests/fixtures/starfield-dds/starfield-dds-v2-zlib.hex",
+    "tests/fixtures/starfield-dds/starfield-dds-v3-raw-lz4.hex"
+  ],
+  "independent_validator": {
+    "path": "build/validate-dds-wire.py",
+    "result": "PASS",
+    "role": "equivalent independent wire and reconstructed-envelope validator"
+  },
+  "local_oracle": {
+    "result": "PASS",
+    "sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2",
+    "directions": [
+      "oracle-to-jbsa-zlib",
+      "jbsa-to-oracle-zlib",
+      "oracle-to-jbsa-raw-lz4",
+      "jbsa-to-oracle-raw-lz4"
+    ],
+    "raw_evidence_root": "target/dds-local-evidence/issue46"
+  },
+  "directxtex": {
+    "result": "UNAVAILABLE",
+    "reason": "No jbsa.directxtex.path was configured; the independent bounded validator supplied the accepted equivalent check."
+  }
+}

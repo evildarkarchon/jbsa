@@ -103,7 +103,16 @@ record Invocation(
         require(false, "Duplicate switch: " + key);
       }
       switch (key) {
-        case "-tes3", "-tes4", "-fo3", "-fnv", "-tes5", "-sse", "-fo4", "-fo4dds", "-sf1" -> {
+        case "-tes3",
+            "-tes4",
+            "-fo3",
+            "-fnv",
+            "-tes5",
+            "-sse",
+            "-fo4",
+            "-fo4dds",
+            "-sf1",
+            "-sf1dds" -> {
           require(
               pack && option.equals(key) && (family == null || profile.isPresent()),
               "Inapplicable or duplicate family");
@@ -116,6 +125,7 @@ record Invocation(
                 case "-sse" -> ArchiveFamily.SSE_BSA;
                 case "-fo4dds" -> ArchiveFamily.FO4_DDS_BA2;
                 case "-sf1" -> ArchiveFamily.STARFIELD_GENERAL_BA2;
+                case "-sf1dds" -> ArchiveFamily.STARFIELD_DDS_BA2;
                 default -> ArchiveFamily.FO4_GENERAL_BA2;
               };
           if (familySelector == null
@@ -200,11 +210,13 @@ record Invocation(
     require(!pack || family != null, "Pack requires one supported family selector");
     if (familyDefaultCompression && family == ArchiveFamily.SSE_BSA)
       compression = PackOptions.Compression.LZ4_FRAME;
+    if (familyDefaultCompression && family == ArchiveFamily.STARFIELD_DDS_BA2)
+      compression = PackOptions.Compression.LZ4_RAW;
     require(
         !seen.contains("-z")
             || switch (family) {
               case SSE_BSA -> compression == PackOptions.Compression.LZ4_FRAME;
-              case STARFIELD_GENERAL_BA2 ->
+              case STARFIELD_GENERAL_BA2, STARFIELD_DDS_BA2 ->
                   compression == PackOptions.Compression.ZLIB
                       || compression == PackOptions.Compression.LZ4_RAW;
               default -> compression == PackOptions.Compression.ZLIB;
@@ -213,7 +225,8 @@ record Invocation(
     require(
         (family != ArchiveFamily.FO4_GENERAL_BA2
                 && family != ArchiveFamily.FO4_DDS_BA2
-                && family != ArchiveFamily.STARFIELD_GENERAL_BA2)
+                && family != ArchiveFamily.STARFIELD_GENERAL_BA2
+                && family != ArchiveFamily.STARFIELD_DDS_BA2)
             || (!seen.contains("-af") && !seen.contains("-ff")),
         "BA2 does not accept BSA flag switches");
     require(
@@ -223,6 +236,9 @@ record Invocation(
     Path archivePath = Path.of(archive);
     // The immutable compatibility bundle also prohibits unsafe stored DDS output.
     if (family == ArchiveFamily.FO4_DDS_BA2) compression = PackOptions.Compression.ZLIB;
+    if (family == ArchiveFamily.STARFIELD_DDS_BA2
+        && (!seen.contains("-z") || familyDefaultCompression))
+      compression = PackOptions.Compression.LZ4_RAW;
     Path destinationPath =
         destination == null ? archivePath.toAbsolutePath().getParent() : Path.of(destination);
     List<PackSource> sources =
@@ -275,6 +291,7 @@ record Invocation(
       case "-fo4" -> 6;
       case "-fo4dds" -> 7;
       case "-sf1" -> 8;
+      case "-sf1dds" -> 9;
       default -> throw new IllegalArgumentException("Unsupported family selector: " + selector);
     };
   }
