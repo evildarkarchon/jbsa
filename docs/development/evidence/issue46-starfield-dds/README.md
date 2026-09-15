@@ -5,7 +5,8 @@ scanner, public conformance tests, and targeted performance checkpoint to issue 
 v2 evidence, not a new conformance-v1 or performance-v1 packet.
 
 `qualification.json` records reproducible automated results, including both digest-pinned local
-oracle directions. DirectXTex was unavailable, so the bounded independent wire and reconstructed-
-envelope validator supplies the accepted equivalent observation. The opt-in checkpoint writes raw
-measurements beneath `target/dds-performance-checkpoint/`; `performance-checkpoint.json` retains
-the selected lane ranges without inventing portable timing thresholds.
+oracle directions and 66 successful observations from `texdiag` built from the recorded DirectXTex
+source revision. The bounded independent wire scanner remains a separate corroborating validator.
+The opt-in checkpoint writes raw measurements beneath `target/dds-performance-checkpoint/`;
+`performance-checkpoint.json` retains the selected lane ranges without inventing portable timing
+thresholds.

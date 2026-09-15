@@ -100,15 +100,15 @@ level-12 profile, and retains the profile-only version-3 zlib fallback.
 The `-sf1dds` CLI path, project-authored CC0 wire vectors, bounded independent
 zlib/raw-LZ4 scanner, malformed and resource-limit cases, reconstruction and
 sharing interactions, and both digest-pinned oracle directions pass. DirectXTex
-was unavailable on this machine; the independent wire and reconstructed-envelope
-scanner supplied the accepted equivalent validation. The curated zlib/raw-LZ4
-chunk, reconstruction, random-access, heap-peak, and output-size observations are
-retained under `docs/development/evidence/issue46-starfield-dds/`.
+`texdiag` built from the recorded May 2026 source revision accepts all 66
+reconstructed outputs across the v2 zlib and v3 method-3 raw-LZ4 paths. The
+curated chunk, reconstruction, random-access, heap-peak, and output-size
+observations are retained under `docs/development/evidence/issue46-starfield-dds/`.
 
 Assurance v2 now qualifies `sf-dx10-v2` and `sf-dx10-v3-m3`. The deterministic
 comparison accounts for all 281 scoped legacy cases: 275 map to generated
 Assurance Scenarios, the six pre-existing inapplicable cases remain retired, and
-none are unmapped. The 60-result affected local Evidence Capsule is retained at
+none are unmapped. The 62-result affected local Evidence Capsule is retained at
 `tests/assurance/issue46-local-capsule.json` with digest
-`sha256:ecd228fd4001e55e3181f4a8b9c45d21949e7a60dd159eac5d96a6f84d914002`.
+`sha256:ca231d85aa99eb5b100a52af36ceb5c8b4743fcbb8a996658330cbd1d4c9a6a2`.
 No Binary Conformance or release-wide Performance Qualification claim is made.

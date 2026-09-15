@@ -852,6 +852,25 @@
       }
     },
     {
+      "id": "starfield-dds-directxtex-validation",
+      "expected": "Microsoft DirectXTex built from the recorded source revision accepts every independently generated PC DDS after Starfield v2 zlib and v3 method-3 raw-LZ4 reconstruction.",
+      "environments": ["local", "release"],
+      "applies_to": {"families": ["sf-dx10-v2", "sf-dx10-v3-m3"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-dx10-v2": ["JBSA-DDS-008", "JBSA-DDS-009", "JBSA-DDS-010", "JBSA-DDS-011", "JBSA-DX10-004"],
+        "sf-dx10-v3-m3": ["JBSA-DDS-008", "JBSA-DDS-009", "JBSA-DDS-010", "JBSA-DDS-011", "JBSA-DX10-004"]
+      },
+      "test_selectors": {
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#directXTexAcceptsEveryStarfieldReconstruction"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#directXTexAcceptsEveryStarfieldReconstruction"]
+      },
+      "evidence_refs": {
+        "sf-dx10-v2": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"],
+        "sf-dx10-v3-m3": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
+      }
+    },
+    {
       "id": "starfield-dds-cli-selection",
       "expected": "The thin CLI selects Starfield DDS v2 zlib or v3 method-3 raw-LZ4, rejects stored DDS encoding, and cross-decodes the result.",
       "applies_to": {"families": ["sf-dx10-v2", "sf-dx10-v3-m3"]},

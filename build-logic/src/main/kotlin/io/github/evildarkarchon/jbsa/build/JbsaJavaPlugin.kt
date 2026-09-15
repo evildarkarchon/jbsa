@@ -114,6 +114,7 @@ class JbsaJavaPlugin : Plugin<Project> {
                 "jbsa.bsa.local",
                 "jbsa.ba2.local",
                 "jbsa.dds.local",
+                "jbsa.directxtex.path",
                 "jbsa.bsa.performance",
                 "jbsa.ba2.performance",
                 "jbsa.dds.performance",

@@ -8,8 +8,8 @@
     "path": "tests/assurance/issue46-local-capsule.json",
     "result": "PASS",
     "tier": "affected",
-    "scenario_count": 60,
-    "digest": "sha256:ecd228fd4001e55e3181f4a8b9c45d21949e7a60dd159eac5d96a6f84d914002"
+    "scenario_count": 62,
+    "digest": "sha256:ca231d85aa99eb5b100a52af36ceb5c8b4743fcbb8a996658330cbd1d4c9a6a2"
   },
   "commands": [
     {
@@ -28,6 +28,12 @@
       "command": ".\\gradlew.bat --no-daemon '-Djbsa.dds.local=true' :jbsa-conformance-tests:ddsConformanceTest --tests io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT.pinnedLocalOracleCrossDecodesBothDirections",
       "result": "PASS",
       "tests": 1
+    },
+    {
+      "command": ".\\gradlew.bat --no-daemon '-Djbsa.directxtex.path=D:\\repos\\jbsa\\target\\directxtex-issue46-build\\bin\\texdiag.exe' :jbsa-conformance-tests:ddsConformanceTest --tests io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT.directXTexAcceptsEveryStarfieldReconstruction",
+      "result": "PASS",
+      "tests": 1,
+      "reconstructed_dds_files": 66
     }
   ],
   "fixtures": [
@@ -51,7 +57,29 @@
     "raw_evidence_root": "target/dds-local-evidence/issue46"
   },
   "directxtex": {
-    "result": "UNAVAILABLE",
-    "reason": "No jbsa.directxtex.path was configured; the independent bounded validator supplied the accepted equivalent check."
+    "result": "PASS",
+    "product": "Microsoft DirectXTex texdiag",
+    "version": "211 (library)",
+    "source_path": "third-party/DirectXTex",
+    "source_revision": "4feb3e11a020f35b796fc769a74216a555d4f5ef",
+    "source_revision_date": "2026-05-08",
+    "source_revision_subject": "May 2026 (#702)",
+    "license": "MIT",
+    "license_sha256": "9906940f61b1f0b533fa7d99baf55178b2808fbe113ea51dfbfad8572ccd5f2b",
+    "build": {
+      "cmake": "4.4.3",
+      "compiler": "MSVC 19.51.36257.0",
+      "generator": "Ninja",
+      "configuration": "RelWithDebInfo",
+      "options": ["BUILD_TOOLS=ON", "BUILD_SAMPLE=OFF", "BUILD_TESTING=OFF", "BUILD_DX11=OFF", "BUILD_DX12=OFF"]
+    },
+    "executable_sha256": "9084b9af2c04e4dcf4a8a3d53150ed594deb9aea25af3c679b16d5fb865c63b5",
+    "observations": {
+      "starfield_v2_zlib": 33,
+      "starfield_v3_method3_raw_lz4": 33,
+      "accepted": 66,
+      "rejected": 0
+    },
+    "raw_evidence_glob": "target/dds-local-evidence/issue46/texdiag-*.log"
   }
 }

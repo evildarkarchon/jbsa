@@ -178,6 +178,29 @@ final class StarfieldDdsBa2ConformanceIT {
     }
   }
 
+  /** DirectXTex accepts all independently generated DDS files after both Starfield round trips. */
+  @Test
+  @EnabledIfSystemProperty(named = "jbsa.directxtex.path", matches = ".+")
+  void directXTexAcceptsEveryStarfieldReconstruction() throws Exception {
+    Path source = root().resolve("target/dds-validator-fixtures/source");
+    assertTrue(Files.isDirectory(source), "Run build/generate-dds-fixtures.py first");
+    for (PackOptions.Compression compression :
+        List.of(PackOptions.Compression.ZLIB, PackOptions.Compression.LZ4_RAW)) {
+      Path archive = pack(compression, source, "directxtex-" + compression);
+      Path extracted = directory.resolve("directxtex-output-" + compression);
+      BethesdaArchives.standard()
+          .extract(ExtractRequest.standard(archive, extracted), OperationControl.standard());
+      List<Path> reconstructed;
+      try (var files = Files.walk(extracted)) {
+        reconstructed = files.filter(path -> path.toString().endsWith(".dds")).sorted().toList();
+      }
+      assertEquals(33, reconstructed.size());
+      for (int index = 0; index < reconstructed.size(); index++) {
+        runTexdiag(reconstructed.get(index), compression + "-" + index);
+      }
+    }
+  }
+
   /** Runs both digest-pinned oracle directions for v2 zlib and v3 raw-LZ4 when enabled. */
   @Test
   @EnabledIfSystemProperty(named = "jbsa.dds.local", matches = "true")
@@ -206,8 +229,14 @@ final class StarfieldDdsBa2ConformanceIT {
 
   /** Packs the independent DDS source through the public Starfield DDS boundary. */
   private Path pack(PackOptions.Compression compression) throws Exception {
+    return pack(compression, source(), "packed-" + compression);
+  }
+
+  /** Packs one DDS source tree with an explicit Starfield codec and deterministic output name. */
+  private Path pack(PackOptions.Compression compression, Path source, String outputName)
+      throws Exception {
     boolean raw = compression == PackOptions.Compression.LZ4_RAW;
-    Path output = directory.resolve("packed-" + compression + ".ba2");
+    Path output = directory.resolve(outputName + ".ba2");
     var defaults =
         PackRequest.standard(
             output,
@@ -216,7 +245,7 @@ final class StarfieldDdsBa2ConformanceIT {
                 Optional.of(new WireVersion(raw ? 3 : 2)),
                 Optional.of(Ba2Subtype.DX10),
                 raw ? OptionalLong.of(3) : OptionalLong.empty()),
-            List.of(new PackSource.DetectedPath(source())),
+            List.of(new PackSource.DetectedPath(source)),
             Optional.of(DdsTarget.PC));
     BethesdaArchives.standard()
         .pack(
@@ -322,10 +351,17 @@ final class StarfieldDdsBa2ConformanceIT {
   private void runTexdiagIfConfigured(Path dds, String codec) throws Exception {
     String configured = System.getProperty("jbsa.directxtex.path");
     if (configured != null && !configured.isBlank()) {
-      run(
-          List.of(Path.of(configured).toString(), "info", dds.toString()),
-          root().resolve("target/dds-local-evidence/issue46/texdiag-" + codec + ".log"));
+      runTexdiag(dds, codec);
     }
+  }
+
+  /** Runs the explicitly selected DirectXTex build and retains its observation log. */
+  private void runTexdiag(Path dds, String label) throws Exception {
+    String configured = System.getProperty("jbsa.directxtex.path");
+    assertNotNull(configured);
+    run(
+        List.of(Path.of(configured).toString(), "info", dds.toString()),
+        root().resolve("target/dds-local-evidence/issue46/texdiag-" + label + ".log"));
   }
 
   /** Owns an independent observer process through completion and deadline cleanup. */

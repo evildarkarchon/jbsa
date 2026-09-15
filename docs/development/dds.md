@@ -249,7 +249,7 @@ The project-authored CC0 vectors and bounded independent scanner live under
 `tests/fixtures/starfield-dds/` and `build/validate-dds-wire.py`. The
 [development evidence](evidence/issue46-starfield-dds/README.md) records successful public-seam
 conformance, both digest-pinned oracle directions for zlib and raw LZ4, and the curated zlib/raw-LZ4
-chunk, reconstruction, random-access, heap-peak, and output-size checkpoint. DirectXTex was not
-provisioned for this run; the independent wire and reconstructed-envelope scanner supplied the
-accepted equivalent validation. These are Assurance v2 development results, not Binary Conformance
-or release-wide Performance Qualification claims.
+chunk, reconstruction, random-access, heap-peak, and output-size checkpoint. Microsoft DirectXTex
+`texdiag` built from the recorded May 2026 source revision accepts all 66 reconstructed outputs—33
+each from the v2 zlib and v3 method-3 raw-LZ4 paths. These are Assurance v2 development results, not
+Binary Conformance or release-wide Performance Qualification claims.
