@@ -39,10 +39,10 @@ class AssuranceComparisonTests(unittest.TestCase):
             check=False,
         )
 
-    def test_repository_comparison_is_deterministic_and_maps_every_qualified_family(
+    def test_repository_comparison_is_deterministic_and_maps_every_scoped_family(
         self,
     ) -> None:
-        """Account for every legacy case in the qualified-family migration scope."""
+        """Map every scoped legacy case while retaining the explicit v7 General gap."""
         with tempfile.TemporaryDirectory() as temporary:
             first_path = Path(temporary) / "first.json"
             second_path = Path(temporary) / "second.json"
@@ -54,8 +54,9 @@ class AssuranceComparisonTests(unittest.TestCase):
             self.assertEqual(first_path.read_bytes(), second_path.read_bytes())
             report = json.loads(first_path.read_text(encoding="utf-8"))
 
-        self.assertTrue(report["equivalent"])
-        self.assertEqual("mapped-equivalent", report["comparison_status"])
+        self.assertFalse(report["equivalent"])
+        self.assertEqual("incomplete", report["comparison_status"])
+        self.assertFalse(report["unmapped_legacy_cases"])
         bsa069_retirements = [
             retirement
             for retirement in report["retired_legacy_cases"]
@@ -66,6 +67,10 @@ class AssuranceComparisonTests(unittest.TestCase):
                 "bsa-067",
                 "bsa-068",
                 "bsa-069",
+                "fo4-dx10-v7",
+                "fo4-dx10-v8",
+                "fo4-gnrl-v7",
+                "fo4-gnrl-v8",
                 "sf-dx10-v2",
                 "sf-dx10-v3-m3",
                 "sf-gnrl-v2",
@@ -79,6 +84,10 @@ class AssuranceComparisonTests(unittest.TestCase):
                 "bsa-067": 32,
                 "bsa-068": 52,
                 "bsa-069": 32,
+                "fo4-dx10-v7": 31,
+                "fo4-dx10-v8": 31,
+                "fo4-gnrl-v7": 31,
+                "fo4-gnrl-v8": 31,
                 "sf-dx10-v2": 31,
                 "sf-dx10-v3-m3": 31,
                 "sf-gnrl-v2": 31,
@@ -89,6 +98,12 @@ class AssuranceComparisonTests(unittest.TestCase):
         )
         self.assertFalse(
             any(scenario.startswith("bsa-069:") for scenario in report["v2_incomplete_scenario_ids"])
+        )
+        self.assertTrue(
+            all(
+                scenario.startswith("fo4-gnrl-v7:")
+                for scenario in report["v2_incomplete_scenario_ids"]
+            )
         )
         self.assertEqual(
             {
@@ -155,8 +170,16 @@ class AssuranceComparisonTests(unittest.TestCase):
             )
         )
         self.assertFalse(report["unmapped_legacy_cases"])
-        self.assertFalse(report["gaps"])
-        self.assertTrue(all(family["equivalent"] for family in report["families"]))
+        self.assertEqual(
+            [("fo4-gnrl-v7", "incomplete-v2-capability")],
+            [(gap["family"], gap["kind"]) for gap in report["gaps"]],
+        )
+        self.assertTrue(
+            all(
+                family["equivalent"] == (family["family"] != "fo4-gnrl-v7")
+                for family in report["families"]
+            )
+        )
         for family_id in ("sf-dx10-v2", "sf-dx10-v3-m3"):
             family = next(
                 item for item in report["families"] if item["family"] == family_id

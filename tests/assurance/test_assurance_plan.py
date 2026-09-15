@@ -75,6 +75,9 @@ class AssurancePlanTests(unittest.TestCase):
                 "bsa-067",
                 "bsa-068",
                 "bsa-069",
+                "fo4-dx10-v7",
+                "fo4-dx10-v8",
+                "fo4-gnrl-v8",
                 "sf-dx10-v2",
                 "sf-dx10-v3-m3",
                 "sf-gnrl-v2",
@@ -83,7 +86,10 @@ class AssurancePlanTests(unittest.TestCase):
             },
             {scenario["capability_id"] for scenario in expanded["assurance_scenarios"]},
         )
-        self.assertFalse(expanded["incomplete_scenarios"])
+        self.assertEqual(
+            {"fo4-gnrl-v7"},
+            {scenario["capability_id"] for scenario in expanded["incomplete_scenarios"]},
+        )
         self.assertTrue(
             any(scenario["scenario_id"] == "decode-entries" for scenario in expanded["assurance_scenarios"])
         )
@@ -147,9 +153,9 @@ class AssurancePlanTests(unittest.TestCase):
             self.assertEqual(first_path.read_bytes(), second_path.read_bytes())
             self.assertEqual(
                 {
-                    "capability_count": 8,
-                    "performance_lane_count": 28,
-                    "scenario_count": 31,
+                    "capability_count": 12,
+                    "performance_lane_count": 30,
+                    "scenario_count": 44,
                     "status": "valid",
                     "version": "assurance-v2",
                 },
@@ -251,6 +257,30 @@ class AssurancePlanTests(unittest.TestCase):
         self.assertEqual("full", unknown_selection["selected_tier"])
         self.assertEqual("unknown-impact", unknown_selection["selection_reason"])
 
+    def test_selects_aggregate_performance_lanes_for_any_affected_capability(self) -> None:
+        """A multi-capability decode lane follows any intersecting affected family."""
+        with tempfile.TemporaryDirectory() as temporary:
+            selected_path = Path(temporary) / "selected.json"
+            selected = self.run_command(
+                "select",
+                selected_path,
+                PLAN,
+                "--tier",
+                "affected",
+                "--environment",
+                "local",
+                "--changed",
+                "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v8-zlib.hex",
+            )
+            self.assertEqual(0, selected.returncode, selected.stderr)
+            lane_ids = {
+                lane["lane_id"]
+                for lane in json.loads(selected_path.read_text(encoding="utf-8"))[
+                    "performance_lanes"
+                ]
+            }
+        self.assertIn("fo4-v78-dds-decode-checkpoint", lane_ids)
+
     def test_select_shared_core_and_empty_impact_as_full(self) -> None:
         """Fail closed for shared public code and absent change information."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -345,6 +375,8 @@ class AssurancePlanTests(unittest.TestCase):
         self.assertEqual(
             [
                 "bsa-069-lz4-checkpoint",
+                "fo4-v78-dds-decode-checkpoint",
+                "fo4-v78-general-decode-checkpoint",
                 "sf-dx10-v2-zlib-checkpoint",
                 "sf-dx10-v3-raw-lz4-checkpoint",
                 "sf-gnrl-v2-zlib-checkpoint",
@@ -426,6 +458,7 @@ class AssurancePlanTests(unittest.TestCase):
             )
             lane["id"] = "worker-scaling-four"
             lane["workers"] = [4]
+            plan["performance"]["lanes"] = plan["performance"]["lanes"][:-1]  # type: ignore[index]
             plan["performance"]["lanes"].append(lane)  # type: ignore[index]
 
         self.assert_invalid(split_scaling, "performance plan must have one scaling lane")
@@ -733,7 +766,12 @@ class AssurancePlanTests(unittest.TestCase):
         """Prevent a qualified development checkpoint from becoming a release lane."""
         def promote_lane(plan: dict[str, object]) -> None:
             """Mark the incomplete 0x69 checkpoint as a release gate."""
-            plan["performance"]["lanes"][-1]["release_gate"] = True  # type: ignore[index]
+            lane = next(  # type: ignore[assignment]
+                item
+                for item in plan["performance"]["lanes"]  # type: ignore[index]
+                if item["id"] == "bsa-069-lz4-checkpoint"
+            )
+            lane["release_gate"] = True
 
         self.assert_invalid(
             promote_lane,
@@ -744,7 +782,12 @@ class AssurancePlanTests(unittest.TestCase):
         """Require a qualified capability checkpoint to retain its measurement evidence."""
         def remove_evidence(plan: dict[str, object]) -> None:
             """Remove all evidence from the BSA 0x69 development checkpoint."""
-            del plan["performance"]["lanes"][-1]["evidence_refs"]  # type: ignore[index]
+            lane = next(  # type: ignore[assignment]
+                item
+                for item in plan["performance"]["lanes"]  # type: ignore[index]
+                if item["id"] == "bsa-069-lz4-checkpoint"
+            )
+            del lane["evidence_refs"]
 
         self.assert_invalid(remove_evidence, "candidate scenario has no evidence references")
 

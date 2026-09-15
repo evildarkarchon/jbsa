@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "issue": 47,
+  "kind": "fallout4-ba2-v7-v8-decode-development-performance-checkpoint",
+  "recorded_on": "2026-09-14",
+  "performance_qualification": false,
+  "result": "PASS",
+  "protocol": {
+    "warmups": 1,
+    "retained_rounds": 3,
+    "random_prefix_reads_per_round": 64,
+    "environment": "Windows; Java 25; concurrent development",
+    "qualification_scope": "decode-only development checkpoint"
+  },
+  "lanes": [
+    {
+      "id": "fo4-v78-general-decode-checkpoint",
+      "versions": [7, 8],
+      "entries": 8,
+      "decoded_input_bytes": 8388608,
+      "archive_bytes": 8768,
+      "inspect_seconds_range": [0.0007114, 0.0337431],
+      "extract_seconds_range": [0.0349730, 0.1073273],
+      "random_prefix_seconds_range": [0.0013762, 0.0561763],
+      "heap_pool_peak_sum_bytes_range": [60632576, 97332736],
+      "qualification_note": "v7 General uses project-authored vectors corroborated by the Conformance Oracle against Reference Snapshot behavior"
+    },
+    {
+      "id": "fo4-v78-dds-decode-checkpoint",
+      "versions": [7, 8],
+      "entries": 33,
+      "decoded_input_bytes": 4562004,
+      "archive_bytes": 18439,
+      "inspect_seconds_range": [0.0009817, 0.0023843],
+      "reconstruction_seconds_range": [0.0324910, 0.0379083],
+      "random_prefix_seconds_range": [0.0009122, 0.0015180],
+      "heap_pool_peak_sum_bytes_range": [66853040, 135010480]
+    }
+  ],
+  "measures": [
+    "metadata-scan",
+    "unpack-or-dds-reconstruction",
+    "random-entry-prefix-access",
+    "heap-pool-peak-sum"
+  ],
+  "claims_excluded": ["encode throughput", "output-size qualification", "release qualification"]
+}

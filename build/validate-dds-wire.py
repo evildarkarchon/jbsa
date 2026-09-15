@@ -143,13 +143,14 @@ def inspect_archive(raw):
     if len(raw) < 24:
         raise ValueError('Truncated BA2 header')
     magic, version, kind, count, names_offset = struct.unpack_from('<4sI4sIq', raw)
-    if magic != b'BTDX' or kind != b'DX10' or version not in (1, 2, 3) or count > 100000:
+    if (magic != b'BTDX' or kind != b'DX10'
+            or version not in (1, 2, 3, 7, 8) or count > 100000):
         raise ValueError('Unsupported archive envelope')
-    header_size = {1: 24, 2: 32, 3: 36}[version]
+    header_size = {1: 24, 2: 32, 3: 36, 7: 24, 8: 24}[version]
     if len(raw) < header_size:
         raise ValueError('Truncated Starfield extra header')
     method = None
-    if version >= 2:
+    if version in (2, 3):
         extra, = struct.unpack_from('<Q', raw, 24)
         if extra != 1:
             raise ValueError('Noncanonical Starfield extra header')
@@ -239,9 +240,10 @@ def inspect_archive(raw):
         previous = end
     if previous != names_offset:
         raise ValueError('Unreferenced payload bytes')
-    family = 'fo4-dx10-v1' if version == 1 else f'sf-dx10-v{version}' + ('-m3' if method == 3 else '')
+    family = (f'fo4-dx10-v{version}' if version in (1, 7, 8)
+              else f'sf-dx10-v{version}' + ('-m3' if method == 3 else ''))
     projection = {'family': family, 'entries': entries}
-    if version >= 2:
+    if version != 1:
         projection.update({'version': version, 'compression_method': method})
     return projection
 

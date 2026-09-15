@@ -194,6 +194,7 @@ def validate(plan: dict[str, Any]) -> None:
                 validate_test_selectors(selectors)
                 references = scenario.get("evidence_refs", {}).get(capability["id"], [])
                 validate_evidence_references(references)
+    known_capability_ids = {capability["id"] for capability in plan["capabilities"]}
     for lane in plan["performance"]["lanes"]:
         if not isinstance(lane.get("implementation_path"), str) or not lane[
             "implementation_path"
@@ -217,11 +218,22 @@ def validate(plan: dict[str, Any]) -> None:
                 )
             validate_test_selectors(lane_selectors)
             validate_evidence_references(lane.get("evidence_refs"))
+        singular_capability = lane.get("capability_id")
+        aggregate_capabilities = lane.get("capability_ids")
+        if singular_capability is not None and aggregate_capabilities is not None:
+            raise PlanError(f'performance lane has conflicting capability selectors: {lane["id"]}')
+        if singular_capability is not None and singular_capability not in known_capability_ids:
+            raise PlanError(f'performance lane has unknown capability: {lane["id"]}')
+        if aggregate_capabilities is not None and (
+            not isinstance(aggregate_capabilities, list)
+            or not aggregate_capabilities
+            or not set(aggregate_capabilities) <= known_capability_ids
+        ):
+            raise PlanError(f'performance lane has unknown capabilities: {lane["id"]}')
 
     impact_rules = plan.get("impact_rules")
     if not isinstance(impact_rules, list) or not impact_rules:
         raise PlanError("plan has no impact rules")
-    capability_ids = {capability["id"] for capability in plan["capabilities"]}
     for rule in impact_rules:
         patterns = rule.get("paths") if isinstance(rule, dict) else None
         selected_capabilities = rule.get("capabilities") if isinstance(rule, dict) else None
@@ -234,7 +246,7 @@ def validate(plan: dict[str, Any]) -> None:
         if (
             not isinstance(selected_capabilities, list)
             or not selected_capabilities
-            or not set(selected_capabilities) <= capability_ids
+            or not set(selected_capabilities) <= known_capability_ids
         ):
             raise PlanError("impact rule has unknown capabilities")
 
@@ -245,6 +257,16 @@ def scenario_applies(scenario: dict[str, Any], capability: dict[str, Any]) -> bo
     family_match = capability["family"] in selectors.get("families", [])
     risk_match = bool(set(capability.get("risk_tags", [])) & set(selectors.get("risk_tags", [])))
     return family_match or risk_match
+
+
+def performance_lane_applies(lane: dict[str, Any], capability_ids: set[str] | None) -> bool:
+    """Return whether a singular or aggregate checkpoint intersects the selected capabilities."""
+    if capability_ids is None:
+        return True
+    selected = set(lane.get("capability_ids", []))
+    if lane.get("capability_id") is not None:
+        selected.add(lane["capability_id"])
+    return bool(selected & capability_ids)
 
 
 def scenario_requirements(
@@ -433,8 +455,7 @@ def select(
             and lane.get("release_gate") is False
             and environment in lane.get("environments", ["hosted", "local", "release"])
             and (
-                selected_capabilities is None
-                or lane.get("capability_id") in selected_capabilities
+                performance_lane_applies(lane, selected_capabilities)
             )
         ]
     return {

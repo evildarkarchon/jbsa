@@ -25,7 +25,7 @@ final class AssurancePlanIT {
    * @throws Exception if the validator cannot execute or its output cannot be inspected
    */
   @Test
-  void expandsQualifiedCapabilitiesIncludingBsa069() throws Exception {
+  void expandsQualifiedCapabilitiesAndRetainsKnownIncompleteVariants() throws Exception {
     Path root = Path.of(System.getProperty("jbsa.reactor.root"));
     Path outputDirectory = Files.createTempDirectory(root.resolve("target"), "assurance-plan-");
     Path expanded = outputDirectory.resolve("expanded.json");
@@ -63,11 +63,19 @@ final class AssurancePlanIT {
     assertTrue(capabilities.contains("bsa-067"), capabilities::toString);
     assertTrue(capabilities.contains("bsa-068"), capabilities::toString);
     assertTrue(capabilities.contains("bsa-069"), capabilities::toString);
+    assertTrue(capabilities.contains("fo4-gnrl-v8"), capabilities::toString);
+    assertTrue(capabilities.contains("fo4-dx10-v7"), capabilities::toString);
+    assertTrue(capabilities.contains("fo4-dx10-v8"), capabilities::toString);
     assertFalse(
         document
             .path("incomplete_scenarios")
             .findValuesAsText("capability_id")
             .contains("bsa-069"));
+    assertTrue(
+        document
+            .path("incomplete_scenarios")
+            .findValuesAsText("capability_id")
+            .contains("fo4-gnrl-v7"));
     assertTrue(document.path("performance_lanes").size() >= 20);
     assertTrue(document.path("performance_lanes").size() <= 30);
     assertTrue(document.path("traceability").isObject());

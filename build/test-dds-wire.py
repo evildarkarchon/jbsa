@@ -64,17 +64,19 @@ class DdsScannerTest(unittest.TestCase):
             else:
                 self.assertEqual(8, scanner.inspect_archive(raw)['entries'][0]['payload_size'])
 
-    def test_starfield_archive_versions_and_codecs(self):
-        """Accept v2 zlib and v3 method-3 raw-LZ4 using their larger headers."""
+    def test_archive_versions_and_codecs(self):
+        """Accept FO4 v7/v8 zlib and Starfield v2/v3 through their exact envelopes."""
         name = b'textures/a.dds'
         image = bytes.fromhex('630e873656a6ce50')
         crc = lambda text: scanner.binascii.crc32(text, 0xffffffff) ^ 0xffffffff
         prefix = struct.pack('<I4sIBBHHHBBBB', crc(b'a'), b'dds\0', crc(b'textures'),
                              0, 1, 24, 4, 4, 1, 71, 0, 0)
         for version, payload, extra in (
+                (7, zlib.compress(image), b''),
+                (8, zlib.compress(image), b''),
                 (2, zlib.compress(image), struct.pack('<Q', 1)),
                 (3, bytes([len(image) << 4]) + image, struct.pack('<QI', 1, 3))):
-            header_size = 32 if version == 2 else 36
+            header_size = {2: 32, 3: 36, 7: 24, 8: 24}[version]
             payload_offset = header_size + 48
             names_offset = payload_offset + len(payload)
             raw = struct.pack('<4sI4sIq', b'BTDX', version, b'DX10', 1, names_offset)
@@ -83,8 +85,9 @@ class DdsScannerTest(unittest.TestCase):
                                0, 0, 0xbaadf00d)
             raw += payload + struct.pack('<H', len(name)) + name
             projection = scanner.inspect_archive(raw)
-            suffix = '-m3' if version == 3 else ''
-            self.assertEqual(f'sf-dx10-v{version}{suffix}', projection['family'])
+            family = (f'fo4-dx10-v{version}' if version in (7, 8)
+                      else f'sf-dx10-v{version}' + ('-m3' if version == 3 else ''))
+            self.assertEqual(family, projection['family'])
             self.assertEqual(hashlib.sha256(image).hexdigest(),
                              projection['entries'][0]['payload_sha256'])
 

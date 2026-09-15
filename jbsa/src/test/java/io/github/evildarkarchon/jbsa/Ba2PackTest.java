@@ -88,6 +88,47 @@ class Ba2PackTest {
     }
   }
 
+  /** Fallout 4 v7/v8 encode requests fail before opening sources or touching destinations. */
+  @Test
+  void rejectsFallout4VersionsSevenAndEightBeforeEffects() throws Exception {
+    int ordinal = 0;
+    for (int version : new int[] {7, 8}) {
+      for (ArchiveFamily family :
+          new ArchiveFamily[] {ArchiveFamily.FO4_GENERAL_BA2, ArchiveFamily.FO4_DDS_BA2}) {
+        Ba2Subtype subtype =
+            family == ArchiveFamily.FO4_GENERAL_BA2 ? Ba2Subtype.GNRL : Ba2Subtype.DX10;
+        var opens = new java.util.concurrent.atomic.AtomicInteger();
+        PackSource source =
+            new PackSource.GeneratedEntry(
+                subtype.equals(Ba2Subtype.GNRL) ? "Data/Entry.bin" : "Textures/Entry.dds",
+                1,
+                () -> {
+                  opens.incrementAndGet();
+                  return Channels.newChannel(new ByteArrayInputStream(new byte[] {7}));
+                });
+        Path target = temporary.resolve("unsupported-v" + version + "-" + ordinal++ + ".ba2");
+        PackRequest request =
+            PackRequest.standard(
+                target,
+                family,
+                new ArchiveEncoding(
+                    Optional.of(new WireVersion(version)),
+                    Optional.of(subtype),
+                    OptionalLong.empty()),
+                List.of(source),
+                subtype.equals(Ba2Subtype.DX10) ? Optional.of(DdsTarget.PC) : Optional.empty());
+        ArchiveException failure =
+            assertThrows(
+                ArchiveException.class,
+                () -> BethesdaArchives.standard().pack(request, OperationControl.standard()));
+        assertEquals(FailureKind.UNSUPPORTED, failure.kind());
+        assertEquals("archive.unsupported-encoding", failure.getMessage());
+        assertEquals(0, opens.get());
+        assertFalse(Files.exists(target));
+      }
+    }
+  }
+
   /** Canonical metadata and payload order retain the caller's spelling and insertion order. */
   @Test
   void writesStoredRecordsInLogicalOrderWithCasePreserved() throws Exception {

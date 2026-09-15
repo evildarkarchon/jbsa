@@ -40,6 +40,7 @@ requirements:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence:
       - tests/assurance/plan.json
       - tests/assurance/test_compare.py
@@ -54,6 +55,7 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence:
       - tests/assurance/test_assurance_plan.py
   - id: JBSA-ASR-005
@@ -68,6 +70,7 @@ requirements:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
       - .scratch/jbsa-1-0/issues/55-run-first-release-performance-v1-qualification-and-establish-the-baseline.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence:
       - tests/assurance/plan.json
   - id: JBSA-ASR-006
@@ -81,6 +84,7 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence:
       - tests/assurance/test_capsule.py
   - id: JBSA-ASR-007
@@ -107,6 +111,7 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/61-implement-assurance-v2.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence:
       - tests/assurance/history.json
       - tests/assurance/test_history.py
@@ -492,7 +497,10 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
-    test_evidence: []
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
+    test_evidence:
+      - jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java
+      - tests/assurance/plan.json
   - id: JBSA-CLI-005
     owner:
       document: docs/spec/bsarch-cli.md
@@ -505,7 +513,10 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
-    test_evidence: []
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
+    test_evidence:
+      - jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java
+      - tests/assurance/plan.json
   - id: JBSA-CLI-006
     owner:
       document: docs/spec/bsarch-cli.md
@@ -1292,7 +1303,10 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
-    test_evidence: []
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
+    test_evidence:
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java
+      - build/validate-dds-wire.py
   - id: JBSA-DDS-010
     owner:
       document: docs/spec/formats/dds-payload.md
@@ -1319,7 +1333,11 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/40-implement-the-fallout-4-dds-ba2-vertical-slice.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
-    test_evidence: []
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java
+      - build/validate-dds-wire.py
   - id: JBSA-DDS-012
     owner:
       document: docs/spec/formats/dds-payload.md
@@ -1623,6 +1641,7 @@ requirements:
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java
       - jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java
       - build/validate-dds-wire.py
       - tests/assurance/plan.json
   - id: JBSA-DX10-002
@@ -1660,10 +1679,12 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence:
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java
       - build/validate-dds-wire.py
       - tests/fixtures/starfield-dds/manifest.json
       - tests/assurance/plan.json
@@ -1708,7 +1729,11 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
       - .scratch/jbsa-1-0/issues/46-implement-starfield-dds-ba2.md
-    test_evidence: []
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java
+      - build/validate-dds-wire.py
+      - tests/assurance/plan.json
   - id: JBSA-DX10-008
     owner:
       document: docs/spec/formats/dds-ba2.md
@@ -1745,7 +1770,13 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
-    test_evidence: []
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java
+      - jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java
+      - build/validate-ba2-wire.py
+      - tests/assurance/plan.json
   - id: JBSA-GNRL-003
     owner:
       document: docs/spec/formats/general-ba2.md
@@ -1784,11 +1815,13 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/45-implement-starfield-general-ba2.md
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
     test_evidence:
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4RawTest.java
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldGeneralBa2ConformanceIT.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java
       - build/validate-ba2-wire.py
       - jbsa/src/main/resources/META-INF/jbsa-starfield-general-lz4-profile.json
       - tests/assurance/plan.json
@@ -1833,7 +1866,11 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
-    test_evidence: []
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java
+      - build/validate-ba2-wire.py
   - id: JBSA-GNRL-009
     owner:
       document: docs/spec/formats/general-ba2.md
@@ -1860,7 +1897,11 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/39-implement-the-fallout-4-general-ba2-vertical-slice.md
-    test_evidence: []
+      - .scratch/jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java
+      - build/validate-ba2-wire.py
   - id: JBSA-GNRL-011
     owner:
       document: docs/spec/formats/general-ba2.md

@@ -136,6 +136,10 @@ class EvidenceCapsuleTests(unittest.TestCase):
         """Retain the Starfield DDS oracle and targeted performance session as evidence."""
         self.assert_retained_capsule("issue46-local-capsule.json", 62)
 
+    def test_retained_issue47_local_capsule_is_content_addressed_and_complete(self) -> None:
+        """Retain the qualified v8 General and v7/v8 DDS decode-only session as evidence."""
+        self.assert_retained_capsule("issue47-local-capsule.json", 40)
+
     def assert_retained_capsule(self, name: str, scenario_count: int) -> None:
         """Verify one committed local capsule's digest, outcomes, scope, and runtime identity."""
         path = ROOT / "tests" / "assurance" / name

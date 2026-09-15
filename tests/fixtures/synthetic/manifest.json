@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "corpus_id": "jbsa-synthetic-fixtures-v1",
-  "generated_on": "2026-09-03",
+  "generated_on": "2026-09-14",
   "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
   "generator": {
     "id": "jbsa-synthetic-fixture-generator",
-    "version": "1",
+    "version": "2",
     "implementation": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/FixtureCorpusGenerator.java",
     "implementation_spdx_license": "Apache-2.0",
     "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
@@ -114,6 +114,90 @@
       "output": {
         "path": "artifacts/archives/fo4-gnrl-v7-zlib.ba2",
         "sha256": "2dd431fbf6c5595d005b39798c2a3a9a6fe0f22d8b184d62cae663d30477c729"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "fo4-gnrl-v8-stored",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-gnrl-v8", "compression"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe fo4-gnrl-v8-stored",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Build a version-8 General BA2 with one stored project-authored payload.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"archive_family": "fo4-gnrl-v8", "codec": "stored"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "367049841319895672e3305c933dc75f714e61f316e1169a5433880f4f7ae703",
+      "output": {
+        "path": "artifacts/archives/fo4-gnrl-v8-stored.hex",
+        "sha256": "40a60416124660a50186b16195a904e1a8e9e80ecda7e437fb372fb3295d220d"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "fo4-gnrl-v8-zlib",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-gnrl-v8", "compression", "boundary"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe fo4-gnrl-v8-zlib",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Build a version-8 General BA2 with one complete deterministic zlib stream.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"archive_family": "fo4-gnrl-v8", "codec": "zlib"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "e193a76eda7347bbbcc5dd43e2fa44bc6b0c354cf2d461dfe1e435d227d0d80e",
+      "output": {
+        "path": "artifacts/archives/fo4-gnrl-v8-zlib.hex",
+        "sha256": "1fb2111a2f8a727dff1fb7b0b111dc04e075b3c91913a0a2e068b79c9deeff7b"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "fo4-dx10-v7-zlib",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-dx10-v7", "compression", "dds"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe fo4-dx10-v7-zlib",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Build a version-7 DDS BA2 with one independently framed zlib BC1 chunk.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"archive_family": "fo4-dx10-v7", "codec": "zlib"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "e95b21feeaeb1ac782ab59227064dea2df047bbb01cd57baab7de236c033ade8",
+      "output": {
+        "path": "artifacts/archives/fo4-dx10-v7-zlib.hex",
+        "sha256": "3a58d79b57b17dacb1834441873be1db96d58477f455d4354575b27a0dc886b4"
+      },
+      "redistribution_class": "project-authored-redistributable"
+    },
+    {
+      "id": "fo4-dx10-v8-zlib",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-dx10-v8", "compression", "dds"],
+      "creator": "JBSA project contributors",
+      "source": "project-authored generator recipe fo4-dx10-v8-zlib",
+      "spdx_license": "CC0-1.0",
+      "generation": {
+        "procedure": "Build a version-8 DDS BA2 with one independently framed zlib BC1 chunk.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {"archive_family": "fo4-dx10-v8", "codec": "zlib"}
+      },
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null,
+      "input_sha256": "c669aa2194e67267d2a0201e4739ce45382477b07d498c8fc5d748a9383482ce",
+      "output": {
+        "path": "artifacts/archives/fo4-dx10-v8-zlib.hex",
+        "sha256": "b950fb79c23b06bd90b7541b882c70d2848ba1ecdbb1c5cfc935b91d0417a0a4"
       },
       "redistribution_class": "project-authored-redistributable"
     },

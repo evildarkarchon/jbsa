@@ -26,6 +26,92 @@ import org.junit.jupiter.api.io.TempDir;
 final class Ba2PerformanceCheckpointIT {
   @TempDir Path directory;
 
+  /**
+   * Measures decode-only v7/v8 metadata, unpack, random-open, and heap paths without timing a
+   * prohibited encode request.
+   */
+  @Test
+  void recordsFallout4V78DecodeOnlyCheckpoint() throws Exception {
+    org.junit.jupiter.api.Assumptions.assumeFalse("true".equals(System.getenv("GITHUB_ACTIONS")));
+    Path sources = Files.createDirectories(directory.resolve("v78-sources/data"));
+    for (int index = 0; index < 8; index++) {
+      byte[] bytes = new byte[1024 * 1024];
+      Arrays.fill(bytes, (byte) ('A' + index));
+      Files.write(sources.resolve("entry" + index + ".bin"), bytes);
+    }
+    Path canonical = directory.resolve("v1-source.ba2");
+    BethesdaArchives.standard()
+        .pack(request(sources.getParent(), canonical, "zlib"), OperationControl.standard());
+    byte[] canonicalBytes = Files.readAllBytes(canonical);
+    Path evidence =
+        Path.of(System.getProperty("jbsa.reactor.root"))
+            .resolve("target/ba2-performance-checkpoint/issue47-" + directory.getFileName());
+    Files.createDirectories(evidence);
+    StringBuilder rows =
+        new StringBuilder(
+            "version,round,entries,archive_bytes,inspect_seconds,extract_seconds,random_prefix_seconds,heap_pool_peak_sum_bytes\n");
+    for (int version : new int[] {7, 8}) {
+      byte[] versioned = canonicalBytes.clone();
+      ByteBuffer.wrap(versioned).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(4, version);
+      Path archive = Files.write(directory.resolve("decode-v" + version + ".ba2"), versioned);
+      for (int round = 0; round < 4; round++) {
+        ManagementFactory.getMemoryPoolMXBeans().stream()
+            .filter(pool -> pool.getType() == MemoryType.HEAP)
+            .forEach(pool -> pool.resetPeakUsage());
+        long started = System.nanoTime();
+        ArchiveInspection inspection = BethesdaArchives.standard().inspect(archive);
+        double inspectSeconds = (System.nanoTime() - started) / 1e9;
+        assertEquals(8, inspection.entries().size());
+        assertEquals(version, inspection.metadata().encoding().wireVersion().orElseThrow().value());
+        double randomSeconds;
+        try (OpenArchive opened =
+            BethesdaArchives.standard().open(archive, OpenOptions.standard())) {
+          ByteBuffer prefix = ByteBuffer.allocate(4096);
+          started = System.nanoTime();
+          for (int access = 0; access < 64; access++) {
+            prefix.clear();
+            try (EntryContent content = opened.entry((access * 5) % 8).openContent()) {
+              while (prefix.hasRemaining()) assertTrue(content.read(prefix) > 0);
+            }
+          }
+          randomSeconds = (System.nanoTime() - started) / 1e9;
+        }
+        Path extracted = directory.resolve("decode-v" + version + "-round" + round);
+        started = System.nanoTime();
+        BethesdaArchives.standard()
+            .extract(ExtractRequest.standard(archive, extracted), OperationControl.standard());
+        double extractSeconds = (System.nanoTime() - started) / 1e9;
+        assertEquals(1024L * 1024, Files.size(extracted.resolve("data/entry0.bin")));
+        long peak =
+            ManagementFactory.getMemoryPoolMXBeans().stream()
+                .filter(pool -> pool.getType() == MemoryType.HEAP)
+                .mapToLong(pool -> pool.getPeakUsage().getUsed())
+                .sum();
+        if (round > 0) {
+          rows.append(
+              String.format(
+                  Locale.ROOT,
+                  "%d,%d,8,%d,%.9f,%.9f,%.9f,%d%n",
+                  version,
+                  round,
+                  versioned.length,
+                  inspectSeconds,
+                  extractSeconds,
+                  randomSeconds,
+                  peak));
+          Files.writeString(evidence.resolve("issue47-general.csv"), rows);
+        }
+      }
+    }
+    Files.writeString(
+        evidence.resolve("issue47-general-conditions.txt"),
+        "Development checkpoint only; not release Performance Qualification.\n"
+            + "Decode-only 8 MiB zlib v1 wire corpus with only the normative version selector set to 7/8 before timing.\n"
+            + "V7 General uses project-authored vectors corroborated by the Conformance Oracle against Reference Snapshot behavior because no known producer emits it.\n"
+            + "One discarded warmup and three retained rounds; metadata, full unpack, 64 random 4 KiB prefix opens.\n"
+            + "Heap pool peak sum is not simultaneous live heap or process peak memory.\n");
+  }
+
   /** Measures a large metadata index independently of bulk payload size and verifies every name. */
   @Test
   void recordsTenThousandEntryMetadataCheckpoint() throws Exception {

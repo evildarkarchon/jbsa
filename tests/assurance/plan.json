@@ -57,6 +57,34 @@
       "behavioral_variant": "starfield-general-v3-method3-raw-lz4-v1",
       "status": "qualified",
       "risk_tags": ["general-ba2", "extra-header", "method-field", "raw-lz4", "native-codec"]
+    },
+    {
+      "id": "fo4-gnrl-v7",
+      "family": "fo4-gnrl-v7",
+      "behavioral_variant": "fallout4-general-v7-synthetic-decode-v1",
+      "status": "incomplete",
+      "risk_tags": ["general-ba2", "decode-only", "zlib-decode", "synthetic-only"]
+    },
+    {
+      "id": "fo4-gnrl-v8",
+      "family": "fo4-gnrl-v8",
+      "behavioral_variant": "fallout4-general-v8-decode-v1",
+      "status": "qualified",
+      "risk_tags": ["general-ba2", "decode-only", "zlib-decode", "random-access"]
+    },
+    {
+      "id": "fo4-dx10-v7",
+      "family": "fo4-dx10-v7",
+      "behavioral_variant": "fallout4-dds-v7-zlib-decode-v1",
+      "status": "qualified",
+      "risk_tags": ["dds-ba2", "decode-only", "zlib-decode", "reconstruction", "random-access"]
+    },
+    {
+      "id": "fo4-dx10-v8",
+      "family": "fo4-dx10-v8",
+      "behavioral_variant": "fallout4-dds-v8-zlib-decode-v1",
+      "status": "qualified",
+      "risk_tags": ["dds-ba2", "decode-only", "zlib-decode", "reconstruction", "random-access"]
     }
   ],
   "requirements": [
@@ -940,6 +968,245 @@
       "evidence_refs": {
         "sf-dx10-v3-m3": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4RawTest.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
       }
+    },
+    {
+      "id": "fallout4-v78-decode",
+      "expected": "Fallout 4 v7/v8 General and DDS archives retain their exact wire version, v1-shaped records, ordered names and hashes, zlib framing, and decoded bytes; v7 General remains synthetic-only.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-006", "JBSA-ASR-007"],
+      "capability_requirements": {
+        "fo4-gnrl-v7": ["JBSA-GNRL-002", "JBSA-GNRL-005", "JBSA-GNRL-008"],
+        "fo4-gnrl-v8": ["JBSA-GNRL-002", "JBSA-GNRL-005", "JBSA-GNRL-008"],
+        "fo4-dx10-v7": ["JBSA-DX10-001", "JBSA-DX10-004"],
+        "fo4-dx10-v8": ["JBSA-DX10-001", "JBSA-DX10-004"]
+      },
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java", "tests/fixtures/synthetic/manifest.json", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java", "tests/fixtures/synthetic/manifest.json", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java", "tests/fixtures/synthetic/manifest.json", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java", "tests/fixtures/synthetic/manifest.json", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "decode-only-encode-rejection",
+      "expected": "Every Fallout 4 v7/v8 General or DDS encode request fails as unsupported before source factories or destination artifacts are touched.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-004"],
+      "capability_requirements": {"fo4-gnrl-v7": ["JBSA-GNRL-002"], "fo4-gnrl-v8": ["JBSA-GNRL-002"], "fo4-dx10-v7": ["JBSA-DX10-001"], "fo4-dx10-v8": ["JBSA-DX10-001"]},
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsFallout4VersionsSevenAndEightBeforeEffects"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsFallout4VersionsSevenAndEightBeforeEffects"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsFallout4VersionsSevenAndEightBeforeEffects"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsFallout4VersionsSevenAndEightBeforeEffects"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-cli-decode",
+      "expected": "The thin CLI automatically detects, dumps, and unpacks every Fallout 4 v7/v8 General and DDS selector without exposing an encode selector.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-CLI-004", "JBSA-CLI-005"],
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.cli.MainTest#dumpsAndUnpacksFallout4VersionsSevenAndEight"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.cli.MainTest#dumpsAndUnpacksFallout4VersionsSevenAndEight"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.cli.MainTest#dumpsAndUnpacksFallout4VersionsSevenAndEight"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.cli.MainTest#dumpsAndUnpacksFallout4VersionsSevenAndEight"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-malformed",
+      "expected": "Truncated records, invalid spans, and corrupt complete zlib streams are rejected without unbounded reads.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003"],
+      "capability_requirements": {"fo4-gnrl-v7": ["JBSA-GNRL-010"], "fo4-gnrl-v8": ["JBSA-GNRL-010"], "fo4-dx10-v7": ["JBSA-DX10-007"], "fo4-dx10-v8": ["JBSA-DX10-007"]},
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#rejectsMalformedVersionedInputs", "io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#diagnosesVersionedNoncanonicalInputs"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#rejectsMalformedVersionedInputs", "io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#diagnosesVersionedNoncanonicalInputs"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#rejectsMalformedVersionedInputs", "io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#diagnosesVersionedNoncanonicalInputs"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#rejectsMalformedVersionedInputs", "io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#diagnosesVersionedNoncanonicalInputs"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-unsupported-codec-decode",
+      "expected": "Payloads framed as raw DEFLATE, raw LZ4, or LZ4 frame data are rejected when v7/v8 records require stored bytes or complete zlib streams.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003"],
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#rejectsMalformedVersionedInputs", "io.github.evildarkarchon.jbsa.Ba2ReaderTest#rejectsInvalidCompressedContent"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#rejectsMalformedVersionedInputs", "io.github.evildarkarchon.jbsa.Ba2ReaderTest#rejectsInvalidCompressedContent"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#rejectsMalformedVersionedInputs", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#decodesIndependentChunksAndRejectsCorruptTail"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#rejectsMalformedVersionedInputs", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#decodesIndependentChunksAndRejectsCorruptTail"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["build/test-ba2-wire.py", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["build/test-ba2-wire.py", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["build/test-dds-wire.py", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["build/test-dds-wire.py", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-bounded-resources",
+      "expected": "Entry, metadata, decoded-byte, and reconstruction limits reject v7/v8 inputs before excess allocation or destination effects.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-SCHED-006"],
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#enforcesVersionedResourceLimits"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#enforcesVersionedResourceLimits"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#enforcesVersionedResourceLimits"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#enforcesVersionedResourceLimits"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78GeneralBa2ConformanceIT.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-independent-validation",
+      "expected": "Independent bounded scanners validate each v7/v8 envelope, record, name/hash, zlib frame, payload extent, DDS mip range, and reconstructed opaque bytes.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003"],
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#independentlyValidatesFallout4Versions"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#independentlyValidatesFallout4Versions"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#independentlyValidatesFallout4Versions"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#independentlyValidatesFallout4Versions"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["build/validate-ba2-wire.py", "build/test-ba2-wire.py", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["build/validate-ba2-wire.py", "build/test-ba2-wire.py", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["build/validate-dds-wire.py", "build/test-dds-wire.py", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["build/validate-dds-wire.py", "build/test-dds-wire.py", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-oracle-decode",
+      "expected": "The digest-pinned Conformance Oracle decodes the same project-authored v7/v8 bytes; this is decode-only and does not establish a v7 General producer.",
+      "environments": ["local", "release"],
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-006"],
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#pinnedOracleDecodesProjectAuthoredVersions"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#pinnedOracleDecodesProjectAuthoredVersions"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#pinnedOracleDecodesProjectAuthoredVersions"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#pinnedOracleDecodesProjectAuthoredVersions"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["build/run-ba2-oracle.ps1", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["build/run-ba2-oracle.ps1", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["build/run-dds-oracle.ps1", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["build/run-dds-oracle.ps1", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-decode-interactions",
+      "expected": "Stored/zlib selection, physical order, names and hashes, exact sharing, random entry opens, and safe extraction retain the shared BA2 behavior under v7/v8 selectors.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003"],
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.Ba2ReaderTest#decodesFallout4VersionsSevenAndEight", "io.github.evildarkarchon.jbsa.Ba2ReaderTest#validatesSharedSpansAndDuplicateNames"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.Ba2ReaderTest#decodesFallout4VersionsSevenAndEight", "io.github.evildarkarchon.jbsa.Ba2ReaderTest#validatesSharedSpansAndDuplicateNames"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#decodesFallout4VersionsSevenAndEight", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#acceptsExactSharingAndRejectsPartialOverlap"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#decodesFallout4VersionsSevenAndEight", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#acceptsExactSharingAndRejectsPartialOverlap"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-dds-reconstruction",
+      "expected": "Version 7 and 8 DDS chunks reconstruct canonical PC DDS headers and exact independently validated opaque mip bytes.",
+      "applies_to": {"families": ["fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-DDS-009", "JBSA-DDS-011"],
+      "test_selectors": {
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"]
+      },
+      "evidence_refs": {
+        "fo4-dx10-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java", "build/validate-dds-wire.py", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V78DdsBa2ConformanceIT.java", "build/validate-dds-wire.py", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-shipping-observation",
+      "expected": "Read-only local samples corroborate Creation Kit v8 General and shipping v7/v8 DDS decoding without committing proprietary bytes; v7 General is intentionally excluded.",
+      "environments": ["local", "release"],
+      "applies_to": {"families": ["fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-006"],
+      "test_selectors": {
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#readsShippingVersionEightCorpusSample"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#readsShippingVersionSevenAndEightSamples"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#readsShippingVersionSevenAndEightSamples"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v8": ["tests/fixtures/local/README.md", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["tests/fixtures/local/README.md", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["tests/fixtures/local/README.md", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-unsafe-extraction",
+      "expected": "Absolute, traversal, and Windows-invalid names remain inspectable but make v7/v8 extraction ineligible before destination effects.",
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#refusesVersionedUnsafeExtraction"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78GeneralBa2ConformanceIT#refusesVersionedUnsafeExtraction"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#refusesVersionedUnsafeExtraction"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.Fallout4V78DdsBa2ConformanceIT#refusesVersionedUnsafeExtraction"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-gnrl-v8": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v7": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"],
+        "fo4-dx10-v8": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue47-fo4-v78/qualification.json"]
+      }
+    },
+    {
+      "id": "fallout4-v78-performance-checkpoint",
+      "expected": "Local decode-only checkpoints cover metadata, unpack or DDS reconstruction, random entry opens, and heap-pool peaks without timing prohibited encoding.",
+      "environments": ["local"],
+      "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
+      "requirements": ["JBSA-ASR-005"],
+      "test_selectors": {
+        "fo4-gnrl-v7": ["io.github.evildarkarchon.jbsa.verification.Ba2PerformanceCheckpointIT#recordsFallout4V78DecodeOnlyCheckpoint"],
+        "fo4-gnrl-v8": ["io.github.evildarkarchon.jbsa.verification.Ba2PerformanceCheckpointIT#recordsFallout4V78DecodeOnlyCheckpoint"],
+        "fo4-dx10-v7": ["io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT#recordsFallout4V78DecodeOnlyCheckpoint"],
+        "fo4-dx10-v8": ["io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT#recordsFallout4V78DecodeOnlyCheckpoint"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2PerformanceCheckpointIT.java", "docs/development/evidence/issue47-fo4-v78/performance-checkpoint.json"],
+        "fo4-gnrl-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2PerformanceCheckpointIT.java", "docs/development/evidence/issue47-fo4-v78/performance-checkpoint.json"],
+        "fo4-dx10-v7": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/DdsPerformanceCheckpointIT.java", "docs/development/evidence/issue47-fo4-v78/performance-checkpoint.json"],
+        "fo4-dx10-v8": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/DdsPerformanceCheckpointIT.java", "docs/development/evidence/issue47-fo4-v78/performance-checkpoint.json"]
+      }
     }
   ],
   "impact_rules": [
@@ -952,8 +1219,16 @@
       "capabilities": ["bsa-067", "bsa-068", "bsa-069"]
     },
     {
-      "paths": ["jbsa/src/main/java/**/ba2/**", "jbsa/src/test/java/**/Ba2*.java", "jbsa/src/test/java/**/Dds*.java", "tests/fixtures/starfield-dds/**", "tests/fixtures/starfield-general/**", "tests/fixtures/synthetic/artifacts/archives/sf-gnrl-*.ba2"],
+      "paths": ["jbsa/src/main/java/**/ba2/**", "jbsa/src/test/java/**/Ba2*.java", "jbsa/src/test/java/**/Dds*.java"],
+      "capabilities": ["sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3", "fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]
+    },
+    {
+      "paths": ["tests/fixtures/starfield-dds/**", "tests/fixtures/starfield-general/**", "tests/fixtures/synthetic/artifacts/archives/sf-gnrl-*.ba2"],
       "capabilities": ["sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]
+    },
+    {
+      "paths": ["tests/fixtures/synthetic/artifacts/archives/fo4-gnrl-v7-*", "tests/fixtures/synthetic/artifacts/archives/fo4-gnrl-v8-*", "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v7-*", "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v8-*"],
+      "capabilities": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]
     },
     {
       "paths": ["build/assurance/**", "tests/assurance/**", "build-logic/**", "jbsa/src/main/java/io/github/evildarkarchon/jbsa/*.java", "jbsa-cli/**", "jbsa-conformance-tests/**", "docs/spec/**", ".github/workflows/**"],
@@ -1295,6 +1570,44 @@
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BsaPerformanceCheckpointIT.java",
           "docs/development/evidence/issue44-performance/measurements.csv",
           "docs/development/evidence/issue44-performance/conditions.txt"
+        ]
+      },
+      {
+        "id": "fo4-v78-general-decode-checkpoint",
+        "surface": "throughput",
+        "workload": "fallout4-v78-general-metadata-unpack-random-access",
+        "implementation_path": "general-ba2-zlib-decode-v78",
+        "risks": ["decode-only", "metadata", "zlib-throughput", "random-access", "heap-peak"],
+        "metrics": ["bytes-per-second", "latency", "peak-working-set"],
+        "capability_ids": ["fo4-gnrl-v7", "fo4-gnrl-v8"],
+        "codec": "zlib",
+        "status": "qualified",
+        "qualification_scope": "development-checkpoint",
+        "environments": ["local"],
+        "release_gate": false,
+        "test_selectors": ["io.github.evildarkarchon.jbsa.verification.Ba2PerformanceCheckpointIT#recordsFallout4V78DecodeOnlyCheckpoint"],
+        "evidence_refs": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2PerformanceCheckpointIT.java",
+          "docs/development/evidence/issue47-fo4-v78/performance-checkpoint.json"
+        ]
+      },
+      {
+        "id": "fo4-v78-dds-decode-checkpoint",
+        "surface": "throughput",
+        "workload": "fallout4-v78-dds-metadata-reconstruction-random-access",
+        "implementation_path": "dds-zlib-decode-v78",
+        "risks": ["decode-only", "texture-metadata", "reconstruction", "random-access", "heap-peak"],
+        "metrics": ["bytes-per-second", "latency", "peak-working-set"],
+        "capability_ids": ["fo4-dx10-v7", "fo4-dx10-v8"],
+        "codec": "zlib",
+        "status": "qualified",
+        "qualification_scope": "development-checkpoint",
+        "environments": ["local"],
+        "release_gate": false,
+        "test_selectors": ["io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT#recordsFallout4V78DecodeOnlyCheckpoint"],
+        "evidence_refs": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/DdsPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue47-fo4-v78/performance-checkpoint.json"
         ]
       }
     ]

@@ -69,13 +69,14 @@ def inspect(path):
     if len(raw) < 24:
         raise ValueError("Truncated General BA2 header")
     magic, version, subtype, count, names_offset = struct.unpack_from("<4sI4sIq", raw)
-    if magic != b"BTDX" or subtype != b"GNRL" or version not in (1, 2, 3) or not 0 < count <= 100000:
+    if (magic != b"BTDX" or subtype != b"GNRL"
+            or version not in (1, 2, 3, 7, 8) or not 0 < count <= 100000):
         raise ValueError("Unsupported header or count")
-    header_size = {1: 24, 2: 32, 3: 36}[version]
+    header_size = {1: 24, 2: 32, 3: 36, 7: 24, 8: 24}[version]
     if len(raw) < header_size:
         raise ValueError("Truncated General BA2 extra header")
     method = None
-    if version >= 2:
+    if version in (2, 3):
         unknown_value_at_24, = struct.unpack_from("<Q", raw, 24)
         if unknown_value_at_24 != 1:
             raise ValueError("Noncanonical Starfield extra header")
@@ -137,9 +138,10 @@ def inspect(path):
         previous_end = end
     if previous_end != names_offset:
         raise ValueError("Unreferenced payload bytes")
-    family = "fo4-gnrl-v1" if version == 1 else f"sf-gnrl-v{version}" + ("-m3" if method == 3 else "")
+    family = (f"fo4-gnrl-v{version}" if version in (1, 7, 8)
+              else f"sf-gnrl-v{version}" + ("-m3" if method == 3 else ""))
     projection = {"family": family, "entries": entries}
-    if version >= 2:
+    if version != 1:
         projection.update({"version": version, "compression_method": method})
     return projection
 

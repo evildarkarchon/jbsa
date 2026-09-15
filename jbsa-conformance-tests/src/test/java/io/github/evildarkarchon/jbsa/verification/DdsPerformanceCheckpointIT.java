@@ -24,6 +24,97 @@ import org.junit.jupiter.api.io.TempDir;
 final class DdsPerformanceCheckpointIT {
   @TempDir Path directory;
 
+  /** Measures decode-only v7/v8 DDS reconstruction, metadata, random opens, and heap paths. */
+  @Test
+  void recordsFallout4V78DecodeOnlyCheckpoint() throws Exception {
+    org.junit.jupiter.api.Assumptions.assumeFalse("true".equals(System.getenv("GITHUB_ACTIONS")));
+    Path root = Path.of(System.getProperty("jbsa.reactor.root"));
+    Path source = root.resolve("target/dds-validator-fixtures/source");
+    assertTrue(Files.isDirectory(source), "Run build/generate-dds-fixtures.py first");
+    Lane canonicalLane =
+        new Lane(
+            "fo4-dx10-v1",
+            "zlib",
+            ArchiveFamily.FO4_DDS_BA2,
+            new ArchiveEncoding(
+                Optional.of(new WireVersion(1)),
+                Optional.of(Ba2Subtype.DX10),
+                OptionalLong.empty()),
+            PackOptions.Compression.ZLIB);
+    Path canonical = directory.resolve("decode-source-v1.ba2");
+    BethesdaArchives.standard()
+        .pack(request(canonicalLane, source, canonical), OperationControl.standard());
+    byte[] canonicalBytes = Files.readAllBytes(canonical);
+    Path evidence =
+        root.resolve("target/dds-performance-checkpoint/issue47-" + directory.getFileName());
+    Files.createDirectories(evidence);
+    StringBuilder rows =
+        new StringBuilder(
+            "version,round,entries,archive_bytes,inspect_seconds,reconstruction_seconds,random_prefix_seconds,heap_pool_peak_sum_bytes\n");
+    for (int version : new int[] {7, 8}) {
+      byte[] versioned = canonicalBytes.clone();
+      ByteBuffer.wrap(versioned).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(4, version);
+      Path archive = Files.write(directory.resolve("decode-dx10-v" + version + ".ba2"), versioned);
+      for (int round = 0; round < 4; round++) {
+        ManagementFactory.getMemoryPoolMXBeans().stream()
+            .filter(pool -> pool.getType() == MemoryType.HEAP)
+            .forEach(pool -> pool.resetPeakUsage());
+        long started = System.nanoTime();
+        ArchiveInspection inspection = BethesdaArchives.standard().inspect(archive);
+        double inspectSeconds = (System.nanoTime() - started) / 1e9;
+        assertEquals(33, inspection.entries().size());
+        assertEquals(version, inspection.metadata().encoding().wireVersion().orElseThrow().value());
+        double randomSeconds;
+        try (OpenArchive opened =
+            BethesdaArchives.standard().open(archive, OpenOptions.standard())) {
+          ByteBuffer prefix = ByteBuffer.allocate(4096);
+          started = System.nanoTime();
+          for (int access = 0; access < 64; access++) {
+            ArchiveEntry entry = opened.entry((access * 17) % opened.entryCount());
+            prefix.clear().limit((int) Math.min(prefix.capacity(), entry.metadata().decodedSize()));
+            try (EntryContent content = entry.openContent()) {
+              while (prefix.hasRemaining()) assertTrue(content.read(prefix) > 0);
+            }
+          }
+          randomSeconds = (System.nanoTime() - started) / 1e9;
+        }
+        Path extracted = directory.resolve("decode-dx10-v" + version + "-round" + round);
+        started = System.nanoTime();
+        BethesdaArchives.standard()
+            .extract(ExtractRequest.standard(archive, extracted), OperationControl.standard());
+        double reconstructionSeconds = (System.nanoTime() - started) / 1e9;
+        try (var files = Files.walk(extracted)) {
+          assertEquals(33, files.filter(Files::isRegularFile).count());
+        }
+        long peak =
+            ManagementFactory.getMemoryPoolMXBeans().stream()
+                .filter(pool -> pool.getType() == MemoryType.HEAP)
+                .mapToLong(pool -> pool.getPeakUsage().getUsed())
+                .sum();
+        if (round > 0) {
+          rows.append(
+              String.format(
+                  Locale.ROOT,
+                  "%d,%d,33,%d,%.9f,%.9f,%.9f,%d%n",
+                  version,
+                  round,
+                  versioned.length,
+                  inspectSeconds,
+                  reconstructionSeconds,
+                  randomSeconds,
+                  peak));
+          Files.writeString(evidence.resolve("issue47-dds.csv"), rows);
+        }
+      }
+    }
+    Files.writeString(
+        evidence.resolve("issue47-dds-conditions.txt"),
+        "Development checkpoint only; not release Performance Qualification.\n"
+            + "Decode-only v7/v8 zlib selectors over the independently generated 33-texture DDS corpus.\n"
+            + "One discarded warmup and three retained rounds; metadata, reconstruction, 64 random prefix opens.\n"
+            + "Heap pool peak sum is not simultaneous live heap or process peak memory.\n");
+  }
+
   /** Measures complete chunk packing/reconstruction and independent entry opens over known DDS. */
   @Test
   void recordsChunkingReconstructionAndRandomAccess() throws Exception {

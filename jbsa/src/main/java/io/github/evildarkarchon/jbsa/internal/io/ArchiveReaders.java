@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.ba2.Ba2Layout;
 import io.github.evildarkarchon.jbsa.internal.bsa.BsaReader;
 import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Reader;
 import java.io.IOException;
@@ -36,9 +37,7 @@ public final class ArchiveReaders {
           boolean generalBa2 =
               detection.ba2Subtype().filter(Ba2Subtype.GNRL::equals).isPresent()
                   && detection.wireVersion().isPresent()
-                  && (detection.wireVersion().orElseThrow().value() == 1
-                      || detection.wireVersion().orElseThrow().value() == 2
-                      || detection.wireVersion().orElseThrow().value() == 3);
+                  && Ba2Layout.supportsDecode(detection.wireVersion().orElseThrow().value());
           boolean qualifiedFallback =
               detection.status() == DetectionStatus.UNSUPPORTED_VARIANT
                   && options.compatibilityProfile().isPresent()
@@ -58,8 +57,7 @@ public final class ArchiveReaders {
           boolean ddsBa2 =
               detection.ba2Subtype().filter(Ba2Subtype.DX10::equals).isPresent()
                   && detection.wireVersion().isPresent()
-                  && detection.wireVersion().orElseThrow().value() >= 1
-                  && detection.wireVersion().orElseThrow().value() <= 3;
+                  && Ba2Layout.supportsDecode(detection.wireVersion().orElseThrow().value());
           if (ddsBa2
               && (detection
                       .family()

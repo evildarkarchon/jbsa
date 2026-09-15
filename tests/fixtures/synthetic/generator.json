@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "generator_id": "jbsa-synthetic-fixture-generator",
-  "generator_version": "1",
+  "generator_version": "2",
   "algorithm": "independent-normative-wire-recipes-v1",
   "recipes": [
     {
@@ -43,6 +43,38 @@
       "input": "general-ba2|version=7|method=absent|entries=data/compressed.txt:zlib:32x41",
       "output_path": "artifacts/archives/fo4-gnrl-v7-zlib.ba2",
       "parameters": {"archive_family": "fo4-gnrl-v7", "codec": "zlib"}
+    },
+    {
+      "id": "fo4-gnrl-v8-stored",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-gnrl-v8", "compression"],
+      "input": "general-ba2|version=8|method=absent|entries=data/readme.txt:stored:jbsa-v8-stored",
+      "output_path": "artifacts/archives/fo4-gnrl-v8-stored.hex",
+      "parameters": {"archive_family": "fo4-gnrl-v8", "codec": "stored"}
+    },
+    {
+      "id": "fo4-gnrl-v8-zlib",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-gnrl-v8", "compression", "boundary"],
+      "input": "general-ba2|version=8|method=absent|entries=data/compressed.txt:zlib:32x42",
+      "output_path": "artifacts/archives/fo4-gnrl-v8-zlib.hex",
+      "parameters": {"archive_family": "fo4-gnrl-v8", "codec": "zlib"}
+    },
+    {
+      "id": "fo4-dx10-v7-zlib",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-dx10-v7", "compression", "dds"],
+      "input": "dds-ba2|version=7|entries=textures/checker.dds:zlib:4x4-bc1-630e873656a6ce50",
+      "output_path": "artifacts/archives/fo4-dx10-v7-zlib.hex",
+      "parameters": {"archive_family": "fo4-dx10-v7", "codec": "zlib"}
+    },
+    {
+      "id": "fo4-dx10-v8-zlib",
+      "kind": "generated-archive",
+      "coverage": ["structural", "fo4-dx10-v8", "compression", "dds"],
+      "input": "dds-ba2|version=8|entries=textures/checker.dds:zlib:4x4-bc1-630e873656a6ce50",
+      "output_path": "artifacts/archives/fo4-dx10-v8-zlib.hex",
+      "parameters": {"archive_family": "fo4-dx10-v8", "codec": "zlib"}
     },
     {
       "id": "sf-gnrl-v3-m3-raw-lz4",

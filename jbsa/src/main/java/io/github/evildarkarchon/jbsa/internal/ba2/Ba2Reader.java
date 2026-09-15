@@ -73,14 +73,14 @@ public final class Ba2Reader {
     ByteBuffer header = builder.readMetadata(0, 24);
     if (header.getInt() != 0x58445442) throw malformed("ba2.invalid-selector");
     long version = u32(header);
-    if ((version < 1 || version > 3) || header.getInt() != 0x4c524e47)
+    if (!Ba2Layout.supportsDecode(version) || header.getInt() != 0x4c524e47)
       throw malformed("ba2.invalid-selector");
     long count = u32(header), nameOffset = header.getLong();
     long headerSize = Ba2Layout.headerSize(version);
     OptionalLong extraHeader = OptionalLong.empty();
     OptionalLong compressionMethod = OptionalLong.empty();
     boolean rawLz4 = false;
-    if (version >= 2) {
+    if (Ba2Layout.hasExtraHeader(version)) {
       long storedExtra = builder.readMetadata(24, 8).getLong();
       extraHeader = OptionalLong.of(storedExtra);
       if (storedExtra != 1)
@@ -111,7 +111,9 @@ public final class Ba2Reader {
       }
     }
     ArchiveFamily family =
-        version == 1 ? ArchiveFamily.FO4_GENERAL_BA2 : ArchiveFamily.STARFIELD_GENERAL_BA2;
+        Ba2Layout.isFallout4(version)
+            ? ArchiveFamily.FO4_GENERAL_BA2
+            : ArchiveFamily.STARFIELD_GENERAL_BA2;
     ArchiveEncoding archiveEncoding =
         new ArchiveEncoding(
             Optional.of(new WireVersion(version)), Optional.of(Ba2Subtype.GNRL), compressionMethod);

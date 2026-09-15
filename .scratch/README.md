@@ -45,8 +45,8 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | [#44](https://github.com/evildarkarchon/jbsa/issues/44) | [Implement BSA for Skyrim SE and AE](jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md) | closed | none |
 | [#45](https://github.com/evildarkarchon/jbsa/issues/45) | [Implement Starfield General BA2](jbsa-1-0/issues/45-implement-starfield-general-ba2.md) | closed | none |
 | [#46](https://github.com/evildarkarchon/jbsa/issues/46) | [Implement Starfield DDS BA2](jbsa-1-0/issues/46-implement-starfield-dds-ba2.md) | closed | none |
-| [#47](https://github.com/evildarkarchon/jbsa/issues/47) | [Implement Fallout 4 BA2 v7 and v8 decoding](jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md) | open | ready-for-agent |
-| [#48](https://github.com/evildarkarchon/jbsa/issues/48) | [Introduce bounded deterministic parallel archive operations](jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md) | open | needs-triage |
+| [#47](https://github.com/evildarkarchon/jbsa/issues/47) | [Implement Fallout 4 BA2 v7 and v8 decoding](jbsa-1-0/issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md) | closed | none |
+| [#48](https://github.com/evildarkarchon/jbsa/issues/48) | [Introduce bounded deterministic parallel archive operations](jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md) | open | ready-for-agent |
 | [#49](https://github.com/evildarkarchon/jbsa/issues/49) | [Complete the cross-family BSArch-compatible CLI](jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md) | open | needs-triage |
 | [#50](https://github.com/evildarkarchon/jbsa/issues/50) | [Complete the mandatory Automated Conformance matrix](jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md) | open | needs-triage |
 | [#51](https://github.com/evildarkarchon/jbsa/issues/51) | [Freeze the JBSA 1.0 public archive interface](jbsa-1-0/issues/51-freeze-the-jbsa-1-0-public-archive-interface.md) | open | needs-triage |

@@ -57,8 +57,8 @@ size. The seed `jbsa-split-boundaries-v1/data/near.bin` starts with the hexadeci
 `fc321a5ccb27f2e0d1d2c103ea9fdb30080ab9a4385ad0a887752fa0289ab351`. The independent regression
 vectors also cover unaligned slices and the boundary at byte offset 2,147,483,648.
 
-The generated archives include independently authored Fallout 4 General BA2 v7 stored/zlib and
-Starfield General BA2 v3 method-3 raw-LZ4/mixed fixtures.
+The generated archives include independently authored Fallout 4 General BA2 v7/v8 stored/zlib,
+Fallout 4 DDS BA2 v7/v8 zlib, and Starfield General BA2 v3 method-3 raw-LZ4/mixed fixtures.
 
 Third-party vectors require an explicit redistribution grant and review. The ignored local corpus
 is documented in [`../local/README.md`](../local/README.md); its proprietary bytes and the

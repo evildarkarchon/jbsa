@@ -1,6 +1,6 @@
 # Introduce bounded deterministic parallel archive operations
 
-Status: needs-triage
+Status: ready-for-agent
 State: open
 GitHub issue: #48
 Source: https://github.com/evildarkarchon/jbsa/issues/48
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:17Z
 Source updated: 2026-09-03T06:54:17Z
 Closed: none
 Migrated: 2026-09-10
-Labels: needs-triage
+Labels: ready-for-agent
 Assignees: none
 Blocked by: [#47](../issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #47.
+Triage reviewed: 2026-09-14
+Triage rationale: #47 is closed; the bounded deterministic scheduling contract is fully specified and has no remaining open prerequisites.
 
 ## Original issue body
 

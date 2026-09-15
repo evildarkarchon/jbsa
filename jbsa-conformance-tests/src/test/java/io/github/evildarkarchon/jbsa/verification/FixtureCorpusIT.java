@@ -313,6 +313,37 @@ final class FixtureCorpusIT {
     assertEquals(1, v7Zlib.getInt(12));
     assertTrue(v7Zlib.getInt(24 + 24) > 0, "v7 zlib entry must carry packed bytes");
 
+    for (String codec : List.of("stored", "zlib")) {
+      ByteBuffer v8 =
+          ByteBuffer.wrap(
+                  HexFormat.of()
+                      .parseHex(
+                          Files.readString(archives.resolve("fo4-gnrl-v8-" + codec + ".hex"))
+                              .trim()))
+              .order(ByteOrder.LITTLE_ENDIAN);
+      assertEquals(8, v8.getInt(4));
+      assertEquals(1, v8.getInt(12));
+      if (codec.equals("stored")) assertEquals(0, v8.getInt(24 + 24));
+      else assertTrue(v8.getInt(24 + 24) > 0, "v8 zlib entry must carry packed bytes");
+    }
+
+    for (int version : new int[] {7, 8}) {
+      ByteBuffer dds =
+          ByteBuffer.wrap(
+                  HexFormat.of()
+                      .parseHex(
+                          Files.readString(archives.resolve("fo4-dx10-v" + version + "-zlib.hex"))
+                              .trim()))
+              .order(ByteOrder.LITTLE_ENDIAN);
+      assertEquals(0x58445442, dds.getInt(0));
+      assertEquals(version, dds.getInt(4));
+      assertEquals(0x30315844, dds.getInt(8));
+      assertEquals(1, dds.getInt(12));
+      assertEquals(1, Byte.toUnsignedInt(dds.get(37)));
+      assertEquals(24, Short.toUnsignedInt(dds.getShort(38)));
+      assertTrue(dds.getInt(56) > 0, "v7/v8 DDS chunks must carry zlib bytes");
+    }
+
     ByteBuffer v3RawLz4 = readAndValidateGeneralBa2(archives.resolve("sf-gnrl-v3-m3-raw-lz4.ba2"));
     assertEquals(3, v3RawLz4.getInt(4));
     assertEquals(1L, v3RawLz4.getLong(24));

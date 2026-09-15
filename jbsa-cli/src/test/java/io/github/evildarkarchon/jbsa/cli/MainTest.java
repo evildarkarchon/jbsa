@@ -249,6 +249,67 @@ class MainTest {
     assertEquals("payload".repeat(100), Files.readString(destination.resolve("Meshes/A.nif")));
   }
 
+  /** Fallout 4 v7/v8 archives remain decode-only through dump and unpack CLI operations. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void dumpsAndUnpacksFallout4VersionsSevenAndEight() throws Exception {
+    Path workingDirectory = Path.of("").toAbsolutePath();
+    Path repository =
+        Files.isDirectory(workingDirectory.resolve("tests"))
+            ? workingDirectory
+            : workingDirectory.resolve("..").normalize();
+    Path fixtures = repository.resolve("tests/fixtures/synthetic/artifacts/archives");
+    List<DecodeFixture> cases =
+        List.of(
+            new DecodeFixture(
+                7,
+                "GNRL",
+                fixtures.resolve("fo4-gnrl-v7-stored.ba2"),
+                "data/readme.txt",
+                "jbsa-v7-stored\n".getBytes(StandardCharsets.UTF_8)),
+            new DecodeFixture(
+                8,
+                "GNRL",
+                fixtures.resolve("fo4-gnrl-v8-zlib.hex"),
+                "data/compressed.txt",
+                "B".repeat(32).getBytes(StandardCharsets.UTF_8)),
+            new DecodeFixture(
+                7,
+                "DX10",
+                fixtures.resolve("fo4-dx10-v7-zlib.hex"),
+                "textures/checker.dds",
+                java.util.HexFormat.of().parseHex("630e873656a6ce50")),
+            new DecodeFixture(
+                8,
+                "DX10",
+                fixtures.resolve("fo4-dx10-v8-zlib.hex"),
+                "textures/checker.dds",
+                java.util.HexFormat.of().parseHex("630e873656a6ce50")));
+    for (DecodeFixture fixture : cases) {
+      Path archive =
+          temporary.resolve("fo4-v" + fixture.version() + "-" + fixture.subtype() + ".ba2");
+      if (fixture.source().toString().endsWith(".hex")) {
+        Files.write(
+            archive, java.util.HexFormat.of().parseHex(Files.readString(fixture.source()).trim()));
+      } else {
+        Files.copy(fixture.source(), archive);
+      }
+      Result dumped = run(archive.toString(), "-dump");
+      assertEquals(0, dumped.status(), dumped.error());
+      assertTrue(dumped.output().contains("Version: " + fixture.version()), dumped.output());
+      assertTrue(dumped.output().contains("Subtype: " + fixture.subtype()), dumped.output());
+      Path destination =
+          Files.createDirectory(temporary.resolve("decoded-" + cases.indexOf(fixture)));
+      Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
+      assertEquals(0, unpacked.status(), unpacked.error());
+      byte[] decoded = Files.readAllBytes(destination.resolve(fixture.entry()));
+      assertArrayEquals(
+          fixture.payload(),
+          java.util.Arrays.copyOfRange(
+              decoded, fixture.subtype().equals("DX10") ? decoded.length - 8 : 0, decoded.length));
+    }
+  }
+
   /** Starfield General CLI codec selection controls v2 versus v3/method-3 wire output. */
   @Test
   @EnabledOnOs(OS.WINDOWS)
@@ -594,6 +655,10 @@ class MainTest {
       }
     }
   }
+
+  /** One committed decode-only CLI vector and its expected extracted payload suffix. */
+  private record DecodeFixture(
+      int version, String subtype, Path source, String entry, byte[] payload) {}
 
   private record Result(int status, String output, String error) {}
 }

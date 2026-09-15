@@ -88,18 +88,36 @@ def archetype_for(case: dict[str, Any], available_scenarios: set[str]) -> str | 
     fixture = identity["fixture"].lower()
     codec = identity["codec"]
     expected = metadata["expected_behavior"]
+    fallout_v78 = family in {
+        "fo4-gnrl-v7",
+        "fo4-gnrl-v8",
+        "fo4-dx10-v7",
+        "fo4-dx10-v8",
+    }
 
     scenario_id = None
     if operation == "decode" and expected == "accept":
-        scenario_id = "decode-entries"
+        scenario_id = "fallout4-v78-decode" if fallout_v78 else "decode-entries"
     elif operation == "decode" and expected == "reject":
-        scenario_id = "unsupported-codec-decode"
+        scenario_id = (
+            "fallout4-v78-unsupported-codec-decode"
+            if fallout_v78
+            else "unsupported-codec-decode"
+        )
     elif (
         operation == "decode"
         and expected == "assert-specified-outcome"
         and "malformed-" in fixture
     ):
-        scenario_id = "malformed-input"
+        scenario_id = "fallout4-v78-malformed" if fallout_v78 else "malformed-input"
+    elif (
+        fallout_v78
+        and family.startswith("fo4-dx10-")
+        and operation == "decode"
+        and expected == "assert-specified-outcome"
+        and codec in {"stored", "mixed"}
+    ):
+        scenario_id = "fallout4-v78-decode-interactions"
     elif (
         family in {"sf-dx10-v2", "sf-dx10-v3-m3"}
         and operation == "decode"
@@ -120,13 +138,17 @@ def archetype_for(case: dict[str, Any], available_scenarios: set[str]) -> str | 
             if family_row not in available_scenarios:
                 scenario_id = "stored-round-trip"
     elif operation == "encode" and expected == "reject":
-        scenario_id = "unsupported-codec-encode"
+        scenario_id = (
+            "decode-only-encode-rejection" if fallout_v78 else "unsupported-codec-encode"
+        )
     elif (
         operation == "extract"
         and expected == "assert-specified-outcome"
         and "unsafe-name" in fixture
     ):
-        scenario_id = "unsafe-extraction"
+        scenario_id = (
+            "fallout4-v78-unsafe-extraction" if fallout_v78 else "unsafe-extraction"
+        )
     elif (
         operation == "scenario"
         and expected == "assert-specified-outcome"

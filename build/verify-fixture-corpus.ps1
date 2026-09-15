@@ -34,11 +34,19 @@ $requiredCoverage = @(
     'split',
     'resource-limit',
     'fo4-gnrl-v7',
+    'fo4-gnrl-v8',
+    'fo4-dx10-v7',
+    'fo4-dx10-v8',
+    'dds',
     'sf-gnrl-v3-m3'
 )
 $requiredIndependentFixtureIds = @(
     'fo4-gnrl-v7-stored',
     'fo4-gnrl-v7-zlib',
+    'fo4-gnrl-v8-stored',
+    'fo4-gnrl-v8-zlib',
+    'fo4-dx10-v7-zlib',
+    'fo4-dx10-v8-zlib',
     'sf-gnrl-v3-m3-raw-lz4',
     'sf-gnrl-v3-m3-mixed'
 )

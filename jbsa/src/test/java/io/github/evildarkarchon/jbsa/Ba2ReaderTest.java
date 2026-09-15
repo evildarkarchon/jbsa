@@ -61,6 +61,33 @@ final class Ba2ReaderTest {
     }
   }
 
+  /** Fallout 4 versions 7 and 8 retain the v1 General record and zlib framing. */
+  @Test
+  void decodesFallout4VersionsSevenAndEight() throws Exception {
+    for (int version : new int[] {7, 8}) {
+      for (String fixture : new String[] {ONE, zlib()}) {
+        byte[] bytes = bytes(fixture);
+        ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).putInt(4, version);
+        try (OpenArchive archive =
+                BethesdaArchives.standard().open(write(bytes), OpenOptions.standard());
+            EntryContent content = archive.entry(0).openContent()) {
+          assertEquals(ArchiveFamily.FO4_GENERAL_BA2, archive.inspection().metadata().family());
+          assertEquals(
+              new WireVersion(version),
+              archive.inspection().metadata().encoding().wireVersion().orElseThrow());
+          assertTrue(
+              ((ArchiveMetadata.GeneralBa2) archive.inspection().metadata())
+                  .unknownValueAt24()
+                  .isEmpty());
+          ByteBuffer decoded = ByteBuffer.allocate(2);
+          assertEquals(1, content.read(decoded));
+          assertEquals(7, decoded.get(0));
+          assertEquals(-1, content.read(decoded));
+        }
+      }
+    }
+  }
+
   /** Starfield version 2 preserves its extra header and otherwise uses General zlib framing. */
   @Test
   void decodesStarfieldVersionTwoZlib() throws Exception {

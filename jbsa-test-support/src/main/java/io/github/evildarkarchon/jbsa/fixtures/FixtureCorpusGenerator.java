@@ -18,8 +18,8 @@ import java.util.zip.Adler32;
  */
 public final class FixtureCorpusGenerator {
   private static final String GENERATOR_ID = "jbsa-synthetic-fixture-generator";
-  private static final String GENERATOR_VERSION = "1";
-  private static final String GENERATED_ON = "2026-09-03";
+  private static final String GENERATOR_VERSION = "2";
+  private static final String GENERATED_ON = "2026-09-14";
   private static final String REFERENCE_SNAPSHOT_REVISION =
       "fd1e36020b2b5b6217e553dc0038983146a2e2dd";
   private static final String COMMAND =
@@ -188,6 +188,43 @@ public final class FixtureCorpusGenerator {
             generalBa2(7, null, List.of(entry("data/compressed.txt", "A".repeat(32), Codec.ZLIB))),
             Map.of("archive_family", "fo4-gnrl-v7", "codec", "zlib")));
     fixtures.add(
+        hexFixture(
+            "fo4-gnrl-v8-stored",
+            "generated-archive",
+            List.of("structural", "fo4-gnrl-v8", "compression"),
+            "Build a version-8 General BA2 with one stored project-authored payload.",
+            "general-ba2|version=8|method=absent|entries=data/readme.txt:stored:jbsa-v8-stored",
+            "artifacts/archives/fo4-gnrl-v8-stored.hex",
+            generalBa2(
+                8, null, List.of(entry("data/readme.txt", "jbsa-v8-stored\n", Codec.STORED))),
+            Map.of("archive_family", "fo4-gnrl-v8", "codec", "stored")));
+    fixtures.add(
+        hexFixture(
+            "fo4-gnrl-v8-zlib",
+            "generated-archive",
+            List.of("structural", "fo4-gnrl-v8", "compression", "boundary"),
+            "Build a version-8 General BA2 with one complete deterministic zlib stream.",
+            "general-ba2|version=8|method=absent|entries=data/compressed.txt:zlib:32x42",
+            "artifacts/archives/fo4-gnrl-v8-zlib.hex",
+            generalBa2(8, null, List.of(entry("data/compressed.txt", "B".repeat(32), Codec.ZLIB))),
+            Map.of("archive_family", "fo4-gnrl-v8", "codec", "zlib")));
+    for (int version : new int[] {7, 8}) {
+      fixtures.add(
+          hexFixture(
+              "fo4-dx10-v" + version + "-zlib",
+              "generated-archive",
+              List.of("structural", "fo4-dx10-v" + version, "compression", "dds"),
+              "Build a version-"
+                  + version
+                  + " DDS BA2 with one independently framed zlib BC1 chunk.",
+              "dds-ba2|version="
+                  + version
+                  + "|entries=textures/checker.dds:zlib:4x4-bc1-630e873656a6ce50",
+              "artifacts/archives/fo4-dx10-v" + version + "-zlib.hex",
+              ddsBa2(version, "textures/checker.dds", HexFormat.of().parseHex("630e873656a6ce50")),
+              Map.of("archive_family", "fo4-dx10-v" + version, "codec", "zlib")));
+    }
+    fixtures.add(
         binaryFixture(
             "sf-gnrl-v3-m3-raw-lz4",
             "generated-archive",
@@ -344,6 +381,28 @@ public final class FixtureCorpusGenerator {
         id, kind, coverage, procedure, recipeInput, outputPath, bytes, parameters, false);
   }
 
+  /** Creates one lowercase hexadecimal wire fixture with canonical UTF-8/LF text bytes. */
+  private static Fixture hexFixture(
+      String id,
+      String kind,
+      List<String> coverage,
+      String procedure,
+      String recipeInput,
+      String outputPath,
+      byte[] bytes,
+      Map<String, String> parameters) {
+    return new Fixture(
+        id,
+        kind,
+        coverage,
+        procedure,
+        recipeInput,
+        outputPath,
+        canonicalText(HexFormat.of().formatHex(bytes)),
+        parameters,
+        false);
+  }
+
   /** Creates one canonical-LF UTF-8 scenario fixture. */
   private static Fixture textFixture(
       String id,
@@ -464,6 +523,56 @@ public final class FixtureCorpusGenerator {
       output.putShort((short) nameBytes.length);
       output.put(nameBytes);
     }
+    return output.array();
+  }
+
+  /**
+   * Encodes one tiny Fallout 4 DDS BA2 directly from the normative DX10 record tables.
+   *
+   * @param version Fallout 4 wire version 7 or 8
+   * @param name canonical slash-separated ASCII DDS entry name
+   * @param image exact opaque 4x4 BC1 mip bytes
+   * @return complete one-entry DDS BA2 with one independently framed zlib chunk
+   * @throws IllegalArgumentException if the selector or fixed BC1 payload is unsupported
+   */
+  private static byte[] ddsBa2(int version, String name, byte[] image) {
+    if ((version != 7 && version != 8) || image.length != 8) {
+      throw new IllegalArgumentException("Fixture DDS BA2 requires version 7/8 and one BC1 block");
+    }
+    NameParts parts = nameParts(name);
+    byte[] encodedName = name.getBytes(StandardCharsets.US_ASCII);
+    byte[] payload = zlibStoredBlock(image);
+    int payloadOffset = 24 + 48;
+    int namesOffset = payloadOffset + payload.length;
+    ByteBuffer output =
+        ByteBuffer.allocate(namesOffset + 2 + encodedName.length).order(ByteOrder.LITTLE_ENDIAN);
+    output
+        .put("BTDX".getBytes(StandardCharsets.US_ASCII))
+        .putInt(version)
+        .put("DX10".getBytes(StandardCharsets.US_ASCII))
+        .putInt(1)
+        .putLong(namesOffset)
+        .putInt(ba2Hash(parts.baseName()))
+        .put(extensionBytes(parts.extension()))
+        .putInt(ba2Hash(parts.directory()))
+        .put((byte) 0)
+        .put((byte) 1)
+        .putShort((short) 24)
+        .putShort((short) 4)
+        .putShort((short) 4)
+        .put((byte) 1)
+        .put((byte) 71)
+        .put((byte) 0)
+        .put((byte) 0)
+        .putLong(payloadOffset)
+        .putInt(payload.length)
+        .putInt(image.length)
+        .putShort((short) 0)
+        .putShort((short) 0)
+        .putInt(0xBAADF00D)
+        .put(payload)
+        .putShort((short) encodedName.length)
+        .put(encodedName);
     return output.array();
   }
 
