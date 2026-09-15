@@ -1,3 +1,6 @@
 [submodule "TES5Edit"]
 	path = TES5Edit
 	url = https://github.com/TES5Edit/TES5Edit.git
+[submodule "third-party/DirectXTex"]
+	path = third-party/DirectXTex
+	url = https://github.com/microsoft/DirectXTex.git
