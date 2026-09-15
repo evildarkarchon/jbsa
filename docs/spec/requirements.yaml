@@ -1713,7 +1713,11 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/45-implement-starfield-general-ba2.md
-    test_evidence: []
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java
+      - jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldGeneralBa2ConformanceIT.java
+      - tests/assurance/plan.json
   - id: JBSA-GNRL-004
     owner:
       document: docs/spec/formats/general-ba2.md
@@ -1736,7 +1740,14 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/45-implement-starfield-general-ba2.md
-    test_evidence: []
+    test_evidence:
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4RawTest.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldGeneralBa2ConformanceIT.java
+      - build/validate-ba2-wire.py
+      - jbsa/src/main/resources/META-INF/jbsa-starfield-general-lz4-profile.json
+      - tests/assurance/plan.json
   - id: JBSA-GNRL-006
     owner:
       document: docs/spec/formats/general-ba2.md

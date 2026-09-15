@@ -7,6 +7,7 @@ import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -58,6 +59,125 @@ final class Ba2ReaderTest {
       assertEquals(-1, content.read(bytes));
       assertTrue(content.assessment().isPresent());
     }
+  }
+
+  /** Starfield version 2 preserves its extra header and otherwise uses General zlib framing. */
+  @Test
+  void decodesStarfieldVersionTwoZlib() throws Exception {
+    String versionTwo =
+        "42544458 02000000 474e524c 01000000 5000000000000000 0100000000000000 "
+            + "7400bca3 74787400 ce51b53a 00011000 4400000000000000 0c000000 01000000 0df0adba "
+            + "78da010100feff0700080008 0700 612f622e747874";
+    try (OpenArchive archive =
+            BethesdaArchives.standard().open(literal(versionTwo), OpenOptions.standard());
+        EntryContent content = archive.entry(0).openContent()) {
+      assertEquals(ArchiveFamily.STARFIELD_GENERAL_BA2, archive.inspection().metadata().family());
+      assertEquals(
+          new WireVersion(2),
+          archive.inspection().metadata().encoding().wireVersion().orElseThrow());
+      assertTrue(archive.inspection().metadata().encoding().compressionMethod().isEmpty());
+      assertEquals(
+          1,
+          ((ArchiveMetadata.GeneralBa2) archive.inspection().metadata())
+              .unknownValueAt24()
+              .orElseThrow());
+      ByteBuffer decoded = ByteBuffer.allocate(2);
+      assertEquals(1, content.read(decoded));
+      assertEquals(7, decoded.get(0));
+      assertEquals(-1, content.read(decoded));
+    }
+  }
+
+  /** A safely ignored Starfield extra-header value remains inspectable with exact evidence. */
+  @Test
+  void diagnosesNoncanonicalStarfieldExtraHeader() throws Exception {
+    byte[] versionTwo =
+        bytes(
+            "42544458 02000000 474e524c 01000000 5000000000000000 0100000000000000 "
+                + "7400bca3 74787400 ce51b53a 00011000 4400000000000000 0c000000 01000000 0df0adba "
+                + "78da010100feff0700080008 0700 612f622e747874");
+    ByteBuffer.wrap(versionTwo).order(ByteOrder.LITTLE_ENDIAN).putLong(24, 2);
+    ArchiveInspection inspection = BethesdaArchives.standard().inspect(write(versionTwo));
+    assertEquals(ArchiveDisposition.TOLERATED_NONCANONICAL, inspection.assessment().disposition());
+    Diagnostic diagnostic = inspection.assessment().diagnostics().getFirst();
+    assertEquals("ba2.extra-header-value", diagnostic.identifier());
+    assertEquals(
+        new DiagnosticLocation.ByteSpan(24, 8), diagnostic.location().byteSpan().orElseThrow());
+    assertEquals(Map.of("stored", "2", "expected", "1"), diagnostic.values());
+  }
+
+  /** Starfield version 3 method 3 decodes one complete raw-LZ4 block without frame bytes. */
+  @Test
+  void decodesStarfieldVersionThreeRawLz4() throws Exception {
+    String versionThree =
+        "42544458 03000000 474e524c 01000000 5900000000000000 0100000000000000 03000000 "
+            + "4702f2e5 74787400 7f2cb78c 00011000 4800000000000000 11000000 0f000000 0df0adba "
+            + "f0006a6273612d737461726669656c640a 0c00 646174612f7261772e747874";
+    try (OpenArchive archive =
+            BethesdaArchives.standard().open(literal(versionThree), OpenOptions.standard());
+        EntryContent content = archive.entry(0).openContent()) {
+      ArchiveMetadata metadata = archive.inspection().metadata();
+      assertEquals(ArchiveFamily.STARFIELD_GENERAL_BA2, metadata.family());
+      assertEquals(new WireVersion(3), metadata.encoding().wireVersion().orElseThrow());
+      assertEquals(3, metadata.encoding().compressionMethod().orElseThrow());
+      assertArrayEquals(
+          "jbsa-starfield\n".getBytes(java.nio.charset.StandardCharsets.US_ASCII),
+          java.nio.channels.Channels.newInputStream(content).readAllBytes());
+      assertTrue(content.assessment().isPresent());
+    }
+  }
+
+  /** A profile may decode a non-method-3 v3 archive without rewriting its detection status. */
+  @Test
+  void appliesQualifiedVersionThreeZlibFallbackWithoutChangingRecognition() throws Exception {
+    String fallback =
+        "42544458 03000000 474e524c 01000000 5400000000000000 0100000000000000 02000000 "
+            + "7400bca3 74787400 ce51b53a 00011000 4800000000000000 0c000000 01000000 0df0adba "
+            + "78da010100feff0700080008 0700 612f622e747874";
+    Path archivePath = literal(fallback);
+    ArchiveException unsupported =
+        assertThrows(
+            ArchiveException.class,
+            () -> BethesdaArchives.standard().open(archivePath, OpenOptions.standard()));
+    assertEquals(FailureKind.UNSUPPORTED, unsupported.kind());
+    OpenOptions qualified =
+        new OpenOptions(
+            java.util.Optional.of(CompatibilityProfile.BSARCH_1_0_V1),
+            ResourceLimits.standard(),
+            java.util.Optional.empty());
+    try (OpenArchive archive = BethesdaArchives.standard().open(archivePath, qualified);
+        EntryContent content = archive.entry(0).openContent()) {
+      assertEquals(DetectionStatus.UNSUPPORTED_VARIANT, archive.inspection().detection().status());
+      assertTrue(archive.inspection().detection().family().isEmpty());
+      assertEquals(ArchiveFamily.STARFIELD_GENERAL_BA2, archive.inspection().metadata().family());
+      Diagnostic diagnostic = archive.inspection().assessment().diagnostics().getFirst();
+      assertEquals("ba2.sf3-zlib-fallback", diagnostic.identifier());
+      assertEquals(
+          new DiagnosticLocation.ByteSpan(32, 4), diagnostic.location().byteSpan().orElseThrow());
+      assertEquals("2", diagnostic.values().get("stored"));
+      ByteBuffer decoded = ByteBuffer.allocate(2);
+      assertEquals(1, content.read(decoded));
+      assertEquals(7, decoded.get(0));
+      assertEquals(-1, content.read(decoded));
+    }
+  }
+
+  /** Raw-LZ4 rejects trailing block bytes and oversize output before changing caller buffers. */
+  @Test
+  void rejectsInvalidAndOversizeStarfieldRawBlocksWithoutOutputEffects() throws Exception {
+    String trailing =
+        "42544458 03000000 474e524c 01000000 5a00000000000000 0100000000000000 03000000 "
+            + "4702f2e5 74787400 7f2cb78c 00011000 4800000000000000 12000000 0f000000 0df0adba "
+            + "f0006a6273612d737461726669656c640a00 0c00 646174612f7261772e747874";
+    assertRawReadFailsWithoutOutput(trailing, FailureKind.FORMAT);
+
+    byte[] oversize =
+        bytes(
+            "42544458 03000000 474e524c 01000000 5900000000000000 0100000000000000 03000000 "
+                + "4702f2e5 74787400 7f2cb78c 00011000 4800000000000000 11000000 0f000000 0df0adba "
+                + "f0006a6273612d737461726669656c640a 0c00 646174612f7261772e747874");
+    ByteBuffer.wrap(oversize).order(ByteOrder.LITTLE_ENDIAN).putInt(64, 16 * 1024 * 1024 + 1);
+    assertRawReadFailsWithoutOutput(HexFormat.of().formatHex(oversize), FailureKind.POLICY);
   }
 
   /** Unusable table offsets remain bounded and preserve hashes without synthetic wire identity. */
@@ -388,5 +508,21 @@ final class Ba2ReaderTest {
   private Path literal(String hex) throws Exception {
     return Files.write(
         directory.resolve("fixture.ba2"), HexFormat.of().parseHex(hex.replace(" ", "")));
+  }
+
+  /** Reads one raw entry and proves a rejected block never publishes bytes to the caller. */
+  private void assertRawReadFailsWithoutOutput(String hex, FailureKind kind) throws Exception {
+    try (OpenArchive archive =
+            BethesdaArchives.standard().open(literal(hex), OpenOptions.standard());
+        EntryContent content = archive.entry(0).openContent()) {
+      ByteBuffer destination = ByteBuffer.allocate(8);
+      java.util.Arrays.fill(destination.array(), (byte) 0x55);
+      ArchiveException failure =
+          assertThrows(ArchiveException.class, () -> content.read(destination));
+      assertEquals(kind, failure.kind());
+      assertEquals(0, destination.position());
+      assertArrayEquals(
+          new byte[] {0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55}, destination.array());
+    }
   }
 }

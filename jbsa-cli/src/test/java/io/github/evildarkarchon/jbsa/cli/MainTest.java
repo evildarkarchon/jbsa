@@ -248,6 +248,49 @@ class MainTest {
     assertEquals("payload".repeat(100), Files.readString(destination.resolve("Meshes/A.nif")));
   }
 
+  /** Starfield General CLI codec selection controls v2 versus v3/method-3 wire output. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void packsAndUnpacksStarfieldGeneralVariants() throws Exception {
+    Path source = Files.createDirectories(temporary.resolve("sf-input/Data"));
+    String payload = "starfield".repeat(200);
+    Files.writeString(source.resolve("Entry.bin"), payload);
+    List<String> codecs = java.util.Arrays.asList(null, "-z", "-z:zlib", "-z:lz4");
+    for (int index = 0; index < codecs.size(); index++) {
+      String codec = codecs.get(index);
+      Path archive = temporary.resolve("sf-" + index + ".ba2");
+      var arguments =
+          new ArrayList<>(
+              List.of(
+                  "pack",
+                  source.getParent().toString(),
+                  archive.toString(),
+                  "-sf1",
+                  "-share:no",
+                  "--no-progress"));
+      if (codec != null) arguments.add(4, codec);
+      Result packed = run(arguments.toArray(String[]::new));
+      assertEquals(0, packed.status(), packed.error());
+      Result dumped = run(archive.toString(), "-dump");
+      assertEquals(0, dumped.status(), dumped.error());
+      assertTrue(dumped.output().contains("Family: STARFIELD_GENERAL_BA2"));
+      assertTrue(
+          dumped
+              .output()
+              .contains("Version: " + (codec != null && codec.equals("-z:lz4") ? 3 : 2)));
+      assertTrue(
+          dumped
+              .output()
+              .contains(
+                  "Codec: "
+                      + (codec == null ? "STORED" : codec.equals("-z:lz4") ? "LZ4_RAW" : "ZLIB")));
+      Path destination = Files.createDirectory(temporary.resolve("sf-output-" + index));
+      Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
+      assertEquals(0, unpacked.status(), unpacked.error());
+      assertEquals(payload, Files.readString(destination.resolve("Data/Entry.bin")));
+    }
+  }
+
   /** Inapplicable BA2 flags and conflicting families fail before filesystem source access. */
   @Test
   void rejectsInvalidGeneralBa2Invocations() throws Exception {

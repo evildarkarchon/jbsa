@@ -20,6 +20,7 @@ import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.OpenOptions;
 import io.github.evildarkarchon.jbsa.OperationControl;
 import io.github.evildarkarchon.jbsa.OperationReport;
+import io.github.evildarkarchon.jbsa.PackOptions;
 import io.github.evildarkarchon.jbsa.PackRequest;
 import io.github.evildarkarchon.jbsa.ResourceLimits;
 import java.io.PrintStream;
@@ -94,28 +95,7 @@ public final class Main {
                         new PackRequest(
                             invocation.archive(),
                             invocation.family(),
-                            invocation.family() == ArchiveFamily.TES3_BSA
-                                ? ArchiveEncoding.tes3()
-                                : new ArchiveEncoding(
-                                    Optional.of(
-                                        new io.github.evildarkarchon.jbsa.WireVersion(
-                                            invocation.family() == ArchiveFamily.FO4_GENERAL_BA2
-                                                    || invocation.family()
-                                                        == ArchiveFamily.FO4_DDS_BA2
-                                                ? 1
-                                                : invocation.family()
-                                                        == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
-                                                    ? 0x68
-                                                    : invocation.family() == ArchiveFamily.SSE_BSA
-                                                        ? 0x69
-                                                        : 0x67)),
-                                    invocation.family() == ArchiveFamily.FO4_GENERAL_BA2
-                                        ? Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.GNRL)
-                                        : invocation.family() == ArchiveFamily.FO4_DDS_BA2
-                                            ? Optional.of(
-                                                io.github.evildarkarchon.jbsa.Ba2Subtype.DX10)
-                                            : Optional.empty(),
-                                    java.util.OptionalLong.empty()),
+                            packEncoding(invocation),
                             invocation.profile(),
                             invocation.sources(),
                             invocation.targetPolicy(),
@@ -193,6 +173,43 @@ public final class Main {
     }
   }
 
+  /** Maps one validated CLI family/codec choice to its independent wire selectors. */
+  private static ArchiveEncoding packEncoding(Invocation invocation) {
+    return switch (invocation.family()) {
+      case TES3_BSA -> ArchiveEncoding.tes3();
+      case TES4_BSA -> versionedEncoding(0x67);
+      case FO3_FNV_SKYRIM_LE_BSA -> versionedEncoding(0x68);
+      case SSE_BSA -> versionedEncoding(0x69);
+      case FO4_GENERAL_BA2 ->
+          new ArchiveEncoding(
+              Optional.of(new io.github.evildarkarchon.jbsa.WireVersion(1)),
+              Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.GNRL),
+              java.util.OptionalLong.empty());
+      case FO4_DDS_BA2 ->
+          new ArchiveEncoding(
+              Optional.of(new io.github.evildarkarchon.jbsa.WireVersion(1)),
+              Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.DX10),
+              java.util.OptionalLong.empty());
+      case STARFIELD_GENERAL_BA2 -> {
+        boolean raw = invocation.packOptions().compression() == PackOptions.Compression.LZ4_RAW;
+        yield new ArchiveEncoding(
+            Optional.of(new io.github.evildarkarchon.jbsa.WireVersion(raw ? 3 : 2)),
+            Optional.of(io.github.evildarkarchon.jbsa.Ba2Subtype.GNRL),
+            raw ? java.util.OptionalLong.of(3) : java.util.OptionalLong.empty());
+      }
+      case STARFIELD_DDS_BA2 ->
+          throw new IllegalArgumentException("Starfield DDS pack is not an implemented CLI target");
+    };
+  }
+
+  /** Constructs selector-only Versioned BSA encoding for a validated family choice. */
+  private static ArchiveEncoding versionedEncoding(long version) {
+    return new ArchiveEncoding(
+        Optional.of(new io.github.evildarkarchon.jbsa.WireVersion(version)),
+        Optional.empty(),
+        java.util.OptionalLong.empty());
+  }
+
   /** Renders stable archive headers and serialized entry facts from detached library metadata. */
   private static void renderInspection(
       Invocation invocation, ArchiveInspection inspection, PrintStream output) {
@@ -215,7 +232,11 @@ public final class Main {
         "Codec: "
             + (compressed == 0
                 ? "STORED"
-                : inspection.metadata().family() == ArchiveFamily.SSE_BSA ? "LZ4_FRAME" : "ZLIB"));
+                : inspection.metadata().encoding().compressionMethod().orElse(-1) == 3
+                    ? "LZ4_RAW"
+                    : inspection.metadata().family() == ArchiveFamily.SSE_BSA
+                        ? "LZ4_FRAME"
+                        : "ZLIB"));
     if (inspection.metadata() instanceof ArchiveMetadata.DdsBa2 metadata) {
       output.println("Version: " + metadata.encoding().wireVersion().orElseThrow().value());
       output.println("Subtype: DX10");
@@ -361,6 +382,8 @@ public final class Main {
     output.println("Fallout 4 DDS BA2 pack: -fo4dds [-z|-z:zlib] (PC DDS only; always compressed)");
     output.println(
         "Fallout 4 General BA2 pack: -fo4 [-z|-z:zlib] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
+    output.println(
+        "Starfield General BA2 pack: -sf1 [-z|-z:zlib|-z:lz4] -split:0..8 -share:yes|no -mt:yes|no -f:mask[,mask]");
     output.println(
         "jbsa [--compatibility-profile=bsarch-1.0/v1] pack <source1+source2+...> <archive> [options]");
     output.println(

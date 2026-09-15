@@ -27,7 +27,7 @@ final class BsaPerformanceCheckpointIT {
   @TempDir Path directory;
 
   /** Records matched versioned-BSA workloads, discarding the first round of each family codec. */
-  @ParameterizedTest
+  @ParameterizedTest(name = "recordsCurrentMachineCheckpoint[{index}] version={0}")
   @ValueSource(ints = {0x67, 0x68, 0x69})
   void recordsCurrentMachineCheckpoint(int version) throws Exception {
     org.junit.jupiter.api.Assumptions.assumeFalse("true".equals(System.getenv("GITHUB_ACTIONS")));

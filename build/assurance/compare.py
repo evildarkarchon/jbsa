@@ -104,6 +104,7 @@ def archetype_for(case: dict[str, Any], available_scenarios: set[str]) -> str | 
         scenario_id = {
             "stored": "stored-mixed-round-trip",
             "zlib": "zlib-round-trip",
+            "raw-lz4": "raw-lz4-round-trip",
             "lz4-frame": "lz4-frame-round-trip",
             "mixed": "stored-mixed-round-trip",
         }.get(codec)

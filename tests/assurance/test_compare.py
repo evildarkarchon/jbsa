@@ -62,11 +62,18 @@ class AssuranceComparisonTests(unittest.TestCase):
             if retirement["family"] == "bsa-069"
         ]
         self.assertEqual(
-            ["bsa-067", "bsa-068", "bsa-069", "tes3"],
+            ["bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3", "tes3"],
             report["scope_families"],
         )
         self.assertEqual(
-            {"bsa-067": 32, "bsa-068": 52, "bsa-069": 32, "tes3": 39},
+            {
+                "bsa-067": 32,
+                "bsa-068": 52,
+                "bsa-069": 32,
+                "sf-gnrl-v2": 31,
+                "sf-gnrl-v3-m3": 33,
+                "tes3": 39,
+            },
             report["legacy_case_counts"],
         )
         self.assertFalse(

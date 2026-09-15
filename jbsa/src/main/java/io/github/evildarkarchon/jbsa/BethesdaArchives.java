@@ -132,7 +132,8 @@ public final class BethesdaArchives {
         || request.family() == ArchiveFamily.SSE_BSA)
       return io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
     if (request.family() == ArchiveFamily.FO4_GENERAL_BA2
-        || request.family() == ArchiveFamily.FO4_DDS_BA2)
+        || request.family() == ArchiveFamily.FO4_DDS_BA2
+        || request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2)
       return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Packer.pack(request, control);
     return unavailableMutation(
         Operation.PACK,

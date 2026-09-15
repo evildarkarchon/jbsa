@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 
-/** Canonical sequential Fallout 4 BA2 writer with bounded stabilization before split planning. */
+/** Canonical sequential BA2 writer with bounded stabilization before split planning. */
 public final class Ba2Packer {
   private Ba2Packer() {}
 
@@ -27,29 +27,44 @@ public final class Ba2Packer {
     var failures = new FailureRetention(request.resourceLimits(), Operation.PACK);
     ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context);
     boolean dds = request.family() == ArchiveFamily.FO4_DDS_BA2;
+    boolean starfieldGeneral = request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2;
     try {
       operation.begin();
       var encoding =
           io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names.encoding(
               request.compatibilityProfile(), context);
-      if (!request
-          .encoding()
-          .equals(
-              new ArchiveEncoding(
-                  Optional.of(new WireVersion(1)),
-                  Optional.of(dds ? Ba2Subtype.DX10 : Ba2Subtype.GNRL),
-                  OptionalLong.empty())))
+      boolean rawLz4 =
+          starfieldGeneral
+              && (request.options().compression() == PackOptions.Compression.LZ4_RAW
+                  || request
+                      .options()
+                      .entryCompression()
+                      .containsValue(PackOptions.Compression.LZ4_RAW));
+      boolean zlib =
+          request.options().compression() == PackOptions.Compression.ZLIB
+              || request.options().entryCompression().containsValue(PackOptions.Compression.ZLIB);
+      if (rawLz4 && zlib)
+        throw context.failure(FailureKind.UNSUPPORTED, "ba2.mixed-compressed-codecs", null);
+      ArchiveEncoding archiveEncoding =
+          new ArchiveEncoding(
+              Optional.of(new WireVersion(starfieldGeneral ? (rawLz4 ? 3 : 2) : 1)),
+              Optional.of(dds ? Ba2Subtype.DX10 : Ba2Subtype.GNRL),
+              rawLz4 ? OptionalLong.of(3) : OptionalLong.empty());
+      if (!request.encoding().equals(archiveEncoding))
         throw context.failure(FailureKind.UNSUPPORTED, "archive.unsupported-encoding", null);
-      boolean defaultCompressed = request.options().compression() == PackOptions.Compression.ZLIB;
       if (request.options().archiveFlags() instanceof FlagSelection.Explicit
           || request.options().fileFlags() instanceof FlagSelection.Explicit)
         throw context.failure(FailureKind.UNSUPPORTED, "ba2.flags-inapplicable", null);
       if (request.options().compression() != PackOptions.Compression.FAMILY_DEFAULT
           && request.options().compression() != PackOptions.Compression.STORED
-          && !defaultCompressed)
+          && request.options().compression() != PackOptions.Compression.ZLIB
+          && (!starfieldGeneral
+              || request.options().compression() != PackOptions.Compression.LZ4_RAW))
         throw context.failure(FailureKind.UNSUPPORTED, "ba2.unsupported-codec", null);
       for (var choice : request.options().entryCompression().values())
-        if (choice != PackOptions.Compression.STORED && choice != PackOptions.Compression.ZLIB)
+        if (choice != PackOptions.Compression.STORED
+            && choice != PackOptions.Compression.ZLIB
+            && (!starfieldGeneral || choice != PackOptions.Compression.LZ4_RAW))
           throw context.failure(FailureKind.UNSUPPORTED, "ba2.unsupported-entry-codec", null);
       if (dds
           && (request.options().compression() == PackOptions.Compression.STORED
@@ -58,6 +73,7 @@ public final class Ba2Packer {
                   .entryCompression()
                   .containsValue(PackOptions.Compression.STORED)))
         throw context.failure(FailureKind.UNSUPPORTED, "dx10.stored-encode", null);
+      if (rawLz4) Lz4Runtime.preflight("raw-lz4", "encode", context);
       Set<NormalizedNameIdentity> unmatched =
           new HashSet<>(request.options().entryCompression().keySet());
       List<Item> items = new ArrayList<>();
@@ -65,15 +81,16 @@ public final class Ba2Packer {
       long decoded = 0;
       for (PackSources.Entry source : PackSources.plan(request, operation, budget, encoding)) {
         unmatched.remove(new NormalizedNameIdentity(source.identity()));
+        PackOptions.Compression selected =
+            request
+                .options()
+                .entryCompression()
+                .getOrDefault(
+                    new NormalizedNameIdentity(source.identity()), request.options().compression());
         boolean compressed =
             dds
-                || request
-                        .options()
-                        .entryCompression()
-                        .getOrDefault(
-                            new NormalizedNameIdentity(source.identity()),
-                            request.options().compression())
-                    == PackOptions.Compression.ZLIB;
+                || selected == PackOptions.Compression.ZLIB
+                || selected == PackOptions.Compression.LZ4_RAW;
         String display = source.displayName().replace('\\', '/');
         if (dds && !display.toLowerCase(Locale.ROOT).endsWith(".dds"))
           throw context.failure(FailureKind.UNSUPPORTED, "dds.non-dds-entry", null);
@@ -120,13 +137,14 @@ public final class Ba2Packer {
         throw context.failure(FailureKind.POLICY, "pack.unmatched-entry-compression", null);
       if (items.isEmpty()) throw context.failure(FailureKind.POLICY, "ba2.empty-entry-set", null);
       boolean anyCompressed = items.stream().anyMatch(item -> item.compressed);
+      boolean zlibCompressed = anyCompressed && !rawLz4;
       // One spool bounds heap and handle use independently of entry count, and fixes split sizes.
       scratch = SpillBuffer.open(Path.of(System.getProperty("java.io.tmpdir")), budget, context);
       SpillBuffer stable = scratch;
       try (var codecCredits =
           budget.reserve(
-              anyCompressed ? JdkZlib.ENCODE_HEAP_BYTES + 131072 : 196608,
-              anyCompressed ? JdkZlib.ENCODE_NATIVE_BYTES : 0,
+              zlibCompressed ? JdkZlib.ENCODE_HEAP_BYTES + 131072 : 196608,
+              zlibCompressed ? JdkZlib.ENCODE_NATIVE_BYTES : 0,
               0,
               0)) {
         Map<String, List<Item>> candidates = new HashMap<>();
@@ -215,12 +233,22 @@ public final class Ba2Packer {
                     /* The operation owns scratch cleanup. */
                   }
                 }) {
-              JdkZlib.encode(
-                  input,
-                  item.source.size(),
-                  (offset, bytes) -> stable.write(start + offset, bytes),
-                  () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
-                  processing);
+              if (rawLz4)
+                Lz4Raw.encode(
+                    (offset, bytes) -> stable.read(item.rawOffset + offset, bytes),
+                    item.source.size(),
+                    (offset, bytes) -> stable.write(start + offset, bytes),
+                    () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
+                    budget,
+                    processing,
+                    12);
+              else
+                JdkZlib.encode(
+                    input,
+                    item.source.size(),
+                    (offset, bytes) -> stable.write(start + offset, bytes),
+                    () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
+                    processing);
             }
             item.size = stable.size() - item.offset;
             checkU32(item.size, processing);
@@ -229,9 +257,11 @@ public final class Ba2Packer {
       }
       stable.seal();
       List<List<Item>> parts = split(items, request.options());
+      long headerSize =
+          GeneralBa2Layout.headerSize(archiveEncoding.wireVersion().orElseThrow().value());
       for (var part : parts)
         budget.metadata(
-            24 + part.stream().mapToLong(i -> i.recordSize() + i.name.length + 2L).sum());
+            headerSize + part.stream().mapToLong(i -> i.recordSize() + i.name.length + 2L).sum());
       var writers = new ArrayList<PublicationTransaction.Writer>();
       var completed = new ArrayList<OperationReport.ArchivePart>();
       for (var part : parts) {
@@ -241,7 +271,7 @@ public final class Ba2Packer {
               /** Replays this independent part before the transaction may publish any sibling. */
               @Override
               public void write(PublicationTransaction.StagedFile output) throws IOException {
-                Ba2Packer.write(part, stable, output, dds);
+                Ba2Packer.write(part, stable, output, dds, archiveEncoding);
                 // Stabilization is no longer needed after the last staged part; cleanup must
                 // precede
                 // commit.
@@ -261,18 +291,22 @@ public final class Ba2Packer {
               @Override
               public void validate(Path staged) throws IOException {
                 long metadataBytes =
-                    24
+                    headerSize
                         + part.stream().mapToLong(Item::recordSize).sum()
                         + part.stream().mapToLong(item -> item.name.length + 2L).sum();
+                boolean validatesRawLz4 = rawLz4 && part.stream().anyMatch(item -> item.compressed);
+                long validationCodecHeap =
+                    validatesRawLz4
+                        ? 4096 + part.stream().mapToLong(item -> item.source.size()).max().orElse(0)
+                        : JdkZlib.DECODE_HEAP_BYTES;
+                long validationCodecNative =
+                    validatesRawLz4 ? Lz4Raw.DECODE_NATIVE_BYTES : JdkZlib.DECODE_NATIVE_BYTES;
                 // The reader owns its own budget, so admit its peak against the still-live pack
                 // budget as well; readback must not silently exceed the operation's capacity.
                 try (var validationCredits =
                         budget.reserve(
-                            512L * part.size()
-                                + 8L * metadataBytes
-                                + 65536
-                                + JdkZlib.DECODE_HEAP_BYTES,
-                            JdkZlib.DECODE_NATIVE_BYTES,
+                            512L * part.size() + 8L * metadataBytes + 65536 + validationCodecHeap,
+                            validationCodecNative,
                             1,
                             0);
                     var archive =
@@ -378,12 +412,18 @@ public final class Ba2Packer {
 
   /** Emits record-order payloads and a trailing case-preserving filename table. */
   private static void write(
-      List<Item> items, SpillBuffer scratch, PublicationTransaction.StagedFile output, boolean dds)
+      List<Item> items,
+      SpillBuffer scratch,
+      PublicationTransaction.StagedFile output,
+      boolean dds,
+      ArchiveEncoding encoding)
       throws IOException {
-    long payload = 24 + items.stream().mapToLong(Item::recordSize).sum();
+    long version = encoding.wireVersion().orElseThrow().value();
+    int headerSize = GeneralBa2Layout.headerSize(version);
+    long payload = headerSize + items.stream().mapToLong(Item::recordSize).sum();
     output.reserve(payload);
     Map<Object, Long> emitted = new IdentityHashMap<>();
-    long recordPosition = 24;
+    long recordPosition = headerSize;
     for (int ordinal = 0; ordinal < items.size(); ordinal++) {
       Item item = items.get(ordinal), owner = item.owner;
       output.checkpoint();
@@ -433,7 +473,7 @@ public final class Ba2Packer {
         payload = Math.addExact(payload, owner.size);
       }
       output.write(
-          24 + 36L * ordinal,
+          headerSize + 36L * ordinal,
           ByteBuffer.allocate(36)
               .order(ByteOrder.LITTLE_ENDIAN)
               .putInt((int) item.identity.baseNameHash())
@@ -449,16 +489,16 @@ public final class Ba2Packer {
               .flip());
       output.completedEntry(item.source.size());
     }
-    output.write(
-        0,
-        ByteBuffer.allocate(24)
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .putInt(0x58445442)
-            .putInt(1)
-            .putInt(dds ? 0x30315844 : 0x4c524e47)
-            .putInt(items.size())
-            .putLong(payload)
-            .flip());
+    ByteBuffer header = ByteBuffer.allocate(headerSize).order(ByteOrder.LITTLE_ENDIAN);
+    header
+        .putInt(0x58445442)
+        .putInt((int) version)
+        .putInt(dds ? 0x30315844 : 0x4c524e47)
+        .putInt(items.size())
+        .putLong(payload);
+    if (version >= 2) header.putLong(1);
+    if (version == 3) header.putInt(3);
+    output.write(0, header.flip());
     for (Item item : items) {
       output.write(
           payload,

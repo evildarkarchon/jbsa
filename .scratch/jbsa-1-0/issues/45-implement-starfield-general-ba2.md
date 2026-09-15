@@ -1,22 +1,22 @@
 # Implement Starfield General BA2
 
-Status: ready-for-agent
-State: open
+Status: none
+State: closed
 GitHub issue: #45
 Source: https://github.com/evildarkarchon/jbsa/issues/45
 Author: evildarkarchon
 Created: 2026-09-03T06:54:11Z
 Source updated: 2026-09-03T06:54:11Z
-Closed: none
+Closed: 2026-09-14
 Migrated: 2026-09-10
-Labels: ready-for-agent
+Labels: none
 Assignees: none
 Blocked by: [#44](../issues/44-implement-bsa-for-skyrim-se-and-ae.md), [#61](../issues/61-implement-assurance-v2.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
 Triage reviewed: 2026-09-14
-Triage rationale: #44 and #61 are closed. The current Assurance v2 acceptance is complete and this ticket is ready for agent implementation.
+Triage rationale: Closed after Starfield General v2/v3 implementation, independent validation, local oracle and performance qualification, and the full verification gate passed.
 
 ## Original issue body
 
@@ -87,3 +87,27 @@ expansion, rebaseline packet, or performance-v1 product matrix is required.
 
 Ticket #61 is closed; this current contract supersedes the historical expanded
 catalog wording above. Ticket #45 is unblocked and ready for an agent.
+
+### Implemented and qualified — 2026-09-14
+
+The shared General BA2 reader and writer now support Starfield version 2 stored
+and zlib entries plus version 3 method-3 stored and raw-LZ4 entries. Canonical
+packing emits the 32-byte v2 header except when raw LZ4 selects the 36-byte v3
+header and method 3. The BSArch compatibility profile retains the specified
+non-method-3 zlib fallback diagnostic without changing selector recognition.
+
+The `-sf1` CLI path, bounded raw-LZ4 lazy content, level-12 family profile,
+project-authored v2/v3 fixtures, independent Python wire/LZ4 validator, optional
+local corpus route, and bidirectional pinned-oracle stored/zlib/raw-LZ4
+differentials all pass. Targeted native-loading and local zlib/raw-LZ4
+performance runs are recorded under `docs/development/evidence/issue45-*`,
+including derived output size and Windows process peak working set.
+
+Assurance v2 now qualifies `sf-gnrl-v2` and `sf-gnrl-v3-m3`. The deterministic
+comparison accounts for all 219 legacy cases: 213 map to executable scenarios,
+the six pre-existing inapplicable cases remain retired, and none are unmapped.
+The generated hosted tier and final `clean verify` both pass. The accepted
+30-scenario local Evidence Capsule is retained at
+`tests/assurance/issue45-local-capsule.json` with digest
+`sha256:6221f16574d39ce33fd974dd80d3f8204730aec99572b299fbc5d22aa8634e9b`.
+No Binary Conformance or release-wide Performance Qualification claim is made.

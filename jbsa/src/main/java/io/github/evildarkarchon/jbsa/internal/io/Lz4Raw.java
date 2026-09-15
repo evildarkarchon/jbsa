@@ -11,13 +11,17 @@ import org.lwjgl.util.lz4.LZ4HC;
 public final class Lz4Raw {
   private static final long MAX_INPUT = 0x7E000000L;
   private static final long DISPATCH_LIMIT = 16L * 1024 * 1024;
+  public static final long ENCODE_NATIVE_BYTES =
+      DISPATCH_LIMIT + DISPATCH_LIMIT + DISPATCH_LIMIT / 255 + 16 + 524288 + 32;
+  public static final long DECODE_NATIVE_BYTES =
+      DISPATCH_LIMIT + DISPATCH_LIMIT + DISPATCH_LIMIT / 255 + 16 + 16;
 
   private Lz4Raw() {}
 
   /**
-   * Encodes one admitted raw HC block at level 9 without fallback or splitting. The complete
-   * source, worst-case output and HC state are reserved before allocation; callbacks remain
-   * caller-owned.
+   * Encodes one admitted raw HC block at the shared level 9 without fallback or splitting. The
+   * complete source, worst-case output and HC state are reserved before allocation; callbacks
+   * remain caller-owned.
    */
   public static long encode(
       JdkZlib.ByteSource source,
@@ -27,6 +31,21 @@ public final class Lz4Raw {
       ResourceBudget budget,
       IoContext context)
       throws IOException {
+    return encode(source, decodedSize, sink, checkpoint, budget, context, 9);
+  }
+
+  /** Encodes one admitted raw HC block at the family-qualified compression level. */
+  public static long encode(
+      JdkZlib.ByteSource source,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      IoContext context,
+      int compressionLevel)
+      throws IOException {
+    if (compressionLevel < 1 || compressionLevel > 12)
+      throw new IllegalArgumentException("Raw LZ4 HC level must be between 1 and 12");
     checkSize(decodedSize, DISPATCH_LIMIT, context);
     Lz4Runtime.preflight("raw-lz4", "encode", context);
     long bound = decodedSize + decodedSize / 255 + 16;
@@ -47,7 +66,7 @@ public final class Lz4Raw {
       try {
         if (LZ4HC.LZ4_sizeofStateHC() > state.capacity())
           throw new IllegalStateException("HC state exceeds credit");
-        count = LZ4HC.LZ4_compress_HC_extStateHC(state, input, output, 9);
+        count = LZ4HC.LZ4_compress_HC_extStateHC(state, input, output, compressionLevel);
       } catch (RuntimeException | LinkageError | AssertionError cause) {
         throw Lz4Runtime.failure(
             context,
@@ -88,9 +107,7 @@ public final class Lz4Raw {
       ResourceBudget budget,
       IoContext context)
       throws IOException {
-    // Incompressible blocks grow by the upstream compressBound allowance.
-    checkSize(storedSize, DISPATCH_LIMIT + DISPATCH_LIMIT / 255 + 16, context);
-    checkSize(decodedSize, DISPATCH_LIMIT, context);
+    admitDecode(storedSize, decodedSize, context);
     Lz4Runtime.preflight("raw-lz4", "decode", context);
     caller(checkpoint::check, context);
     try (var lease = budget.reserve(4096, storedSize + decodedSize + 16, 0, 0);
@@ -132,6 +149,14 @@ public final class Lz4Raw {
       caller(() -> sink.write(0, output.limit(count)), context);
       return count;
     }
+  }
+
+  /** Rejects raw-block wire and dispatch sizes before any decoder allocation or output effect. */
+  public static void admitDecode(long storedSize, long decodedSize, IoContext context)
+      throws ArchiveException {
+    // Incompressible blocks grow by the upstream compressBound allowance.
+    checkSize(storedSize, DISPATCH_LIMIT + DISPATCH_LIMIT / 255 + 16, context);
+    checkSize(decodedSize, DISPATCH_LIMIT, context);
   }
 
   /**

@@ -113,13 +113,16 @@ class OperationSemanticsTest {
     assertEquals(0, failure.getSuppressed().length);
   }
 
-  /** Constructs a real immutable request without invoking a source factory. */
+  /** Constructs a real request for an Archive Family whose pack capability remains unavailable. */
   private PackRequest request() {
     return PackRequest.standard(
         directory.resolve("archive.bsa"),
-        ArchiveFamily.STARFIELD_GENERAL_BA2,
-        ArchiveEncoding.tes3(),
+        ArchiveFamily.STARFIELD_DDS_BA2,
+        new ArchiveEncoding(
+            Optional.of(new WireVersion(2)),
+            Optional.of(Ba2Subtype.DX10),
+            java.util.OptionalLong.empty()),
         List.of(),
-        Optional.empty());
+        Optional.of(DdsTarget.PC));
   }
 }

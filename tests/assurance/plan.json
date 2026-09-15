@@ -29,6 +29,20 @@
       "behavioral_variant": "bsa-069-v1",
       "status": "qualified",
       "risk_tags": ["embedded-names", "lz4-frame"]
+    },
+    {
+      "id": "sf-gnrl-v2",
+      "family": "sf-gnrl-v2",
+      "behavioral_variant": "starfield-general-v2-zlib-v1",
+      "status": "qualified",
+      "risk_tags": ["general-ba2", "extra-header", "zlib"]
+    },
+    {
+      "id": "sf-gnrl-v3-m3",
+      "family": "sf-gnrl-v3-m3",
+      "behavioral_variant": "starfield-general-v3-method3-raw-lz4-v1",
+      "status": "qualified",
+      "risk_tags": ["general-ba2", "extra-header", "method-field", "raw-lz4", "native-codec"]
     }
   ],
   "requirements": [
@@ -50,7 +64,26 @@
     {"id": "JBSA-BSA-015"},
     {"id": "JBSA-CLI-004"},
     {"id": "JBSA-CLI-005"},
+    {"id": "JBSA-CODEC-002"},
+    {"id": "JBSA-CODEC-003"},
     {"id": "JBSA-CODEC-008"},
+    {"id": "JBSA-CODEC-009"},
+    {"id": "JBSA-CODEC-010"},
+    {"id": "JBSA-CODEC-011"},
+    {"id": "JBSA-CODEC-012"},
+    {"id": "JBSA-GNRL-001"},
+    {"id": "JBSA-GNRL-002"},
+    {"id": "JBSA-GNRL-003"},
+    {"id": "JBSA-GNRL-004"},
+    {"id": "JBSA-GNRL-005"},
+    {"id": "JBSA-GNRL-006"},
+    {"id": "JBSA-GNRL-007"},
+    {"id": "JBSA-GNRL-008"},
+    {"id": "JBSA-GNRL-009"},
+    {"id": "JBSA-GNRL-010"},
+    {"id": "JBSA-GNRL-011"},
+    {"id": "JBSA-GNRL-012"},
+    {"id": "JBSA-GNRL-013"},
     {"id": "JBSA-LIB-010"},
     {"id": "JBSA-SCHED-006"},
     {"id": "JBSA-SCHED-010"},
@@ -61,19 +94,23 @@
     {
       "id": "decode-entries",
       "expected": "Recognized archives expose the specified ordered names, metadata, diagnostics, and decoded bytes.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-001", "JBSA-ASR-002", "JBSA-ASR-003", "JBSA-ASR-006", "JBSA-ASR-007", "JBSA-ASR-008"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-001"],
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
-        "bsa-069": ["JBSA-BSA-001"]
+        "bsa-069": ["JBSA-BSA-001"],
+        "sf-gnrl-v2": ["JBSA-GNRL-001", "JBSA-GNRL-002", "JBSA-GNRL-004", "JBSA-GNRL-005", "JBSA-GNRL-006", "JBSA-GNRL-008", "JBSA-GNRL-009"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-001", "JBSA-GNRL-002", "JBSA-GNRL-004", "JBSA-GNRL-005", "JBSA-GNRL-006", "JBSA-GNRL-008", "JBSA-GNRL-009"]
       },
       "test_selectors": {
         "tes3": ["io.github.evildarkarchon.jbsa.verification.Tes3ConformanceIT#readsIndependentStoredWireFixture"],
         "bsa-067": ["io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#readsAndExtractsIndependentWireVectors"],
         "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#readsAndExtractsIndependentGameVectors"],
-        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#readsAndExtractsIndependentGameVectors"]
+        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#readsAndExtractsIndependentGameVectors"],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"]
       },
       "evidence_refs": {
         "bsa-069": [
@@ -105,13 +142,15 @@
     {
       "id": "malformed-input",
       "expected": "Malformed structures are rejected or classified as the specified tolerated noncanonical disposition without unbounded reads.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-004"],
         "bsa-067": ["JBSA-BSA-014"],
         "bsa-068": ["JBSA-BSA-014"],
-        "bsa-069": ["JBSA-BSA-014"]
+        "bsa-069": ["JBSA-BSA-014"],
+        "sf-gnrl-v2": ["JBSA-GNRL-010", "JBSA-CODEC-012"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-010", "JBSA-CODEC-008", "JBSA-CODEC-012"]
       },
       "test_selectors": {
         "tes3": [
@@ -147,7 +186,9 @@
           "io.github.evildarkarchon.jbsa.BsaReaderTest#opensMixedRecordsAndDistinguishesExactSharedSpans",
           "io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsMalformedIndexAndUnsignedSizeSpans",
           "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest#unsafeNamesRemainInspectableWithAllApplicableWarnings"
-        ]
+        ],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2ReaderTest#diagnosesNoncanonicalStarfieldExtraHeader"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#rejectsUnsupportedMethodAndInvalidRawLz4", "io.github.evildarkarchon.jbsa.Ba2ReaderTest#rejectsInvalidAndOversizeStarfieldRawBlocksWithoutOutputEffects"]
       },
       "evidence_refs": {
         "bsa-069": [
@@ -162,12 +203,14 @@
     {
       "id": "unsupported-codec-decode",
       "expected": "Unsupported compressed payload encodings fail with a stable unsupported or format outcome before unsafe consumption.",
-      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069"]},
+      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
-        "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"]
+        "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"],
+        "sf-gnrl-v2": ["JBSA-GNRL-002", "JBSA-GNRL-005"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-005"]
       },
       "test_selectors": {
         "bsa-067": ["io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsChecksumTrailingTruncationAndDecodedSizeMismatch"],
@@ -175,7 +218,9 @@
         "bsa-069": [
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsMalformedLz4FramesAtContentEof",
           "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#rejectsCorruptionTruncationTrailingFramesAndWrongOutputSize"
-        ]
+        ],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2ReaderTest#appliesQualifiedVersionThreeZlibFallbackWithoutChangingRecognition"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#rejectsUnsupportedMethodAndInvalidRawLz4"]
       },
       "evidence_refs": {
         "bsa-069": [
@@ -188,13 +233,15 @@
     {
       "id": "unsupported-codec-encode",
       "expected": "Unsupported encode codecs are rejected before opening sources or publishing destination artifacts.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-004"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-001"],
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
-        "bsa-069": ["JBSA-BSA-001", "JBSA-CLI-005"]
+        "bsa-069": ["JBSA-BSA-001", "JBSA-CLI-005"],
+        "sf-gnrl-v2": ["JBSA-GNRL-002", "JBSA-GNRL-011"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-011"]
       },
       "test_selectors": {
         "tes3": ["io.github.evildarkarchon.jbsa.BsaPackTest#rejectsTes3CompressionOverrides"],
@@ -203,7 +250,9 @@
         "bsa-069": [
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsForeignCodecsBeforeSourceEffects",
           "io.github.evildarkarchon.jbsa.cli.MainTest#rejectsInvalidSseCodecCombinations"
-        ]
+        ],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsInvalidStarfieldCodecCombinationsBeforePayloads"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsInvalidStarfieldCodecCombinationsBeforePayloads"]
       },
       "evidence_refs": {
         "bsa-069": [
@@ -215,12 +264,14 @@
     {
       "id": "stored-mixed-round-trip",
       "expected": "Stored and mixed-compression inputs encode canonically and decode to the original ordered entries.",
-      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069"]},
+      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
       "capability_requirements": {
         "bsa-067": ["JBSA-BSA-001", "JBSA-BSA-009"],
         "bsa-068": ["JBSA-BSA-001", "JBSA-BSA-009"],
-        "bsa-069": ["JBSA-BSA-001"]
+        "bsa-069": ["JBSA-BSA-001"],
+        "sf-gnrl-v2": ["JBSA-GNRL-003", "JBSA-GNRL-005", "JBSA-GNRL-009", "JBSA-GNRL-012"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-003", "JBSA-GNRL-005", "JBSA-GNRL-009", "JBSA-GNRL-012"]
       },
       "test_selectors": {
         "bsa-067": ["io.github.evildarkarchon.jbsa.BsaPackTest#packsMixedCompressionOverridesAndRoundTrips", "io.github.evildarkarchon.jbsa.BsaPackTest#packsCanonicalStoredArchive"],
@@ -229,7 +280,9 @@
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#packsAndReadsLz4FrameAndMixedEntries",
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#packsStoredWithTwentyFourByteFolderRecords",
           "io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#independentlyValidatesEveryEncodeMode"
-        ]
+        ],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#writesCodecSelectedHeadersAndRoundTrips"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#writesMixedStoredAndRawLz4Entries"]
       },
       "evidence_refs": {
         "bsa-069": [
@@ -242,13 +295,15 @@
     {
       "id": "unsafe-extraction",
       "expected": "Unsafe or colliding entry names are rejected before destination effects and cannot escape the extraction root.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-004"],
         "bsa-067": ["JBSA-BSA-014"],
         "bsa-068": ["JBSA-BSA-014"],
-        "bsa-069": ["JBSA-BSA-014"]
+        "bsa-069": ["JBSA-BSA-014"],
+        "sf-gnrl-v2": ["JBSA-GNRL-008", "JBSA-GNRL-010", "JBSA-GNRL-011"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-008", "JBSA-GNRL-010", "JBSA-GNRL-011"]
       },
       "test_selectors": {
         "tes3": ["io.github.evildarkarchon.jbsa.Tes3ExtractTest#rejectsIneligibleNameBeforeDestinationEffects"],
@@ -257,7 +312,9 @@
         "bsa-069": [
           "io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects",
           "io.github.evildarkarchon.jbsa.verification.PublicMetadataContractIT#normalizedIdentityPreservesNonAsciiSpellingAndRejectsUnsafeOrUnmappableNames"
-        ]
+        ],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"]
       },
       "evidence_refs": {
         "bsa-069": [
@@ -285,11 +342,13 @@
       "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
       "capability_requirements": {
         "bsa-067": ["JBSA-BSA-009"],
-        "bsa-068": ["JBSA-BSA-009"]
+        "bsa-068": ["JBSA-BSA-009"],
+        "sf-gnrl-v2": ["JBSA-GNRL-003", "JBSA-GNRL-005"]
       },
       "test_selectors": {
         "bsa-067": ["io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#independentlyValidatesPackedArchives"],
-        "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#independentlyValidatesStoredZlibMixedAndEmbeddedOutput"]
+        "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#independentlyValidatesStoredZlibMixedAndEmbeddedOutput"],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#independentlyValidatesStarfieldWireVersions"]
       }
     },
     {
@@ -314,18 +373,30 @@
       "id": "oracle-differential",
       "expected": "JBSA and the digest-pinned Conformance Oracle cross-decode equivalent semantic content in both applicable directions.",
       "environments": ["local", "release"],
-      "applies_to": {"families": ["bsa-069"]},
+      "applies_to": {"families": ["bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
-        "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"]
+        "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"],
+        "sf-gnrl-v2": ["JBSA-GNRL-002", "JBSA-GNRL-005"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-005"]
       },
       "test_selectors": {
-        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#pinnedOracleCrossDecodesEveryFraming"]
+        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#pinnedOracleCrossDecodesEveryFraming"],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#pinnedLocalOracleCrossDecodesEveryStarfieldCodec"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#pinnedLocalOracleCrossDecodesEveryStarfieldCodec"]
       },
       "evidence_refs": {
         "bsa-069": [
           "build/run-bsa-oracle.ps1",
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java"
+        ],
+        "sf-gnrl-v2": [
+          "build/run-ba2-oracle.ps1",
+          "docs/development/evidence/issue45-qualification/results.txt"
+        ],
+        "sf-gnrl-v3-m3": [
+          "build/run-ba2-oracle.ps1",
+          "docs/development/evidence/issue45-qualification/results.txt"
         ]
       }
     },
@@ -460,33 +531,49 @@
     },
     {
       "id": "performance-checkpoint",
-      "expected": "The focused BSA 0x69 checkpoint records throughput and derived output size under bound conditions.",
+      "expected": "Focused Archive Family checkpoints record throughput, memory observations, and derived output size under bound conditions.",
       "environments": ["local"],
-      "applies_to": {"families": ["bsa-069"]},
+      "applies_to": {"families": ["bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-005"],
       "capability_requirements": {
-        "bsa-069": ["JBSA-BSA-010"]
+        "bsa-069": ["JBSA-BSA-010"],
+        "sf-gnrl-v2": ["JBSA-GNRL-003", "JBSA-GNRL-005"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-003", "JBSA-GNRL-005", "JBSA-CODEC-008"]
       },
       "test_selectors": {
-        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.BsaPerformanceCheckpointIT#recordsCurrentMachineCheckpoint"]
+        "bsa-069": ["io.github.evildarkarchon.jbsa.verification.BsaPerformanceCheckpointIT#recordsCurrentMachineCheckpoint"],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralPerformanceCheckpointIT#recordsZlibAndRawLz4Checkpoint"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralPerformanceCheckpointIT#recordsZlibAndRawLz4Checkpoint"]
       },
       "evidence_refs": {
         "bsa-069": [
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/BsaPerformanceCheckpointIT.java",
           "docs/development/evidence/issue44-performance/measurements.csv",
           "docs/development/evidence/issue44-performance/conditions.txt"
+        ],
+        "sf-gnrl-v2": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldGeneralPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue45-performance/measurements.csv",
+          "docs/development/evidence/issue45-performance/conditions.txt"
+        ],
+        "sf-gnrl-v3-m3": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldGeneralPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue45-performance/measurements.csv",
+          "docs/development/evidence/issue45-performance/conditions.txt"
         ]
       }
     },
     {
       "id": "behavioral-interactions",
       "expected": "Family-specific naming, hashing, flags, compression boundaries, source overlays, sharing, splitting, determinism, and empty or multi-entry interactions match their owning specifications.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-001", "JBSA-TES3-004"],
         "bsa-067": ["JBSA-BSA-001", "JBSA-BSA-015"],
-        "bsa-068": ["JBSA-BSA-001", "JBSA-BSA-011", "JBSA-BSA-013", "JBSA-BSA-015"]
+        "bsa-068": ["JBSA-BSA-001", "JBSA-BSA-011", "JBSA-BSA-013", "JBSA-BSA-015"],
+        "sf-gnrl-v2": ["JBSA-GNRL-007", "JBSA-GNRL-008", "JBSA-GNRL-009", "JBSA-GNRL-012", "JBSA-GNRL-013", "JBSA-CODEC-003"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-007", "JBSA-GNRL-008", "JBSA-GNRL-009", "JBSA-GNRL-012", "JBSA-GNRL-013", "JBSA-CODEC-003"]
       },
       "test_selectors": {
         "tes3": [
@@ -502,7 +589,97 @@
           "io.github.evildarkarchon.jbsa.Bsa68PackTest#clearsLegacyFileFlags",
           "io.github.evildarkarchon.jbsa.Bsa68PackTest#retainsMixedRecordsAndDoesNotShareDifferentPrefixes",
           "io.github.evildarkarchon.jbsa.BsaReaderTest#preservesAuthoritativeNonAsciiAndEmptyStemHashes"
-        ]
+        ],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2PackTest#selectsStarfieldWireVersionFromCompressionAndRoundTrips"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#writesMixedStoredAndRawLz4Entries"]
+      }
+    },
+    {
+      "id": "raw-lz4-round-trip",
+      "expected": "Starfield v3 method-3 entries use the qualified level-12 raw-LZ4 profile and round trip exact ordered bytes.",
+      "applies_to": {"risk_tags": ["raw-lz4"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-003", "JBSA-GNRL-005", "JBSA-CODEC-002"]
+      },
+      "test_selectors": {
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#writesCodecSelectedHeadersAndRoundTrips", "io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#packagedProfileIdentifiesLevelTwelveRawLz4"]
+      },
+      "evidence_refs": {
+        "sf-gnrl-v3-m3": ["jbsa/src/main/resources/META-INF/jbsa-starfield-general-lz4-profile.json", "tests/fixtures/synthetic/manifest.json"]
+      }
+    },
+    {
+      "id": "starfield-header-method-selection",
+      "expected": "Starfield General emits the canonical extra header and selects v2 without a method or v3 with method 3 solely from the compressed codec.",
+      "applies_to": {"families": ["sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-gnrl-v2": ["JBSA-GNRL-001", "JBSA-GNRL-003"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-001", "JBSA-GNRL-003"]
+      },
+      "test_selectors": {
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2PackTest#selectsStarfieldWireVersionFromCompressionAndRoundTrips"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.Ba2PackTest#selectsStarfieldWireVersionFromCompressionAndRoundTrips"]
+      }
+    },
+    {
+      "id": "starfield-cli-selection",
+      "expected": "The thin CLI maps -sf1 stored and zlib to v2 and raw LZ4 to v3 method 3, then cross-decodes the output.",
+      "applies_to": {"families": ["sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-gnrl-v2": ["JBSA-CLI-004", "JBSA-CLI-005"],
+        "sf-gnrl-v3-m3": ["JBSA-CLI-004", "JBSA-CLI-005"]
+      },
+      "test_selectors": {
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.cli.MainTest#packsAndUnpacksStarfieldGeneralVariants"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.cli.MainTest#packsAndUnpacksStarfieldGeneralVariants"]
+      }
+    },
+    {
+      "id": "starfield-independent-validation",
+      "expected": "An independent bounded scanner accepts canonical Starfield v2 zlib and v3 raw-LZ4 while requiring exact complete payload consumption.",
+      "applies_to": {"families": ["sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "requirements": ["JBSA-ASR-003"],
+      "capability_requirements": {
+        "sf-gnrl-v2": ["JBSA-GNRL-005", "JBSA-GNRL-010"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-005", "JBSA-GNRL-010", "JBSA-CODEC-012"]
+      },
+      "test_selectors": {
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#independentlyValidatesStarfieldWireVersions"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#independentlyValidatesStarfieldWireVersions"]
+      },
+      "evidence_refs": {
+        "sf-gnrl-v2": ["build/validate-ba2-wire.py", "tests/fixtures/starfield-general/starfield-general-v2-zlib.hex", "tests/fixtures/starfield-general/manifest.json"],
+        "sf-gnrl-v3-m3": ["build/validate-ba2-wire.py", "tests/fixtures/synthetic/artifacts/archives/sf-gnrl-v3-m3-raw-lz4.ba2", "tests/fixtures/synthetic/manifest.json"]
+      }
+    },
+    {
+      "id": "starfield-native-resource-safety",
+      "expected": "Raw-LZ4 native capability, size admission, memory credits, invalid input, and stable failure mapping are checked before output effects.",
+      "applies_to": {"risk_tags": ["native-codec", "raw-lz4"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-gnrl-v3-m3": ["JBSA-CODEC-008", "JBSA-CODEC-009", "JBSA-CODEC-010", "JBSA-CODEC-011", "JBSA-CODEC-012"]
+      },
+      "test_selectors": {
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#rejectsOversizedUnsplittableBlocksBeforeEffects", "io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#rejectsInvalidBlocksAndSizeMismatch", "io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts"]
+      },
+      "evidence_refs": {
+        "sf-gnrl-v3-m3": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4RawTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java", "jbsa/src/main/resources/META-INF/jbsa-starfield-general-lz4-profile.json", "docs/development/evidence/issue45-qualification/results.txt"]
+      }
+    },
+    {
+      "id": "starfield-raw-cancellation",
+      "expected": "Raw-LZ4 cancellation and callback failures release credits without publishing destination effects.",
+      "applies_to": {"risk_tags": ["raw-lz4"]},
+      "requirements": ["JBSA-ASR-004"],
+      "capability_requirements": {
+        "sf-gnrl-v3-m3": ["JBSA-CODEC-010", "JBSA-SCHED-010"]
+      },
+      "test_selectors": {
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#normalizesCallbackFaultsAndReturnsCreditOnCancellation"]
       }
     }
   ],
@@ -514,6 +691,10 @@
     {
       "paths": ["jbsa/src/main/java/**/bsa/**", "jbsa/src/test/java/**/Bsa*.java", "tests/fixtures/bsa*/**"],
       "capabilities": ["bsa-067", "bsa-068", "bsa-069"]
+    },
+    {
+      "paths": ["jbsa/src/main/java/**/ba2/**", "jbsa/src/test/java/**/Ba2*.java", "tests/fixtures/starfield-general/**", "tests/fixtures/synthetic/artifacts/archives/sf-gnrl-*.ba2"],
+      "capabilities": ["sf-gnrl-v2", "sf-gnrl-v3-m3"]
     },
     {
       "paths": ["build/assurance/**", "tests/assurance/**", "build-logic/**", "jbsa/src/main/java/io/github/evildarkarchon/jbsa/*.java", "jbsa-cli/**", "jbsa-conformance-tests/**", "docs/spec/**", ".github/workflows/**"],
@@ -752,6 +933,48 @@
         "workers": [1, 2, 4, 8, 16],
         "status": "planned",
         "release_gate": true
+      },
+      {
+        "id": "sf-gnrl-v2-zlib-checkpoint",
+        "surface": "throughput",
+        "workload": "bulk-zlib-starfield-general",
+        "implementation_path": "general-ba2-zlib-v2",
+        "risks": ["extra-header", "zlib-throughput", "heap-peak", "output-size"],
+        "metrics": ["bytes-per-second", "peak-working-set", "output-size"],
+        "capability_id": "sf-gnrl-v2",
+        "codec": "zlib",
+        "status": "qualified",
+        "qualification_scope": "development-checkpoint",
+        "environments": ["local"],
+        "release_gate": false,
+        "test_selectors": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralPerformanceCheckpointIT#recordsZlibAndRawLz4Checkpoint"],
+        "evidence_refs": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldGeneralPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue45-performance/measurements.csv",
+          "docs/development/evidence/issue45-performance/conditions.txt",
+          "docs/development/evidence/issue45-qualification/results.txt"
+        ]
+      },
+      {
+        "id": "sf-gnrl-v3-raw-lz4-checkpoint",
+        "surface": "throughput",
+        "workload": "bulk-raw-lz4-starfield-general",
+        "implementation_path": "general-ba2-raw-lz4-v3-method3",
+        "risks": ["method-dispatch", "native-loading", "native-credits", "heap-peak", "output-size"],
+        "metrics": ["bytes-per-second", "peak-working-set", "output-size"],
+        "capability_id": "sf-gnrl-v3-m3",
+        "codec": "raw-lz4",
+        "status": "qualified",
+        "qualification_scope": "development-checkpoint",
+        "environments": ["local"],
+        "release_gate": false,
+        "test_selectors": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralPerformanceCheckpointIT#recordsZlibAndRawLz4Checkpoint"],
+        "evidence_refs": [
+          "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldGeneralPerformanceCheckpointIT.java",
+          "docs/development/evidence/issue45-performance/measurements.csv",
+          "docs/development/evidence/issue45-performance/conditions.txt",
+          "docs/development/evidence/issue45-qualification/results.txt"
+        ]
       },
       {
         "id": "bsa-069-lz4-checkpoint",

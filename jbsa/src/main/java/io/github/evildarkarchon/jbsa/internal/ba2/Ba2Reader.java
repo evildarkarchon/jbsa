@@ -10,14 +10,12 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.*;
 
-/** Bounded FO4 General BA2 v1 index reader with parent-owned lazy payload access. */
+/** Bounded General BA2 index reader with parent-owned lazy payload access. */
 public final class Ba2Reader {
-  private static final ArchiveEncoding ENCODING =
-      new ArchiveEncoding(
-          Optional.of(new WireVersion(1)), Optional.of(Ba2Subtype.GNRL), OptionalLong.empty());
   private final OwnedArchive.IndexBuilder builder;
   private final IoContext context;
   private final Charset encoding;
+  private final Optional<CompatibilityProfile> compatibilityProfile;
   private final FailureRetention retention;
   private boolean noncanonical;
 
@@ -32,6 +30,7 @@ public final class Ba2Reader {
     this.builder = builder;
     context = IoContext.of(path, operation);
     encoding = Tes3Names.encoding(options.compatibilityProfile(), context);
+    compatibilityProfile = options.compatibilityProfile();
     retention = new FailureRetention(options.resourceLimits(), operation, policy);
   }
 
@@ -72,11 +71,52 @@ public final class Ba2Reader {
   /** Bounds every metadata and payload span before admitting the serialized entry index. */
   private ArchiveInspection parse() throws IOException {
     ByteBuffer header = builder.readMetadata(0, 24);
-    if (header.getInt() != 0x58445442 || header.getInt() != 1 || header.getInt() != 0x4c524e47)
+    if (header.getInt() != 0x58445442) throw malformed("ba2.invalid-selector");
+    long version = u32(header);
+    if ((version < 1 || version > 3) || header.getInt() != 0x4c524e47)
       throw malformed("ba2.invalid-selector");
     long count = u32(header), nameOffset = header.getLong();
+    long headerSize = GeneralBa2Layout.headerSize(version);
+    OptionalLong extraHeader = OptionalLong.empty();
+    OptionalLong compressionMethod = OptionalLong.empty();
+    boolean rawLz4 = false;
+    if (version >= 2) {
+      long storedExtra = builder.readMetadata(24, 8).getLong();
+      extraHeader = OptionalLong.of(storedExtra);
+      if (storedExtra != 1)
+        mismatch(
+            "ba2.extra-header-value",
+            -1,
+            null,
+            "unknownValueAt24",
+            24,
+            8,
+            Long.toUnsignedString(storedExtra),
+            "1");
+    }
+    if (version == 3) {
+      long method = u32(builder.readMetadata(32, 4));
+      compressionMethod = OptionalLong.of(method);
+      rawLz4 = method == 3;
+      if (!rawLz4) {
+        if (compatibilityProfile.isEmpty()) throw unsupported("archive.unsupported-encoding");
+        warning(
+            "ba2.sf3-zlib-fallback",
+            -1,
+            null,
+            "compressionMethod",
+            32,
+            4,
+            Map.of("stored", Long.toUnsignedString(method)));
+      }
+    }
+    ArchiveFamily family =
+        version == 1 ? ArchiveFamily.FO4_GENERAL_BA2 : ArchiveFamily.STARFIELD_GENERAL_BA2;
+    ArchiveEncoding archiveEncoding =
+        new ArchiveEncoding(
+            Optional.of(new WireVersion(version)), Optional.of(Ba2Subtype.GNRL), compressionMethod);
     long recordsEnd =
-        ExactIo.end(24, ExactIo.multiply(count, 36, context), builder.size(), context);
+        ExactIo.end(headerSize, ExactIo.multiply(count, 36, context), builder.size(), context);
     builder.declareEntries(count);
     boolean named = nameOffset > 0 && nameOffset < builder.size();
     if (!named)
@@ -94,7 +134,7 @@ public final class Ba2Reader {
     List<Span> spans = new ArrayList<>();
     Set<NormalizedNameIdentity> identities = new HashSet<>();
     for (long ordinal = 0; ordinal < count; ordinal++) {
-      long field = 24 + ordinal * 36;
+      long field = headerSize + ordinal * 36;
       ByteBuffer record = builder.readMetadata(field, 36);
       long baseHash = u32(record);
       byte[] extension = new byte[4];
@@ -185,8 +225,8 @@ public final class Ba2Reader {
       }
       EntryMetadata metadata =
           new EntryMetadata(
-              ArchiveFamily.FO4_GENERAL_BA2,
-              ENCODING,
+              family,
+              archiveEncoding,
               ordinal,
               display,
               identity,
@@ -195,6 +235,7 @@ public final class Ba2Reader {
               stored,
               new EntryMetadata.GeneralBa2(prefix, offset, packed, unpacked, sentinel));
       if (packed == 0) builder.addStored(metadata, offset);
+      else if (rawLz4) builder.addLz4Raw(metadata, offset, packed);
       else builder.addZlib(metadata, offset, packed);
       entries.add(metadata);
     }
@@ -227,16 +268,17 @@ public final class Ba2Reader {
     retention.latestAssessment(assessment);
     ArchiveDetection detection =
         new ArchiveDetection(
-            DetectionStatus.SUPPORTED_FAMILY,
+            version == 3 && !rawLz4
+                ? DetectionStatus.UNSUPPORTED_VARIANT
+                : DetectionStatus.SUPPORTED_FAMILY,
             new WireName(new byte[] {66, 84, 68, 88}),
-            Optional.of(ArchiveFamily.FO4_GENERAL_BA2),
-            ENCODING.wireVersion(),
+            version == 3 && !rawLz4 ? Optional.empty() : Optional.of(family),
+            archiveEncoding.wireVersion(),
             Optional.of(Ba2Subtype.GNRL),
-            OptionalLong.empty());
+            archiveEncoding.compressionMethod());
     return new ArchiveInspection(
         detection,
-        new ArchiveMetadata.GeneralBa2(
-            ArchiveFamily.FO4_GENERAL_BA2, ENCODING, count, nameOffset, OptionalLong.empty()),
+        new ArchiveMetadata.GeneralBa2(family, archiveEncoding, count, nameOffset, extraHeader),
         assessment,
         entries);
   }
@@ -337,6 +379,11 @@ public final class Ba2Reader {
 
   private ArchiveException malformed(String id) {
     return context.failure(FailureKind.FORMAT, id, null);
+  }
+
+  /** Rejects a recognized selector combination without reclassifying it as corrupt bytes. */
+  private ArchiveException unsupported(String id) {
+    return context.failure(FailureKind.UNSUPPORTED, id, null);
   }
 
   private record Span(long start, long end) {}

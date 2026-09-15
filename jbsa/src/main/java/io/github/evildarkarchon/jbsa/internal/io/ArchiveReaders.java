@@ -33,8 +33,25 @@ public final class ArchiveReaders {
                           || family == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
                           || family == ArchiveFamily.SSE_BSA)
               .isPresent()) return BsaReader.load(builder, path, options, operation, policy);
-          if (detection.family().filter(ArchiveFamily.FO4_GENERAL_BA2::equals).isPresent()
-              && detection.wireVersion().orElseThrow().value() == 1)
+          boolean generalBa2 =
+              detection.ba2Subtype().filter(Ba2Subtype.GNRL::equals).isPresent()
+                  && detection.wireVersion().isPresent()
+                  && (detection.wireVersion().orElseThrow().value() == 1
+                      || detection.wireVersion().orElseThrow().value() == 2
+                      || detection.wireVersion().orElseThrow().value() == 3);
+          boolean qualifiedFallback =
+              detection.status() == DetectionStatus.UNSUPPORTED_VARIANT
+                  && options.compatibilityProfile().isPresent()
+                  && detection.wireVersion().orElseThrow().value() == 3;
+          if (generalBa2
+              && (detection
+                      .family()
+                      .filter(
+                          family ->
+                              family == ArchiveFamily.FO4_GENERAL_BA2
+                                  || family == ArchiveFamily.STARFIELD_GENERAL_BA2)
+                      .isPresent()
+                  || qualifiedFallback))
             return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Reader.load(
                 builder, path, options, operation, policy);
           IoContext context = IoContext.of(path, operation);

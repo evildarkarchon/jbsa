@@ -1,4 +1,4 @@
-<# .SYNOPSIS Runs a bounded, digest-pinned local FO4 General BA2 differential observation. #>
+<# .SYNOPSIS Runs a bounded, digest-pinned local General BA2 differential observation. #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidateSet('pack', 'unpack')][string]$Operation,
@@ -6,15 +6,20 @@ param(
     [Parameter(Mandatory)][string]$OutputPath,
     [Parameter(Mandatory)][string]$WorkingDirectory,
     [Parameter(Mandatory)][string]$EvidenceDirectory,
-    [ValidateSet('stored', 'zlib')][string]$Compression = 'stored'
+    [ValidateSet('stored', 'zlib', 'raw-lz4')][string]$Compression = 'stored',
+    [ValidateSet('fo4', 'sf1')][string]$Family = 'fo4'
 )
 $ErrorActionPreference = 'Stop'
+if ($Family -eq 'fo4' -and $Compression -eq 'raw-lz4') {
+    throw 'Fallout 4 General BA2 does not support raw LZ4.'
+}
 . (Join-Path $PSScriptRoot 'conformance-adapters.ps1')
 $repositoryRoot = Split-Path $PSScriptRoot -Parent
 $oracleArguments = @($Operation, $InputPath, $OutputPath, '-mt:no')
 if ($Operation -eq 'pack') {
-    $oracleArguments += @('-fo4', '-split:0', '-share:no')
+    $oracleArguments += @("-$Family", '-split:0', '-share:no')
     if ($Compression -eq 'zlib') { $oracleArguments += '-z:zlib' }
+    if ($Compression -eq 'raw-lz4') { $oracleArguments += '-z:lz4' }
 }
 $result = Invoke-ConformanceOracle -RepositoryRoot $repositoryRoot -Arguments $oracleArguments `
     -WorkingDirectory $WorkingDirectory -EvidenceDirectory $EvidenceDirectory `

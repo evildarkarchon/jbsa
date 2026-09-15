@@ -59,7 +59,7 @@ class AssurancePlanTests(unittest.TestCase):
             self.assertFalse(output_path.exists())
 
     def test_compact_plan_expands_all_qualified_assurance_work(self) -> None:
-        """Expand completed families, including the fully evidenced BSA 0x69 capability."""
+        """Expand every completed family, including both Starfield General wire variants."""
         with tempfile.TemporaryDirectory() as temporary:
             first_path = Path(temporary) / "first.json"
             second_path = Path(temporary) / "second.json"
@@ -71,7 +71,7 @@ class AssurancePlanTests(unittest.TestCase):
             expanded = json.loads(first_path.read_text(encoding="utf-8"))
 
         self.assertEqual(
-            {"bsa-067", "bsa-068", "bsa-069", "tes3"},
+            {"bsa-067", "bsa-068", "bsa-069", "sf-gnrl-v2", "sf-gnrl-v3-m3", "tes3"},
             {scenario["capability_id"] for scenario in expanded["assurance_scenarios"]},
         )
         self.assertFalse(expanded["incomplete_scenarios"])
@@ -138,9 +138,9 @@ class AssurancePlanTests(unittest.TestCase):
             self.assertEqual(first_path.read_bytes(), second_path.read_bytes())
             self.assertEqual(
                 {
-                    "capability_count": 4,
-                    "performance_lane_count": 24,
-                    "scenario_count": 19,
+                    "capability_count": 6,
+                    "performance_lane_count": 26,
+                    "scenario_count": 25,
                     "status": "valid",
                     "version": "assurance-v2",
                 },
@@ -334,7 +334,11 @@ class AssurancePlanTests(unittest.TestCase):
         self.assertIn("bsa-069:oracle-differential", local_ids)
         self.assertIn("bsa-069:performance-checkpoint", local_ids)
         self.assertEqual(
-            ["bsa-069-lz4-checkpoint"],
+            [
+                "bsa-069-lz4-checkpoint",
+                "sf-gnrl-v2-zlib-checkpoint",
+                "sf-gnrl-v3-raw-lz4-checkpoint",
+            ],
             [lane["lane_id"] for lane in local_selection["performance_lanes"]],
         )
 
@@ -547,6 +551,40 @@ class AssurancePlanTests(unittest.TestCase):
             "JBSA-SCHED-010",
         ):
             self.assertTrue(traceability[requirement], requirement)
+
+    def test_qualified_starfield_general_inventory_is_executable(self) -> None:
+        """Keep both Starfield wire variants complete, selected, and evidence-backed."""
+        with tempfile.TemporaryDirectory() as temporary:
+            output_path = Path(temporary) / "expanded.json"
+            result = self.run_command("expand", output_path)
+            self.assertEqual(0, result.returncode, result.stderr)
+            expanded = json.loads(output_path.read_text(encoding="utf-8"))
+
+        scenarios = [
+            scenario
+            for scenario in expanded["assurance_scenarios"]
+            if scenario["capability_id"] in {"sf-gnrl-v2", "sf-gnrl-v3-m3"}
+        ]
+        self.assertFalse(
+            any(
+                scenario["capability_id"] in {"sf-gnrl-v2", "sf-gnrl-v3-m3"}
+                for scenario in expanded["incomplete_scenarios"]
+            )
+        )
+        self.assertTrue(all(scenario["test_selectors"] for scenario in scenarios))
+        scenario_ids = {scenario["assurance_scenario_id"] for scenario in scenarios}
+        self.assertIn("sf-gnrl-v2:starfield-independent-validation", scenario_ids)
+        self.assertIn("sf-gnrl-v3-m3:raw-lz4-round-trip", scenario_ids)
+        lanes = {lane["lane_id"]: lane for lane in expanded["performance_lanes"]}
+        for lane_id in (
+            "sf-gnrl-v2-zlib-checkpoint",
+            "sf-gnrl-v3-raw-lz4-checkpoint",
+        ):
+            self.assertEqual("qualified", lanes[lane_id]["status"])
+            self.assertFalse(lanes[lane_id]["release_gate"])
+            self.assertTrue(
+                all((ROOT / reference).is_file() for reference in lanes[lane_id]["evidence_refs"])
+            )
 
     def test_validate_rejects_missing_qualified_test_selectors(self) -> None:
         """Require qualified scenarios to cite the focused tests that produced their evidence."""

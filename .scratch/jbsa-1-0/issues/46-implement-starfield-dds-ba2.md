@@ -1,6 +1,6 @@
 # Implement Starfield DDS BA2
 
-Status: needs-triage
+Status: ready-for-agent
 State: open
 GitHub issue: #46
 Source: https://github.com/evildarkarchon/jbsa/issues/46
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:13Z
 Source updated: 2026-09-03T06:54:13Z
 Closed: none
 Migrated: 2026-09-10
-Labels: needs-triage
+Labels: ready-for-agent
 Assignees: none
 Blocked by: [#45](../issues/45-implement-starfield-general-ba2.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #45.
+Triage reviewed: 2026-09-14
+Triage rationale: #45 is closed; this ticket's Assurance v2 contract is current, it is fully specified, and no open prerequisites remain.
 
 ## Original issue body
 
@@ -81,3 +81,10 @@ Performance work is limited to the curated DDS zlib/raw-LZ4 chunk,
 reconstruction, random-access, peak-memory, and associated pack output-size
 lanes. No expanded CV1 or performance-v1 packet is required. The dependency on
 #45 remains unchanged.
+
+### Dependency reassessment after #45 — 2026-09-14
+
+Ticket #45 is closed with the shared Starfield General v2/v3 header, codec,
+validation, oracle, and performance paths qualified. This ticket has no
+remaining open prerequisite and is ready for agent implementation under its
+Assurance v2 completion contract.

@@ -28,7 +28,7 @@ public final class ResourceBudget implements AutoCloseable {
         limits,
         context,
         Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
-        Lz4Frame.DECODE_NATIVE_BYTES,
+        Math.max(Lz4Frame.DECODE_NATIVE_BYTES, Lz4Raw.DECODE_NATIVE_BYTES),
         1);
   }
 
@@ -42,7 +42,7 @@ public final class ResourceBudget implements AutoCloseable {
         limits,
         context,
         Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
-        Lz4Frame.DECODE_NATIVE_BYTES,
+        Math.max(Lz4Frame.DECODE_NATIVE_BYTES, Lz4Raw.ENCODE_NATIVE_BYTES),
         4);
   }
 

@@ -17,6 +17,77 @@ import org.junit.jupiter.api.io.TempDir;
 class Ba2PackTest {
   @TempDir Path temporary;
 
+  /** Starfield emits v3/method-3 only for raw LZ4 and otherwise emits the v2 extra header. */
+  @Test
+  void selectsStarfieldWireVersionFromCompressionAndRoundTrips() throws Exception {
+    byte[] payload =
+        "starfield-general".repeat(100).getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+    for (PackOptions.Compression compression :
+        List.of(
+            PackOptions.Compression.STORED,
+            PackOptions.Compression.ZLIB,
+            PackOptions.Compression.LZ4_RAW)) {
+      Path target = temporary.resolve(compression.name().toLowerCase(Locale.ROOT) + ".ba2");
+      BethesdaArchives.standard()
+          .pack(
+              starfieldRequest(
+                  target, options(compression, false, 0), generated("Data/Entry.bin", payload)),
+              OperationControl.standard());
+      ByteBuffer wire = ByteBuffer.wrap(Files.readAllBytes(target)).order(ByteOrder.LITTLE_ENDIAN);
+      int expectedVersion = compression == PackOptions.Compression.LZ4_RAW ? 3 : 2;
+      assertEquals(expectedVersion, wire.getInt(4));
+      assertEquals(1, wire.getLong(24));
+      if (expectedVersion == 3) assertEquals(3, wire.getInt(32));
+      try (OpenArchive archive = BethesdaArchives.standard().open(target, OpenOptions.standard());
+          EntryContent content = archive.entry(0).openContent()) {
+        assertEquals(ArchiveFamily.STARFIELD_GENERAL_BA2, archive.inspection().metadata().family());
+        assertArrayEquals(payload, Channels.newInputStream(content).readAllBytes());
+      }
+    }
+  }
+
+  /**
+   * Foreign or conflicting Starfield codecs fail before payload factories or destination effects.
+   */
+  @Test
+  void rejectsInvalidStarfieldCodecCombinationsBeforePayloads() throws Exception {
+    List<PackOptions> invalid =
+        List.of(
+            options(PackOptions.Compression.LZ4_FRAME, false, 0),
+            new PackOptions(
+                List.of(),
+                PackOptions.Compression.LZ4_RAW,
+                false,
+                new PackOptions.Splitting.UpToBytes(0),
+                FlagSelection.AUTOMATIC,
+                FlagSelection.AUTOMATIC,
+                Map.of(
+                    new NormalizedNameIdentity("data\\entry.bin"), PackOptions.Compression.ZLIB)));
+    for (int index = 0; index < invalid.size(); index++) {
+      PackOptions selected = invalid.get(index);
+      var opens = new java.util.concurrent.atomic.AtomicInteger();
+      PackSource source =
+          new PackSource.GeneratedEntry(
+              "Data/Entry.bin",
+              1,
+              () -> {
+                opens.incrementAndGet();
+                return Channels.newChannel(new ByteArrayInputStream(new byte[] {7}));
+              });
+      Path target = temporary.resolve("invalid-starfield-" + index + ".ba2");
+      ArchiveException failure =
+          assertThrows(
+              ArchiveException.class,
+              () ->
+                  BethesdaArchives.standard()
+                      .pack(
+                          starfieldRequest(target, selected, source), OperationControl.standard()));
+      assertEquals(FailureKind.UNSUPPORTED, failure.kind());
+      assertEquals(0, opens.get());
+      assertFalse(Files.exists(target));
+    }
+  }
+
   /** Canonical metadata and payload order retain the caller's spelling and insertion order. */
   @Test
   void writesStoredRecordsInLogicalOrderWithCasePreserved() throws Exception {
@@ -322,6 +393,34 @@ class Ba2PackTest {
                 Optional.of(new WireVersion(1)),
                 Optional.of(Ba2Subtype.GNRL),
                 OptionalLong.empty()),
+            List.of(sources),
+            Optional.empty());
+    return new PackRequest(
+        standard.destination(),
+        standard.family(),
+        standard.encoding(),
+        standard.compatibilityProfile(),
+        standard.sources(),
+        standard.targetPolicy(),
+        standard.diagnosticPolicy(),
+        standard.resourceLimits(),
+        standard.workerSelection(),
+        options,
+        standard.ddsTarget());
+  }
+
+  /** Builds a public Starfield General request whose selectors agree with the selected codec. */
+  private static PackRequest starfieldRequest(
+      Path target, PackOptions options, PackSource... sources) {
+    boolean raw = options.compression() == PackOptions.Compression.LZ4_RAW;
+    var standard =
+        PackRequest.standard(
+            target,
+            ArchiveFamily.STARFIELD_GENERAL_BA2,
+            new ArchiveEncoding(
+                Optional.of(new WireVersion(raw ? 3 : 2)),
+                Optional.of(Ba2Subtype.GNRL),
+                raw ? OptionalLong.of(3) : OptionalLong.empty()),
             List.of(sources),
             Optional.empty());
     return new PackRequest(

@@ -1,5 +1,6 @@
 """Black-box tests for canonical Assurance v2 Evidence Capsules."""
 
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -126,6 +127,27 @@ class EvidenceCapsuleTests(unittest.TestCase):
                 capsule = json.loads(output.read_text(encoding="utf-8"))
                 self.assertEqual(1, process.returncode)
                 self.assertEqual(outcome, capsule["outcome"])
+
+    def test_retained_issue45_local_capsule_is_content_addressed_and_complete(self) -> None:
+        """Retain the accepted local Starfield oracle/performance session as canonical evidence."""
+        path = ROOT / "tests" / "assurance" / "issue45-local-capsule.json"
+        capsule = json.loads(path.read_text(encoding="utf-8"))
+        digest = capsule.pop("capsule_digest")
+        encoded = json.dumps(
+            capsule, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        self.assertEqual("sha256:" + hashlib.sha256(encoded).hexdigest(), digest)
+        self.assertEqual("PASS", capsule["outcome"])
+        self.assertEqual("local", capsule["environment"])
+        self.assertEqual("affected", capsule["selected_tier"])
+        self.assertEqual(30, len(capsule["selected_scenario_ids"]))
+        self.assertTrue(
+            all(result["outcome"] == "PASS" for result in capsule["results"])
+        )
+        self.assertEqual(
+            'openjdk version "25.0.4.1" 2026-08-18 LTS',
+            capsule["session_identity"]["jvm"],
+        )
 
 
 if __name__ == "__main__":
