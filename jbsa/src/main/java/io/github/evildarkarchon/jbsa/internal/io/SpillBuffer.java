@@ -26,6 +26,8 @@ public final class SpillBuffer implements AutoCloseable {
   private final IoContext context;
   private final Path scratchParent;
   private final ResourceBudget.Lease memoryLease;
+  private final boolean borrowedLease;
+  private final long reservedScratch;
   private ByteBuffer memory;
   private FileChannel channel;
   private Path scratchPath;
@@ -37,15 +39,28 @@ public final class SpillBuffer implements AutoCloseable {
   /** Owns the heap credit acquired before allocating the fixed working window. */
   private SpillBuffer(Path scratchParent, ResourceBudget budget, IoContext context)
       throws IOException {
+    this(scratchParent, budget, context, null, -1);
+  }
+
+  /** Uses a caller-owned reservation when a worker's entire result cost was admitted first. */
+  private SpillBuffer(
+      Path scratchParent,
+      ResourceBudget budget,
+      IoContext context,
+      ResourceBudget.Lease precharged,
+      long reservedScratch)
+      throws IOException {
     this.scratchParent =
         Objects.requireNonNull(scratchParent, "scratchParent").toAbsolutePath().normalize();
     this.budget = Objects.requireNonNull(budget, "budget");
     this.context = Objects.requireNonNull(context, "context");
-    memoryLease = budget.reserve(MEMORY_BYTES, 0, 0, 0);
+    this.borrowedLease = precharged != null;
+    this.reservedScratch = reservedScratch;
+    memoryLease = borrowedLease ? precharged : budget.reserve(MEMORY_BYTES, 0, 0, 0);
     try {
       memory = ByteBuffer.allocate(MEMORY_BYTES);
     } catch (RuntimeException | Error cause) {
-      memoryLease.close();
+      if (!borrowedLease) memoryLease.close();
       throw cause;
     }
   }
@@ -62,6 +77,31 @@ public final class SpillBuffer implements AutoCloseable {
   }
 
   /**
+   * Borrows a worker reservation containing the fixed heap window, one possible spill handle, and
+   * the complete declared result extent. The reservation owner closes it after this buffer closes.
+   */
+  public static SpillBuffer openPrecharged(
+      Path scratchParent,
+      ResourceBudget budget,
+      IoContext context,
+      ResourceBudget.Lease reservation,
+      long reservedScratch)
+      throws IOException {
+    Objects.requireNonNull(reservation, "reservation");
+    if (reservedScratch < 0) throw new IllegalArgumentException("Negative scratch reservation");
+    return new SpillBuffer(scratchParent, budget, context, reservation, reservedScratch);
+  }
+
+  /**
+   * Holds the possible spill handle before parallel source admission so later coordinator growth
+   * cannot be starved by already-admitted private worker results.
+   */
+  public void reserveSpillHandle() throws ArchiveException {
+    if (closed) throw new IllegalStateException("Scratch is closed");
+    if (!borrowedLease && handleLease == null) handleLease = budget.reserve(0, 0, 1, 0);
+  }
+
+  /**
    * Appends or backpatches all remaining bytes; gaps and overflowing spans are rejected before
    * admission. Only this worker may write, and sealing permanently disables further writes.
    * Filesystem failure aborts and cleans this owner; scratch-limit rejection preserves its bytes.
@@ -72,7 +112,10 @@ public final class SpillBuffer implements AutoCloseable {
     long end = checkedEnd(offset, source.remaining(), Long.MAX_VALUE);
     if (offset > size)
       throw scratchContext().failure(FailureKind.DESTINATION, "io.invalid-output-span", null);
-    memoryLease.growScratch(Math.max(size, end) - size);
+    if (borrowedLease) {
+      if (end > reservedScratch)
+        throw scratchContext().failure(FailureKind.POLICY, "io.resource-capacity", null);
+    } else memoryLease.growScratch(Math.max(size, end) - size);
     try {
       if (end > MEMORY_BYTES && channel == null) spill();
       if (channel == null) {
@@ -147,7 +190,7 @@ public final class SpillBuffer implements AutoCloseable {
     } finally {
       // Residual reporting transfers ownership, so no credit or later close may retain that path.
       memory = null;
-      memoryLease.close();
+      if (!borrowedLease) memoryLease.close();
       if (handleLease != null) handleLease.close();
     }
     if (failures.failed()) throw failures.finish(artifacts);
@@ -155,7 +198,7 @@ public final class SpillBuffer implements AutoCloseable {
 
   /** Acquires the only scratch handle before creating a file and copies the bounded heap prefix. */
   private void spill() throws IOException {
-    handleLease = budget.reserve(0, 0, 1, 0);
+    if (!borrowedLease && handleLease == null) handleLease = budget.reserve(0, 0, 1, 0);
     try {
       scratchPath = Files.createTempFile(scratchParent, ".jbsa-spill-", ".tmp");
       channel =

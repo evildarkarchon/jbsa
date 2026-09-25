@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 
-/** Canonical sequential BA2 writer with bounded stabilization before split planning. */
+/** Canonical BA2 writer with bounded ordered stabilization before split planning. */
 public final class Ba2Packer {
   private Ba2Packer() {}
 
@@ -23,6 +23,7 @@ public final class Ba2Packer {
     var context = IoContext.of(request.destination(), Operation.PACK);
     boolean publicationOwnsSession = false;
     SpillBuffer scratch = null;
+    ParallelSources sources = null;
     OperationReport result = null;
     var failures = new FailureRetention(request.resourceLimits(), Operation.PACK);
     ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context);
@@ -34,6 +35,7 @@ public final class Ba2Packer {
             || request.family() == ArchiveFamily.STARFIELD_DDS_BA2;
     try {
       operation.begin();
+      WorkerSelection.UpTo selectedWorkers = WorkerLimits.snapshot(request.workerSelection());
       var encoding =
           io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names.encoding(
               request.compatibilityProfile(), context);
@@ -143,124 +145,172 @@ public final class Ba2Packer {
       if (items.isEmpty()) throw context.failure(FailureKind.POLICY, "ba2.empty-entry-set", null);
       boolean anyCompressed = items.stream().anyMatch(item -> item.compressed);
       boolean zlibCompressed = anyCompressed && !rawLz4;
+      preflightKnownTargets(items, request, context, !dds && !anyCompressed);
       // One spool bounds heap and handle use independently of entry count, and fixes split sizes.
       scratch = SpillBuffer.open(Path.of(System.getProperty("java.io.tmpdir")), budget, context);
       SpillBuffer stable = scratch;
+      sources =
+          new ParallelSources(
+              items.stream().map(item -> item.source).toList(),
+              selectedWorkers,
+              budget,
+              context,
+              0,
+              ordinal -> {
+                Item item = items.get(ordinal);
+                if (dds || rawLz4 || !item.compressed) return null;
+                return new ParallelSources.Encoding(
+                    zlibBound(item.source.size()),
+                    JdkZlib.ENCODE_HEAP_BYTES,
+                    JdkZlib.ENCODE_NATIVE_BYTES,
+                    (input, decodedSize, encoded, checkpoint, processing) ->
+                        JdkZlib.encode(
+                            input,
+                            decodedSize,
+                            (offset, bytes) -> encoded.write(offset, bytes),
+                            checkpoint::check,
+                            processing));
+              });
+      if (sources.parallel()) stable.reserveSpillHandle();
+      boolean workerZlib = sources.parallel() && !dds && !rawLz4;
       try (var codecCredits =
           budget.reserve(
-              zlibCompressed ? JdkZlib.ENCODE_HEAP_BYTES + 131072 : 196608,
-              zlibCompressed ? JdkZlib.ENCODE_NATIVE_BYTES : 0,
+              zlibCompressed && !workerZlib ? JdkZlib.ENCODE_HEAP_BYTES + 131072 : 196608,
+              zlibCompressed && !workerZlib ? JdkZlib.ENCODE_NATIVE_BYTES : 0,
               0,
               0)) {
         Map<String, List<Item>> candidates = new HashMap<>();
         Map<String, List<Chunk>> chunkCandidates = new HashMap<>();
         for (int ordinal = 0; ordinal < items.size(); ordinal++) {
-          Item item = items.get(ordinal);
-          var processing =
-              new IoContext(
-                  context.path(),
-                  Operation.PACK,
-                  OperationPhase.PROCESSING,
-                  OptionalLong.of(ordinal));
-          item.rawOffset = stable.size();
-          PackSources.consume(
-              item.source,
-              input ->
-                  transfer(
-                      input, item.source.size(), stable, item.rawOffset, operation, processing),
-              processing);
-          item.offset = item.rawOffset;
-          item.size = item.source.size();
-          if (dds) {
-            stabilizeDds(
-                item, stable, request, operation, processing, budget, chunkCandidates, rawLz4);
-            long entryDecoded =
-                item.texture.payloadSize()
-                    + DdsEnvelope.canonicalHeader(
-                            item.texture.width(),
-                            item.texture.height(),
-                            item.texture.mipCount(),
-                            item.texture.dxgiFormat(),
-                            item.texture.cubemap(),
-                            item.texture.tileMode(),
-                            request.ddsTarget().orElseThrow(),
-                            processing)
-                        .length;
-            if (entryDecoded > request.resourceLimits().maxDecodedBytes() - decoded)
-              throw processing.limit(
-                  "maxDecodedBytes",
-                  request.resourceLimits().maxDecodedBytes(),
-                  java.math.BigInteger.valueOf(decoded)
-                      .add(java.math.BigInteger.valueOf(entryDecoded))
-                      .toString());
-            decoded += entryDecoded;
-            continue;
-          }
-          if (request.options().sharing()) {
-            String key = digest(stable, item.rawOffset, item.source.size(), operation);
-            for (Item previous : candidates.getOrDefault(key, List.of())) {
-              if (previous.source.size() == item.source.size()
-                  && equal(
-                      stable, previous.rawOffset, item.rawOffset, item.source.size(), operation)) {
-                item.owner = previous.owner;
-                break;
+          try (ParallelSources.Input staged = sources.next(operation)) {
+            Item item = items.get(ordinal);
+            var processing =
+                new IoContext(
+                    context.path(),
+                    Operation.PACK,
+                    OperationPhase.PROCESSING,
+                    OptionalLong.of(ordinal));
+            item.rawOffset = stable.size();
+            if (staged == null) {
+              PackSources.consume(
+                  item.source,
+                  input ->
+                      transfer(
+                          input, item.source.size(), stable, item.rawOffset, operation, processing),
+                  processing);
+            } else {
+              try (ReadableByteChannel input = staged.channel()) {
+                transfer(input, item.source.size(), stable, item.rawOffset, operation, processing);
               }
             }
-            // Digest collisions cannot establish sharing; retain only byte-distinct owners.
-            if (item.owner == item)
-              candidates.computeIfAbsent(key, ignored -> new ArrayList<>()).add(item);
-          }
-          if (item.owner == item && item.compressed) {
-            item.offset = stable.size();
-            final long start = item.offset;
-            try (ReadableByteChannel input =
-                new ReadableByteChannel() {
-                  long position;
-
-                  /** Reads stabilized bytes without invoking the caller's payload factory twice. */
-                  public int read(ByteBuffer bytes) throws IOException {
-                    if (position == item.source.size()) return -1;
-                    int count = (int) Math.min(bytes.remaining(), item.source.size() - position);
-                    ByteBuffer window = bytes.slice();
-                    window.limit(count);
-                    stable.read(item.rawOffset + position, window);
-                    bytes.position(bytes.position() + count);
-                    position += count;
-                    return count;
-                  }
-
-                  /** The operation controls the scratch lifetime. */
-                  public boolean isOpen() {
-                    return true;
-                  }
-
-                  /** Leaves the operation-owned spool available for replay. */
-                  public void close() {
-                    /* The operation owns scratch cleanup. */
-                  }
-                }) {
-              if (rawLz4)
-                Lz4Raw.encode(
-                    (offset, bytes) -> stable.read(item.rawOffset + offset, bytes),
-                    item.source.size(),
-                    (offset, bytes) -> stable.write(start + offset, bytes),
-                    () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
-                    budget,
-                    processing,
-                    12);
-              else
-                JdkZlib.encode(
-                    input,
-                    item.source.size(),
-                    (offset, bytes) -> stable.write(start + offset, bytes),
-                    () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
-                    processing);
+            item.offset = item.rawOffset;
+            item.size = item.source.size();
+            if (dds) {
+              stabilizeDds(
+                  item, stable, request, operation, processing, budget, chunkCandidates, rawLz4);
+              long entryDecoded =
+                  item.texture.payloadSize()
+                      + DdsEnvelope.canonicalHeader(
+                              item.texture.width(),
+                              item.texture.height(),
+                              item.texture.mipCount(),
+                              item.texture.dxgiFormat(),
+                              item.texture.cubemap(),
+                              item.texture.tileMode(),
+                              request.ddsTarget().orElseThrow(),
+                              processing)
+                          .length;
+              if (entryDecoded > request.resourceLimits().maxDecodedBytes() - decoded)
+                throw processing.limit(
+                    "maxDecodedBytes",
+                    request.resourceLimits().maxDecodedBytes(),
+                    java.math.BigInteger.valueOf(decoded)
+                        .add(java.math.BigInteger.valueOf(entryDecoded))
+                        .toString());
+              decoded += entryDecoded;
+              continue;
             }
-            item.size = stable.size() - item.offset;
-            checkU32(item.size, processing);
+            if (request.options().sharing()) {
+              String key = digest(stable, item.rawOffset, item.source.size(), operation);
+              for (Item previous : candidates.getOrDefault(key, List.of())) {
+                if (previous.source.size() == item.source.size()
+                    && equal(
+                        stable,
+                        previous.rawOffset,
+                        item.rawOffset,
+                        item.source.size(),
+                        operation)) {
+                  item.owner = previous.owner;
+                  break;
+                }
+              }
+              // Digest collisions cannot establish sharing; retain only byte-distinct owners.
+              if (item.owner == item)
+                candidates.computeIfAbsent(key, ignored -> new ArrayList<>()).add(item);
+            }
+            if (item.owner == item && item.compressed) {
+              item.offset = stable.size();
+              final long start = item.offset;
+              if (staged != null && staged.hasEncoded()) {
+                try (ReadableByteChannel encoded = staged.encodedChannel()) {
+                  transfer(encoded, staged.encodedSize(), stable, start, operation, processing);
+                }
+              } else {
+                try (ReadableByteChannel input =
+                    new ReadableByteChannel() {
+                      long position;
+
+                      /**
+                       * Reads stabilized bytes without invoking the caller's payload factory twice.
+                       */
+                      public int read(ByteBuffer bytes) throws IOException {
+                        if (position == item.source.size()) return -1;
+                        int count =
+                            (int) Math.min(bytes.remaining(), item.source.size() - position);
+                        ByteBuffer window = bytes.slice();
+                        window.limit(count);
+                        stable.read(item.rawOffset + position, window);
+                        bytes.position(bytes.position() + count);
+                        position += count;
+                        return count;
+                      }
+
+                      /** The operation controls the scratch lifetime. */
+                      public boolean isOpen() {
+                        return true;
+                      }
+
+                      /** Leaves the operation-owned spool available for replay. */
+                      public void close() {
+                        /* The operation owns scratch cleanup. */
+                      }
+                    }) {
+                  if (rawLz4)
+                    Lz4Raw.encode(
+                        (offset, bytes) -> stable.read(item.rawOffset + offset, bytes),
+                        item.source.size(),
+                        (offset, bytes) -> stable.write(start + offset, bytes),
+                        () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
+                        budget,
+                        processing,
+                        12);
+                  else
+                    JdkZlib.encode(
+                        input,
+                        item.source.size(),
+                        (offset, bytes) -> stable.write(start + offset, bytes),
+                        () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
+                        processing);
+                }
+              }
+              item.size = stable.size() - item.offset;
+              checkU32(item.size, processing);
+            }
           }
         }
       }
+      sources.close();
+      sources = null;
       stable.seal();
       List<List<Item>> parts = split(items, request.options());
       long headerSize = Ba2Layout.headerSize(archiveEncoding.wireVersion().orElseThrow().value());
@@ -365,6 +415,19 @@ public final class Ba2Packer {
               ? archive
               : context.failure(FailureKind.SOURCE, "operation.source-io", failure));
     } finally {
+      Error fatal = null;
+      if (sources != null)
+        try {
+          sources.close();
+        } catch (IOException failure) {
+          failures.accept(
+              failure instanceof ArchiveException archive
+                  ? archive
+                  : context.failure(FailureKind.SOURCE, "operation.source-io", failure));
+        } catch (Error failure) {
+          // A fatal worker outcome still needs operation-owned scratch and budget settlement.
+          fatal = failure;
+        }
       if (scratch != null)
         try {
           scratch.close();
@@ -372,6 +435,7 @@ public final class Ba2Packer {
           failures.accept(failure);
         }
       budget.close();
+      if (fatal != null) throw fatal;
     }
     if (failures.failed()) {
       ArchiveException failure = failures.finish(result == null ? List.of() : result.artifacts());
@@ -382,6 +446,31 @@ public final class Ba2Packer {
       return operation.finish(List.of());
     }
     return result;
+  }
+
+  /**
+   * Checks a known complete output set before a source worker starts. Transformed-size or sharing
+   * dependent split plans retain the documented bounded stabilization exception.
+   */
+  private static void preflightKnownTargets(
+      List<Item> items, PackRequest request, IoContext context, boolean stored)
+      throws ArchiveException {
+    PackOptions.Splitting splitting = request.options().splitting();
+    boolean disabled =
+        splitting instanceof PackOptions.Splitting.FamilyDefault
+            || splitting instanceof PackOptions.Splitting.UpToBytes value
+                && value.targetBytes() == 0;
+    boolean perEntry = splitting instanceof PackOptions.Splitting.LegacyPerEntry;
+    if (!disabled && !perEntry && !(stored && !request.options().sharing())) return;
+    int count;
+    if (disabled) count = 1;
+    else if (perEntry) count = items.size();
+    else {
+      for (Item item : items) item.size = item.source.size();
+      count = split(items, request.options()).size();
+    }
+    PublicationTransaction.preflightArchiveTargets(
+        request.destination(), count, request.targetPolicy(), request.resourceLimits(), context);
   }
 
   /** Assigns whole logical entries using each part's unique transformed payload cost. */
@@ -514,6 +603,11 @@ public final class Ba2Packer {
       output.write(payload + 2, ByteBuffer.wrap(item.name));
       payload += 2L + item.name.length;
     }
+  }
+
+  /** Reserves zlib's conservative stream bound before admitting a transformed worker result. */
+  private static long zlibBound(long size) {
+    return Math.addExact(Math.addExact(size, (size >> 12) + (size >> 14) + (size >> 25)), 13);
   }
 
   /** Reads a declared source exactly, detecting excess bytes and stalled generated channels. */

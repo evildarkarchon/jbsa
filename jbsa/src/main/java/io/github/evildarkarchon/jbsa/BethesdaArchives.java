@@ -105,6 +105,7 @@ public final class BethesdaArchives {
 
   /**
    * Extracts selected entries synchronously under the request's policy and operation control.
+   * Caller interruption is restored after worker settlement, publication, and cleanup.
    *
    * @throws ArchiveException on cancellation, observer failure, or unavailable family capability
    */
@@ -112,12 +113,16 @@ public final class BethesdaArchives {
       throws ArchiveException {
     Objects.requireNonNull(request, "request");
     Objects.requireNonNull(control, "control");
-    return io.github.evildarkarchon.jbsa.internal.io.ArchiveExtractor.extract(request, control);
+    try (var interruption =
+        io.github.evildarkarchon.jbsa.internal.io.OrderedWorkerRunner.enterOperation()) {
+      return io.github.evildarkarchon.jbsa.internal.io.ArchiveExtractor.extract(request, control);
+    }
   }
 
   /**
    * Packs ordered overlay sources synchronously under the request's policy and operation control.
-   * Generated channel ownership transfers to JBSA when a factory is invoked.
+   * Generated channel ownership transfers to JBSA when a factory is invoked. Caller interruption is
+   * restored after worker settlement, publication, and cleanup.
    *
    * @throws ArchiveException on cancellation, observer failure, or unavailable family capability
    */
@@ -125,23 +130,26 @@ public final class BethesdaArchives {
       throws ArchiveException {
     Objects.requireNonNull(request, "request");
     Objects.requireNonNull(control, "control");
-    if (request.family() == ArchiveFamily.TES3_BSA)
-      return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Packer.pack(request, control);
-    if (request.family() == ArchiveFamily.TES4_BSA
-        || request.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
-        || request.family() == ArchiveFamily.SSE_BSA)
-      return io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
-    if (request.family() == ArchiveFamily.FO4_GENERAL_BA2
-        || request.family() == ArchiveFamily.FO4_DDS_BA2
-        || request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2
-        || request.family() == ArchiveFamily.STARFIELD_DDS_BA2)
-      return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Packer.pack(request, control);
-    return unavailableMutation(
-        Operation.PACK,
-        request.destination(),
-        request.resourceLimits(),
-        request.diagnosticPolicy(),
-        control);
+    try (var interruption =
+        io.github.evildarkarchon.jbsa.internal.io.OrderedWorkerRunner.enterOperation()) {
+      if (request.family() == ArchiveFamily.TES3_BSA)
+        return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Packer.pack(request, control);
+      if (request.family() == ArchiveFamily.TES4_BSA
+          || request.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
+          || request.family() == ArchiveFamily.SSE_BSA)
+        return io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
+      if (request.family() == ArchiveFamily.FO4_GENERAL_BA2
+          || request.family() == ArchiveFamily.FO4_DDS_BA2
+          || request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2
+          || request.family() == ArchiveFamily.STARFIELD_DDS_BA2)
+        return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Packer.pack(request, control);
+      return unavailableMutation(
+          Operation.PACK,
+          request.destination(),
+          request.resourceLimits(),
+          request.diagnosticPolicy(),
+          control);
+    }
   }
 
   /** Applies shared outcome and progress semantics while family execution remains unavailable. */

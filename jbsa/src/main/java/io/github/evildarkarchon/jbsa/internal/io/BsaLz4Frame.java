@@ -39,6 +39,25 @@ public final class BsaLz4Frame {
     }
   }
 
+  /** Borrows a worker's full codec reservation while retaining the BSA profile diagnostics. */
+  public static long encodePrecharged(
+      JdkZlib.ByteSource source,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      ResourceBudget.Lease admission,
+      IoContext context)
+      throws IOException {
+    try {
+      preflight("encode", context);
+      return Lz4Frame.encodeBsaPrecharged(
+          source, decodedSize, sink, checkpoint, budget, admission, context);
+    } catch (ArchiveException failure) {
+      throw reprofile(failure);
+    }
+  }
+
   /** Creates a lazy decoder whose later content failures retain the BSA profile identity. */
   public static Decoder decoder(
       JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context)

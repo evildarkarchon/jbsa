@@ -78,7 +78,7 @@ Implement and qualify the Windows-first Java 25 Bethesda archive library and thi
 | [#45 — Implement Starfield General BA2](issues/45-implement-starfield-general-ba2.md) | closed |
 | [#46 — Implement Starfield DDS BA2](issues/46-implement-starfield-dds-ba2.md) | closed |
 | [#47 — Implement Fallout 4 BA2 v7 and v8 decoding](issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md) | closed |
-| [#48 — Introduce bounded deterministic parallel archive operations](issues/48-introduce-bounded-deterministic-parallel-archive-operations.md) | open |
+| [#48 — Introduce bounded deterministic parallel archive operations](issues/48-introduce-bounded-deterministic-parallel-archive-operations.md) | closed |
 | [#49 — Complete the cross-family BSArch-compatible CLI](issues/49-complete-the-cross-family-bsarch-compatible-cli.md) | open |
 | [#50 — Complete the mandatory Automated Conformance matrix](issues/50-complete-the-mandatory-automated-conformance-matrix.md) | open |
 | [#51 — Freeze the JBSA 1.0 public archive interface](issues/51-freeze-the-jbsa-1-0-public-archive-interface.md) | open |

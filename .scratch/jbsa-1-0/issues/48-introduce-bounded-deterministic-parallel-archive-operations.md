@@ -1,22 +1,22 @@
 # Introduce bounded deterministic parallel archive operations
 
-Status: ready-for-agent
-State: open
+Status: none
+State: closed
 GitHub issue: #48
 Source: https://github.com/evildarkarchon/jbsa/issues/48
 Author: evildarkarchon
 Created: 2026-09-03T06:54:17Z
 Source updated: 2026-09-03T06:54:17Z
-Closed: none
+Closed: 2026-09-25
 Migrated: 2026-09-10
-Labels: ready-for-agent
+Labels: none
 Assignees: none
 Blocked by: [#47](../issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-14
-Triage rationale: #47 is closed; the bounded deterministic scheduling contract is fully specified and has no remaining open prerequisites.
+Triage reviewed: 2026-09-25
+Triage rationale: Implemented bounded ordered pack and extraction workers, public concurrency tests, and a local scaling checkpoint.
 
 ## Original issue body
 
@@ -56,3 +56,13 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+### 2026-09-25 implementation outcome
+
+Added operation-owned bounded platform workers, private staged results, ordered
+coordinator consumption and publication, preadmitted resource credits, and
+noninterrupting settlement. Public tests cover worker-count equivalence,
+sharing and splits, compressed paths, ordered failures, cancellation,
+backpressure, and independent operations. The local 1/2/4/8/16-worker
+throughput, output-size, and sampled heap checkpoint is recorded at
+`docs/development/evidence/issue48-parallel/`.

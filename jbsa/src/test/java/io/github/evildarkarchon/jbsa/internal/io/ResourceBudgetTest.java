@@ -41,18 +41,18 @@ final class ResourceBudgetTest {
     }
   }
 
-  /** Sequential mutation bounds its handle owners, largest codec state, and identity window. */
+  /** Mutation bounds parallel handles, largest codec state, and identity window. */
   @Test
   void mutationCapacityRemainsBoundedAndReleasesWithTheOperation() throws Exception {
     try (ResourceBudget budget = ResourceBudget.forMutation(ResourceLimits.standard(), CONTEXT)) {
       try (ResourceBudget.Lease owners =
-          budget.reserve(64 * 1024, Lz4Raw.ENCODE_NATIVE_BYTES, 4, 0)) {
+          budget.reserve(64 * 1024, Lz4Raw.ENCODE_NATIVE_BYTES, 36, 0)) {
         assertNotNull(owners);
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 0, 1, 0));
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
       }
       try (ResourceBudget.Lease returned =
-          budget.reserve(64 * 1024, Lz4Raw.ENCODE_NATIVE_BYTES, 4, 0)) {
+          budget.reserve(64 * 1024, Lz4Raw.ENCODE_NATIVE_BYTES, 36, 0)) {
         assertNotNull(returned);
       }
     }

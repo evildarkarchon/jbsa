@@ -15,8 +15,8 @@ Blocked by: [#49](../issues/49-complete-the-cross-family-bsarch-compatible-cli.m
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-13
-Triage rationale: #61 is closed. Reassess readiness after open prerequisites close: #49, #48, #47. The current gate is compact generated conformance, not completion of every historical committed CV1 row.
+Triage reviewed: 2026-09-25
+Triage rationale: #31, #47, #48, and #61 are closed. #49 remains open, so this ticket stays blocked. The current gate is compact generated conformance, not completion of every historical committed CV1 row.
 
 ## Original issue body
 

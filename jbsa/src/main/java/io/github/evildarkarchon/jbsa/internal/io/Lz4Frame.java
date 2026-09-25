@@ -32,7 +32,7 @@ public final class Lz4Frame {
       ResourceBudget budget,
       IoContext context)
       throws IOException {
-    return encode(source, decodedSize, sink, checkpoint, budget, context, false);
+    return encode(source, decodedSize, sink, checkpoint, budget, null, context, false);
   }
 
   /** Encodes one frame with the exact versioned-BSA 0x69 profile. */
@@ -44,22 +44,42 @@ public final class Lz4Frame {
       ResourceBudget budget,
       IoContext context)
       throws IOException {
-    return encode(source, decodedSize, sink, checkpoint, budget, context, true);
+    return encode(source, decodedSize, sink, checkpoint, budget, null, context, true);
   }
 
-  /** Owns one admitted encoder invocation and selects only a recorded internal profile. */
+  /**
+   * Encodes a BSA frame while borrowing a worker admission that already covers this codec's {@link
+   * #HEAP_BYTES} and {@link #ENCODE_NATIVE_BYTES}. The caller releases that lease after the private
+   * result has settled; this method does not charge or close it again.
+   */
+  public static long encodeBsaPrecharged(
+      JdkZlib.ByteSource source,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      ResourceBudget.Lease admission,
+      IoContext context)
+      throws IOException {
+    java.util.Objects.requireNonNull(admission, "admission");
+    return encode(source, decodedSize, sink, checkpoint, budget, admission, context, true);
+  }
+
+  /** Runs one admitted encoder invocation, borrowing a worker lease when one was precharged. */
   private static long encode(
       JdkZlib.ByteSource source,
       long decodedSize,
       JdkZlib.ByteSink sink,
       JdkZlib.Checkpoint checkpoint,
       ResourceBudget budget,
+      ResourceBudget.Lease admission,
       IoContext context,
       boolean bsaProfile)
       throws IOException {
     if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
     Lz4Runtime.preflight("lz4-frame", "encode", context);
-    try (var lease = budget.reserve(HEAP_BYTES, ENCODE_NATIVE_BYTES, 0, 0);
+    try (var lease =
+            admission == null ? budget.reserve(HEAP_BYTES, ENCODE_NATIVE_BYTES, 0, 0) : null;
         var state = new State(true, context)) {
       var preferences = state.preferences;
       preferences.compressionLevel(bsaProfile ? 12 : 9).autoFlush(true);

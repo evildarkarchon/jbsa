@@ -313,11 +313,24 @@ class BsaPackTest {
     var failure =
         assertThrows(
             ArchiveException.class,
-            () ->
-                BethesdaArchives.standard()
-                    .pack(
-                        request(temporary.resolve("large.bsa"), options, first, second),
-                        OperationControl.standard()));
+            () -> {
+              PackRequest planned = request(temporary.resolve("large.bsa"), options, first, second);
+              // This case checks first-source length handling before a later source is opened.
+              PackRequest sequential =
+                  new PackRequest(
+                      planned.destination(),
+                      planned.family(),
+                      planned.encoding(),
+                      planned.compatibilityProfile(),
+                      planned.sources(),
+                      planned.targetPolicy(),
+                      planned.diagnosticPolicy(),
+                      planned.resourceLimits(),
+                      new WorkerSelection.UpTo(1),
+                      planned.options(),
+                      planned.ddsTarget());
+              BethesdaArchives.standard().pack(sequential, OperationControl.standard());
+            });
     assertEquals(1, opens.get());
     assertEquals(FailureKind.SOURCE, failure.primaryFailure().kind());
     assertEquals(

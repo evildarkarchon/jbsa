@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
 
-/** Canonical sequential versioned-BSA writer with bounded stabilization before split planning. */
+/** Canonical versioned-BSA writer with bounded ordered stabilization before split planning. */
 public final class BsaPacker {
   private BsaPacker() {}
 
@@ -22,11 +22,13 @@ public final class BsaPacker {
     var context = IoContext.of(request.destination(), Operation.PACK);
     boolean publicationOwnsSession = false;
     SpillBuffer scratch = null;
+    BsaTransformedSources transformed = null;
     OperationReport result = null;
     var failures = new FailureRetention(request.resourceLimits(), Operation.PACK);
     ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context);
     try {
       operation.begin();
+      long requestedWorkers = WorkerLimits.snapshot(request.workerSelection()).workers();
       io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names.encoding(
           request.compatibilityProfile(), context);
       int version =
@@ -120,19 +122,56 @@ public final class BsaPacker {
             return order == 0 ? Arrays.compareUnsigned(a.name, b.name) : order;
           });
       boolean anyCompressed = items.stream().anyMatch(item -> item.compressed);
+      int knownPartCount = -1;
       if (!anyCompressed) {
         for (Item item : items)
           item.size =
               item.source.size() + (embedded ? item.folder.length + item.name.length + 2L : 0);
-        for (var part : split(items, request.options())) layout(part, version, context);
+        List<List<Item>> knownParts = split(items, request.options());
+        for (var part : knownParts) layout(part, version, context);
+        if (!request.options().sharing()) knownPartCount = knownParts.size();
       }
-      // One spool bounds heap and handle use independently of entry count, and fixes split sizes.
+      if (request.options().splitting() instanceof PackOptions.Splitting.UpToBytes bytes
+          && bytes.targetBytes() == 0) knownPartCount = 1;
+      if (request.options().splitting() instanceof PackOptions.Splitting.LegacyPerEntry)
+        knownPartCount = items.size();
+      if (knownPartCount > 0)
+        PublicationTransaction.preflightArchiveTargets(
+            request.destination(),
+            knownPartCount,
+            request.targetPolicy(),
+            request.resourceLimits(),
+            context);
+      // The ordered spool fixes split sizes; independent worker spools retain their own credits.
       scratch = SpillBuffer.open(Path.of(System.getProperty("java.io.tmpdir")), budget, context);
       SpillBuffer stable = scratch;
+      long framingAllowance = 256L * items.size();
+      long plannedScratchBytes =
+          decoded > Long.MAX_VALUE - framingAllowance ? Long.MAX_VALUE : decoded + framingAllowance;
+      boolean parallel =
+          requestedWorkers > 1
+              && items.size() > 1
+              && WorkerLimits.hasParallelScratchHeadroom(
+                  plannedScratchBytes, request.resourceLimits().maxScratchBytes());
+      // Worker handle leases must not starve the coordinator's ordered stable spool.
+      if (parallel) stable.reserveSpillHandle();
+      if (parallel)
+        transformed =
+            new BsaTransformedSources(
+                items.stream()
+                    .map(item -> new BsaTransformedSources.Source(item.source, item.compressed))
+                    .toList(),
+                version,
+                requestedWorkers,
+                budget,
+                request.resourceLimits(),
+                context);
       try (var codecCredits =
           budget.reserve(
-              anyCompressed && version != 0x69 ? JdkZlib.ENCODE_HEAP_BYTES : 65536,
-              anyCompressed && version != 0x69 ? JdkZlib.ENCODE_NATIVE_BYTES : 0,
+              parallel
+                  ? 65536
+                  : anyCompressed && version != 0x69 ? JdkZlib.ENCODE_HEAP_BYTES : 65536,
+              parallel || version == 0x69 || !anyCompressed ? 0 : JdkZlib.ENCODE_NATIVE_BYTES,
               0,
               0)) {
         for (int ordinal = 0; ordinal < items.size(); ordinal++) {
@@ -154,39 +193,49 @@ public final class BsaPacker {
           }
           if (item.compressed) stable.write(framing, words(item.source.size()));
           long start = framing + (item.compressed ? 4 : 0);
-          PackSources.consume(
-              item.source,
-              input -> {
-                if (!item.compressed) {
-                  transfer(input, item.source.size(), stable, start, operation, processing);
-                } else if (version == 0x69) {
-                  long[] position = {0};
-                  BsaLz4Frame.encode(
-                      (offset, bytes) -> {
-                        if (offset != position[0])
-                          throw new IllegalStateException("Nonsequential source");
-                        readExact(input, bytes, processing);
-                        position[0] += bytes.position();
-                      },
-                      item.source.size(),
-                      (offset, bytes) -> stable.write(start + offset, bytes),
-                      () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
-                      budget,
-                      processing);
-                  requireEnd(input, processing);
-                } else {
-                  JdkZlib.encode(
-                      input,
-                      item.source.size(),
-                      (offset, bytes) -> stable.write(start + offset, bytes),
-                      () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
-                      processing);
-                }
-              },
-              processing);
+          if (parallel) {
+            try (var staged = transformed.next(operation)) {
+              copyStable(staged.result(), stable, start, operation, processing);
+            }
+          } else {
+            PackSources.consume(
+                item.source,
+                input -> {
+                  if (!item.compressed) {
+                    transfer(input, item.source.size(), stable, start, operation, processing);
+                  } else if (version == 0x69) {
+                    long[] position = {0};
+                    BsaLz4Frame.encode(
+                        (offset, bytes) -> {
+                          if (offset != position[0])
+                            throw new IllegalStateException("Nonsequential source");
+                          readExact(input, bytes, processing);
+                          position[0] += bytes.position();
+                        },
+                        item.source.size(),
+                        (offset, bytes) -> stable.write(start + offset, bytes),
+                        () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
+                        budget,
+                        processing);
+                    requireEnd(input, processing);
+                  } else {
+                    JdkZlib.encode(
+                        input,
+                        item.source.size(),
+                        (offset, bytes) -> stable.write(start + offset, bytes),
+                        () -> operation.checkpoint(OperationPhase.PROCESSING, processing.ordinal()),
+                        processing);
+                  }
+                },
+                processing);
+          }
           item.size = stable.size() - item.offset;
           checkSize(item.size, processing);
         }
+      }
+      if (transformed != null) {
+        transformed.close();
+        transformed = null;
       }
       stable.seal();
       List<List<Item>> parts = split(items, request.options());
@@ -239,6 +288,19 @@ public final class BsaPacker {
               ? archive
               : context.failure(FailureKind.SOURCE, "operation.source-io", failure));
     } finally {
+      Error fatal = null;
+      if (transformed != null)
+        try {
+          transformed.close();
+        } catch (IOException failure) {
+          failures.accept(
+              failure instanceof ArchiveException archive
+                  ? archive
+                  : context.failure(FailureKind.SOURCE, "operation.source-io", failure));
+        } catch (Error failure) {
+          // A fatal worker outcome still needs operation-owned scratch and budget settlement.
+          fatal = failure;
+        }
       if (scratch != null)
         try {
           scratch.close();
@@ -246,6 +308,7 @@ public final class BsaPacker {
           failures.accept(failure);
         }
       budget.close();
+      if (fatal != null) throw fatal;
     }
     if (failures.failed()) {
       ArchiveException failure = failures.finish(result == null ? List.of() : result.artifacts());
@@ -427,6 +490,25 @@ public final class BsaPacker {
       count += read;
     }
     if (count != size) throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+  }
+
+  /** Replays one private worker result into the shared stabilization spool in plan order. */
+  private static void copyStable(
+      SpillBuffer source,
+      SpillBuffer stable,
+      long target,
+      OperationSession operation,
+      IoContext context)
+      throws IOException {
+    ByteBuffer bytes = ByteBuffer.allocate(65536);
+    for (long position = 0; position < source.size(); ) {
+      operation.checkpoint(OperationPhase.PROCESSING, context.ordinal());
+      int count = (int) Math.min(bytes.capacity(), source.size() - position);
+      bytes.clear().limit(count);
+      source.read(position, bytes);
+      stable.write(target + position, bytes.flip());
+      position += count;
+    }
   }
 
   /** Fills one codec source window while bounding stalled-channel retries. */

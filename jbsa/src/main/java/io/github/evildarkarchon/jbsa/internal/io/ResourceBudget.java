@@ -33,9 +33,9 @@ public final class ResourceBudget implements AutoCloseable {
   }
 
   /**
-   * Creates bounded admission for sequential mutation with source, scratch, staging handles, and
-   * the largest release-pinned codec state. The caller closes this operation-scoped budget after
-   * every owner releases its resources.
+   * Creates bounded mutation admission with room for sixteen paired source/spill handles in
+   * addition to staging and publication handles. The shared budget still limits each operation;
+   * higher requested worker counts wait for credits instead of raising this internal ceiling.
    */
   public static ResourceBudget forMutation(ResourceLimits limits, IoContext context) {
     return new ResourceBudget(
@@ -43,7 +43,7 @@ public final class ResourceBudget implements AutoCloseable {
         context,
         Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
         Math.max(Lz4Frame.DECODE_NATIVE_BYTES, Lz4Raw.ENCODE_NATIVE_BYTES),
-        4);
+        36);
   }
 
   /** Returns immutable semantic limits to operation-owned cleanup reporters. */
@@ -185,7 +185,7 @@ public final class ResourceBudget implements AutoCloseable {
   public final class Lease implements AutoCloseable {
     private final long heap;
     private final long nativeBytes;
-    private final long handles;
+    private long handles;
     private long scratch;
     private boolean released;
 
@@ -215,6 +215,21 @@ public final class ResourceBudget implements AutoCloseable {
         // One mutable reservation keeps streaming bookkeeping independent of the number of writes.
         scratch += added;
         ResourceBudget.this.scratch = next;
+      }
+    }
+
+    /**
+     * Returns transient worker handles after their channel, validation, and identity inspection
+     * have closed, while retaining scratch and result-slot credits until ordered publication.
+     */
+    public void releaseHandles(long count) {
+      synchronized (ResourceBudget.this) {
+        ensureOpen();
+        if (released) throw new IllegalStateException("Resource lease is released");
+        nonnegative(count);
+        if (count > handles) throw new IllegalArgumentException("Too many handles released");
+        handles -= count;
+        ResourceBudget.this.handles -= count;
       }
     }
 

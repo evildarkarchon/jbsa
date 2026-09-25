@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.util.*;
+import java.util.function.IntConsumer;
 
 /**
  * Synchronous, operation-owned staging and atomic publication beneath the archive format writers.
@@ -58,6 +59,35 @@ public final class PublicationTransaction {
       throws ArchiveException {
     return new Session(destination, policy, limits, operation, new FileActions(), false)
         .run(List.copyOf(writers), List.of());
+  }
+
+  /**
+   * Checks a known archive-part target set before pack work admission, without creating staging.
+   * The temporary containment pin is closed before this method returns.
+   */
+  public static void preflightArchiveTargets(
+      Path destination,
+      int partCount,
+      TargetPolicy policy,
+      ResourceLimits limits,
+      IoContext context)
+      throws ArchiveException {
+    Path target = Objects.requireNonNull(destination, "destination").toAbsolutePath().normalize();
+    Objects.requireNonNull(policy, "policy");
+    Objects.requireNonNull(limits, "limits");
+    Objects.requireNonNull(context, "context");
+    if (partCount < 1) throw new IllegalArgumentException("An archive set needs a first part");
+    if (target.getFileName() == null)
+      throw context.failure(FailureKind.POLICY, "destination.not-file", null);
+    if (partCount > limits.maxOutputs())
+      throw context.limit("maxOutputs", limits.maxOutputs(), Integer.toString(partCount));
+    List<String> names = new ArrayList<>(partCount);
+    for (int index = 0; index < partCount; index++)
+      names.add(splitPath(target, index + 1).getFileName().toString());
+    try (ExtractionPaths checked =
+        ExtractionPaths.preflight(target.getParent(), names, policy, context)) {
+      // The output set is validated now; the publishing transaction rechecks it before staging.
+    }
   }
 
   /** Borrows the planner's budget so retained stabilization and staged bytes share one ceiling. */
@@ -126,12 +156,64 @@ public final class PublicationTransaction {
             selection.stream().map(Entry::name).toList());
   }
 
-  /** A complete decoded entry name and its synchronous content writer in Logical Plan Order. */
-  public record Entry(String name, Writer writer) {
-    /** Requires real decoded spelling and a writer; absent identities fail extraction preflight. */
+  /**
+   * Stages selected entries on private workers after complete target preflight, then consumes and
+   * publishes them only on the caller thread in Logical Plan Order.
+   */
+  public static OperationReport extractParallel(
+      Path root,
+      List<Entry> entries,
+      TargetPolicy policy,
+      ResourceLimits limits,
+      OperationSession operation,
+      WorkerSelection selection,
+      IntConsumer onStaged,
+      FinalStageAction beforeFinalCommit)
+      throws ArchiveException {
+    List<Entry> plan = List.copyOf(entries);
+    return new Session(root, policy, limits, operation, new FileActions(), true)
+        .runParallel(plan, selection, onStaged, beforeFinalCommit);
+  }
+
+  /** A decoded entry name, staged writer, private output extent, and source archive ordinal. */
+  public record Entry(String name, Writer writer, long maximumStagedBytes, long inputOrdinal) {
+    /** Retains the sequential entry form used by existing extraction callers. */
+    public Entry(String name, Writer writer) {
+      this(name, writer, -1, -1);
+    }
+
+    /** Requires complete spelling, a writer, and paired parallel extent and source ordinal. */
     public Entry {
       Objects.requireNonNull(name, "name");
       Objects.requireNonNull(writer, "writer");
+      if (maximumStagedBytes < -1 || inputOrdinal < -1)
+        throw new IllegalArgumentException("Invalid parallel entry quantity");
+    }
+  }
+
+  /** Closes the extraction source after all admitted stages settle and before its final commit. */
+  @FunctionalInterface
+  public interface FinalStageAction {
+    /** Completes source ownership, reporting a structured source failure when it cannot close. */
+    void run() throws IOException;
+  }
+
+  /** Coordinator hooks and immutable per-entry costs for one parallel extraction. */
+  private record ParallelPlan(
+      List<Entry> entries,
+      WorkerSelection selection,
+      IntConsumer onStaged,
+      FinalStageAction beforeFinalCommit) {
+    /** Rejects missing scheduling or source-lifetime contracts before destination effects. */
+    private ParallelPlan {
+      entries = List.copyOf(entries);
+      Objects.requireNonNull(selection, "selection");
+      Objects.requireNonNull(onStaged, "onStaged");
+      Objects.requireNonNull(beforeFinalCommit, "beforeFinalCommit");
+      if (entries.stream()
+          .anyMatch(entry -> entry.maximumStagedBytes() < 0 || entry.inputOrdinal() < 0))
+        throw new IllegalArgumentException(
+            "Parallel entries need a known extent and input ordinal");
     }
   }
 
@@ -155,15 +237,30 @@ public final class PublicationTransaction {
     private final ResourceBudget.Lease scratch;
     private final IoContext context;
     private final Session owner;
+    private final OrderedWorkerRunner.Checkpoint workerCheckpoint;
+    private final long maximumExtent;
     private long size;
 
     /** Borrows a single channel and its operation-owned extent reservation. */
     private StagedFile(
         FileChannel channel, ResourceBudget.Lease scratch, IoContext context, Session owner) {
+      this(channel, scratch, context, owner, null, -1);
+    }
+
+    /** Borrows the worker's preadmitted scratch lease without charging each write twice. */
+    private StagedFile(
+        FileChannel channel,
+        ResourceBudget.Lease scratch,
+        IoContext context,
+        Session owner,
+        OrderedWorkerRunner.Checkpoint workerCheckpoint,
+        long maximumExtent) {
       this.channel = channel;
       this.scratch = scratch;
       this.context = context;
       this.owner = owner;
+      this.workerCheckpoint = workerCheckpoint;
+      this.maximumExtent = maximumExtent;
     }
 
     /** Reserves a checked extent without allocating a header-sized heap buffer. */
@@ -189,9 +286,9 @@ public final class PublicationTransaction {
       } catch (ArithmeticException cause) {
         throw context.failure(FailureKind.DESTINATION, "io.invalid-output-span", cause);
       }
-      reserve(end);
+      reserveForWrite(end);
       while (bytes.hasRemaining()) {
-        owner.checkpoint();
+        checkpointWork();
         ByteBuffer window = bytes.slice();
         int count = Math.min(window.remaining(), ExactIo.WINDOW_BYTES);
         window.limit(count);
@@ -243,6 +340,25 @@ public final class PublicationTransaction {
     public void checkpoint() throws ArchiveException {
       owner.checkpoint();
     }
+
+    /** Observes worker stop without calling the coordinator's progress or cancellation session. */
+    public void checkpointWork() throws IOException {
+      if (workerCheckpoint == null) owner.checkpoint();
+      else workerCheckpoint.check();
+    }
+
+    /** Uses preadmitted worker scratch or the sequential writer's growing extent lease. */
+    private void reserveForWrite(long extent) throws IOException {
+      if (workerCheckpoint == null) {
+        reserve(extent);
+        return;
+      }
+      if (!channel.isOpen()) throw new IllegalStateException("Staged output lifetime has ended");
+      workerCheckpoint.check();
+      if (extent > maximumExtent)
+        throw context.failure(FailureKind.FORMAT, "io.decoded-size-mismatch", null);
+      size = Math.max(size, extent);
+    }
   }
 
   /**
@@ -280,6 +396,7 @@ public final class PublicationTransaction {
     private final boolean extraction;
     private final ResourceBudget budget;
     private final boolean ownsBudget;
+    private ParallelPlan parallel;
     private final List<Part> parts = new ArrayList<>();
     private final LinkedHashMap<Path, Long> owned = new LinkedHashMap<>();
     private final List<ResourceBudget.Lease> credits = new ArrayList<>();
@@ -329,6 +446,20 @@ public final class PublicationTransaction {
       budget = ownsBudget ? ResourceBudget.forMutation(limits, context()) : sharedBudget;
     }
 
+    /**
+     * Selects bounded worker staging while retaining the transaction's ordered publication path.
+     */
+    OperationReport runParallel(
+        List<Entry> entries,
+        WorkerSelection selection,
+        IntConsumer onStaged,
+        FinalStageAction beforeFinalCommit)
+        throws ArchiveException {
+      parallel = new ParallelPlan(entries, selection, onStaged, beforeFinalCommit);
+      return run(
+          entries.stream().map(Entry::writer).toList(), entries.stream().map(Entry::name).toList());
+    }
+
     /** Settles cleanup before returning evidence, preserving the first accepted failure. */
     OperationReport run(List<Writer> writers, List<String> names) throws ArchiveException {
       try {
@@ -357,27 +488,18 @@ public final class PublicationTransaction {
           operationSession.completePhase();
           operationSession.processing(existingTree);
           phase = OperationPhase.PROCESSING;
-          for (Part part : parts) {
-            ordinal = part.ordinal;
-            checkpoint();
-            long logicalBytes = stage(part);
-            if (extraction) {
-              operationSession.processedEntry(logicalBytes);
-            }
-            if (existingTree) {
+          if (parallel == null) {
+            for (Part part : parts) {
+              ordinal = part.ordinal;
               checkpoint();
-              prepareParents(part);
-              operationSession.beginCommit(phase, OptionalLong.of(ordinal));
-              phase = OperationPhase.PUBLISHING;
-              committing = part;
-              commitInProgress = true;
-              publish(part);
-              commitInProgress = false;
-              operationSession.endCommit(part.ordinal == parts.size() - 1);
-              committing = null;
-              phase = OperationPhase.PROCESSING;
-              operationSession.advance(ProgressMetric.ARTIFACTS, 1);
+              long logicalBytes = stage(part);
+              if (extraction) operationSession.processedEntry(logicalBytes);
+              if (existingTree) publishExisting(part);
             }
+          } else {
+            stageParallel();
+            // A worker failure must leave PROCESSING interrupted, without a synthetic terminal.
+            checkpoint();
           }
           if (!existingTree) {
             operationSession.completePhase();
@@ -400,7 +522,7 @@ public final class PublicationTransaction {
               owned.keySet().removeIf(path -> path.startsWith(stagedRoot));
               for (Part part : parts) {
                 part.state = ArtifactState.PUBLISHED;
-                part.scratch.close();
+                releaseStage(part);
               }
             } else {
               for (Part part : parts) {
@@ -444,6 +566,7 @@ public final class PublicationTransaction {
             accept(cause);
           }
         }
+        closeParallelOutcomes();
         credits.forEach(ResourceBudget.Lease::close);
         if (ownsBudget) budget.close();
         operationSession.cleaned(artifacts().size());
@@ -514,6 +637,184 @@ public final class PublicationTransaction {
       return size;
     }
 
+    /** Admits only bounded private stages and consumes their outcomes in plan order. */
+    private void stageParallel() throws IOException {
+      try (var runner =
+          new OrderedWorkerRunner<StagedResult>(
+              parallel.selection(), parts.size(), budget, context())) {
+        int nextToSubmit = 0;
+        int nextToConsume = 0;
+        while (nextToSubmit < parts.size() || runner.hasPending()) {
+          while (nextToSubmit < parts.size() && !runner.stopped()) {
+            Part candidate = parts.get(nextToSubmit);
+            ordinal = candidate.ordinal;
+            operationSession.checkpoint(
+                OperationPhase.PROCESSING,
+                OptionalLong.of(parallel.entries().get(nextToSubmit).inputOrdinal()));
+            prepareParallelStage(candidate);
+            long extent = parallel.entries().get(nextToSubmit).maximumStagedBytes();
+            var cost = new OrderedWorkerRunner.Cost(65536, 0, 1, extent);
+            if (!runner.trySubmit(
+                nextToSubmit, cost, (stop, lease) -> stageWorker(candidate, stop, lease, extent)))
+              break;
+            nextToSubmit++;
+          }
+          if (!runner.hasPending()) break;
+          int waitingFor = nextToConsume;
+          var outcome =
+              runner.takeNext(
+                  () ->
+                      operationSession.checkpoint(
+                          OperationPhase.PROCESSING,
+                          OptionalLong.of(parallel.entries().get(waitingFor).inputOrdinal())));
+          nextToConsume++;
+          Part part = parts.get(outcome.ordinal());
+          ordinal = part.ordinal;
+          if (outcome.failure() != null) {
+            acceptWorkerFailure(part, outcome.failure());
+            outcome.close();
+            runner.stop();
+            continue;
+          }
+          if (outcome.skipped() || operationSession.failed()) {
+            outcome.close();
+            continue;
+          }
+          part.parallelOutcome = outcome;
+          part.stagedIdentity = outcome.result().identity();
+          parallel.onStaged().accept(outcome.ordinal());
+          operationSession.processedEntry(outcome.result().size());
+          if (existingTree) {
+            if (part.ordinal == parts.size() - 1) {
+              // No source handle may close while an admitted sibling is still using it.
+              runner.close();
+              parallel.beforeFinalCommit().run();
+            }
+            publishExisting(part);
+          }
+        }
+        if (!existingTree && !operationSession.failed() && nextToConsume == parts.size()) {
+          runner.close();
+          parallel.beforeFinalCommit().run();
+        }
+      }
+    }
+
+    /** Assigns a private staged path and cleanup owner before its worker may create the file. */
+    private void prepareParallelStage(Part part) throws IOException {
+      if (part.staged != null) return;
+      part.staged =
+          stagedRoot == null
+              ? staging.resolve("part-" + part.ordinal)
+              : stagedRoot.resolve(destination.relativize(part.target));
+      if (stagedRoot != null) createPrivateParents(part.staged.getParent(), part.ordinal);
+      own(part.staged, part.ordinal);
+    }
+
+    /**
+     * Writes and validates one staged file while keeping all transaction maps on the coordinator.
+     */
+    private StagedResult stageWorker(
+        Part part, OrderedWorkerRunner.Checkpoint stop, ResourceBudget.Lease lease, long extent)
+        throws IOException {
+      IoContext location =
+          new IoContext(
+              destination,
+              Operation.EXTRACT,
+              OperationPhase.PROCESSING,
+              OptionalLong.of(part.ordinal));
+      boolean handleAndValidationClosed = false;
+      try {
+        long size;
+        try (FileChannel channel =
+            FileChannel.open(
+                part.staged,
+                StandardOpenOption.CREATE_NEW,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.READ)) {
+          StagedFile output = new StagedFile(channel, lease, location, this, stop, extent);
+          part.writer.write(output);
+          if (channel.size() < output.size())
+            ExactIo.write(channel, output.size() - 1, ByteBuffer.wrap(new byte[1]), location);
+          size = output.size();
+        }
+        // Readback and identity inspection happen after the write handle closes on Windows.
+        part.writer.validate(part.staged);
+        StagedResult result = new StagedResult(size, WindowsPathIdentity.inspect(part.staged));
+        handleAndValidationClosed = true;
+        return result;
+      } catch (ArchiveException failure) {
+        throw failure;
+      } catch (IOException failure) {
+        throw location.failure(FailureKind.DESTINATION, "operation.destination-io", failure);
+      } finally {
+        // Keep the credit on an uncertain close or validation failure until worker settlement.
+        if (handleAndValidationClosed) lease.releaseHandles(1);
+      }
+    }
+
+    /**
+     * Preserves worker failure semantics while locating unexpected faults at their plan ordinal.
+     */
+    private void acceptWorkerFailure(Part part, Throwable cause) {
+      if (cause instanceof VirtualMachineError fatal) throw fatal;
+      if (cause instanceof ThreadDeath fatal) throw fatal;
+      IoContext location =
+          new IoContext(
+              destination,
+              Operation.EXTRACT,
+              OperationPhase.PROCESSING,
+              OptionalLong.of(part.ordinal));
+      accept(
+          cause instanceof ArchiveException failure
+              ? failure
+              : location.failure(
+                  cause instanceof IOException ? FailureKind.DESTINATION : FailureKind.INTERNAL,
+                  cause instanceof IOException
+                      ? "operation.destination-io"
+                      : "operation.internal-failure",
+                  cause));
+    }
+
+    /** Commits one existing-tree leaf after its ordered stage and progress have settled. */
+    private void publishExisting(Part part) throws IOException {
+      checkpoint();
+      prepareParents(part);
+      operationSession.beginCommit(phase, OptionalLong.of(ordinal));
+      phase = OperationPhase.PUBLISHING;
+      committing = part;
+      commitInProgress = true;
+      publish(part);
+      commitInProgress = false;
+      operationSession.endCommit(part.ordinal == parts.size() - 1);
+      committing = null;
+      phase = OperationPhase.PROCESSING;
+      operationSession.advance(ProgressMetric.ARTIFACTS, 1);
+    }
+
+    /** Releases a staged result only after publication no longer needs its scratch credit. */
+    private void releaseStage(Part part) throws IOException {
+      if (part.scratch != null) part.scratch.close();
+      if (part.parallelOutcome != null) {
+        part.parallelOutcome.close();
+        part.parallelOutcome = null;
+      }
+    }
+
+    /** Returns uncommitted worker credits after private paths are deleted during cleanup. */
+    private void closeParallelOutcomes() {
+      for (Part part : parts) {
+        if (part.parallelOutcome == null) continue;
+        ordinal = part.ordinal;
+        try {
+          part.parallelOutcome.close();
+          part.parallelOutcome = null;
+        } catch (IOException failure) {
+          accept(failure);
+        }
+      }
+    }
+
     /** Installs a fully staged artifact with no implicit replacement semantics. */
     private void publish(Part part) throws IOException {
       recheck(part, false);
@@ -531,7 +832,7 @@ public final class PublicationTransaction {
       files.move(part.staged, part.target);
       owned.remove(part.staged);
       part.state = ArtifactState.PUBLISHED;
-      part.scratch.close();
+      releaseStage(part);
     }
 
     /** Keeps a containment failure at the actual publication boundary rather than preflight. */
@@ -772,6 +1073,16 @@ public final class PublicationTransaction {
     return destination.resolveSibling(name.substring(0, dot) + number + name.substring(dot));
   }
 
+  /** Immutable worker evidence; its staged-file credits belong to the containing Outcome. */
+  private record StagedResult(long size, WindowsPathIdentity.Snapshot identity)
+      implements AutoCloseable {
+    /** The coordinator owns the staged path and the Outcome owns every live resource credit. */
+    @Override
+    public void close() {
+      // Immutable evidence has no separate resource to release.
+    }
+  }
+
   /** One target's retained in-process publication history. */
   private static final class Part {
     final long ordinal;
@@ -784,6 +1095,7 @@ public final class PublicationTransaction {
     WindowsPathIdentity.Snapshot backupIdentity;
     boolean backedUp;
     ResourceBudget.Lease scratch;
+    OrderedWorkerRunner.Outcome<StagedResult> parallelOutcome;
     ArtifactState state;
 
     /** Starts with the observed target state, before destination effects. */

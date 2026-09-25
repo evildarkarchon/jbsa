@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.LockSupport;
 
 /** Selected-entry extraction through shared validated-path staging and publication semantics. */
 public final class ArchiveExtractor {
@@ -24,6 +26,7 @@ public final class ArchiveExtractor {
     List<Artifact> artifacts = List.of();
     try {
       operation.begin();
+      WorkerSelection.UpTo selectedWorkers = WorkerLimits.snapshot(request.workerSelection());
       archive =
           ArchiveReaders.open(
               request.source(),
@@ -65,27 +68,75 @@ public final class ArchiveExtractor {
       }
       Set<Long> validated = new TreeSet<>();
       List<PublicationTransaction.Entry> entries = new ArrayList<>();
+      boolean sequential = selected.isEmpty() || selectedWorkers.workers() == 1;
+      // The opened archive's native budget admits one decoder. Stored entries still run freely.
+      Semaphore compressedDecoder = new Semaphore(1, true);
       for (int index = 0; index < selected.size(); index++) {
         ArchiveEntry entry = selected.get(index);
         boolean last = index == selected.size() - 1;
-        entries.add(
-            new PublicationTransaction.Entry(
-                entry.metadata().displayName(),
-                output -> {
-                  transfer(entry, output, operation, source.inspection().assessment(), validated);
-                  // Source cleanup must succeed before the last selected file can become visible.
-                  if (last) source.close();
-                }));
+        if (sequential) {
+          entries.add(
+              new PublicationTransaction.Entry(
+                  entry.metadata().displayName(),
+                  output -> {
+                    transfer(entry, output, operation, source.inspection().assessment(), validated);
+                    // Source cleanup must succeed before the last selected file can become visible.
+                    if (last) source.close();
+                  }));
+        } else {
+          IoContext entryContext =
+              new IoContext(
+                  request.source(),
+                  Operation.EXTRACT,
+                  OperationPhase.PROCESSING,
+                  OptionalLong.of(entry.metadata().ordinal()));
+          entries.add(
+              new PublicationTransaction.Entry(
+                  entry.metadata().displayName(),
+                  output -> transferParallel(entry, output, compressedDecoder, entryContext),
+                  entry.metadata().decodedSize(),
+                  entry.metadata().ordinal()));
+        }
       }
       if (selected.isEmpty()) source.close();
       publicationOwnsSession = true;
       artifacts =
-          PublicationTransaction.extract(
-                  request.destination(),
-                  entries,
-                  request.targetPolicy(),
-                  request.resourceLimits(),
-                  operation)
+          (sequential
+                  ? PublicationTransaction.extract(
+                      request.destination(),
+                      entries,
+                      request.targetPolicy(),
+                      request.resourceLimits(),
+                      operation)
+                  : PublicationTransaction.extractParallel(
+                      request.destination(),
+                      entries,
+                      request.targetPolicy(),
+                      request.resourceLimits(),
+                      operation,
+                      selectedWorkers,
+                      index -> {
+                        validated.add(selected.get(index).metadata().ordinal());
+                        operation.latestAssessment(
+                            new ArchiveAssessment(
+                                source.inspection().assessment().disposition(),
+                                new ValidationExtent.Payloads(validated),
+                                source.inspection().assessment().diagnostics()));
+                      },
+                      () -> {
+                        try {
+                          source.close();
+                        } catch (ArchiveException failure) {
+                          throw failure;
+                        } catch (IOException failure) {
+                          throw new IoContext(
+                                  request.source(),
+                                  Operation.EXTRACT,
+                                  OperationPhase.CLEANUP,
+                                  OptionalLong.empty())
+                              .failure(FailureKind.SOURCE, "operation.source-io", failure);
+                        }
+                      }))
               .artifacts();
     } catch (ArchiveException failure) {
       if (publicationOwnsSession) artifacts = failure.artifacts();
@@ -147,5 +198,69 @@ public final class ArchiveExtractor {
               new ValidationExtent.Payloads(validated),
               structure.diagnostics()));
     }
+  }
+
+  /** Copies one payload on a worker without touching coordinator-owned progress or assessment. */
+  private static void transferParallel(
+      ArchiveEntry entry,
+      PublicationTransaction.StagedFile output,
+      Semaphore compressedDecoder,
+      IoContext sourceContext)
+      throws IOException {
+    boolean compressed = requiresDecoder(entry.metadata());
+    if (compressed) {
+      // The source archive admits one native decoder, so waiting workers poll the stop state.
+      while (!compressedDecoder.tryAcquire()) {
+        output.checkpointWork();
+        LockSupport.parkNanos(1_000_000L);
+      }
+    }
+    try {
+      EntryContent content;
+      try {
+        content = entry.openContent();
+      } catch (ArchiveException failure) {
+        throw failure;
+      } catch (IOException failure) {
+        throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+      }
+      try (content) {
+        ByteBuffer window = ByteBuffer.allocate(65536);
+        long position = 0;
+        while (true) {
+          output.checkpointWork();
+          int count;
+          try {
+            count = content.read(window);
+          } catch (ArchiveException failure) {
+            throw failure;
+          } catch (IOException failure) {
+            throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+          }
+          if (count < 0) break;
+          window.flip();
+          output.write(position, window);
+          position += count;
+          window.clear();
+        }
+      } catch (ArchiveException failure) {
+        throw failure;
+      } catch (IOException failure) {
+        throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+      }
+    } finally {
+      if (compressed) compressedDecoder.release();
+    }
+  }
+
+  /** Identifies payloads that may reserve the opened archive's sole native decoder capacity. */
+  private static boolean requiresDecoder(EntryMetadata metadata) {
+    return switch (metadata.facts()) {
+      case EntryMetadata.Tes3 ignored -> false;
+      case EntryMetadata.VersionedBsa bsa -> bsa.compressed();
+      case EntryMetadata.GeneralBa2 general -> general.packedSize() != 0;
+      case EntryMetadata.DdsBa2 dds ->
+          dds.chunks().stream().anyMatch(chunk -> chunk.packedSize() != 0);
+    };
   }
 }

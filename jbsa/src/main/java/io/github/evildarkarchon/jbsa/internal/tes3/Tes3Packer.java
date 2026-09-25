@@ -8,7 +8,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.ReadableByteChannel;
 import java.util.*;
 
-/** Sequential TES3 planning and stored encoding under the shared publication contract. */
+/** Ordered TES3 planning and stored encoding under the shared publication contract. */
 public final class Tes3Packer {
   private Tes3Packer() {}
 
@@ -22,6 +22,7 @@ public final class Tes3Packer {
     boolean publicationOwnsSession = false;
     try (ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context)) {
       operation.begin();
+      WorkerSelection.UpTo selectedWorkers = WorkerLimits.snapshot(request.workerSelection());
       if (!request.options().entryCompression().isEmpty())
         throw context.failure(FailureKind.UNSUPPORTED, "tes3.entry-compression-inapplicable", null);
       Tes3Names.encoding(request.compatibilityProfile(), context);
@@ -78,7 +79,10 @@ public final class Tes3Packer {
                   context,
                   request.options().sharing(),
                   request.resourceLimits(),
-                  firstOrdinal);
+                  firstOrdinal,
+                  selectedWorkers,
+                  budget,
+                  operation);
               completedParts.add(
                   new OperationReport.ArchivePart(
                       PublicationTransaction.splitPath(
@@ -95,7 +99,8 @@ public final class Tes3Packer {
               writers,
               request.targetPolicy(),
               request.resourceLimits(),
-              operation);
+              operation,
+              budget);
       return new OperationReport(
           report.operation(),
           report.artifacts(),
@@ -158,7 +163,10 @@ public final class Tes3Packer {
       IoContext context,
       boolean sharing,
       ResourceLimits limits,
-      long firstOrdinal)
+      long firstOrdinal,
+      WorkerSelection.UpTo workers,
+      ResourceBudget budget,
+      OperationSession operation)
       throws IOException {
     long names = entries.stream().mapToLong(entry -> entry.name().length + 1L).sum();
     long hashOffset = entries.size() * 12L + names;
@@ -167,89 +175,136 @@ public final class Tes3Packer {
     long nameOffset = 0;
     long dataOffset = 0;
     Map<String, List<StoredPayload>> shared = new HashMap<>();
-    for (int index = 0; index < entries.size(); index++) {
-      PackSources.Entry entry = entries.get(index);
-      IoContext processing =
-          new IoContext(
-              context.path(),
-              Operation.PACK,
-              OperationPhase.PROCESSING,
-              OptionalLong.of(firstOrdinal + index));
-      output.write(12 + entries.size() * 8L + index * 4L, words(nameOffset));
-      output.write(
-          12 + entries.size() * 12L + nameOffset,
-          ByteBuffer.wrap(Arrays.copyOf(entry.name(), entry.name().length + 1)));
-      output.write(
-          12 + hashOffset + index * 8L,
-          ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(entry.hash()).flip());
-      long position = dataBase + dataOffset;
-      long relative = dataOffset;
-      if (sharing) {
-        SpillBuffer scratch = output.scratch();
-        ArchiveException primary = null;
-        try {
-          var digest = digest();
-          PackSources.consume(
-              entry,
-              input ->
-                  transfer(
-                      input,
-                      entry.size(),
-                      (offset, bytes) -> {
-                        digest.update(bytes.duplicate());
-                        scratch.write(offset, bytes);
-                      },
-                      output,
-                      processing),
-              processing);
-          scratch.seal();
-          String key = entry.size() + ":" + HexFormat.of().formatHex(digest.digest());
-          List<StoredPayload> candidates = shared.getOrDefault(key, List.of());
-          StoredPayload match = null;
-          for (StoredPayload candidate : candidates) {
-            if (equal(scratch, candidate.offset, output)) {
-              match = candidate;
-              break;
+    ParallelSources sources = new ParallelSources(entries, workers, budget, context, firstOrdinal);
+    Throwable pending = null;
+    try {
+      for (int index = 0; index < entries.size(); index++) {
+        try (ParallelSources.Input staged = sources.next(operation)) {
+          PackSources.Entry entry = entries.get(index);
+          IoContext processing =
+              new IoContext(
+                  context.path(),
+                  Operation.PACK,
+                  OperationPhase.PROCESSING,
+                  OptionalLong.of(firstOrdinal + index));
+          output.write(12 + entries.size() * 8L + index * 4L, words(nameOffset));
+          output.write(
+              12 + entries.size() * 12L + nameOffset,
+              ByteBuffer.wrap(Arrays.copyOf(entry.name(), entry.name().length + 1)));
+          output.write(
+              12 + hashOffset + index * 8L,
+              ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN).putLong(entry.hash()).flip());
+          long position = dataBase + dataOffset;
+          long relative = dataOffset;
+          if (sharing) {
+            SpillBuffer scratch = output.scratch();
+            ArchiveException primary = null;
+            try {
+              var digest = digest();
+              consume(
+                  entry,
+                  staged,
+                  input ->
+                      transfer(
+                          input,
+                          entry.size(),
+                          (offset, bytes) -> {
+                            digest.update(bytes.duplicate());
+                            scratch.write(offset, bytes);
+                          },
+                          output,
+                          processing),
+                  processing);
+              scratch.seal();
+              String key = entry.size() + ":" + HexFormat.of().formatHex(digest.digest());
+              List<StoredPayload> candidates = shared.getOrDefault(key, List.of());
+              StoredPayload match = null;
+              for (StoredPayload candidate : candidates) {
+                if (equal(scratch, candidate.offset, output)) {
+                  match = candidate;
+                  break;
+                }
+              }
+              if (match == null) {
+                replay(scratch, position, output);
+                shared
+                    .computeIfAbsent(key, ignored -> new ArrayList<>())
+                    .add(new StoredPayload(position));
+                dataOffset += entry.size();
+              } else relative = match.offset - dataBase;
+            } catch (ArchiveException failure) {
+              primary = failure;
+              throw failure;
+            } finally {
+              try {
+                scratch.close();
+              } catch (ArchiveException cleanup) {
+                if (primary == null) throw cleanup;
+                // Keep cleanup as structured secondary evidence, including any exact residual path.
+                var failures = new FailureRetention(limits, Operation.PACK);
+                failures.accept(primary);
+                failures.accept(cleanup);
+                throw failures.finish(List.of());
+              }
             }
-          }
-          if (match == null) {
-            replay(scratch, position, output);
-            shared
-                .computeIfAbsent(key, ignored -> new ArrayList<>())
-                .add(new StoredPayload(position));
+          } else {
+            consume(
+                entry,
+                staged,
+                input ->
+                    transfer(
+                        input,
+                        entry.size(),
+                        (offset, bytes) -> output.write(position + offset, bytes),
+                        output,
+                        processing),
+                processing);
             dataOffset += entry.size();
-          } else relative = match.offset - dataBase;
-        } catch (ArchiveException failure) {
-          primary = failure;
-          throw failure;
-        } finally {
-          try {
-            scratch.close();
-          } catch (ArchiveException cleanup) {
-            if (primary == null) throw cleanup;
-            // Keep cleanup as structured secondary evidence, including any exact residual path.
-            var failures = new FailureRetention(limits, Operation.PACK);
-            failures.accept(primary);
-            failures.accept(cleanup);
-            throw failures.finish(List.of());
           }
+          output.write(12 + index * 8L, words(entry.size(), relative));
+          output.completedEntry(entry.size());
+          nameOffset += entry.name().length + 1L;
         }
-      } else {
-        PackSources.consume(
-            entry,
-            input ->
-                transfer(
-                    input,
-                    entry.size(),
-                    (offset, bytes) -> output.write(position + offset, bytes),
-                    output,
-                    processing),
-            processing);
-        dataOffset += entry.size();
       }
-      output.write(12 + index * 8L, words(entry.size(), relative));
-      output.completedEntry(entry.size());
-      nameOffset += entry.name().length + 1L;
+    } catch (Throwable failure) {
+      pending = failure;
+    }
+    try {
+      sources.close();
+    } catch (Throwable cleanup) {
+      if (pending == null) pending = cleanup;
+      else if (pending instanceof IOException first && cleanup instanceof IOException second) {
+        // Closing worker results can fail after processing; keep both structured outcomes.
+        var failures = new FailureRetention(limits, Operation.PACK);
+        failures.accept(
+            first instanceof ArchiveException archive
+                ? archive
+                : context.failure(FailureKind.SOURCE, "operation.source-io", first));
+        failures.accept(
+            second instanceof ArchiveException archive
+                ? archive
+                : context.failure(FailureKind.SOURCE, "operation.source-io", second));
+        pending = failures.finish(List.of());
+      } else pending.addSuppressed(cleanup);
+    }
+    if (pending instanceof IOException checked) throw checked;
+    if (pending instanceof Error fatal) throw fatal;
+    if (pending instanceof RuntimeException unchecked) throw unchecked;
+    if (pending != null) throw new AssertionError(pending);
+  }
+
+  /** Uses a staged worker result or the established direct stream for one logical source. */
+  private static void consume(
+      PackSources.Entry entry,
+      ParallelSources.Input staged,
+      PackSources.Reader reader,
+      IoContext processing)
+      throws IOException {
+    if (staged == null) PackSources.consume(entry, reader, processing);
+    else {
+      try (ReadableByteChannel input = staged.channel()) {
+        reader.read(input);
+      }
     }
   }
 

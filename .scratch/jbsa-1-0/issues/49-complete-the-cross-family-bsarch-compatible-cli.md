@@ -1,6 +1,6 @@
 # Complete the cross-family BSArch-compatible CLI
 
-Status: needs-triage
+Status: ready-for-agent
 State: open
 GitHub issue: #49
 Source: https://github.com/evildarkarchon/jbsa/issues/49
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:19Z
 Source updated: 2026-09-03T06:54:19Z
 Closed: none
 Migrated: 2026-09-10
-Labels: needs-triage
+Labels: ready-for-agent
 Assignees: none
 Blocked by: [#47](../issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md), [#48](../issues/48-introduce-bounded-deterministic-parallel-archive-operations.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #47, #48.
+Triage reviewed: 2026-09-25
+Triage rationale: #47 and #48 are closed; the CLI contract and acceptance criteria remain current, and no prerequisite remains open.
 
 ## Original issue body
 
