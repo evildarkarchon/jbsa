@@ -491,6 +491,17 @@ def write_json(path: Path, document: dict[str, Any]) -> None:
     )
 
 
+def load_changed_paths(path: Path) -> list[str]:
+    """Read a CI-supplied JSON path array, rejecting missing or malformed selection input."""
+    try:
+        paths = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise PlanError(f"invalid changed-paths file: {error}") from error
+    if not isinstance(paths, list) or not all(isinstance(item, str) and item for item in paths):
+        raise PlanError("changed-paths file must be a JSON array of nonempty strings")
+    return paths
+
+
 def main() -> int:
     """Run the Assurance v2 command-line interface."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -499,6 +510,7 @@ def main() -> int:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--tier", choices=("affected", "full", "release"))
     parser.add_argument("--changed", action="append", default=[])
+    parser.add_argument("--changed-file", type=Path)
     parser.add_argument("--environment", choices=("hosted", "local", "release"), default="hosted")
     arguments = parser.parse_args()
 
@@ -513,7 +525,14 @@ def main() -> int:
     elif arguments.command == "select":
         if arguments.tier is None:
             parser.error("select requires --tier")
-        document = select(plan, arguments.tier, arguments.changed, arguments.environment)
+        changed_paths = list(arguments.changed)
+        if arguments.changed_file is not None:
+            try:
+                changed_paths.extend(load_changed_paths(arguments.changed_file))
+            except PlanError as error:
+                sys.stderr.write(f"assurance selection invalid: {error}\n")
+                return 2
+        document = select(plan, arguments.tier, changed_paths, arguments.environment)
     else:
         document = validation_receipt(plan)
     write_json(arguments.output, document)

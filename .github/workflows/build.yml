@@ -127,6 +127,8 @@ jobs:
           name: assurance-v2-windows-authoritative-evidence
           path: |
             target/assurance/**
+            build-logic/target/test-results/test/**
+            build-logic/target/reports/tests/test/**
             jbsa/target/test-results/test/**
             jbsa-cli/target/test-results/test/**
             jbsa-conformance-tests/target/test-results/assurancePlanTest/**

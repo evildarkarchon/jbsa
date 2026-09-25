@@ -257,6 +257,27 @@ class AssurancePlanTests(unittest.TestCase):
         self.assertEqual("full", unknown_selection["selected_tier"])
         self.assertEqual("unknown-impact", unknown_selection["selection_reason"])
 
+    def test_select_accepts_large_changed_path_file(self) -> None:
+        """Read PR impact from one file without expanding the Windows process command line."""
+        with tempfile.TemporaryDirectory() as temporary:
+            changed_file = Path(temporary) / "changed.json"
+            output = Path(temporary) / "selection.json"
+            changed = [
+                f"jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/tes3/Changed{index:04}.java"
+                for index in range(500)
+            ]
+            changed_file.write_text(json.dumps(changed), encoding="utf-8")
+
+            result = self.run_command(
+                "select", output, PLAN, "--tier", "affected", "--changed-file", str(changed_file)
+            )
+
+            self.assertEqual(0, result.returncode, result.stderr)
+            selection = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(changed, selection["changed_paths"])
+            self.assertEqual("affected", selection["selected_tier"])
+            self.assertTrue(selection["assurance_scenarios"])
+
     def test_selects_aggregate_performance_lanes_for_any_affected_capability(self) -> None:
         """A multi-capability decode lane follows any intersecting affected family."""
         with tempfile.TemporaryDirectory() as temporary:

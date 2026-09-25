@@ -59,7 +59,8 @@ build/performance/**/*.py text eol=lf
 build/performance-memory.cs text eol=lf
 tests/performance/**/*.json text eol=lf
 tests/performance/**/*.gz -text
-jbsa/src/main/resources/META-INF/jbsa-codec-profile.* text eol=lf
+# Packaged codec profiles bind exact LF bytes through their checked-in digests.
+jbsa/src/main/resources/META-INF/jbsa-*-profile.* text eol=lf
 docs/reviews/issue43-lz4-runtime/** text eol=lf
 docs/reviews/issue43-lz4-runtime/**/*.ba2 -text
 docs/reviews/issue43-lz4-runtime/**/*.bin -text
@@ -70,6 +71,12 @@ build/*lz4*.py text eol=lf
 # Retained CRLF is a line ending, while ordinary trailing-space checks still apply.
 build/bsa68-*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/fixtures/bsa068/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/fixtures/bsa069/*.json text eol=lf
+tests/fixtures/bsa069/*.hex text eol=lf
+tests/fixtures/starfield-dds/*.json text eol=lf
+tests/fixtures/starfield-dds/*.hex text eol=lf
+tests/fixtures/starfield-general/*.json text eol=lf
+tests/fixtures/starfield-general/*.hex text eol=lf
 docs/reviews/issue42-cv1/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 docs/development/evidence/issue42-build.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 docs/development/evidence/issue42-performance/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

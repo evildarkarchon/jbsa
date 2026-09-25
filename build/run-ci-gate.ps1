@@ -58,9 +58,12 @@ try {
             if ($LASTEXITCODE -ne 0) {
                 throw 'Unable to determine Assurance v2 impact from the pull-request base.'
             }
-            foreach ($changedPath in $changedPaths) {
-                $selectionArguments += @('--changed', $changedPath)
-            }
+            # A large PR can exceed Windows process argument limits when each path is passed separately.
+            $changedFile = Join-Path $reactorRoot 'target/assurance/changed-paths.json'
+            [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($changedFile)) | Out-Null
+            $changedJson = ConvertTo-Json -InputObject $changedPaths -Compress
+            [IO.File]::WriteAllText($changedFile, "$changedJson`n", [Text.UTF8Encoding]::new($false))
+            $selectionArguments += @('--changed-file', $changedFile)
         }
         & python @selectionArguments
         if ($LASTEXITCODE -ne 0) {
