@@ -152,6 +152,18 @@ class DdsEnvelopePackTest {
     rejects(source, DdsTarget.PC, FailureKind.FORMAT);
   }
 
+  /** Contradictory DX10 and legacy cubemap flags cannot define one preserved resource shape. */
+  @ParameterizedTest
+  @CsvSource({"65024,0", "0,4"})
+  void rejectsContradictoryExtendedCubemapFlags(int legacyCaps2, int miscFlag) throws Exception {
+    byte[] source = extended(71, 48, false);
+    ByteBuffer.wrap(source)
+        .order(ByteOrder.LITTLE_ENDIAN)
+        .putInt(112, legacyCaps2)
+        .putInt(136, miscFlag);
+    rejects(source, DdsTarget.PC, FailureKind.FORMAT);
+  }
+
   /** Builds an independent one-pixel extended DDS input with deliberately nonzero opaque bytes. */
   private static byte[] extended(int format, int payloadSize, boolean xbox) {
     int header = xbox ? 164 : 148;
