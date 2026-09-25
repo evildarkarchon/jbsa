@@ -9,6 +9,7 @@ import sys
 
 
 # The freeze intentionally excludes live harness documentation and Assurance v2 files.
+# These two fixture trees are inputs to the frozen CV1 catalog; other fixture trees remain live.
 FROZEN_PATHS = (
     "tests/conformance/catalog.json",
     ":(glob)tests/conformance/objects/**",
@@ -20,6 +21,8 @@ FROZEN_PATHS = (
     "tests/performance/requirements.json",
     "tests/performance/protocol.json",
     "tests/performance/baselines.json",
+    ":(glob)tests/fixtures/bsa067/**",
+    ":(glob)tests/fixtures/synthetic/**",
 )
 
 FROZEN_ROOTS = (
@@ -29,6 +32,8 @@ FROZEN_ROOTS = (
     "tests/conformance/catalog.json",
     "tests/conformance/objects",
     "tests/conformance/rebaselines",
+    "tests/fixtures/bsa067",
+    "tests/fixtures/synthetic",
     "tests/performance/baselines.json",
     "tests/performance/catalog.json",
     "tests/performance/protocol.json",

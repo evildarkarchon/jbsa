@@ -23,7 +23,7 @@ def digest_files(repository: Path, paths: list[Path]) -> str:
         elif path.is_dir():
             files.update(candidate for candidate in path.rglob("*") if candidate.is_file())
     digest = hashlib.sha256()
-    for path in sorted(files):
+    for path in sorted(files, key=lambda item: item.relative_to(repository).as_posix()):
         relative = path.relative_to(repository).as_posix()
         digest.update(relative.encode("utf-8"))
         digest.update(b"\0")
@@ -84,13 +84,24 @@ def command_identity(command: list[str], repository: Path) -> str:
     return output[0].strip()
 
 
-def specification_version(repository: Path) -> str:
-    """Read the normative specification-set identity from its registry."""
-    registry = (repository / "docs/spec/requirements.yaml").read_text(encoding="utf-8")
+def specification_identity(repository: Path) -> str:
+    """Bind the declared version and exact contents of the normative specification set."""
+    specification_root = repository / "docs/spec"
+    registry = (specification_root / "requirements.yaml").read_text(encoding="utf-8")
     match = re.search(r"^\s+version:\s+(\S+)\s*$", registry, re.MULTILINE)
     if match is None:
         raise capsule_tool.CapsuleError("cannot identify specification version")
-    return match.group(1)
+    # The superseded v1 contracts explicitly identify themselves as non-normative history.
+    historical = {
+        specification_root / "conformance-v1.md",
+        specification_root / "performance-v1.md",
+    }
+    normative = [
+        path
+        for path in specification_root.rglob("*")
+        if path.is_file() and path not in historical
+    ]
+    return f"{match.group(1)}@{digest_files(repository, normative)}"
 
 
 def session_identity(repository: Path, plan_path: Path, java_executable: str) -> dict[str, str]:
@@ -111,7 +122,7 @@ def session_identity(repository: Path, plan_path: Path, java_executable: str) ->
             [*fixture_inputs, repository / "tests/performance/corpus"],
         ),
         "protocol": digest_files(repository, [repository / "tests/performance/protocol.json"]),
-        "specification": specification_version(repository),
+        "specification": specification_identity(repository),
         "toolchain": digest_files(
             repository,
             [

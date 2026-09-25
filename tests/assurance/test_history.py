@@ -31,6 +31,9 @@ class FrozenHistoryTests(unittest.TestCase):
         self.write("tests/performance/requirements.json", "{}\n")
         self.write("tests/performance/protocol.json", "{}\n")
         self.write("tests/performance/baselines.json", "{}\n")
+        self.write("tests/fixtures/synthetic/generator.json", "{}\n")
+        self.write("tests/fixtures/synthetic/artifacts/base.hex", "00\n")
+        self.write("tests/fixtures/bsa067/generator.json", "{}\n")
         self.write("tests/conformance/README.md", "live\n")
         self.run_git("add", ".")
         self.run_git("commit", "--quiet", "-m", "baseline")
@@ -123,6 +126,8 @@ class FrozenHistoryTests(unittest.TestCase):
         self.assertIn("tests/performance/catalog.json", index["roots"])
         self.assertIn("docs/spec/conformance-v1.md", index["roots"])
         self.assertIn("docs/spec/performance-v1.md", index["roots"])
+        self.assertIn("tests/fixtures/synthetic", index["roots"])
+        self.assertIn("tests/fixtures/bsa067", index["roots"])
 
         verified = self.run_verifier(index=first)
         self.assertEqual(0, verified.returncode, verified.stderr)
@@ -146,6 +151,23 @@ class FrozenHistoryTests(unittest.TestCase):
             result.stdout,
         )
         self.assertEqual("", result.stderr)
+
+    def test_changed_legacy_fixture_inputs_are_frozen(self) -> None:
+        """Reject edits to fixture bytes and both catalog-referenced generator trees."""
+        self.write("tests/fixtures/synthetic/artifacts/base.hex", "ff\n")
+        self.write("tests/fixtures/synthetic/generator.json", '{"changed":true}\n')
+        self.write("tests/fixtures/bsa067/generator.json", '{"changed":true}\n')
+
+        result = self.run_verifier()
+
+        self.assertEqual(1, result.returncode, result.stderr)
+        self.assertEqual(
+            "frozen CV1 history changed:\n"
+            "tests/fixtures/bsa067/generator.json\n"
+            "tests/fixtures/synthetic/artifacts/base.hex\n"
+            "tests/fixtures/synthetic/generator.json\n",
+            result.stdout,
+        )
 
     def test_invalid_baseline_and_repository_exit_two(self) -> None:
         """Classify invalid revisions and repository paths as validation errors."""
