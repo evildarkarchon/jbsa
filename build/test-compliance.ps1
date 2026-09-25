@@ -76,6 +76,25 @@ function Write-TestZip {
     } finally { $zip.Dispose() }
 }
 
+<#
+.SYNOPSIS
+Writes several owned payloads into one ZIP for aggregate inspection tests.
+.PARAMETER Path
+Destination ZIP in the owned test fixture.
+.PARAMETER Entries
+Entry names mapped to their exact payload bytes.
+#>
+function Write-TestZipEntries {
+    param([string] $Path, [hashtable] $Entries)
+    $zip = [System.IO.Compression.ZipFile]::Open($Path, 'Create')
+    try {
+        foreach ($name in @($Entries.Keys | Sort-Object)) {
+            $stream = $zip.CreateEntry($name).Open()
+            try { $stream.Write([byte[]] $Entries[$name]) } finally { $stream.Dispose() }
+        }
+    } finally { $zip.Dispose() }
+}
+
 <# .SYNOPSIS Writes a synthetic CycloneDX component carrying a caller-selected artifact hash. #>
 function Write-TestSbom {
     param([object] $Entry, [string] $Hash)
@@ -254,6 +273,85 @@ try {
         & git -C $reactorRoot add -- container.zip
         Test-TrackedRepositoryBytes @{} @{}
     } 'Unapproved native payload'
+    Test-PolicyCase 'ZIP inspection bounds aggregate entry count' {
+        $path = Join-Path $reactorRoot 'container.zip'
+        Write-TestZipEntries $path @{
+            'a.txt' = [byte[]]@(1)
+            'b.txt' = [byte[]]@(2)
+            'c.txt' = [byte[]]@(3)
+        }
+        $previous = $script:maximumArchiveEntries
+        try {
+            $script:maximumArchiveEntries = 2
+            $stream = [System.IO.File]::OpenRead($path)
+            try { Test-ZipArchiveContents $stream 'container.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally { $script:maximumArchiveEntries = $previous }
+    } 'aggregate entry count limit'
+    Test-PolicyCase 'ZIP inspection bounds aggregate expanded bytes' {
+        $path = Join-Path $reactorRoot 'container.zip'
+        Write-TestZipEntries $path @{
+            'a.txt' = [byte[]]@(1,2,3)
+            'b.txt' = [byte[]]@(4,5,6)
+        }
+        $previous = $script:maximumArchiveExpandedBytes
+        try {
+            $script:maximumArchiveExpandedBytes = 5
+            $stream = [System.IO.File]::OpenRead($path)
+            try { Test-ZipArchiveContents $stream 'container.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally { $script:maximumArchiveExpandedBytes = $previous }
+    } 'aggregate expanded-byte limit'
+    Test-PolicyCase 'ZIP inspection counts nested entry fanout' {
+        $innerPath = Join-Path $reactorRoot 'inner.zip'
+        Write-TestZipEntries $innerPath @{
+            'a.txt' = [byte[]]@(1)
+            'b.txt' = [byte[]]@(2)
+        }
+        $outerPath = Join-Path $reactorRoot 'outer.zip'
+        Write-TestZip $outerPath 'inner.zip' ([System.IO.File]::ReadAllBytes($innerPath))
+        $previous = $script:maximumArchiveEntries
+        try {
+            $script:maximumArchiveEntries = 2
+            $stream = [System.IO.File]::OpenRead($outerPath)
+            try { Test-ZipArchiveContents $stream 'outer.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally { $script:maximumArchiveEntries = $previous }
+    } 'aggregate entry count limit'
+    Test-PolicyCase 'ZIP inspection charges nested expanded bytes' {
+        $innerPath = Join-Path $reactorRoot 'inner.zip'
+        Write-TestZip $innerPath 'payload.bin' ([byte[]]@(1,2,3))
+        $innerBytes = [System.IO.File]::ReadAllBytes($innerPath)
+        $outerPath = Join-Path $reactorRoot 'outer.zip'
+        Write-TestZip $outerPath 'inner.zip' $innerBytes
+        $previous = $script:maximumArchiveExpandedBytes
+        try {
+            # The outer member fits; its child needs three bytes with only two remaining.
+            $script:maximumArchiveExpandedBytes = $innerBytes.Length + 2
+            $stream = [System.IO.File]::OpenRead($outerPath)
+            try { Test-ZipArchiveContents $stream 'outer.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally { $script:maximumArchiveExpandedBytes = $previous }
+    } 'aggregate expanded-byte limit'
+    Test-PolicyCase 'ZIP inspection accepts exact aggregate limits' {
+        $path = Join-Path $reactorRoot 'container.zip'
+        Write-TestZipEntries $path @{
+            'a.txt' = [byte[]]@(1,2,3)
+            'b.txt' = [byte[]]@(4,5,6)
+        }
+        $previousEntries = $script:maximumArchiveEntries
+        $previousBytes = $script:maximumArchiveExpandedBytes
+        try {
+            $script:maximumArchiveEntries = 2
+            $script:maximumArchiveExpandedBytes = 6
+            $stream = [System.IO.File]::OpenRead($path)
+            try { Test-ZipArchiveContents $stream 'container.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally {
+            $script:maximumArchiveEntries = $previousEntries
+            $script:maximumArchiveExpandedBytes = $previousBytes
+        }
+    }
     Test-PolicyCase 'reference pin is accepted without checkout' { Test-TrackedRepositoryBytes @{} @{} }
     Test-PolicyCase 'reference revision drift is rejected' {
         & git -C $reactorRoot update-index --cacheinfo '160000,1111111111111111111111111111111111111111,TES5Edit'

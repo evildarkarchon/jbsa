@@ -81,6 +81,9 @@ $nativeLibraryExtensions = @('.dll', '.so', '.dylib')
 $nestedArchiveExtensions = @('.jar', '.zip')
 # This cap bounds inflation before hashing while covering ordinary dependency and application JARs.
 $maximumArchiveEntryBytes = 268435456
+# Shared across a ZIP and all of its descendants so broad or deeply nested fanout stays bounded.
+$maximumArchiveEntries = 100000
+$maximumArchiveExpandedBytes = 1073741824
 # EOCD plus its maximum ZIP comment is sufficient to detect archives with an executable preamble.
 $maximumZipTrailerBytes = 65557
 # Four nested layers cover expected packaging while bounding adversarial archive recursion.
@@ -891,7 +894,8 @@ Readable stream positioned at the first payload byte. The function leaves owners
 Maximum bytes permitted before inspection aborts. Defaults to the largest stream length.
 
 .OUTPUTS
-An object containing the lowercase SHA-256 digest plus native, proprietary-format, and ZIP flags.
+An object containing the lowercase SHA-256 digest, observed byte count, and native,
+proprietary-format, and ZIP flags.
 
 .NOTES
 Consumes the stream exactly once so non-seekable ZIP entry streams receive the same content-based
@@ -1004,6 +1008,7 @@ function Get-StreamPayloadInspection {
     ))
     return [pscustomobject]@{
         sha256 = $hash
+        bytesRead = $totalBytes
         isNativePayload = $isNativePayload
         isZipArchive = $isZipArchive
         isProprietaryPayload = $headerLength -ge 4 -and $magic32 -cin @(
@@ -1220,6 +1225,10 @@ Release-approved native entries keyed by exact payload SHA-256.
 .PARAMETER Depth
 Current nested-archive depth used to enforce the bounded inspection limit.
 
+.PARAMETER InspectionBudget
+Mutable entry-count and expanded-byte totals shared by every nested ZIP in one outer archive.
+An omitted budget starts a new outer-archive traversal.
+
 .OUTPUTS
 None.
 
@@ -1238,11 +1247,15 @@ function Test-ZipArchiveContents {
         [hashtable] $NativeByHash,
         [Parameter(Mandatory = $true)]
         [hashtable] $ApprovedNativeByHash,
-        [int] $Depth = 0
+        [int] $Depth = 0,
+        [hashtable] $InspectionBudget = $null
     )
 
     if ($Depth -gt $maximumArchiveDepth) {
         throw "Opaque nested archive exceeds the inspection depth limit: $DisplayPath"
+    }
+    if ($null -eq $InspectionBudget) {
+        $InspectionBudget = @{ entries = [long] 0; expandedBytes = [long] 0 }
     }
     $archive = [System.IO.Compression.ZipArchive]::new(
         $Stream,
@@ -1250,6 +1263,11 @@ function Test-ZipArchiveContents {
         $true
     )
     try {
+        if ($archive.Entries.Count -gt $maximumArchiveEntries - $InspectionBudget.entries) {
+            throw "Archive exceeds the aggregate entry count limit: $DisplayPath"
+        }
+        # Admit this central directory before opening members; descendants share the same total.
+        $InspectionBudget.entries += $archive.Entries.Count
         $entryNames = [System.Collections.Generic.HashSet[string]]::new(
             [System.StringComparer]::OrdinalIgnoreCase
         )
@@ -1271,6 +1289,10 @@ function Test-ZipArchiveContents {
             if ($entry.Length -gt $maximumArchiveEntryBytes) {
                 throw "Archive entry exceeds the inspection size limit: $DisplayPath!/$entryPath"
             }
+            $remainingBytes = $maximumArchiveExpandedBytes - $InspectionBudget.expandedBytes
+            if ($entry.Length -gt $remainingBytes) {
+                throw "Archive exceeds the aggregate expanded-byte limit: $DisplayPath!/$entryPath"
+            }
             # Unix ZIP creators store st_mode in the upper half; S_IFMT 0xa000 identifies a link.
             $unixMode = ($entry.ExternalAttributes -shr 16) -band 0xffff
             if (($unixMode -band 0xf000) -eq 0xa000) {
@@ -1290,11 +1312,14 @@ function Test-ZipArchiveContents {
             try {
                 $inspection = Assert-ApprovedNativeStream `
                     $entryStream $qualifiedPath 'in archived release inputs' `
-                    $extension $NativeByHash $ApprovedNativeByHash $maximumArchiveEntryBytes
+                    $extension $NativeByHash $ApprovedNativeByHash `
+                    ([Math]::Min($maximumArchiveEntryBytes, $remainingBytes))
             }
             finally {
                 $entryStream.Dispose()
             }
+            # Charge observed inflation before inspecting children; central-directory sizes are untrusted.
+            $InspectionBudget.expandedBytes += $inspection.bytesRead
             if ($inspection.isProprietaryPayload) {
                 throw "Proprietary or local fixture material is forbidden in release inputs: $qualifiedPath"
             }
@@ -1310,7 +1335,8 @@ function Test-ZipArchiveContents {
                     }
                     $nestedStream.Position = 0
                     Test-ZipArchiveContents `
-                        $nestedStream $qualifiedPath $NativeByHash $ApprovedNativeByHash ($Depth + 1)
+                        $nestedStream $qualifiedPath $NativeByHash $ApprovedNativeByHash `
+                        ($Depth + 1) $InspectionBudget
                 }
                 finally {
                     $nestedStream.Dispose()
