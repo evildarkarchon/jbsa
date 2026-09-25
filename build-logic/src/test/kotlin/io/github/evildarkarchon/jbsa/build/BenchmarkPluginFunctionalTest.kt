@@ -195,7 +195,7 @@ class BenchmarkPluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(TestKitBuildArguments.create(arguments))
+            .withArguments(TestKitBuildArguments.create(projectDir, arguments))
             .build()
 
     /** Runs a fixture build that is expected to reject benchmark release-input leakage. */
@@ -203,7 +203,7 @@ class BenchmarkPluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(TestKitBuildArguments.create(arguments))
+            .withArguments(TestKitBuildArguments.create(projectDir, arguments))
             .buildAndFail()
 
     /** Writes the dependency and plugin pins used by the benchmark convention. */

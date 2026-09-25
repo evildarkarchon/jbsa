@@ -293,7 +293,7 @@ class ConformancePluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(TestKitBuildArguments.create(arguments))
+            .withArguments(TestKitBuildArguments.create(projectDir, arguments))
 
     /** Writes the fixture's complete centrally pinned dependency catalog. */
     private fun writeCatalog() {

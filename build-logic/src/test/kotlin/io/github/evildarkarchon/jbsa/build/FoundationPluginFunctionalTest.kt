@@ -796,7 +796,7 @@ class FoundationPluginFunctionalTest {
         return GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(TestKitBuildArguments.create(arguments, verificationOff))
+            .withArguments(TestKitBuildArguments.create(projectDir, arguments, verificationOff))
     }
 
     /** Asserts an exact task-graph edge through observable execution order. */

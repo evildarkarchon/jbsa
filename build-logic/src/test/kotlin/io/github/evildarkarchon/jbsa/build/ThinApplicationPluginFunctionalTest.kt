@@ -202,7 +202,7 @@ class ThinApplicationPluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(TestKitBuildArguments.create(arguments))
+            .withArguments(TestKitBuildArguments.create(projectDir, arguments))
             .build()
 
     /** Runs a fixture build that is expected to reject an invalid thin-application contract. */
@@ -210,7 +210,7 @@ class ThinApplicationPluginFunctionalTest {
         GradleRunner.create()
             .withProjectDir(projectDir.toFile())
             .withPluginClasspath()
-            .withArguments(TestKitBuildArguments.create(arguments))
+            .withArguments(TestKitBuildArguments.create(projectDir, arguments))
             .buildAndFail()
 
     /** Writes the centralized dependency pins required by the foundation policy. */
