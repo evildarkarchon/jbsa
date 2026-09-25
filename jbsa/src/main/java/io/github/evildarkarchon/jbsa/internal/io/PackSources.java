@@ -213,7 +213,9 @@ public final class PackSources {
       case ArchiveMetadata.Tes3 value -> value.dataBaseOffset();
       case ArchiveMetadata.VersionedBsa value ->
           36
-              + value.folderCount() * 16
+              // SSE folder records include eight padding bytes absent from earlier versions.
+              + value.folderCount()
+                  * (value.encoding().wireVersion().orElseThrow().value() == 0x69 ? 24L : 16L)
               + value.entryCount() * 16
               + value.folderNamesLength()
               + value.fileNamesLength()

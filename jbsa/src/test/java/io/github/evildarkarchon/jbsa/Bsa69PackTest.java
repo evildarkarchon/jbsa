@@ -41,6 +41,46 @@ final class Bsa69PackTest {
     assertArrayEquals(new byte[] {1, 2, 3}, Arrays.copyOfRange(wire.array(), 90, 93));
   }
 
+  /** Repacking charges the full 24-byte source folder record at the exact metadata ceiling. */
+  @Test
+  void repackChargesSseSourceFolderRecordAtExactLimit() throws Exception {
+    Path source = directory.resolve("source-limit.bsa");
+    BethesdaArchives.standard()
+        .pack(
+            request(source, PackOptions.standard(), generated("meshes/a.nif", new byte[] {7})),
+            OperationControl.standard());
+    assertEquals(
+        90, ByteBuffer.wrap(Files.readAllBytes(source)).order(ByteOrder.LITTLE_ENDIAN).getInt(80));
+
+    Path rejected = directory.resolve("rejected-limit.bsa");
+    ArchiveException failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                BethesdaArchives.standard()
+                    .pack(
+                        request(
+                            rejected,
+                            PackOptions.standard(),
+                            metadataLimit(179),
+                            new PackSource.DetectedPath(source)),
+                        OperationControl.standard()));
+    assertEquals(FailureKind.POLICY, failure.kind());
+    assertEquals("maxMetadataBytes", failure.diagnostics().getFirst().values().get("field"));
+    assertFalse(Files.exists(rejected));
+
+    Path accepted = directory.resolve("accepted-limit.bsa");
+    BethesdaArchives.standard()
+        .pack(
+            request(
+                accepted,
+                PackOptions.standard(),
+                metadataLimit(180),
+                new PackSource.DetectedPath(source)),
+            OperationControl.standard());
+    assertTrue(Files.isRegularFile(accepted));
+  }
+
   /** LZ4-frame output uses the SSE profile and mixed entry toggles round-trip exactly. */
   @Test
   void packsAndReadsLz4FrameAndMixedEntries() throws Exception {
@@ -286,6 +326,12 @@ final class Bsa69PackTest {
 
   /** Builds an SSE request through the public immutable pack model. */
   private static PackRequest request(Path target, PackOptions options, PackSource... sources) {
+    return request(target, options, ResourceLimits.standard(), sources);
+  }
+
+  /** Builds an SSE request with caller-selected resource ceilings for boundary cases. */
+  private static PackRequest request(
+      Path target, PackOptions options, ResourceLimits limits, PackSource... sources) {
     return new PackRequest(
         target,
         ArchiveFamily.SSE_BSA,
@@ -295,10 +341,23 @@ final class Bsa69PackTest {
         List.of(sources),
         TargetPolicy.FAIL,
         DiagnosticPolicy.standard(),
-        ResourceLimits.standard(),
+        limits,
         new WorkerSelection.UpTo(1),
         options,
         Optional.empty());
+  }
+
+  /** Changes only the metadata ceiling while retaining the standard limits for other resources. */
+  private static ResourceLimits metadataLimit(long metadata) {
+    var standard = ResourceLimits.standard();
+    return new ResourceLimits(
+        standard.maxEntries(),
+        metadata,
+        standard.maxDecodedBytes(),
+        standard.maxScratchBytes(),
+        standard.maxOutputs(),
+        standard.maxDiagnostics(),
+        standard.maxSecondaryFailures());
   }
 
   /** Supplies a fresh channel over synthetic redistributable bytes. */
