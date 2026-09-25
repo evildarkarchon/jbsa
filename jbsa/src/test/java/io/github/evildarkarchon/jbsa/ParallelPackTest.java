@@ -691,13 +691,15 @@ class ParallelPackTest {
     assertTrue(Files.exists(nested));
   }
 
-  /** A cancellation sampled during native LZ4 work discards its uncommitted worker result. */
+  /**
+   * Requests cancellation after observing native LZ4 work and discards its uncommitted result. The
+   * coordinator may sample the request after the worker leaves the native call.
+   */
   @Test
-  void cancellationSampledDuringNativeLz4CallDiscardsResult() throws Exception {
+  void cancellationRequestedDuringNativeLz4CallDiscardsResult() throws Exception {
     byte[] payload = new byte[8 * 1024 * 1024];
     new java.util.Random(48).nextBytes(payload);
     AtomicBoolean cancelled = new AtomicBoolean();
-    AtomicBoolean sampledDuringNative = new AtomicBoolean();
     AtomicReference<Throwable> outcome = new AtomicReference<>();
     AtomicReference<String> workerStack = new AtomicReference<>("");
     PackOptions options =
@@ -724,14 +726,7 @@ class ParallelPackTest {
                                 2,
                                 ArchiveFamily.SSE_BSA,
                                 options),
-                            new OperationControl(
-                                snapshot -> {},
-                                () -> {
-                                  boolean requested = cancelled.get();
-                                  if (requested && nativeLz4Worker(workerStack))
-                                    sampledDuringNative.set(true);
-                                  return requested;
-                                }));
+                            new OperationControl(snapshot -> {}, cancelled::get));
                   } catch (Throwable failure) {
                     outcome.set(failure);
                   }
@@ -750,7 +745,6 @@ class ParallelPackTest {
     }
     assertFalse(caller.isAlive());
     assertInstanceOf(ArchiveCancelledException.class, outcome.get());
-    assertTrue(sampledDuringNative.get(), workerStack.get());
     assertFalse(Files.exists(target));
   }
 
