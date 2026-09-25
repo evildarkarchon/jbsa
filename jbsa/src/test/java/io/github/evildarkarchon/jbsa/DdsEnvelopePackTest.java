@@ -18,6 +18,7 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** DDS format and envelope checks through public packing and reconstructed content. */
 @EnabledOnOs(OS.WINDOWS)
@@ -162,6 +163,36 @@ class DdsEnvelopePackTest {
         .putInt(112, legacyCaps2)
         .putInt(136, miscFlag);
     rejects(source, DdsTarget.PC, FailureKind.FORMAT);
+  }
+
+  /** Missing or orphaned legacy face bits cannot identify one complete cubemap. */
+  @ParameterizedTest
+  @ValueSource(ints = {0x200, 0x7E00, 0x400})
+  void rejectsIncompleteLegacyCubemapMasks(int caps2) throws Exception {
+    int payloadSize = (caps2 & 0x200) == 0 ? 8 : 48;
+    byte[] source = DdsBa2PackTest.bc1(1, 1, 1, payloadSize);
+    ByteBuffer.wrap(source).order(ByteOrder.LITTLE_ENDIAN).putInt(112, caps2);
+    rejects(source, DdsTarget.PC, FailureKind.FORMAT);
+  }
+
+  /** The DX10 cube flag does not excuse missing face bits in the base DDS header. */
+  @Test
+  void rejectsIncompleteExtendedCubemapMask() throws Exception {
+    byte[] source = extended(71, 48, false);
+    ByteBuffer.wrap(source).order(ByteOrder.LITTLE_ENDIAN).putInt(112, 0x7E00).putInt(136, 4);
+    rejects(source, DdsTarget.PC, FailureKind.FORMAT);
+  }
+
+  /** A complete legacy cubemap retains all six face chains through reconstruction. */
+  @Test
+  void roundTripsCompleteLegacyCubemap() throws Exception {
+    byte[] source = DdsBa2PackTest.bc1(1, 1, 1, 48);
+    ByteBuffer.wrap(source).order(ByteOrder.LITTLE_ENDIAN).putInt(112, 0xFE00);
+    byte[] actual = roundTrip(source, DdsTarget.PC);
+    assertEquals(0xFE00, ByteBuffer.wrap(actual).order(ByteOrder.LITTLE_ENDIAN).getInt(112));
+    assertArrayEquals(
+        Arrays.copyOfRange(source, 128, source.length),
+        Arrays.copyOfRange(actual, 128, actual.length));
   }
 
   /** Builds an independent one-pixel extended DDS input with deliberately nonzero opaque bytes. */

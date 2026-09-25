@@ -64,7 +64,11 @@ public final class DdsEnvelope {
         || (h.getInt(112) & 0x200000) != 0
         || (extended && (h.getInt(132) != 3 || h.getInt(140) != 1)))
       throw context.failure(FailureKind.UNSUPPORTED, "dds.unsupported-shape", null);
-    boolean legacyCube = (h.getInt(112) & 0x200) != 0;
+    int cubeCaps = h.getInt(112) & 0xFE00;
+    // DDS BA2 can preserve either all six cubemap faces or no cubemap faces.
+    if (cubeCaps != 0 && cubeCaps != 0xFE00)
+      throw context.failure(FailureKind.FORMAT, "dds.invalid-cubemap-faces", null);
+    boolean legacyCube = cubeCaps != 0;
     boolean extendedCube = extended && (h.getInt(136) & 4) != 0;
     // A contradictory extended header cannot identify how many face chains the payload contains.
     if (extended && legacyCube != extendedCube)
