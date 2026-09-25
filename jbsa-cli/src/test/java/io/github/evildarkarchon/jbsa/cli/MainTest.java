@@ -210,9 +210,15 @@ class MainTest {
     Result dumped = run(archive.toString(), "-dump");
     assertEquals(0, dumped.status(), dumped.error());
     assertTrue(dumped.output().contains("Subtype: DX10"));
+    assertTrue(dumped.output().contains("Target: PC"));
     assertTrue(dumped.output().contains("Codec: ZLIB"));
     assertTrue(dumped.output().contains("Dimensions: 1x1"));
     assertTrue(dumped.output().contains("Mip range: 0..0"));
+    Path xboxNamed = temporary.resolve("dds_xbox.ba2");
+    Files.copy(archive, xboxNamed);
+    Result xboxInfo = run("--compatibility-profile=bsarch-1.0/v1", xboxNamed.toString());
+    assertEquals(0, xboxInfo.status(), xboxInfo.error());
+    assertTrue(xboxInfo.output().contains("Target: XBOX"), xboxInfo.output());
     Files.writeString(source.resolve("Other.txt"), "not a texture");
     Path rejected = temporary.resolve("non-dds.ba2");
     Result invalid = run("pack", source.getParent().toString(), rejected.toString(), "-fo4dds");
@@ -589,6 +595,92 @@ class MainTest {
     assertEquals(0, result.status(), result.output() + result.error());
     assertTrue(Files.isRegularFile(archive));
     assertEquals("", result.error());
+  }
+
+  /** Profiled archive information reports operational errors on stdout with a zero exit status. */
+  @Test
+  void profileArchiveInformationFailureExitsZero() throws Exception {
+    Path missing = temporary.resolve("missing.bsa");
+    Result safe = run(missing.toString());
+    assertEquals(1, safe.status());
+    Result profiled = run("--compatibility-profile=bsarch-1.0/v1", missing.toString());
+    assertEquals(0, profiled.status());
+    assertTrue(profiled.output().startsWith("Error: [source]"), profiled.output());
+    assertEquals("", profiled.error());
+  }
+
+  /** Profiled packing omits unusable roots but still needs an entry after library discovery. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileOmitsUnusablePackSources() throws Exception {
+    Path missing = temporary.resolve("missing-source");
+    Path valid = Files.createDirectory(temporary.resolve("valid-source"));
+    Files.writeString(valid.resolve("entry.txt"), "payload");
+    String mixed = missing + "+" + valid;
+    Path safeArchive = temporary.resolve("safe.bsa");
+    Result safe = run("pack", mixed, safeArchive.toString(), "-tes3");
+    assertEquals(1, safe.status(), safe.error());
+    assertTrue(Files.notExists(safeArchive));
+
+    Path profiledArchive = temporary.resolve("profiled.bsa");
+    Result profiled =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            mixed,
+            profiledArchive.toString(),
+            "-tes3");
+    assertEquals(0, profiled.status(), profiled.output() + profiled.error());
+    Result listed = run(profiledArchive.toString(), "-list");
+    assertEquals(0, listed.status(), listed.error());
+    assertTrue(listed.output().contains("Entries: 1"));
+    assertTrue(listed.output().contains("entry.txt"));
+
+    Path malformed = temporary.resolve("malformed.bsa");
+    Files.write(malformed, new byte[] {'B', 'S', 'A', 0, 0x68, 0, 0, 0});
+    Path recoveredArchive = temporary.resolve("recovered.bsa");
+    Result recovered =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            malformed + "+" + valid,
+            recoveredArchive.toString(),
+            "-tes3");
+    assertEquals(0, recovered.status(), recovered.output() + recovered.error());
+    assertTrue(run(recoveredArchive.toString()).output().contains("Entries: 1"));
+
+    Path empty = Files.createDirectory(temporary.resolve("empty-source"));
+    Path emptyArchive = temporary.resolve("empty.bsa");
+    Result none =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            missing + "+" + empty,
+            emptyArchive.toString(),
+            "-tes3");
+    assertEquals(1, none.status(), none.output());
+    assertTrue(Files.notExists(emptyArchive));
+  }
+
+  /** Profile omission cannot bypass the library's explicit output-source overlap rejection. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileRetainsOutputAliasesForLibrarySafetyPreflight() throws Exception {
+    Path valid = Files.createDirectory(temporary.resolve("valid-source"));
+    Files.writeString(valid.resolve("entry.txt"), "payload");
+    for (String alias : List.of("archive.bsa", "archive2.bsa")) {
+      Path archive = temporary.resolve("archive.bsa");
+      Result result =
+          run(
+              "--compatibility-profile=bsarch-1.0/v1",
+              "pack",
+              temporary.resolve(alias) + "+" + valid,
+              archive.toString(),
+              "-tes3");
+      assertEquals(1, result.status(), result.output());
+      assertTrue(result.output().contains("source.output-overlap"), result.output());
+      assertTrue(Files.notExists(archive));
+    }
   }
 
   @Test

@@ -9,6 +9,8 @@ import io.github.evildarkarchon.jbsa.Artifact;
 import io.github.evildarkarchon.jbsa.ArtifactState;
 import io.github.evildarkarchon.jbsa.BethesdaArchives;
 import io.github.evildarkarchon.jbsa.CompatibilityProfile;
+import io.github.evildarkarchon.jbsa.DdsTarget;
+import io.github.evildarkarchon.jbsa.DetectionStatus;
 import io.github.evildarkarchon.jbsa.Diagnostic;
 import io.github.evildarkarchon.jbsa.DiagnosticPolicy;
 import io.github.evildarkarchon.jbsa.DiagnosticSeverity;
@@ -22,11 +24,17 @@ import io.github.evildarkarchon.jbsa.OperationControl;
 import io.github.evildarkarchon.jbsa.OperationReport;
 import io.github.evildarkarchon.jbsa.PackOptions;
 import io.github.evildarkarchon.jbsa.PackRequest;
+import io.github.evildarkarchon.jbsa.PackSource;
 import io.github.evildarkarchon.jbsa.ResourceLimits;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -75,7 +83,7 @@ public final class Main {
         }
         case "inspect" -> {
           ArchiveInspection inspection = archives.inspect(invocation.archive(), options);
-          renderInspection(invocation, inspection, output);
+          renderInspection(invocation, inspection, options, output);
           renderDiagnostics(inspection.assessment().diagnostics(), diagnostics);
         }
         case "pack", "unpack" -> {
@@ -97,7 +105,7 @@ public final class Main {
                             invocation.family(),
                             packEncoding(invocation),
                             invocation.profile(),
-                            invocation.sources(),
+                            packSources(invocation, archives, options),
                             invocation.targetPolicy(),
                             DiagnosticPolicy.standard(),
                             ResourceLimits.standard(),
@@ -170,8 +178,73 @@ public final class Main {
                 + " path="
                 + artifact.path());
       }
+      // The qualified archive-information quirk changes only the process status, not failure
+      // records.
+      if (invocation.operation().equals("inspect") && invocation.profile().isPresent()) return 0;
       return failure.kind() == FailureKind.CANCELLED ? 130 : 1;
     }
+  }
+
+  /**
+   * Omits unusable declared paths only for the CLI compatibility profile. Output aliases remain so
+   * library preflight can reject them, including aliases that do not exist yet. The library still
+   * expands directories, resolves overlays, and rejects an empty final entry set.
+   *
+   * @return surviving sources in their original operand order
+   */
+  private static List<PackSource> packSources(
+      Invocation invocation, BethesdaArchives archives, OpenOptions options) {
+    if (invocation.profile().isEmpty()) return invocation.sources();
+    List<PackSource> usable = new ArrayList<>();
+    for (PackSource source : invocation.sources()) {
+      if (!(source instanceof PackSource.DetectedPath detected)) {
+        usable.add(source);
+        continue;
+      }
+      Path path = detected.path();
+      // An output alias must reach library preflight even if it does not exist yet.
+      if (outputPath(path, invocation.archive())) {
+        usable.add(source);
+      } else if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS) && Files.isReadable(path)) {
+        usable.add(source);
+      } else if (Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS) && Files.isReadable(path)) {
+        try {
+          DetectionStatus status = archives.detect(path).status();
+          if (status == DetectionStatus.UNRECOGNIZED
+              || (status == DetectionStatus.SUPPORTED_FAMILY
+                  && !archives.inspect(path, options).entries().isEmpty())) {
+            usable.add(source);
+          }
+        } catch (ArchiveException unusableSource) {
+          // This profile omits a source whose bounded archive preflight cannot succeed.
+        }
+      }
+    }
+    return List.copyOf(usable);
+  }
+
+  /**
+   * Recognizes the requested target and numbered siblings so absent aliases are never omitted
+   * before the library's output-overlap preflight.
+   */
+  private static boolean outputPath(Path source, Path target) {
+    Path absolute = source.toAbsolutePath().normalize();
+    Path destination = target.toAbsolutePath().normalize();
+    if (!Objects.equals(absolute.getParent(), destination.getParent())) return false;
+    String actual = absolute.getFileName().toString().toLowerCase(Locale.ROOT);
+    String requested = destination.getFileName().toString().toLowerCase(Locale.ROOT);
+    if (actual.equals(requested)) return true;
+    int dot = requested.lastIndexOf('.');
+    if (dot < 0) dot = requested.length();
+    String prefix = requested.substring(0, dot);
+    String suffix = requested.substring(dot);
+    if (!actual.startsWith(prefix) || !actual.endsWith(suffix)) return false;
+    int end = actual.length() - suffix.length();
+    if (end <= prefix.length()) return false;
+    String number = actual.substring(prefix.length(), end);
+    return number.charAt(0) != '0'
+        && number.chars().allMatch(c -> c >= '0' && c <= '9')
+        && (number.length() > 1 || number.charAt(0) >= '2');
   }
 
   /** Maps one validated CLI family/codec choice to its independent wire selectors. */
@@ -218,7 +291,10 @@ public final class Main {
 
   /** Renders stable archive headers and serialized entry facts from detached library metadata. */
   private static void renderInspection(
-      Invocation invocation, ArchiveInspection inspection, PrintStream output) {
+      Invocation invocation,
+      ArchiveInspection inspection,
+      OpenOptions options,
+      PrintStream output) {
     output.println("Archive: " + invocation.archive());
     output.println("Family: " + inspection.metadata().family());
     output.println("Entries: " + inspection.metadata().entryCount());
@@ -246,6 +322,7 @@ public final class Main {
     if (inspection.metadata() instanceof ArchiveMetadata.DdsBa2 metadata) {
       output.println("Version: " + metadata.encoding().wireVersion().orElseThrow().value());
       output.println("Subtype: DX10");
+      output.println("Target: " + reconstructionTarget(invocation.archive(), options));
       output.println("Filename table offset: " + metadata.fileNameTableOffset());
     }
     if (inspection.metadata() instanceof ArchiveMetadata.GeneralBa2 metadata) {
@@ -347,6 +424,17 @@ public final class Main {
         }
       }
     }
+  }
+
+  /**
+   * Reports the same explicit-or-qualified DDS reconstruction choice used by the archive reader.
+   */
+  private static DdsTarget reconstructionTarget(Path archive, OpenOptions options) {
+    if (options.ddsTarget().isPresent()) return options.ddsTarget().orElseThrow();
+    return options.compatibilityProfile().isPresent()
+            && archive.getFileName().toString().toLowerCase(Locale.ROOT).contains("_xbox.")
+        ? DdsTarget.XBOX
+        : DdsTarget.PC;
   }
 
   /** Preserves library diagnostic order, severity, structured locations and canonical values. */
