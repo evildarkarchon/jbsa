@@ -14,7 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 /** Verifies the stable CI-gate launcher and hosted workflow at their public repository seams. */
 @Tag("build-policy")
 final class CiGatePolicyIT {
-  private static final String PINNED_JAVA = "java-version: '25.0.4.1+1'";
+  private static final String SETUP_JAVA_VERSION = "java-version: '25.0.4'";
   private static final String WINDOWS_JDK_SHA256 =
       "00c847d804f4a78e9f04f2683faf14fed898535b177b7fc704486cb0284e9283";
   private static final String LINUX_JDK_SHA256 =
@@ -68,7 +68,9 @@ final class CiGatePolicyIT {
       assertTrue(workflow.contains("          - " + gate), () -> "Missing stable CI gate " + gate);
     }
     assertEquals(
-        1, count(setupAction, PINNED_JAVA), "The shared action must use the pinned Temurin JDK");
+        1,
+        count(setupAction, SETUP_JAVA_VERSION),
+        "The shared action must use a SemVer label for the verified Temurin archive");
     assertEquals(3, count(workflow, "uses: ./.github/actions/setup-qualified-jdk"));
     assertEquals(2, count(workflow, "platform: windows-x64"));
     assertEquals(1, count(workflow, "platform: linux-x64"));
@@ -79,6 +81,7 @@ final class CiGatePolicyIT {
     assertEquals(1, count(provisioner, LINUX_JDK_SHA256));
     assertTrue(provisioner.contains("OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1.zip"));
     assertTrue(provisioner.contains("OpenJDK25U-jdk_x64_linux_hotspot_25.0.4.1_1.tar.gz"));
+    assertTrue(provisioner.contains("releases/download/jdk-25.0.4.1%2B1"));
     assertTrue(provisioner.contains("Get-FileHash -Algorithm SHA256"));
     assertTrue(provisioner.contains("if ($actual -cne $distribution.Sha256)"));
     assertTrue(workflow.contains("run: .\\gradlew.bat clean verify --no-daemon"));
@@ -109,10 +112,11 @@ final class CiGatePolicyIT {
         line -> assertTrue(line.matches("uses: [^@\\s]+@[0-9a-f]{40}(?:\\s+#.*)?"), line));
 
     int conformanceGate = workflow.indexOf("- name: Run ${{ matrix.gate }} gate");
-    int conformanceEvidence = workflow.indexOf("- name: Retain per-case conformance evidence");
+    int conformanceEvidence = workflow.indexOf("- name: Retain Assurance v2 evidence");
     assertTrue(conformanceGate >= 0 && conformanceEvidence > conformanceGate);
     assertTrue(workflow.contains("if: always() && matrix.gate == 'conformance'"));
-    assertTrue(workflow.contains("name: conformance-v1-windows-authoritative-evidence"));
+    assertTrue(workflow.contains("name: assurance-v2-hosted-evidence"));
+    assertTrue(workflow.contains("name: assurance-v2-windows-authoritative-evidence"));
   }
 
   /** Counts exact non-overlapping occurrences of one workflow fragment. */

@@ -15,11 +15,25 @@ $ErrorActionPreference = 'Stop'
 $fixtureRoot = Join-Path ([IO.Path]::GetTempPath()) "jbsa-ci-gate-test-$([guid]::NewGuid().ToString('N'))"
 $priorLog = $env:JBSA_CI_GATE_TEST_LOG
 $priorFailure = $env:JBSA_CI_GATE_TEST_FAILURE
+$priorEvent = $env:GITHUB_EVENT_NAME
 
 try {
     $fixtureBuild = Join-Path $fixtureRoot 'build'
     New-Item -ItemType Directory -Path $fixtureBuild -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'run-ci-gate.ps1') -Destination $fixtureBuild
+
+    # Keep this launcher test independent of the assurance planner while satisfying its output seam.
+    $fixtureAssurance = Join-Path $fixtureBuild 'assurance'
+    New-Item -ItemType Directory -Path $fixtureAssurance -Force | Out-Null
+    $fixtureSelector = @'
+import pathlib
+import sys
+
+output = pathlib.Path(sys.argv[sys.argv.index("--output") + 1])
+output.parent.mkdir(parents=True, exist_ok=True)
+output.write_text("{}\n", encoding="utf-8")
+'@
+    Set-Content -LiteralPath (Join-Path $fixtureAssurance 'plan.py') -Value $fixtureSelector
 
     $fixtureGradle = @'
 $record = [ordered]@{ arguments = @($args) } | ConvertTo-Json -Compress
@@ -27,7 +41,13 @@ Add-Content -LiteralPath $env:JBSA_CI_GATE_TEST_LOG -Value $record
 if ($env:JBSA_CI_GATE_TEST_FAILURE -eq 'true') { exit 17 }
 '@
     Set-Content -LiteralPath (Join-Path $fixtureRoot 'fixture-gradle.ps1') -Value $fixtureGradle
-    Set-Content -LiteralPath (Join-Path $fixtureRoot 'gradlew.bat') -Value '@pwsh -NoLogo -NoProfile -NonInteractive -File "%~dp0fixture-gradle.ps1" %*'
+    # A batch-to-pwsh hop splits -Pname=C:\path, so record the wrapper's raw arguments on Windows.
+    $windowsWrapper = @'
+@echo off
+>>"%JBSA_CI_GATE_TEST_LOG%" echo %*
+if /I "%JBSA_CI_GATE_TEST_FAILURE%"=="true" exit /b 17
+'@
+    Set-Content -LiteralPath (Join-Path $fixtureRoot 'gradlew.bat') -Value $windowsWrapper
     $posixWrapper = @'
 #!/usr/bin/env pwsh
 & "$PSScriptRoot/fixture-gradle.ps1" @args
@@ -46,14 +66,17 @@ Add-Content -LiteralPath $env:JBSA_CI_GATE_TEST_LOG -Value 'REPRODUCIBILITY'
     Set-Content -LiteralPath (Join-Path $fixtureBuild 'verify-reproducible-build.ps1') -Value $reproducibilityFixture
 
     $env:JBSA_CI_GATE_TEST_LOG = Join-Path $fixtureRoot 'invocations.log'
+    # A temporary fixture has no PR comparison base, so exercise the full selection path.
+    $env:GITHUB_EVENT_NAME = 'local-fixture'
     $runner = Join-Path $fixtureBuild 'run-ci-gate.ps1'
+    $selection = Join-Path $fixtureRoot 'target/assurance/selection.json'
     $expectedMappings = [ordered]@{
         compile = @('--no-daemon', ':jbsa:classes', ':jbsa-cli:classes', ':jbsa-test-support:classes', ':jbsa-conformance-tests:classes', ':jbsa-benchmarks:classes')
         unit = @('--no-daemon', ':jbsa:test', ':jbsa-cli:test', ':jbsa-test-support:test', ':jbsa-conformance-tests:test', ':jbsa-benchmarks:test')
         architecture = @('--no-daemon', ':jbsa-conformance-tests:architectureTest')
         formatting = @('--no-daemon', 'spotlessCheck')
         policy = @('--no-daemon', ':jbsa-conformance-tests:buildPolicyTest')
-        conformance = @('--no-daemon', ':jbsa-conformance-tests:automatedConformance')
+        conformance = @('--no-daemon', ':jbsa-conformance-tests:automatedAssurance', "-PjbsaAssuranceSelection=$selection")
     }
 
     foreach ($entry in $expectedMappings.GetEnumerator()) {
@@ -62,9 +85,9 @@ Add-Content -LiteralPath $env:JBSA_CI_GATE_TEST_LOG -Value 'REPRODUCIBILITY'
         $output = & pwsh -NoLogo -NoProfile -NonInteractive -File $runner -Gate $entry.Key 2>&1
         if ($LASTEXITCODE -ne 0) { throw "The $($entry.Key) fixture failed: $output" }
         $records = @(Get-Content -LiteralPath $env:JBSA_CI_GATE_TEST_LOG)
-        $actual = @(($records[0] | ConvertFrom-Json).arguments)
-        if (($actual -join "`n") -cne (@($entry.Value) -join "`n")) {
-            throw "The $($entry.Key) gate mapped to '$($actual -join ' ')' instead of '$($entry.Value -join ' ')'."
+        $actual = if ($IsWindows) { $records[0] } else { @((($records[0] | ConvertFrom-Json).arguments)) -join ' ' }
+        if ($actual -cne ($entry.Value -join ' ')) {
+            throw "The $($entry.Key) gate mapped to '$actual' instead of '$($entry.Value -join ' ')'."
         }
         $expectedRecordCount = if ($entry.Key -eq 'policy') { 2 } else { 1 }
         if ($records.Count -ne $expectedRecordCount) {
@@ -91,6 +114,7 @@ Add-Content -LiteralPath $env:JBSA_CI_GATE_TEST_LOG -Value 'REPRODUCIBILITY'
 finally {
     $env:JBSA_CI_GATE_TEST_LOG = $priorLog
     $env:JBSA_CI_GATE_TEST_FAILURE = $priorFailure
+    $env:GITHUB_EVENT_NAME = $priorEvent
     $resolvedRoot = [IO.Path]::GetFullPath($fixtureRoot)
     $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd('\', '/') + [IO.Path]::DirectorySeparatorChar
     if (-not $resolvedRoot.StartsWith($tempPrefix, [StringComparison]::OrdinalIgnoreCase)) {

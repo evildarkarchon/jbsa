@@ -26,6 +26,8 @@ compliance/licenses/LZ4-1.10.0.txt text eol=crlf
 build/windows-runtime/launch-policy.json text eol=crlf
 
 tests/fixtures/synthetic/**/*.json text eol=lf
+# Hex fixture digests bind their LF terminator across Windows and Linux checkouts.
+tests/fixtures/synthetic/**/*.hex text eol=lf
 tests/fixtures/synthetic/**/*.ba2 -text
 tests/fixtures/synthetic/**/*.bin -text
 tests/fixtures/tes3/*.hex text eol=lf
