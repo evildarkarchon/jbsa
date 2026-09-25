@@ -32,4 +32,5 @@ runs:
           gradle/wrapper/gradle-wrapper.properties
         distribution: jdkfile
         jdk-file: ${{ env.JBSA_JDK_ARCHIVE }}
-        java-version: '25.0.4.1+1'
+        # setup-java requires a SemVer label; the verified archive fixes the exact 25.0.4.1+1 build.
+        java-version: '25.0.4'
