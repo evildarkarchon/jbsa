@@ -21,6 +21,8 @@ class TestKitBuildArgumentsTest {
         val secondCache = Path.of(second[second.indexOf("--project-cache-dir") + 1])
         assertEquals(firstCache, repeatedCache)
         assertNotEquals(firstCache, secondCache)
+        assertEquals(firstCache.toFile().canonicalFile.toPath(), firstCache)
+        assertEquals(secondCache.toFile().canonicalFile.toPath(), secondCache)
         assertFalse(firstCache.startsWith(temporary))
         assertFalse(secondCache.startsWith(temporary))
     }
