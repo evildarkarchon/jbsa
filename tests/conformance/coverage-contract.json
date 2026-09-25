@@ -1,0 +1,776 @@
+{
+  "schema_version": 1,
+  "contract": "conformance-v1",
+  "coverage_items": [
+    {
+      "id": "bsa-automatic-flags",
+      "description": "Every automatic flag-classifier row; root over extension, first match, no match, family mask and archive flags",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "bsa-dds-empty-stem",
+      "description": ".dds empty-stem encode rejection and decode retention",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "bsa-embedded-068",
+      "description": "Explicit embedded-name framing, canonical prefix derivation and bounded prefix/index mismatch",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "bsa-embedded-069",
+      "description": "Explicit embedded-name framing, canonical prefix derivation and bounded prefix/index mismatch",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "bsa-hash-collisions",
+      "description": "Two colliding folders with interleaving basename hashes and multiple entries, equal-hash basenames, byte tie-breaks, contiguous folder blocks across reverse source and worker orders",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "bsa-name-flags",
+      "description": "All four directory/file-name presence-flag combinations, absent components and synthetic metadata",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "bsa-xml-067",
+      "description": "Special 0x67 XML automatic-classifier rule",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "cli-exits-streams",
+      "description": "Every CLI exit result and stream placement rule",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "cli-filter-masks",
+      "description": "-f whole-basename inclusion, union, ASCII-fold, wildcard, empty/no mask and no-match",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "cli-filter-plus-rejection",
+      "description": "Leading/trailing/repeated plus rejection before path conversion or source discovery",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "cli-operations",
+      "description": "Every CLI operation and owned filesystem result",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "cli-switches",
+      "description": "Every valid and invalid CLI switch",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "compatibility-deviations",
+      "description": "Every registered Compatibility Deviation in safe-default and activated profile modes",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "compression-boundaries",
+      "description": "Compression size boundaries",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "compression-consumption",
+      "description": "Complete codec consumption",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "compression-mixed",
+      "description": "Mixed stored and compressed entries",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "compression-size-mismatch",
+      "description": "Decoded-size mismatch rejection",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-bc16-boundaries",
+      "description": "16-byte BC blocks at 1x1 and 5x7",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-bc8-boundaries",
+      "description": "8-byte BC blocks at 1x1 and 5x7",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-cli-selector",
+      "description": "CLI DDS selector maps to PC",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-cubemaps",
+      "description": "Cubemaps",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-dimensions-mips",
+      "description": "Materially distinct dimensions and mip counts",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-name-tables",
+      "description": "Zero/out-of-range name tables; exact ordinal-disambiguated synthetic names and absent wire bytes/identity",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-nonsquare-mips",
+      "description": "Nonsquare mip chain with one dimension reaching one first",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-odd-multichunk",
+      "description": "Odd-dimension multichunk mip chain",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-partitions",
+      "description": "Exact partition sizes and missing/extra payload rejection",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-reconstruction",
+      "description": "Canonical reconstruction and chunk boundaries",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-reconstruction-selection",
+      "description": "Explicit, default and qualified-profile reconstruction selection with fixed archive filename",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-target-mismatch-pc",
+      "description": "PC target rejects XBOX input",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-target-mismatch-xbox",
+      "description": "XBOX target rejects PC input",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-target-pc",
+      "description": "PC encode target with matching PC input and fixed target in both differential directions",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-target-xbox",
+      "description": "XBOX encode target with matching XBOX input and fixed target in both differential directions",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "dds-writable-formats",
+      "description": "Every writable DDS format",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "determinism-sequential",
+      "description": "Repeated sequential runs compare semantic projection, diagnostics, ordering and deterministic bytes",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "determinism-workers",
+      "description": "Every applicable worker limit and parallel semantic equivalence, bounded resources and deterministic public ordering",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "gnrl-name-tables",
+      "description": "Zero/out-of-range name tables; exact ordinal-disambiguated synthetic names and absent wire bytes/identity",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "input-empty",
+      "description": "Empty input archive and zero entries",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "input-multi-entry",
+      "description": "Multiple entries with exact order and payloads",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "input-nested",
+      "description": "Nested input names",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "input-single-entry",
+      "description": "Single-entry input",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "input-zero-length",
+      "description": "Zero-length entry payloads",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "limits-cli-standard",
+      "description": "CLI uses every standard resource ceiling",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "limits-library-overrides",
+      "description": "Direct-library ResourceLimits overrides",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "limits-standard-boundaries",
+      "description": "Every ResourceLimits.standard ceiling exactly at and one unit above its boundary",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "malformed-arithmetic-overflow",
+      "description": "Checked-arithmetic overflow",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-decompression-mismatch",
+      "description": "Decompression failure or decoded-size mismatch",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-equal-name-identities",
+      "description": "Equal Normalized Name Identities",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-exact-shared-spans",
+      "description": "Exact shared spans",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-harmless-trailing-bytes",
+      "description": "Harmless trailing bytes",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-ignorable-constants",
+      "description": "Safely ignorable constants",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-illegal-tuples",
+      "description": "Illegal family/version/subtype/method tuples",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-impossible-counts",
+      "description": "Impossible counts",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-missing-name-tables",
+      "description": "Missing or out-of-range name tables",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-out-of-range-spans",
+      "description": "Out-of-range spans",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-owning-dispositions",
+      "description": "Every rejection and tolerated-noncanonical class owned by the format and operation specifications",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-partial-overlap",
+      "description": "Partially overlapping spans",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-tes3-name-offset",
+      "description": "Bounded TES3 name-offset inconsistency",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-truncated-spans",
+      "description": "Truncated spans",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-undecodable-wire-names",
+      "description": "Undecodable present wire-name components",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-unsafe-absolute-names",
+      "description": "Unsafe absolute names",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-unsafe-name-extraction",
+      "description": "Every JBSA-OPS-003 unsafe-name diagnostic: checked POLICY outcome, no-write preflight, containment and no destination effects",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-unsafe-traversal-names",
+      "description": "Unsafe traversal names",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-usable-name-hash-mismatch",
+      "description": "Usable-name hash mismatch",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "malformed-windows-invalid-names",
+      "description": "Qualified-Windows-invalid characters and reserved device basenames",
+      "requirements": [
+        "JBSA-CONF-012"
+      ]
+    },
+    {
+      "id": "names-ascii-lowercase",
+      "description": "Deterministic ASCII lowercasing",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "names-case-and-separators",
+      "description": "Path case and both forward-slash and backslash forms",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "names-nonascii-lowercase",
+      "description": "Non-ASCII lowercase rejection and qualified-profile behavior",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "names-normalized-rejections",
+      "description": "Reject empty/repeated segments, dot/dotdot, trailing space/dot, colon, and non-ASCII case pairs for Normalized Name Identity",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "names-undecodable-components",
+      "description": "Exact diagnostic, ordinal synthetic display name, retained undecodable wire bytes and absent identity",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "names-unmappable-encode",
+      "description": "Reject unmappable encode names",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "names-wire-encodings",
+      "description": "ASCII, Windows-1252 and Windows-932 wire names",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "primary-failure-ordering",
+      "description": "All eight present/absent combinations of logical ordinal, diagnostic identifier and structured location",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "progress-cancellation",
+      "description": "Pre-cancellation, interruption in each phase, cleanup after non-success and late cancellation",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "progress-extract-atomic",
+      "description": "Exact atomic-set/new-root extract phase/metric sets and zero-unit success",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "progress-extract-existing",
+      "description": "Exact existing-tree extract phase/metric sets and zero-unit success",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "progress-observer-failure",
+      "description": "Observer failure with no later callback; callback thread and cadence non-semantic",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "progress-pack",
+      "description": "Exact pack phase/metric sets and zero-unit success",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-descendant-indirections",
+      "description": "Direct library and CLI omit descendant file/directory indirections without target access",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-directory-order",
+      "description": "Opposite filesystem creation orders and repeated materializations produce identical directory expansion",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-filtering",
+      "description": "Source filtering",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-later-part-collision",
+      "description": "Transformed-size/sharing-dependent later-part collision under FAIL before destination staging; no effects and complete scratch cleanup",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-link-mutation",
+      "description": "Regular-file-to-link mutation rejection",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-linked-root",
+      "description": "Linked-root SOURCE rejection",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-mappings",
+      "description": "Directory-root-relative, individual-file-basename, existing archive, explicit name and generated-entry PackSource mappings",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-overlay",
+      "description": "Later-source-wins overlay order",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-sharing",
+      "description": "Sharing on and off",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-split-names",
+      "description": "Extension-bearing, extensionless, leading-dot and trailing-dot split names",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-splitting",
+      "description": "Splitting on and off, crossing the 2 GiB BSA target",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "source-unprovable-classification",
+      "description": "Unprovable-classification CAPABILITY rejection",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "tes3-hash-collisions",
+      "description": "Distinct names with the same full hash; canonical byte tie-breaks for records/payloads across reverse source and worker orders",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "windows-accepted-neighbors",
+      "description": "COM0, COM10 and CONSOLE accepted neighbors",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "windows-invalid-characters",
+      "description": "Qualified-Windows extraction invalid filename characters, retaining otherwise present Normalized Name Identity",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    },
+    {
+      "id": "windows-reserved-devices",
+      "description": "Reserved device basename case/extension and U+00B9/U+00B2/U+00B3 variants",
+      "requirements": [
+        "JBSA-CONF-009"
+      ]
+    }
+  ],
+  "base_families": [
+    {
+      "token": "tes3",
+      "codecs": [
+        "stored"
+      ],
+      "encode": true
+    },
+    {
+      "token": "bsa-067",
+      "codecs": [
+        "stored",
+        "zlib",
+        "mixed"
+      ],
+      "encode": true
+    },
+    {
+      "token": "bsa-068",
+      "codecs": [
+        "stored",
+        "zlib",
+        "mixed"
+      ],
+      "encode": true
+    },
+    {
+      "token": "bsa-069",
+      "codecs": [
+        "stored",
+        "lz4-frame",
+        "mixed"
+      ],
+      "encode": true
+    },
+    {
+      "token": "fo4-gnrl-v1",
+      "codecs": [
+        "stored",
+        "zlib"
+      ],
+      "encode": true
+    },
+    {
+      "token": "fo4-dx10-v1",
+      "codecs": [
+        "zlib"
+      ],
+      "encode": true
+    },
+    {
+      "token": "fo4-gnrl-v7",
+      "codecs": [
+        "stored",
+        "zlib"
+      ],
+      "encode": false
+    },
+    {
+      "token": "fo4-gnrl-v8",
+      "codecs": [
+        "stored",
+        "zlib"
+      ],
+      "encode": false
+    },
+    {
+      "token": "fo4-dx10-v7",
+      "codecs": [
+        "zlib"
+      ],
+      "encode": false
+    },
+    {
+      "token": "fo4-dx10-v8",
+      "codecs": [
+        "zlib"
+      ],
+      "encode": false
+    },
+    {
+      "token": "sf-gnrl-v2",
+      "codecs": [
+        "stored",
+        "zlib"
+      ],
+      "encode": true
+    },
+    {
+      "token": "sf-gnrl-v3-m3",
+      "codecs": [
+        "raw-lz4",
+        "mixed"
+      ],
+      "encode": true
+    },
+    {
+      "token": "sf-dx10-v2",
+      "codecs": [
+        "zlib"
+      ],
+      "encode": true
+    },
+    {
+      "token": "sf-dx10-v3-m3",
+      "codecs": [
+        "raw-lz4"
+      ],
+      "encode": true
+    }
+  ],
+  "codec_universe": [
+    "stored",
+    "zlib",
+    "mixed",
+    "lz4-frame",
+    "raw-lz4",
+    "raw-deflate"
+  ]
+}

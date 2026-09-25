@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "issue": 46,
+  "kind": "starfield-dds-development-performance-checkpoint",
+  "recorded_on": "2026-09-14",
+  "performance_qualification": false,
+  "result": "PASS",
+  "command": ".\\gradlew.bat --no-daemon '-Djbsa.dds.performance=true' :jbsa-conformance-tests:ddsConformanceTest --tests io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT.recordsChunkingReconstructionAndRandomAccess",
+  "protocol": {
+    "warmups": 1,
+    "retained_rounds": 3,
+    "entries": 33,
+    "input_bytes": 4562004,
+    "random_prefix_reads_per_round": 64,
+    "environment": "Windows 11; Java 25.0.4.1; concurrent development",
+    "qualification_scope": "development checkpoint only"
+  },
+  "lanes": [
+    {
+      "id": "sf-dx10-v2-zlib-checkpoint",
+      "codec": "zlib",
+      "archive_bytes": 18447,
+      "pack_seconds_range": [0.0463433, 0.0549025],
+      "reconstruction_seconds_range": [0.0280034, 0.0367915],
+      "inspect_seconds_range": [0.000865, 0.0017344],
+      "random_prefix_seconds_range": [0.000467, 0.0008731],
+      "heap_pool_peak_sum_bytes_range": [309980688, 377801376]
+    },
+    {
+      "id": "sf-dx10-v3-raw-lz4-checkpoint",
+      "codec": "raw-lz4",
+      "archive_bytes": 24488,
+      "pack_seconds_range": [0.0301136, 0.0325449],
+      "reconstruction_seconds_range": [0.0277822, 0.0294101],
+      "inspect_seconds_range": [0.0009674, 0.0011219],
+      "random_prefix_seconds_range": [0.00276, 0.0034422],
+      "heap_pool_peak_sum_bytes_range": [156551840, 273992352]
+    }
+  ],
+  "measures": [
+    "chunk-pack-throughput",
+    "dds-reconstruction-throughput",
+    "random-entry-prefix-access",
+    "heap-pool-peak-sum",
+    "archive-output-size"
+  ],
+  "raw_evidence_root": "target/dds-performance-checkpoint/junit-13079446073689075349"
+}

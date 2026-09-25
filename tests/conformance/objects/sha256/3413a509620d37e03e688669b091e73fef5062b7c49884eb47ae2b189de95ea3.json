@@ -1,0 +1,13 @@
+{
+  "kind": "configuration",
+  "version": 1,
+  "description": "Sequential safe-default configuration; no Compatibility Profile; Windows-1252 names; exact DdsTarget=PC",
+  "DdsTarget": "PC",
+  "compatibility_profile": "none",
+  "workers": 1,
+  "name_encoding": "windows-1252",
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0"
+  }
+}

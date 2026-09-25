@@ -1,0 +1,118 @@
+{
+  "issue": 40,
+  "status": "PREPARED_NOT_QUALIFIED",
+  "scope": "pc-only",
+  "normative_samples": 0,
+  "configuration_sha256": "d6b837394d0ee61bb095aac15a85aaeb4a9ab62090785bc936fd33d82c3de2c1",
+  "readiness_sha256": "4e9d5048d5726191fb043e2b72396a2db1264e651b65c117b07b8c1519c71222",
+  "codec_profile_sha256": "b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda",
+  "jdk_distribution_sha256": "00c847d804f4a78e9f04f2683faf14fed898535b177b7fc704486cb0284e9283",
+  "installed_jvm_bytes_match_distribution": true,
+  "selected_pv1_cases": 84,
+  "required_by_current_harness": 64,
+  "required_pc_and_global": 61,
+  "deferred_xbox_cases": [
+    "CV1-fo4-dx10-v1.encode.dds-target-mismatch-xbox.zlib.xbox-v1",
+    "CV1-fo4-dx10-v1.encode.dds-target-xbox.zlib.xbox-v1",
+    "CV1-fo4-dx10-v1.scenario.dds-reconstruction-selection.zlib.pc-v1"
+  ],
+  "missing_cv1_rows_in_unbound_preparation": 64,
+  "corpora": [
+    {
+      "files": 8,
+      "logical_bytes": 2147483648,
+      "manifest": {
+        "path": "tests/performance/corpus/bulk-compressible-dds-source.json.gz",
+        "sha256": "200d95b1b47ea94c5c90e4765a0ad864da03cf7366f85520ad75d4608ce8c8bf"
+      },
+      "oracle_archive": {
+        "path": "build/target/dds-pv1/oracle-final/bulk-compressible.ba2",
+        "sha256": "aa06a4447cc5a821ca40e4e0eabdbef74eb7403ff97284df3e2cfb130eb1cc16"
+      },
+      "oracle_archive_independent_validation": true,
+      "oracle_archive_validation_error": null,
+      "source_verified": false,
+      "workload": "bulk-compressible"
+    },
+    {
+      "files": 8,
+      "logical_bytes": 2147483648,
+      "manifest": {
+        "path": "tests/performance/corpus/bulk-incompressible-dds-source.json.gz",
+        "sha256": "77d3941471448034b7432b944ad0cc049c7fd4e33eee7b027f3f69b39210c37d"
+      },
+      "oracle_archive": {
+        "path": "build/target/dds-pv1/oracle-final/bulk-incompressible.ba2",
+        "sha256": "babd9fb47266724e91b0f3f5008a6abedb73a6a0ba9e6a67ad049833a2a27653"
+      },
+      "oracle_archive_independent_validation": true,
+      "oracle_archive_validation_error": null,
+      "source_verified": false,
+      "workload": "bulk-incompressible"
+    },
+    {
+      "files": 10000,
+      "logical_bytes": 2147483648,
+      "manifest": {
+        "path": "tests/performance/corpus/mixed-10k-dds-source.json.gz",
+        "sha256": "537215fde6b837bcf004cec315cadd850a62f961d5dae34e97efc66ef1b7a243"
+      },
+      "oracle_archive": {
+        "path": "build/target/dds-pv1/oracle-final/mixed-10k.ba2",
+        "sha256": "4632adb966b5b6ec5e13223233287616f975691c369f5351b60c99abf6cee856"
+      },
+      "oracle_archive_independent_validation": true,
+      "oracle_archive_validation_error": null,
+      "source_verified": false,
+      "workload": "mixed-10k"
+    },
+    {
+      "files": 100000,
+      "logical_bytes": 268435456,
+      "manifest": {
+        "path": "tests/performance/corpus/metadata-100k-dds-source.json.gz",
+        "sha256": "a3b387ad23b389ee0a59fa5d37af4b877a6ea7ea49e3866d063424e3a9d59148"
+      },
+      "oracle_archive": {
+        "path": "build/target/dds-pv1/oracle-final/metadata-100k.ba2",
+        "sha256": "734fac02fb54999749d707d43a1a3fa8978938c8d455290b5b9bc23fc0779a5e"
+      },
+      "oracle_archive_independent_validation": true,
+      "oracle_archive_validation_error": null,
+      "source_verified": false,
+      "workload": "metadata-100k"
+    },
+    {
+      "files": 256,
+      "logical_bytes": 2147483648,
+      "manifest": {
+        "path": "tests/performance/corpus/dds-mipmapped.json.gz",
+        "sha256": "a05c42fd3e9660209b388262cfecdd639f85f8e882912a733a47c58ed0d63b85"
+      },
+      "oracle_archive": {
+        "path": "build/target/dds-pv1/oracle-final/dds-mipmapped.ba2",
+        "sha256": "2b64e6aa803a128ac59e5ceeacd36456de7f9af26383e48f475accddb9b7d979"
+      },
+      "oracle_archive_independent_validation": true,
+      "oracle_archive_validation_error": null,
+      "source_verified": false,
+      "workload": "dds-mipmapped"
+    }
+  ],
+  "blockers": [
+    "environment attestation not supplied",
+    "existing harness still requires three explicitly deferred Xbox/mixed-target cases",
+    "missing exact passed CV1 prerequisites",
+    "separate fixed-class or 10k companion oracle archive binding not yet supplied",
+    "shipping CLI has no fixed worker-count selection for 2/4/8/16",
+    "shipping launcher and production arguments not available"
+  ],
+  "source_verification_note": "All corpus files were generated and digest-checked by materialize; final preparer skipped repeat source verification, and normative runner must verify them again.",
+  "identity_note": "Regenerate after candidate, benchmark, validator or harness changes; no approval or environmental attestations have been synthesized.",
+  "wire_metadata_notes": {
+    "oracle_legacy_pc_tile_mode": 8,
+    "candidate_legacy_pc_tile_mode": 0,
+    "scope": "Canonical PC DDS bytes and specified corpus geometry are validated; no blanket wire metadata equality is claimed. Legacy DDS carries no explicit tile mode.",
+    "oracle_padding": "Oracle reserves four chunk headers per entry; bounded padding is excluded by JBSA-CONF-010, partial referenced overlap is rejected."
+  }
+}

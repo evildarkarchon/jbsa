@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nCreate the public-interface black-box conformance runner, optional digest-pinned BSArch oracle integration, golden comparisons, independent-validator adapters, and hosted-CI case reporting.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-CONF-*\n\n## Acceptance\n\n- Load the complete CV1 matrix and report each applicable case independently as pass, fail, unavailable, or invalid without percentages or waivers.\n- Verify the canonical BSArch digest before local use and cleanly separate optional local oracle/corpus execution from hosted-CI goldens.\n- Support BSArch-to-JBSA and JBSA-to-BSArch differentials where encoding exists, structured CLI Observations, semantic comparisons, and case-scoped Binary Conformance evidence.\n- Integrate independent archive and DDS validators and make disagreements or registered contradictions block the affected case.\n- Enforce fixture provenance, immutable golden/rebaseline policy, deterministic evidence capture, and Automated Conformance reporting in hosted Windows CI.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-05T10:18:01Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:37Z",
+  "labels": [],
+  "milestone": null,
+  "number": 31,
+  "state": "CLOSED",
+  "title": "Build the pinned-oracle and Conformance Case harness",
+  "updatedAt": "2026-09-05T10:18:01Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/31"
+}

@@ -1,0 +1,3 @@
+One fresh Java process per wire version; -Xmx64m; source-file reflection launcher.
+Development regression investigation only; NOT formal PV1 qualification.
+max_heap_bytes=67108864

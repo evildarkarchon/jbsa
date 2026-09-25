@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "platform": "windows-x64",
+  "javaFeature": 25,
+  "mainModule": "io.github.evildarkarchon.jbsa.cli",
+  "mainClass": "io.github.evildarkarchon.jbsa.cli.Main",
+  "runtimeArtifacts": [
+    { "file": "lwjgl-3.4.3.jar", "sha256": "46eeca5471833c3cf5da3c1da015b41e3bb3eb16dd3da03f366886da10096751" },
+    { "file": "lwjgl-lz4-3.4.3.jar", "sha256": "fd81606cbfdd7084cdbf576f6260087a2ae68bcfb53ca1ccbec0707ae603f876" },
+    { "file": "lwjgl-3.4.3-natives-windows.jar", "sha256": "19949bca7b780f55e5d2db12ac061a7657a4c1b7c860c30607f5406e7017aa2b" },
+    { "file": "lwjgl-lz4-3.4.3-natives-windows.jar", "sha256": "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc" }
+  ]
+}

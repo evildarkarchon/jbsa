@@ -1,0 +1,291 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] JBSA reactor                                                       [pom]
+[INFO] JBSA archive library                                               [jar]
+[INFO] JBSA command-line interface                                        [jar]
+[INFO] JBSA build-only test support                                       [jar]
+[INFO] JBSA build-only conformance tests                                  [jar]
+[INFO] JBSA build-only benchmarks                                         [jar]
+[INFO] JBSA build-only distribution assembly                              [pom]
+[INFO] 
+[INFO] ----------------< io.github.evildarkarchon:jbsa-parent >----------------
+[INFO] Building JBSA reactor 0.1.0-SNAPSHOT                               [1/7]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-parent ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireMavenVersion passed
+[INFO] Rule 1: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 3: org.apache.maven.enforcer.rules.ReactorModuleConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] -------------------< io.github.evildarkarchon:jbsa >--------------------
+[INFO] Building JBSA archive library 0.1.0-SNAPSHOT                       [2/7]
+[INFO]   from jbsa\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- flatten:1.8.0:flatten (flatten-consumer-pom) @ jbsa ---
+[INFO] Generating flattened POM of project io.github.evildarkarchon:jbsa:jar:0.1.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running io.github.evildarkarchon.jbsa.Ba2PackTest
+[WARNING] Tests run: 7, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.307 s -- in io.github.evildarkarchon.jbsa.Ba2PackTest
+[INFO] Running io.github.evildarkarchon.jbsa.Ba2ReaderTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.119 s -- in io.github.evildarkarchon.jbsa.Ba2ReaderTest
+[INFO] Running io.github.evildarkarchon.jbsa.Bsa68PackLimitsTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s -- in io.github.evildarkarchon.jbsa.Bsa68PackLimitsTest
+[INFO] Running io.github.evildarkarchon.jbsa.Bsa68PackTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.048 s -- in io.github.evildarkarchon.jbsa.Bsa68PackTest
+[INFO] Running io.github.evildarkarchon.jbsa.Bsa68ReaderTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.045 s -- in io.github.evildarkarchon.jbsa.Bsa68ReaderTest
+[INFO] Running io.github.evildarkarchon.jbsa.BsaPackTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.079 s -- in io.github.evildarkarchon.jbsa.BsaPackTest
+[INFO] Running io.github.evildarkarchon.jbsa.BsaReaderTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.389 s -- in io.github.evildarkarchon.jbsa.BsaReaderTest
+[INFO] Running io.github.evildarkarchon.jbsa.DdsBa2PackTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.087 s -- in io.github.evildarkarchon.jbsa.DdsBa2PackTest
+[INFO] Running io.github.evildarkarchon.jbsa.DdsBa2ReaderTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s -- in io.github.evildarkarchon.jbsa.DdsBa2ReaderTest
+[INFO] Running io.github.evildarkarchon.jbsa.DdsEnvelopePackTest
+[INFO] Tests run: 32, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.264 s -- in io.github.evildarkarchon.jbsa.DdsEnvelopePackTest
+[INFO] Running io.github.evildarkarchon.jbsa.OperationSemanticsTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in io.github.evildarkarchon.jbsa.OperationSemanticsTest
+[INFO] Running io.github.evildarkarchon.jbsa.QueryValidationTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s -- in io.github.evildarkarchon.jbsa.QueryValidationTest
+[INFO] Running io.github.evildarkarchon.jbsa.Tes3ExtractTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.049 s -- in io.github.evildarkarchon.jbsa.Tes3ExtractTest
+[INFO] Running io.github.evildarkarchon.jbsa.Tes3PackTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.585 s -- in io.github.evildarkarchon.jbsa.Tes3PackTest
+[INFO] Running io.github.evildarkarchon.jbsa.Tes3ReadTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s -- in io.github.evildarkarchon.jbsa.Tes3ReadTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.ArchiveInputTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.584 s -- in io.github.evildarkarchon.jbsa.internal.io.ArchiveInputTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.ExactIoTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in io.github.evildarkarchon.jbsa.internal.io.ExactIoTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest
+[INFO] Tests run: 40, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.211 s -- in io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.FailureRetentionTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in io.github.evildarkarchon.jbsa.internal.io.FailureRetentionTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.InputSharingTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in io.github.evildarkarchon.jbsa.internal.io.InputSharingTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.lwjgl.system.MemoryBackendUnsafeLegacy (file:/C:/Users/evild/.m2/repository/org/lwjgl/lwjgl/3.4.3/lwjgl-3.4.3.jar)
+WARNING: Please consider reporting this to the maintainers of class org.lwjgl.system.MemoryBackendUnsafeLegacy
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.116 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.169 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.690 s -- in io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.OperationSessionTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.009 s -- in io.github.evildarkarchon.jbsa.internal.io.OperationSessionTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveRaceTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.016 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveRaceTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s -- in io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.PublicationDriveRootTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationDriveRootTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.PublicationFailuresTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.062 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationFailuresTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.PublicationProgressTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.039 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationProgressTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.089 s -- in io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.ResourceBudgetTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.007 s -- in io.github.evildarkarchon.jbsa.internal.io.ResourceBudgetTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.SourceFileTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.054 s -- in io.github.evildarkarchon.jbsa.internal.io.SourceFileTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.SpillBufferTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s -- in io.github.evildarkarchon.jbsa.internal.io.SpillBufferTest
+[INFO] Running io.github.evildarkarchon.jbsa.internal.io.WindowsPathIdentityTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.142 s -- in io.github.evildarkarchon.jbsa.internal.io.WindowsPathIdentityTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 310, Failures: 0, Errors: 0, Skipped: 1
+[INFO] 
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-cli >------------------
+[INFO] Building JBSA command-line interface 0.1.0-SNAPSHOT                [3/7]
+[INFO]   from jbsa-cli\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-cli ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-cli ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-cli\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-cli ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-cli ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-cli\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-cli ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 25 module-path] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-cli ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running io.github.evildarkarchon.jbsa.cli.MainTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.10 s -- in io.github.evildarkarchon.jbsa.cli.MainTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] -------------< io.github.evildarkarchon:jbsa-test-support >-------------
+[INFO] Building JBSA build-only test support 0.1.0-SNAPSHOT               [4/7]
+[INFO]   from jbsa-test-support\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-test-support ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-test-support ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-test-support\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-test-support ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-test-support ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-test-support\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-test-support ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-test-support ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] ----------< io.github.evildarkarchon:jbsa-conformance-tests >-----------
+[INFO] Building JBSA build-only conformance tests 0.1.0-SNAPSHOT          [5/7]
+[INFO]   from jbsa-conformance-tests\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-conformance-tests ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-conformance-tests ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-conformance-tests ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-conformance-tests ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-conformance-tests ---
+[WARNING] I/O error reading dependency state: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\target\classes: C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\target\classes
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 30 source files with javac [debug parameters release 25] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-conformance-tests ---
+[INFO] 
+[INFO] --------------< io.github.evildarkarchon:jbsa-benchmarks >--------------
+[INFO] Building JBSA build-only benchmarks 0.1.0-SNAPSHOT                 [6/7]
+[INFO]   from jbsa-benchmarks\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-benchmarks ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-benchmarks ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-benchmarks ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ jbsa-benchmarks ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-benchmarks\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:testCompile (default-testCompile) @ jbsa-benchmarks ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug parameters release 25] to target\test-classes
+[WARNING] No processor claimed any of these annotations: /org.junit.jupiter.api.io.TempDir,/org.junit.jupiter.api.Test
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ jbsa-benchmarks ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running io.github.evildarkarchon.jbsa.benchmarks.DdsArchiveAccessProviderTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.220 s -- in io.github.evildarkarchon.jbsa.benchmarks.DdsArchiveAccessProviderTest
+[INFO] Running io.github.evildarkarchon.jbsa.benchmarks.PayloadReadTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.006 s -- in io.github.evildarkarchon.jbsa.benchmarks.PayloadReadTest
+[INFO] Running io.github.evildarkarchon.jbsa.benchmarks.RandomAccessBenchmarkTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s -- in io.github.evildarkarchon.jbsa.benchmarks.RandomAccessBenchmarkTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-dist >-----------------
+[INFO] Building JBSA build-only distribution assembly 0.1.0-SNAPSHOT      [7/7]
+[INFO]   from jbsa-dist\pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-dist ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for JBSA reactor 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] JBSA reactor ....................................... SUCCESS [  0.267 s]
+[INFO] JBSA archive library ............................... SUCCESS [  8.614 s]
+[INFO] JBSA command-line interface ........................ SUCCESS [ 17.408 s]
+[INFO] JBSA build-only test support ....................... SUCCESS [  0.014 s]
+[INFO] JBSA build-only conformance tests .................. SUCCESS [  0.964 s]
+[INFO] JBSA build-only benchmarks ......................... SUCCESS [  1.029 s]
+[INFO] JBSA build-only distribution assembly .............. SUCCESS [  0.003 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  28.398 s
+[INFO] Finished at: 2026-09-12T00:31:05-07:00
+[INFO] ------------------------------------------------------------------------

@@ -1,0 +1,81 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] JBSA reactor                                                       [pom]
+[INFO] JBSA archive library                                               [jar]
+[INFO] JBSA command-line interface                                        [jar]
+[INFO] JBSA build-only test support                                       [jar]
+[INFO] JBSA build-only conformance tests                                  [jar]
+[INFO] JBSA build-only benchmarks                                         [jar]
+[INFO] JBSA build-only distribution assembly                              [pom]
+[INFO] 
+[INFO] ----------------< io.github.evildarkarchon:jbsa-parent >----------------
+[INFO] Building JBSA reactor 0.1.0-SNAPSHOT                               [1/7]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- spotless:3.10.1:check (default-cli) @ jbsa-parent ---
+[INFO] 
+[INFO] -------------------< io.github.evildarkarchon:jbsa >--------------------
+[INFO] Building JBSA archive library 0.1.0-SNAPSHOT                       [2/7]
+[INFO]   from jbsa\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- spotless:3.10.1:check (default-cli) @ jbsa ---
+[INFO] Spotless.Java is keeping 118 files clean - 0 needs changes to be clean, 0 were already clean, 118 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-cli >------------------
+[INFO] Building JBSA command-line interface 0.1.0-SNAPSHOT                [3/7]
+[INFO]   from jbsa-cli\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- spotless:3.10.1:check (default-cli) @ jbsa-cli ---
+[INFO] Spotless.Java is keeping 5 files clean - 0 needs changes to be clean, 0 were already clean, 5 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] -------------< io.github.evildarkarchon:jbsa-test-support >-------------
+[INFO] Building JBSA build-only test support 0.1.0-SNAPSHOT               [4/7]
+[INFO]   from jbsa-test-support\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- spotless:3.10.1:check (default-cli) @ jbsa-test-support ---
+[INFO] Spotless.Java is keeping 3 files clean - 0 needs changes to be clean, 0 were already clean, 3 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] ----------< io.github.evildarkarchon:jbsa-conformance-tests >-----------
+[INFO] Building JBSA build-only conformance tests 0.1.0-SNAPSHOT          [5/7]
+[INFO]   from jbsa-conformance-tests\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- spotless:3.10.1:check (default-cli) @ jbsa-conformance-tests ---
+[INFO] Spotless.Java is keeping 30 files clean - 0 needs changes to be clean, 0 were already clean, 30 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] --------------< io.github.evildarkarchon:jbsa-benchmarks >--------------
+[INFO] Building JBSA build-only benchmarks 0.1.0-SNAPSHOT                 [6/7]
+[INFO]   from jbsa-benchmarks\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- spotless:3.10.1:check (default-cli) @ jbsa-benchmarks ---
+[INFO] Spotless.Java is keeping 8 files clean - 0 needs changes to be clean, 0 were already clean, 8 were skipped because caching determined they were already clean
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-dist >-----------------
+[INFO] Building JBSA build-only distribution assembly 0.1.0-SNAPSHOT      [7/7]
+[INFO]   from jbsa-dist\pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- spotless:3.10.1:check (default-cli) @ jbsa-dist ---
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for JBSA reactor 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] JBSA reactor ....................................... SUCCESS [  0.355 s]
+[INFO] JBSA archive library ............................... SUCCESS [  0.208 s]
+[INFO] JBSA command-line interface ........................ SUCCESS [  0.034 s]
+[INFO] JBSA build-only test support ....................... SUCCESS [  0.027 s]
+[INFO] JBSA build-only conformance tests .................. SUCCESS [  0.041 s]
+[INFO] JBSA build-only benchmarks ......................... SUCCESS [  0.034 s]
+[INFO] JBSA build-only distribution assembly .............. SUCCESS [  0.020 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.842 s
+[INFO] Finished at: 2026-09-12T00:31:28-07:00
+[INFO] ------------------------------------------------------------------------

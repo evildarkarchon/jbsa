@@ -1,0 +1,484 @@
+{
+  "procedure": "issue41-interface-build-v1",
+  "recorded_at": "2026-09-10T10:05:28.467952+00:00",
+  "candidate_commit": "11ef5a21179b168875183a0eb295c60603c9235e",
+  "product_version": "0.1.0-SNAPSHOT",
+  "specification_version": "0.13.0",
+  "java_runtime": "Eclipse Temurin 25.0.4.1+1-LTS",
+  "command": ".\\mvnw.cmd -B -ntp -C -Djbsa.tes3.local=true clean verify",
+  "result": "PASS",
+  "exit_code": 0,
+  "totals": {
+    "tests": 410,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 8
+  },
+  "suites": [
+    {
+      "name": "io.github.evildarkarchon.jbsa.Ba2PackTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "report_sha256": "106631fd4bef7d14c7fed42a797490949047da67c1968406a15b5d65094209c3"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.Ba2ReaderTest",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "b29f69a3f0ec0fd01a5a884be0361590c9a52bc7db753a9530ebe79f3e5f7052"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.BsaPackTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "bcc2e44a79f7c2de795d2a247a682d2e95f2d04e94a2452e9c3b85a8133ca49c"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.BsaReaderTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "c9dd9abcfa33905d33689c9f93ff29f5284aeffe4b395935b1a6e5868467e81a"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.DdsBa2PackTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "580fbae95ace759ce75c3996f7bc9a339f44bd0c94e02eb155227c610684e897"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "9d5acfde5065925aaedf1186a14d713647331134e11abc988c639d38cba3c543"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.DdsEnvelopePackTest",
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "ef6da7c70da404b77b3e390826019459223fc1b4b1d928123c3bedc42a66c753"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.ArchiveInputTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "e97245f8159271063b68b0ce0d1dbc612a285bcd8df562969bc72351bd100661"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.ExactIoTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "d95b099df712e49ba84a992ef56dc81f5d743bd337cddb741ef4fe49bd629bf6"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest",
+      "tests": 40,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "3a76cd93a4b041d66a49d1006c1f1795984e6fec4f450b0b9650cfeabe173185"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.FailureRetentionTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "16b9496b48045cae32de47bbb6ddf16c404a340a63c09938a0918b3f6440a84d"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.InputSharingTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "c545c359dfc84d8f455334d70630a42cd83826d8db535655c5a1dda96986f08e"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.OperationSessionTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "35cdee905fdf372a5d33cfb7b29f8d13e2c026a6bbd7177a62bcbbb4007be760"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveRaceTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "aa3b46c3c9cde997905c825ecc9fd61d30b5a1bcd8f36762a538ea129d35949c"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "9636a8bc56fa497207bac9a6da0f01dff83223196a6d9ce8ff991f14693a48f3"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.OwnedArchiveValidationTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "c70019139282a4d858f441bcbeb163fc8fca6f349769984b9bf9829a7ef8ca19"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.PublicationDriveRootTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "c6df2462b8a42bc7a406b1bc57786c871cb77cd535e535bdf92a806b620d7cfa"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.PublicationFailuresTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "c122f70a641d16d90369e4b354d1bdbb56db887a3effe760b161fcede53de192"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.PublicationProgressTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "b7af96a455ccac2d6775a8c133c5af97fbbfe4928edf5da87744713b2150ae09"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "c8da4c20f2e8b17b00734d3e21d4c386c815d630c52c62fe7bec75e03ceb84bc"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.ResourceBudgetTest",
+      "tests": 9,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "874ff3a131ae6af7d23ecb0bef7a03fe7d63258a15f0d14c3be88d8424a255ce"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.SourceFileTest",
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "c6ede09985b9d939a2fbb69a282c5513026e7c34b2009e3d9cc702577ac14474"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.SpillBufferTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "0addfb60a4b55496ec285bd19aaffc16ba21b985defc39a2ba6fbeb5866d220e"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.internal.io.WindowsPathIdentityTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "01879b963a0bb3d13efed551c295383f8ea6c20fc9074dab3d298f9a4bb88968"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.OperationSemanticsTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "1f7bc2ba2b6bb9f4c97d8ddbc26de46e198f7539c68551c7dfe4ded61015b5f4"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.QueryValidationTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "35db3ec26355394d1fe12788ba96a7e29a118f880c49ad62027850831ba36e6c"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.Tes3ExtractTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "76f78cc57d3ef6a416e082a0b387245728a6136c98e4b6deee18d65d847e0923"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.Tes3PackTest",
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "830d5494d1187145cd6bf100bc5e2f7f15d42adbf3100acfc6c1c78b23d8e4f3"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.Tes3ReadTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "f9bb2d53158a5e5bb983ec3863ce333404046e61d62d857917584711f626afa9"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.benchmarks.DdsArchiveAccessProviderTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "e50e3df3a9eccfebcb3dae2abb02470296aa7ba607b6decc88d07d787314ffba"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.benchmarks.PayloadReadTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "529e710c09ba5760de376c2b1ccc6d1774ef0f22a2e3ee2e25c0a84eb6355175"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.benchmarks.RandomAccessBenchmarkTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "4a42ea11f930f288e397e097385da82bb4ce43f5de50b1a44c85cc90448fc9e9"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.cli.MainTest",
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "bb3db29c3644a569a3729cdc1e3ad7db5ba28cbb9a73fc88118ecd4c8451bf64"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "report_sha256": "bd2acd5e43c9274b38bce571be821e3b63719d7003a1e21460db47ffbd813b73"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.Ba2LocalCorpusIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "report_sha256": "1972ba26cd274628eec4c09a5ca1378205f530cde918cce92995cd3598d5cad6"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.Ba2PerformanceCheckpointIT",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2,
+      "report_sha256": "905e324f5e68ee9e86d77989c6f021bb0ca32d1ce16f9682fc41974744b78dd9"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.BsaConformanceIT",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "report_sha256": "c647eb0b5f1f65ab42efca6d15a3a789d77acfa31ed7ddea215453fc96a59bdf"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.BsaFixtureCorpusIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "88ea1d9908d02999d4766c3fc20a178223af33bfe89d721ca980d4bd670e934d"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.BsaPerformanceCheckpointIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "report_sha256": "63a94237d06f1cda8b373cfb21f4f937acd5ae0911c4c732eebca8e639c37d39"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.BuildPolicyIT",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "e9172d3644052289e94664cfe4fd63ba7ad12bcac133cff39c450edbd3a68264"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.CompliancePolicyIT",
+      "tests": 21,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "cdd19fba5280f68c43aa932151e5169851b52699499cb3057bc3afaa3c1a8a47"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.ConformanceHarnessIT",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "6cb126d9346b8a31b3153e709385b2a99a3a2772d248cdc227df2f8c3c8700a9"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.DdsPerformanceCheckpointIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 1,
+      "report_sha256": "30be45cabea5b1f06dfa4d2eab770a51912de0fbe87af04022d53f10b39e562d"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.FixtureCorpusIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "51c693b1895520b17ded084c6913f834caba6ea79193d903dd28e6aa3784a98b"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.ModuleArchitectureIT",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "309b3f0f4c2efb1188c463e8367a78446af1b6e21ef7efe12e0b7f8ecf9552bd"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.PerformanceHarnessIT",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "207aae57885d948445bd96b95fb0a45bd140cd8445c3cd8561ade1c060891ed5"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.PublicArchiveContractIT",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "41358669c0fc9dcf93834fb39b78c097f3bde4050c452a7aee8c53d2d9f91093"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.PublicMetadataContractIT",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "be3e2fe33b53d3517b0ac603f74e7ffc5b12d5a60e2ce5f7bf38fab1f566e12b"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.PublicModuleConsumerIT",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "b343f94a18a2051fb60c2257ea563332844a3359171c4b6ba7d5d9da28f68d24"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.PublicOutcomeContractIT",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "9b0d35d606d9281b88796f9d7961eb7174dca613df6f61f8182c405d6862c02e"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.PublicRequestContractIT",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "a6a68db2c5e0c2026b50b4f3a033f2c5253b3861cd66a9b5e2f9d560c8bb5cf7"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.ReproducibilityPolicyIT",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "ed91eb97c335a09850659eff31aa507a06982bf949d3517acb01cfc60c42a983"
+    },
+    {
+      "name": "io.github.evildarkarchon.jbsa.verification.Tes3ConformanceIT",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "report_sha256": "96bd2b927902871f627d18af67145d03d8615cbef35fd48f70a385fabd83f81e"
+    }
+  ],
+  "local_build_log": {
+    "path": ".scratch/issue41-full.log",
+    "sha256": "47d3bf484091894f58f96579129757bc5f36385eb30b69b387f2ad6c1695432f"
+  },
+  "artifacts": [
+    {
+      "path": "jbsa/target/jbsa-0.1.0-SNAPSHOT.jar",
+      "sha256": "885d8880404a097676d1ccd1f14995103bcd1e41337df2116757dd527f3a06da"
+    },
+    {
+      "path": "jbsa-cli/target/jbsa-cli-0.1.0-SNAPSHOT.jar",
+      "sha256": "3085508ac877fe6ad4fe175d75e50283b742365cb0b543a60956cb8564a53e8c"
+    }
+  ],
+  "api_snapshot": {
+    "path": "docs/development/interface-candidate-api.txt",
+    "sha256": "5cf3b7d39f0aa1ec6c4424b2132aa52d126ae9b96621696ab8ee42c7f03a4442"
+  },
+  "codec_profile": {
+    "path": "jbsa/src/main/resources/META-INF/jbsa-codec-profile.json",
+    "sha256": "b9515f305ba223111b790ad06c98580360ac85c40235258316aad2ba001a3fda"
+  },
+  "compatibility_profile": {
+    "identifier": "bsarch-1.0/v1",
+    "sha256": "9577d821c40982e7f988d311d5ba7cf55b0f098af2c3f5fd5c5a531360dde1c4"
+  },
+  "catalog_at_full_build_sha256": "bb37f9b75333149d56f5e0c8ab98cfebfdcb526bac6241d7282e1d421fb742ba",
+  "post_build_source_correction": {
+    "path": "docs/development/evidence/issue41-source-repair.json",
+    "sha256": "92148ede6d7119812f1ce28b1637b14f839c71e44f5b1034b0dd6201e5830b3d"
+  },
+  "final_catalog": {
+    "path": "tests/conformance/catalog.json",
+    "sha256": "2e809dcd21304abf4edacf83d296414ee428b72ff1f0a4130f42b7eb99282e77"
+  },
+  "additional_checks": {
+    "activation_boundary_regressions": "2 tests passed",
+    "final_source_catalog_and_rebaseline": "PASS; zero golden replacements; all 109 admitted cases exactly unchanged",
+    "staged_compliance": "PASS"
+  },
+  "scope": "Full reactor verification including TES3 pinned local oracle differential. Optional performance and other local corpus tests remain skipped. Fresh scoped CV1 execution is recorded separately."
+}

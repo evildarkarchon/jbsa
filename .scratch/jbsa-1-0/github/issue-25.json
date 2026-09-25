@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nPublish the normalized wire-format, detection, decode, encode, codec, name, hashing, ordering, chunking, and reconstruction requirements for every supported Archive Family.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-DET-*\n- JBSA-TES3-*\n- JBSA-BSA-*\n- JBSA-GNRL-*\n- JBSA-DX10-*\n- JBSA-DDS-*\n\n## Acceptance\n\n- Create detection, TES3 BSA, versioned BSA, General BA2, DDS BA2, and DDS payload specifications under docs/spec/formats/.\n- Keep Archive Family, wire version, and BA2 subtype distinct and state exact decode-only versus writable combinations.\n- Separate zlib stream, LZ4 frame, and raw LZ4 profiles and specify stored/compressed framing, hashes, names, flags, ordering, splits, and validation behavior.\n- Specify DDS mip chunking and canonical reconstruction independently from General BA2 behavior.\n- Trace every requirement to the pinned Reference Snapshot research and preserve all evidence-qualified contradictions and fixture-dependent unknowns.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-03T08:38:25Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:23Z",
+  "labels": [],
+  "milestone": null,
+  "number": 25,
+  "state": "CLOSED",
+  "title": "Materialize the Archive Family specifications",
+  "updatedAt": "2026-09-03T08:38:25Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/25"
+}

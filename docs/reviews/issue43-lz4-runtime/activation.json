@@ -1,0 +1,929 @@
+{
+  "status": "ACTIVATED",
+  "specification_version": "0.14.0",
+  "runtime_source_commit": "c760986",
+  "profile_packet_approval": "Maintainer explicitly approved exact SHA-256 353e3843a95874f21a971d503f3e14fbc66179db067c17f721c4c0eafd125e0c in the conversation.",
+  "profile_expectation_changes": {
+    "goldens": 12,
+    "fields": 27,
+    "only_field": "diagnostic values.profile",
+    "old": "jbsa-jdk-zlib-v1",
+    "new": "jbsa-lz4-v1"
+  },
+  "profile_activation_tool": {
+    "path": "build/activate-lz4-profile-review.py",
+    "sha256": "4577400127ab329b51dbec8e8df3ffb876df5f448b553173ffa1cda4a3ac45ea"
+  },
+  "schema_projection": "The reviewed supplemental changed_json_paths annotation remains in the immutable packet; schema-defined fields are preserved in approved records.",
+  "packets": [
+    {
+      "review": {
+        "path": "docs/reviews/issue43-lz4-runtime/specification-rebinding/review.json",
+        "sha256": "6bd7962f283851942bfa9e97517d9638ae8463fad4bf5364fc06af4230edfda9"
+      },
+      "record_count": 109,
+      "approved_records": [
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-raw-deflate-v1-interface-v1-runtime-v1-raw-deflate-standard-v1.json",
+          "sha256": "41db12f08ccf11930c719a2e9f0b30a401d4f4af2ee86297ece52739835cead0"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-partial-overlap-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "e62e59505dbaf7d77fd10dda9b2026c3534ebfd947e75e68f4dc62dc769251d2"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-mixed-v1-interface-v1-runtime-v1-mixed-standard-v1.json",
+          "sha256": "8d18e9203ee0794ad16851080e3f585ea01d149686ea62b2d2a86e9817a1d985"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-exact-shared-spans-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "3715b1dd4a6cfa0f1afc862c716cf6ecad48ea53c5b8aa59d1fee62d1cc2fa7e"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-impossible-counts-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "0f3cf5905cfdd1aa3255ef7bef1c242000f1e63cd0d58ba2ffada613a10efe71"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-raw-deflate-v1-interface-v1-runtime-v1-raw-deflate-standard-v1.json",
+          "sha256": "5477c92e5d40808a8f26cd29efa7c2942a45a61cbf6a7a18b96059ace8988549"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-decompression-mismatch-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "9008d1f61ad1b47ec674977ef57754b67e21834d12b1d712fe4b43f3ae7e45fb"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-stored-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "49e5ab20539f83f5cf9373f3dd60414c49bb399afa22c56c317eab384e606cfd"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-scenario-bsa-067-xml-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "082f046adf6eb5d460291308f7f8861d97acd3e602dbdd50ac6203d63e7d9906"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-undecodable-wire-names-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "96b93b7187fb88c21b62b8b5b00dd05782b1dacd964cf5c5b702b61628ad411f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-unsafe-traversal-names-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "493d699c325737baa23682efb4c76fc2a0303228c98d66ed4f015c24bc8b315a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-mixed-v1-interface-v1-runtime-v1-mixed-standard-v1.json",
+          "sha256": "46fd4aef4d7946d9ecb9197f728fbc3b0b286744f571f3cd248fd94e0068f42f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-zlib-v1-interface-v1-runtime-v1-zlib-standard-v1.json",
+          "sha256": "5d63449e726853509fcebe60af8f8c7e03e8cbc776ddc3ac1fd00546b2860ca2"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-arithmetic-overflow-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "e598e2c1a3191e0095e97ac470ba3191122bcf3ee68c1f5d9001797ee1cc0800"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-raw-lz4-v1-interface-v1-runtime-v1-raw-lz4-standard-v1.json",
+          "sha256": "3b14365fc13338ae059683d0304aae9e055193c7bcfcc04b95b981fdf7a23c9f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-stored-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "f540058c8764f5d5ccc12c1868cf16e8f9af0eb87a42f15be86fb84ff7fa369b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-windows-invalid-names-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "4e874b327befc2f5ef57c4ce2b8f36c90d646117e19f7f7d36a995f1ed4c2e0d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-out-of-range-spans-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "53c871aed7794d6b36920ef2f2d869fd6ec5f2f95f19b4676ac1b54a3caa22e5"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-ignorable-constants-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "b795bee4228215b5d6b24988f36c2ab0f11cfb0db14c098715dd47253e8bf401"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-lz4-frame-v1-interface-v1-runtime-v1-lz4-frame-standard-v1.json",
+          "sha256": "456e0adabda9a0a9c720ebabba98dc073dffe24118fb2ed946be7b749ac511dd"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-equal-name-identities-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "123f033dd7ceed88680d26aa507132f9e5650519edc6ce69dbd625f224cd603f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-unsafe-absolute-names-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "1194fabedfcd9657c0a7f3267826f67ba79bdef81fda55eca9f494a5fb25232a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-illegal-tuples-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "07480c23898c5504b617ea1ddd63dd9ebbea991a11775ed94fbfb8f836b7f202"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-lz4-frame-v1-interface-v1-runtime-v1-lz4-frame-standard-v1.json",
+          "sha256": "1b2b8f019c7a834c4992ba3340b4e6b14a138bd2b257b3643ca23c3e5ec3c890"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-usable-name-hash-mismatch-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "12225018cd5ad16f6cdad129048ffb2f3ad055657e0b3bdadbb718e61dbabbdc"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-extract-bsa-067-malformed-unsafe-name-extraction-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "68a3bdcdee3d7fcd189af86318c6a79e797b897b023eea3af735f0ca4b0853a5"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-harmless-trailing-bytes-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "c012604e79b4761fa1992920646d8ae1fbbb9bd2b40887ff985ad80c2f616219"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-truncated-spans-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "ded12587b54006ec02900b670d1d2577d3a8749a506b1fc65b39a5a4a242eafc"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-owning-dispositions-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "025b6761f31809246daefd867fa71edb3728e4a461c0a46e964ded17554a15e6"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-zlib-v1-interface-v1-runtime-v1-zlib-standard-v1.json",
+          "sha256": "b7a22dc49655ceba0b81546f98250158b27887942d07f7110d4eb4f1341814ef"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-raw-lz4-v1-interface-v1-runtime-v1-raw-lz4-standard-v1.json",
+          "sha256": "7d3a415455121fd16463b1f54d875035ff81c408397c4f317e44609ad7b5012b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-missing-name-tables-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "4bf3bff12d0cfec8beb893ab780d9c5c9c5dfc3d43f133b63374bfecb11e9914"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-equal-name-identities-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "613a225af9addcdab11700f21f9524833bd08f52aea7d2798d2512d79b8f16c2"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-partial-overlap-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "14e178e4b421bb3ca1aabca41c7919a7bf75e1038dd062856b2c1d0598c5a77f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-decompression-mismatch-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "e4d74c8bc3c22a5f1481df5f8cee9f38d2dd0f83577b8c9b651685a1344caf2e"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-raw-deflate-v1-interface-v1-runtime-v1-raw-deflate-standard-v1.json",
+          "sha256": "6b6e62294400f485d49311a7a65dd760631a6d05d588de8f436bb9d59f4246e3"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-scenario-fo4-general-gnrl-name-tables-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "11ec12af4ee15814ffca8bbd227f0cd0e407ce58f3266c923edd1527ea89df70"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-stored-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "9cbec1829c9a74806beba2a1f7c206fbbebbd2e85f4cd81886230b5641af1e93"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-extract-fo4-general-malformed-unsafe-name-extraction-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "8e40ecfc489d4476604dfb285740475e5c9d27efd890db13c647d007a25b8981"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-lz4-frame-v1-interface-v1-runtime-v1-lz4-frame-standard-v1.json",
+          "sha256": "a8b9ccb6ed8be75eeae37fad4f15371b97335b7a8a2a5d330c2d65ad9266a9ed"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-stored-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "4f33afffe414315dd91e614a29984a2fca2d3206bfdac73a6e8c3290960493dd"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-zlib-v1-interface-v1-runtime-v1-zlib-standard-v1.json",
+          "sha256": "8d3d966452929fa1ce48540274770d4d347947c3c34ede5170a9056e24f5e756"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-undecodable-wire-names-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "3dd06bd521f347a35c2e22d39de365ff29a52f68c64195bb690b325447398448"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-mixed-v1-interface-v1-runtime-v1-mixed-standard-v1.json",
+          "sha256": "63352ef36ea61ca3bc5d33bd0743064b58a23b1da49dc1760e2d27019b4e2ec5"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-lz4-frame-v1-interface-v1-runtime-v1-lz4-frame-standard-v1.json",
+          "sha256": "0cc63ef8c5b731399d9ec8cb1a56a61b911d19ac743a1fb3487306fbe05b7dc8"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-ignorable-constants-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "5ec525dc51dad8490a2d34986139c77385e3eca4956b3c0fcfb019f00debd9f9"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-unsafe-traversal-names-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "46f6a016f95185ad59152b5899e2ecccca7a8c0581940c33a60d6fba393a3b8c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-unsafe-absolute-names-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "cde018dd0d20b08d20a2862dbb281857b73374b34fae0ea33321dd63ccafd1d1"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-raw-lz4-v1-interface-v1-runtime-v1-raw-lz4-standard-v1.json",
+          "sha256": "9631ef19272cadef2689da69b22f9d2e1fa9d9c172738bb80c29b74a2ceb4bf8"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-illegal-tuples-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "fad06ea63ce7789c269791479d5495067d1f9350f4667efa6ccb79a098aaa5e4"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-scenario-fo4-general-input-zero-length-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "78178c9401017e518c4fbb2c4d1ff55667fe787ad64df6d8867f4d75c73fc469"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-windows-invalid-names-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "346628b32c149f03534665cfffa74c813b1ea813aa2b72ca04b2359b4bfa8359"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-out-of-range-spans-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "a993570c6c6948841e65bf40c585cd9641ce468b97514d272b9ccee63dd8e79c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-impossible-counts-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "170a40e0456fdc6637ffcb5b2dda449c475abaf87f948223f801895a71cea659"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-raw-lz4-v1-interface-v1-runtime-v1-raw-lz4-standard-v1.json",
+          "sha256": "902eb46878682dce168bae2d8096cb8fa0bf278fd86756e47cd9bfcad00e9af6"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-mixed-v1-interface-v1-runtime-v1-mixed-standard-v1.json",
+          "sha256": "ae8e5296191fafc5846c73643b464be528f01faf5e030e67e5195336161cdc41"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-missing-name-tables-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "39cf704fcd783ed40390640b2957b9b53560452d76b462ad83b6526b658904e5"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-exact-shared-spans-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "5ecb914c156dc85cb2fba629d164b17d96ba294d86f378a3e8ef08a1cd60eaa7"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-usable-name-hash-mismatch-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "78ddcdbd217388112ce1137ec1d7759afdc66625fbec566ac5398acc4dd49dbb"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-truncated-spans-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "8fbc02ea3c79900167603884fa7573b91c931ceda314a95bb54e6f5830201edf"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-harmless-trailing-bytes-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "97227f64d29f6f98ddd6c13549aa7e06dbafb0289c5f4ce3204da63ea8b0a337"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-owning-dispositions-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "270d4a05a6bb0aaa5bf74fc55b784a997f1bf04531b563cc7e6b96a261fafedd"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-raw-deflate-v1-interface-v1-runtime-v1-raw-deflate-standard-v1.json",
+          "sha256": "1245b25686454f322ba821819e383cd713cf0a44149fd5590e4ccd6d591364be"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-zlib-v1-interface-v1-runtime-v1-zlib-standard-v1.json",
+          "sha256": "7de4ffbc46aba6c2eec495c7ac01b028827367dd1723e8cc849d7cecbc3ea33e"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-arithmetic-overflow-v1-interface-v1-runtime-v1-stored-standard-v1.json",
+          "sha256": "fbc864d2bc4b6ebe87ae92d64aec424be9896646f9fade83c76e4385fbdb2635"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-dds-target-mismatch-pc-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "b092a5d3c0e2afb070d89971b259dd3cc32eb0fd8ec1eb6a622ed1039657613f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-unsafe-absolute-names-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "e870021ee71e03fca3e8d433a76b431c6f7e9d1ab5e53354eaaa5187900a557d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-raw-lz4-v1-interface-v1-runtime-v1-raw-lz4-pc-v1.json",
+          "sha256": "c726f0715716f6ea4fdfa550f02fa931cfc2746c4d27ed476f749f8ec5dc3d85"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-odd-multichunk-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "0ae92e84b1dcdf1a37cae8ce38b6df8b342383d1841aad5f02ef66debfc69589"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-truncated-spans-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "beee9c535a0b0d87ca4f9830dba26f2fcdc38f3ab2892072b2e18a12eed19293"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-impossible-counts-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "a9f9a8841911ab48a4723ee9d9aefb47f200fcb9813b6c8530b9d4a6d76dece3"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-unsafe-traversal-names-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "50bfbfc6b51dc0bd5c782dfe5dcc4d03a51701e4cc98d05f2158208aa5fb97cd"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-exact-shared-spans-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "e96544531af6ed758dec59b6321e0db301e1ed36b3f2e5e0649e843b9db7b866"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-partial-overlap-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "673084c6bebf0c0925d8a5c8cfa1f00c977ecfd110ead366693a6f93fb5a817f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-raw-deflate-v1-interface-v1-runtime-v1-raw-deflate-pc-v1.json",
+          "sha256": "d03accf0874c949b1f96352f8221b0145c984330592ae688f13e2b83528836da"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-zlib-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "d08a321f4c62f9b4c84308eba89367d19987461954f33db1f9a5e1916b3ee80a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-mixed-v1-interface-v1-runtime-v1-mixed-pc-v1.json",
+          "sha256": "b9869ff77470edaff3872d24da81443bce7471ab81b681c91f420296dcf27ce3"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-extract-fo4-dds-malformed-unsafe-name-extraction-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "256e92b85a672f2b4456db0ff805cff1c5f58047277d1d83ea3aea0274c94a21"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-illegal-tuples-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "145c78e1fa1d248d460f6396595c1998f74d440dc7d8d436d69f3b13bf339bbb"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-owning-dispositions-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "6841d02d65f0efa631ac17fcc868fb8f5fb949df4200b2795aae621fa262bbc4"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-equal-name-identities-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "ac937d72ac2a3d515aa17914e37072067017530b6ebd95b037a0439ddae0be3b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-usable-name-hash-mismatch-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "edba46151702e142547da8dd6d45f5972929132fff95cc435ed4361f1d16492d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-nonsquare-mips-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "6009ac9f729db9059f4967fa58ff84d1004b6e31debeff94cbf3e2ca09e74cc1"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-raw-deflate-v1-interface-v1-runtime-v1-raw-deflate-pc-v1.json",
+          "sha256": "a118b2f78ccfb00473c13fa868a1f4a4c8d05afe045782488eaf1f9aca7cf724"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-mixed-v1-interface-v1-runtime-v1-mixed-pc-v1.json",
+          "sha256": "f1d1efc7755dd3fc72e827f53df72c5eae83d7c50c463c4c992728eecc483b6d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-out-of-range-spans-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "fbe55cad1c21f6e0cf0aba922ce3b211e869cac324ec862991d2f62109e1ee43"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-undecodable-wire-names-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "171d57ebc54a863306cdd3e6e0738a5eb17e80993245413ac6c2438bfddd5674"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-stored-v1-interface-v1-runtime-v1-stored-pc-v1.json",
+          "sha256": "b11033fc1521242d51d49673b3d4c75579225b976bea6ea01dc8d8335592ee78"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-bc8-boundaries-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "15f075039d0310fb36217c53a8df7817750f93271b78ab24594038d31d3b8903"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-lz4-frame-v1-interface-v1-runtime-v1-lz4-frame-pc-v1.json",
+          "sha256": "69cde8b2fe687980a28cb08cbc27e3b7f437f8c6702031360592a307f04804b3"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-dimensions-mips-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "3ac388b3d853a1215baf5f2c34480c1c8cf7332e3d56480f8e81d5bcb211465c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-name-tables-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "7d501156b1ee75c10c76939ad68b05f36febfce63608cc9e90ec61ccf951559c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-stored-v1-interface-v1-runtime-v1-stored-pc-v1.json",
+          "sha256": "45eb7b35fbf5cd309dd9ff0a6914e1f2aa13677ea908cfc11df9c78985740dcf"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-missing-name-tables-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "4c53ee11ddebcf6c3ad969166361e23d908c7249194e5225de419ac9338057f0"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-writable-formats-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "6ddb4993e17ed8ef4ad8ac1b9b8c6151e3bf36a454751c9219ea22d2cd2899b3"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-cli-selector-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "76baba7474b2ec588a004dc7e530ff6543c1e3f33ce635b9453140088772eecd"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-bc16-boundaries-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "17afca08969fd8ac36bcf8e779a890affd884f8b28911c2bdd4a74d670d53f60"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-dds-target-pc-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "61a006c70096a64b58943adda666f19075888b9793631c2c77e649f04ecf2a43"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-partitions-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "8d18c8eac0d8c801d8a703f4439f71175adee637348827b653f1ab6537c98a85"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-lz4-frame-v1-interface-v1-runtime-v1-lz4-frame-pc-v1.json",
+          "sha256": "5fa5058aa2079385b6c8cde2cf290b38c38897536dbbe404271e1caa54cf47d1"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-cubemaps-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "2e07cdb717d4d76144436eb070bca808de332189dd5ddbeae556b24d958d14ba"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-ignorable-constants-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "f13f70ab7c75ce14bbc000d070f0d37fe3d1b90c537e249a06438d4bcedd34bf"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-harmless-trailing-bytes-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "21bda2044ae94f26622dcb5bea962a403a6a337201577695e42a5c9ac5f67a30"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-decompression-mismatch-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "eba4a0eb8976b518743dcfc67d0aa958e2e5603d11bc038fd12953394866c0c0"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-arithmetic-overflow-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "8bfd0c846be943cc100f6398812750082d6d3fe177680cb67e518548f5cd4018"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-raw-lz4-v1-interface-v1-runtime-v1-raw-lz4-pc-v1.json",
+          "sha256": "1e05713d7054f819076c6663e632c5abaec422d45aa80f2a2fd7e0ef380758f9"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-reconstruction-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "e95a4870d142dcf1ea3fddb3eda8a03b1825a4e0a1e73bcf7da357a71e4e4131"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-windows-invalid-names-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "040125078ca6284c128ad5b691fe4087af34886f77b3afc9ea71992560b26a5a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-zlib-v1-interface-v1-runtime-v1-zlib-pc-v1.json",
+          "sha256": "52fa84696660ae3be736e114e4591b94d66a9b14994ef290b70d0205c1556960"
+        }
+      ]
+    },
+    {
+      "review": {
+        "path": "docs/reviews/issue43-lz4-runtime/profile-rebinding/review.json",
+        "sha256": "353e3843a95874f21a971d503f3e14fbc66179db067c17f721c4c0eafd125e0c"
+      },
+      "record_count": 109,
+      "approved_records": [
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-lz4-frame-v1-interface-v1-runtime-v1-profile-v1-lz4-frame-standard-v1.json",
+          "sha256": "6f0bf233420670ef13b7bc1cba48124a60c089deaa48591e65264e4c69710afa"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-raw-deflate-v1-interface-v1-runtime-v1-profile-v1-raw-deflate-standard-v1.json",
+          "sha256": "d1746661bcec084635d539b44e9bfaf612f5e9e74c474bf77b7f2bff1bbbab38"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-windows-invalid-names-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "a1ba42a8d70e17c54bd64dcb2f35647940a3b80bd3e78f18c33ecaa071a4df97"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-lz4-frame-v1-interface-v1-runtime-v1-profile-v1-lz4-frame-standard-v1.json",
+          "sha256": "0570aeb3fa3fa9b48871908e2edd17d07514f4ad16a7b3ef0303da2ae659e907"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-ignorable-constants-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "7eff93488313d5e0d9a9b6a9e494f111829cab12da9ddfdc972f0ca9e89ec55b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-out-of-range-spans-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "003dacaede324538cbdf98cc3b14a51714e5b1584ff4df9085b73809f8f45678"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-unsafe-traversal-names-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "79bebee61a8e8e28c69e4484b2130f9610de175d692a7dab86fa536b5dea8c6f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-owning-dispositions-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "68bb3a746db8f6f78ee66e39b33e0b04f69bf42707cf6c6047534ea065260928"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-illegal-tuples-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "b8c912084cbf76f48dfe65d4e83eba378f0702c6b89460ee45702cccdbe0f04a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-undecodable-wire-names-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "a06a8e47ae17dc63b2c2988ed41e72d8e8d3beaa7fa271eadf9ae74b4073674c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-scenario-fo4-general-gnrl-name-tables-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "44d14e86977e5664d345cc29e4ef1275994cae0387387f7042a46d49d5604104"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-stored-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "9ab007308693867bd2f6fbf685d9465c4194165298d30348cf5695ef2e92424f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-mixed-v1-interface-v1-runtime-v1-profile-v1-mixed-standard-v1.json",
+          "sha256": "d5085ce98b689414674cf010d95883327853342d05cb1e8ca8e9197832de2b29"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-impossible-counts-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "f05f336f06da6cee4d8f4b35a5969ba31db74bb20c7fab974e3495dada3547c3"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-zlib-v1-interface-v1-runtime-v1-profile-v1-zlib-standard-v1.json",
+          "sha256": "3fc4918c45996fe7ec40a0f22f91974e39b33608674f362081f25bd6c102f0c2"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-decompression-mismatch-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "07f523cdcc28078476f961b882aa047aa53509491f95e52c9718f0cc92354dc8"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-arithmetic-overflow-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "981f5061356df8bd712f9532cd9cdccc34027182c2e473b05003b863015017ae"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-raw-lz4-v1-interface-v1-runtime-v1-profile-v1-raw-lz4-standard-v1.json",
+          "sha256": "fa06d54d28fd510775c76febd6be131d62cd214871c2057aba2edb27b59beca9"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-zlib-v1-interface-v1-runtime-v1-profile-v1-zlib-standard-v1.json",
+          "sha256": "4239ec9e9427930d19afb14f730e2a9cf7bdd4188e137eaaf4e99d9ba8e48e4b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-partial-overlap-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "0c21a019e35bf19f3ce9a5d67ebcbaf4a31211819b6cbdf876c7df1fec461b8d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-scenario-fo4-general-input-zero-length-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "eb6b5b168b95934820e491253c877175b22f2758176e61c606e9c5f22d0fdc85"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-raw-lz4-v1-interface-v1-runtime-v1-profile-v1-raw-lz4-standard-v1.json",
+          "sha256": "c8472afba206592b2b4fbf4bd7dc6da8616a77231e9470e39d8d8c3c49ab9b32"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-missing-name-tables-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "afd42078ff4fff0fc3e7e5508ab6a0813c0f1d41a38dc563b4419d2d03837e6e"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-unsafe-absolute-names-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "d6e53dbdce7f291eb168bff1e0419efde4b17b5c366e8657b4ac6850e9022b9d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-raw-deflate-v1-interface-v1-runtime-v1-profile-v1-raw-deflate-standard-v1.json",
+          "sha256": "fda39c7b404dc94e8885ad94bdeabcf9d2eac9a00af86c0bc9bca17cc84e8828"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-harmless-trailing-bytes-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "9a70063fdfddb8cfc3b247ca8bd2817974d0c0ddb120b6b8e914027f953c207a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-usable-name-hash-mismatch-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "1723e62012514485336ccbb13d2426bdaefec83eec10e0d60b1b61fd6620982b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-exact-shared-spans-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "65a8c0eafa9a4daa7cf070f6d9166acc7e04b686289370998a7be92c7b6b27b6"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-extract-fo4-general-malformed-unsafe-name-extraction-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "74d6f66152906366e50f191505b3865401d52758f1ae8ac20251303e78068f34"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-truncated-spans-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "1cb393db876875e9f6e7c58c9cbd5782b4583b01d89f937103bf163f0bd5b7e9"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-mixed-v1-interface-v1-runtime-v1-profile-v1-mixed-standard-v1.json",
+          "sha256": "d04ebb6bc11f6e8201453a7d5006f8aad842c0538251d61b1e4120dbb2fd41d8"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-equal-name-identities-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "bfc58e399c918b3d03c086fae5c38fbb2b5f56e5f190185fca2e27a46cdbc1b6"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-stored-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "11ac9fad4190ff332c7237864b4681f373e052535839a2f9fe17aa98c005fc3a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-arithmetic-overflow-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "365ad692bea13309f2d011fe42896838266a07f2e5c94402aa02df0cf7e8eb43"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-lz4-frame-v1-interface-v1-runtime-v1-profile-v1-lz4-frame-pc-v1.json",
+          "sha256": "931082216c638ccb84f4c608bc50cec90eaff7e870f50677523834cdd34957d2"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-raw-lz4-v1-interface-v1-runtime-v1-profile-v1-raw-lz4-pc-v1.json",
+          "sha256": "8e97f9bfca57969d7946039098319e2884e7aa7491facebb270b0b3e7d242f77"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-unsafe-absolute-names-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "aa47d4e0837eb5650f9c984804548286690c82e1d11922cdbeb4db90596d5e70"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-raw-lz4-v1-interface-v1-runtime-v1-profile-v1-raw-lz4-pc-v1.json",
+          "sha256": "6096d74562a6f75c5f6881d3837fbff326a28af339bb5843f1891a013bad6fde"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-dimensions-mips-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "84f94d7cd98df3be513b844ff1e2b0cc381b0183400bfe524578bdb5768018f8"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-name-tables-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "ea554206b86e559b4f85adb971e0ef79819e97183f04063a857cfd2e8f9d6888"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-truncated-spans-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "4aab136621fb19f95238812e6e68b17bcb35b8d4d85d36495f3bf9089052d447"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-illegal-tuples-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "800a87ebad5e8293dc2baa5df67fafb6d50ed06ca3742bf5a2cfd99adfed6671"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-nonsquare-mips-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "aa2b05663edab4562475abbe5f1c627266dda74dc7d9de7806ebb40318f3fc99"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-missing-name-tables-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "cfc3d32ab51cfe5f71e68882d72a87e35fa9898dec694b1a781bbb3ef8588213"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-odd-multichunk-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "95ffe919e655fe7adb5aa08253b1d342d5b327ad2eeca806d6dec4a0c5c02287"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-mixed-v1-interface-v1-runtime-v1-profile-v1-mixed-pc-v1.json",
+          "sha256": "4449333322d58faae5147c6451dd9b70f3b2e784dca22f0613227c57613a082b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-bc16-boundaries-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "6ca45b54c662d970b7c196dcb5450d1be1dab61b0eb5ca0ff951eef3a35b67da"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-writable-formats-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "9d21dfa1164749aa27543ff5c46c76e17cd71ad3695ac2ace9b1674990198ad5"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-undecodable-wire-names-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "ad72dfd00c55f6ca0c0f7054bb97bfc00a802a3b50a25ee7ab1df34d9e791ee3"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-stored-v1-interface-v1-runtime-v1-profile-v1-stored-pc-v1.json",
+          "sha256": "883e7a48ea947beefef40a354fb0625b505784d48b714ac6aff85b0a4783b626"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-raw-deflate-v1-interface-v1-runtime-v1-profile-v1-raw-deflate-pc-v1.json",
+          "sha256": "7f195ea70de1cf6389969896b34a170628bb829535ec9ab6159a5c738492584f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-dds-target-mismatch-pc-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "ddeb24b68cf4aba00725e0937953d5b16477c6fb1c0b7bc53fd358c40674648b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-exact-shared-spans-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "a7f31a97286a0d99bece9a5b1e88352e8b2a472caf20c2bbc5907d996085e80d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-lz4-frame-v1-interface-v1-runtime-v1-profile-v1-lz4-frame-pc-v1.json",
+          "sha256": "5be9d88a3291369ef097843b4869f3aab2301320cd6ea755f07f0bffe1366701"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-raw-deflate-v1-interface-v1-runtime-v1-profile-v1-raw-deflate-pc-v1.json",
+          "sha256": "9dd1fead91826fc2cc484a9b4c9b8942e4d4c6fd2b9c5565fbe6022d78b721dd"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-extract-fo4-dds-malformed-unsafe-name-extraction-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "449630f2196348adb4b10d46d530f90b7e72cbf7e78272a0a8b9493873a03d25"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-cubemaps-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "a5d33cc4441ada670b93abfa3ef399e22e71db0040b99969deec066269268bc3"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-impossible-counts-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "60205d7e747fbd1b70e0e699e3e94cacb75eb3d6bb60c9c4d2f94486692ba72c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-mixed-v1-interface-v1-runtime-v1-profile-v1-mixed-pc-v1.json",
+          "sha256": "f9347c3a0a475cdff4bb8223e743ff0f90637250b73b6e007736775e13796633"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-stored-v1-interface-v1-runtime-v1-profile-v1-stored-pc-v1.json",
+          "sha256": "4c81f341edcb9fbe58012f797eac5da4cd1758a301b673c50b676674930e4b7c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-partial-overlap-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "c5a2f14621230636eb092431570ae41d962bde38c88d6dc47b0d66cd7c9e468d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-decompression-mismatch-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "0d83e22fbe74921eb082edbe16794fd816a2d4334a85d3370722a07f939a0c61"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-bc8-boundaries-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "8430ec66f7d488f9b912aa3b5f15f9580f8c846800ed21dd5f851a05e7291cb0"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-ignorable-constants-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "f53e6b42fbfd822dcf55d6a12c3f459d529e5e00e8ecd0eb1e76e8c798f441ab"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-usable-name-hash-mismatch-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "84b42177588c5c4304423b15ec12aaeed7208496d56a7b8c3b8430d339ac720f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-partitions-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "51bcfddfe8bb70ee326d9f9b795e7417db73c6643bdbe1ce9deed6ee9daa0e34"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-cli-selector-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "b31826d34f6a38735e25ba24a2fdd3e4f428b7e92a9fc822948a8f20cdc33365"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-windows-invalid-names-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "35a9c0766c36e0912046cc26c966faf29a1dd0be58c66510dec74bd42c74f6a1"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-owning-dispositions-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "092083f79ab2b0d227aa4f1113cd0b7c3bb6fa23c9c03813e2645e67421f424a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-zlib-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "659d764bc7a80864208f1250c8e812d7242a2f31d561a0ab485857d113c31640"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-reconstruction-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "3cf93c03a7a5c15f5e3fd4be3396a594c33dc49ea25d8979180e6a072d8d7b74"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-dds-target-pc-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "0acd05ecc71d0d0f78e3b0c4b546a736485faf7838bb98989bce220e59c93a0a"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-equal-name-identities-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "6ecef05b33834dcf75f334ca031c9899112e01ce5d99931c3683febca3fd6d78"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-out-of-range-spans-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "088b03c5c325518551b48ad33f2d7a02c00b9032a249939a3f5ba83ea28a1064"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-unsafe-traversal-names-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "02c56c05e1c92d7d70b0c43b8e90162f95d391a89c826325588612450700ff1c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-zlib-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "bdb5b07148b30b8e8a4f88762967affcd7e036adf633436d2863f67966d45ef1"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-harmless-trailing-bytes-v1-interface-v1-runtime-v1-profile-v1-zlib-pc-v1.json",
+          "sha256": "8ec2a15808d0202a21ab9a890b5e8bb2232e0e7bc5ff7af59836b196b49fbeec"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-lz4-frame-v1-interface-v1-runtime-v1-profile-v1-lz4-frame-standard-v1.json",
+          "sha256": "f17a728e1a41012abbd0a1a77b2dbda07ed5ed9e11fc05a930e57edc0e086d2f"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-usable-name-hash-mismatch-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "eeb06a6279fb340cf6be342e3729a5aec634930819c4bbf11335cadc184d5976"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-extract-bsa-067-malformed-unsafe-name-extraction-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "8ff9b43dbfa4055df451d47b7a10c2d42d86b55edebfb7ba68f7a9e44a17a092"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-unsafe-traversal-names-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "f471b62314653536a4808806bbd85a011aa2b6900ab6404068145f3a9417ed4e"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-decompression-mismatch-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "b0e143465c6b716a821a0348e95b0f3a67b0e635221aab2992d42e2acada37dc"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-truncated-spans-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "464a61453ed2f0474cf412ffbcdd2e2ecc74148b683e67111d122f3e7f29930d"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-harmless-trailing-bytes-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "e0072170efe72aa8cbaba0ae81fe6a6b6df52d1815da52e19873aaa4295d78ba"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-lz4-frame-v1-interface-v1-runtime-v1-profile-v1-lz4-frame-standard-v1.json",
+          "sha256": "b45e8c94b7e305f3a5012ddaad061f8aa8e444a56dd32c833e77c569b4195da7"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-stored-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "2cd0a5a0bd5ab8bac9f6d56df6cd0546b63c71dc5f4b0ee9007094d23313d1eb"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-raw-lz4-v1-interface-v1-runtime-v1-profile-v1-raw-lz4-standard-v1.json",
+          "sha256": "2ff09e6e0fd3266564e93db9840ba1f17d1d29067aacaea76acd1c1e520308bc"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-impossible-counts-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "3985b6860cdf333969811a41efb3e48ce2258cdefd59927fd1b3050ffb275636"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-raw-deflate-v1-interface-v1-runtime-v1-profile-v1-raw-deflate-standard-v1.json",
+          "sha256": "0300d8323533bc9fdb4d45d2d07f6ef4316b360ce7bebdb3e8ac9d5f277d9ea8"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-scenario-bsa-067-xml-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "e5704de80aab8d5a82feea0d13b8048f65692aaae08fa28266875c868f31a463"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-owning-dispositions-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "620366a5ef53c628bd32189512e6148ee34e2467f6f5ff98a1127393d7fe5031"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-windows-invalid-names-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "bd972b1af523b24e58292db11c8331be9685eeae8fa26469544079a0396c3afe"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-unsafe-absolute-names-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "b83c07ced34a2ae15d79de6f889ec9f402bbef379730c2a954d220b2b561ea86"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-exact-shared-spans-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "8519429804a371301e10ee514074dbb54efcbd205885d3807e73590a1c5262d6"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-illegal-tuples-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "952b0aed0a98b15345ba9cc5d9c501281445392a23f07a9a3e266aefdbbd0005"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-partial-overlap-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "152f75d5b08d28b9a4d7c1716fba4e9a9c52803943e44a2021a641a02a0f0c1e"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-mixed-v1-interface-v1-runtime-v1-profile-v1-mixed-standard-v1.json",
+          "sha256": "af990670a167b7cbaa731809b5b227ed09458e914e246b5cfb76fc89a5539e7b"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-ignorable-constants-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "1414ebbe780a8b6c9ea2c3f47d910102bcc51d475f5dd9324f89d6d2126c21cb"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-raw-deflate-v1-interface-v1-runtime-v1-profile-v1-raw-deflate-standard-v1.json",
+          "sha256": "99e9d2919b549b6adf2ea2c92a431dc0d654bc82f12c13ff924d987234b15bb8"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-zlib-v1-interface-v1-runtime-v1-profile-v1-zlib-standard-v1.json",
+          "sha256": "80d5ca706a4868552e5005a62bc5e394f8b270502eb0cc5f4f191172271dd950"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-raw-lz4-v1-interface-v1-runtime-v1-profile-v1-raw-lz4-standard-v1.json",
+          "sha256": "f22c6d440834f110007029537ff4583f9169beaa0d63b93c74a7416145f40129"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-undecodable-wire-names-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "01a068cd822c0e1071a129aaa15d92bd78d421d0afc159d710535b33bfeab6f4"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-arithmetic-overflow-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "85f0884eba434b43016b81e4ab2168be426f6723b71dac3e248492ac84378eef"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-out-of-range-spans-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "62266b7066ab5482f7b7946b65f26ffa2a5fcc2b785ef1636ca38adb05319e7c"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-stored-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "8737e47327a108d59fc597e923dee3392c6042d53b0e84705457af3fa255c467"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-equal-name-identities-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "7505b8cdd0bf4f65a5bbdfd5ef8904839dce50ebb23ff421c5a958b98f966c9e"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-missing-name-tables-v1-interface-v1-runtime-v1-profile-v1-stored-standard-v1.json",
+          "sha256": "77b36b19ddf86d260fdac0814105cb1e14825e545ee53c6855a0e031aa0621e4"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-zlib-v1-interface-v1-runtime-v1-profile-v1-zlib-standard-v1.json",
+          "sha256": "ec7884c27313bb23254bec597a2b646b530dc521c0a57ef149b65e2990c27ff6"
+        },
+        {
+          "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-mixed-v1-interface-v1-runtime-v1-profile-v1-mixed-standard-v1.json",
+          "sha256": "04e9ee88b050da169e592e1532e3257431b9873f16cec9578f62b589077c6682"
+        }
+      ]
+    }
+  ],
+  "active_catalog": {
+    "path": "tests/conformance/catalog.json",
+    "sha256": "52387c4c5908bbb9f20254b81f13ad8e2e2241a88104914889c36e27cb6dd696"
+  },
+  "source_repair": {
+    "path": "docs/reviews/issue43-lz4-runtime/source-repair.json",
+    "sha256": "cd54fd3d518d9956108b3e8c405bb9a642d6ac2ad49e24b2bc57abb8bf52f5f4"
+  },
+  "source_repair_validation": {
+    "admitted_cases_unchanged": 109,
+    "unqualified_cases_rebound": 16,
+    "fresh_checkout_without_ignored_duplicates": "PASS"
+  },
+  "complete_rebaseline_chain": {
+    "result": "PASS",
+    "reviewed_golden_bindings": 145
+  },
+  "automated_conformance": false,
+  "performance_qualification": false
+}

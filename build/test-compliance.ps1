@@ -1,0 +1,403 @@
+<#
+.SYNOPSIS
+Exercises compliance decisions against owned fixture bytes and index-only reference gitlinks.
+.NOTES
+Loads the verifier definitions without its command entry point. Never creates a TES5Edit directory.
+Throws when any expected rejection is absent or an approved input is rejected.
+#>
+[CmdletBinding()]
+param()
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$verifier = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'verify-compliance.ps1')
+$entryPoint = $verifier.IndexOf('$dependencyInventory = Read-ComplianceInventory')
+$definitions = $verifier.Substring(0, $entryPoint).Replace('$PSScriptRoot', ("'" + $PSScriptRoot.Replace("'", "''") + "'"))
+$definitionScript = [scriptblock]::Create($definitions)
+# Dot-sourced tests exercise functions only, but the authoritative script contract remains mandatory.
+. $definitionScript `
+    -ReactorVersion '1.0' `
+    -BuildLayoutManifest 'fixture-layout.json' `
+    -ResolvedProductionDependencies 'fixture-resolved.json'
+$originalRoot = $reactorRoot
+$candidate = (Get-Content -Raw (Join-Path $originalRoot 'compliance/dependency-inventory.json') |
+    ConvertFrom-Json).entries[1]
+$ownedRoot = Join-Path ([System.IO.Path]::GetTempPath()) ('jbsa-compliance-cases-' + [guid]::NewGuid())
+New-Item -ItemType Directory $ownedRoot | Out-Null
+$failures = [System.Collections.Generic.List[string]]::new()
+$caseCount = 0
+
+<# .SYNOPSIS Creates an owned minimal repository with an index-only pinned reference. #>
+function New-PolicyFixture {
+    $script:reactorRoot = Join-Path $ownedRoot ([guid]::NewGuid().ToString())
+    New-Item -ItemType Directory $reactorRoot | Out-Null
+    & git -C $reactorRoot init --quiet
+    & git -C $reactorRoot update-index --add --cacheinfo '160000,fd1e36020b2b5b6217e553dc0038983146a2e2dd,TES5Edit'
+    Copy-Item (Join-Path $originalRoot '.gitmodules') (Join-Path $reactorRoot '.gitmodules')
+    $script:ReactorVersion = '1.0'
+}
+
+<# .SYNOPSIS Runs one real policy operation and checks its success or diagnostic category. #>
+function Test-PolicyCase {
+    param([string] $Name, [scriptblock] $Action, [string] $Rejection = '')
+    $script:caseCount++
+    try {
+        New-PolicyFixture
+        & $Action | Out-Null
+        if ($Rejection) { throw "Expected rejection matching: $Rejection" }
+        Write-Output "PASS $Name"
+    } catch {
+        if ($Rejection -and $_.Exception.Message -notlike 'Expected rejection*' -and
+            $_.Exception.Message -match $Rejection) {
+            Write-Output "PASS $Name"
+        } else {
+            $failures.Add("${Name}: $($_.Exception.Message)")
+            Write-Output "FAIL ${Name}: $($_.Exception.Message)"
+        }
+    }
+}
+
+<# .SYNOPSIS Returns independent mutable provenance with cleared promotion blockers. #>
+function New-ApprovedDependency {
+    $entry = $candidate | ConvertTo-Json -Depth 20 | ConvertFrom-Json
+    $entry.redistribution.approved = $true
+    $entry.redistribution.releaseArtifacts = @('jbsa-cli-1.0-windows-x64.zip')
+    $entry.blockedBy = @()
+    return $entry
+}
+
+<# .SYNOPSIS Writes a one-entry ZIP of exact owned bytes without extracting any paths. #>
+function Write-TestZip {
+    param([string] $Path, [string] $EntryName, [byte[]] $Bytes)
+    $zip = [System.IO.Compression.ZipFile]::Open($Path, 'Create')
+    try {
+        $stream = $zip.CreateEntry($EntryName).Open()
+        try { $stream.Write($Bytes) } finally { $stream.Dispose() }
+    } finally { $zip.Dispose() }
+}
+
+<#
+.SYNOPSIS
+Writes several owned payloads into one ZIP for aggregate inspection tests.
+.PARAMETER Path
+Destination ZIP in the owned test fixture.
+.PARAMETER Entries
+Entry names mapped to their exact payload bytes.
+#>
+function Write-TestZipEntries {
+    param([string] $Path, [hashtable] $Entries)
+    $zip = [System.IO.Compression.ZipFile]::Open($Path, 'Create')
+    try {
+        foreach ($name in @($Entries.Keys | Sort-Object)) {
+            $stream = $zip.CreateEntry($name).Open()
+            try { $stream.Write([byte[]] $Entries[$name]) } finally { $stream.Dispose() }
+        }
+    } finally { $zip.Dispose() }
+}
+
+<# .SYNOPSIS Writes a synthetic CycloneDX component carrying a caller-selected artifact hash. #>
+function Write-TestSbom {
+    param([object] $Entry, [string] $Hash)
+    $rootRef = 'pkg:maven/io.github.evildarkarchon/jbsa-parent@1.0?type=pom'
+    $libraryRef = 'pkg:maven/io.github.evildarkarchon/jbsa@1.0?type=jar'
+    $cliRef = 'pkg:maven/io.github.evildarkarchon/jbsa-cli@1.0?type=jar'
+    $component = @{
+        group = $Entry.groupId; name = $Entry.artifactId; version = $Entry.version
+        purl = "pkg:maven/$($Entry.groupId)/$($Entry.artifactId)@$($Entry.version)?type=jar"
+        'bom-ref' = "pkg:maven/$($Entry.groupId)/$($Entry.artifactId)@$($Entry.version)?type=jar"
+        hashes = @(@{ alg = 'SHA-256'; content = $Hash })
+    }
+    $projectComponents = @(
+        @{ type='library'; group='io.github.evildarkarchon'; name='jbsa'; version='1.0'; purl=$libraryRef; 'bom-ref'=$libraryRef },
+        @{ type='library'; group='io.github.evildarkarchon'; name='jbsa-cli'; version='1.0'; purl=$cliRef; 'bom-ref'=$cliRef }
+    )
+    $components = @($projectComponents)
+    if ($component.'bom-ref' -ceq $libraryRef) {
+        $components[0] = $component
+    } elseif ($component.'bom-ref' -ceq $cliRef) {
+        $components[1] = $component
+    } else {
+        $components += $component
+    }
+    $externalRef = @()
+    if ($component.group -cne 'io.github.evildarkarchon') {
+        $externalRef = @($component.'bom-ref')
+    }
+    $dependencies = @(
+        @{ ref=$rootRef; dependsOn=@($cliRef, $libraryRef) },
+        @{ ref=$cliRef; dependsOn=@($libraryRef) },
+        @{ ref=$libraryRef; dependsOn=$externalRef }
+    )
+    if ($externalRef.Count -eq 1) {
+        $dependencies += @{ ref=$externalRef[0]; dependsOn=@() }
+    }
+    $path = Join-Path $reactorRoot 'sbom.json'
+    @{
+        bomFormat = 'CycloneDX'; specVersion = '1.6'
+        metadata = @{ component = @{
+            type='library'; group='io.github.evildarkarchon'; name='jbsa-parent'; version='1.0'
+            purl=$rootRef; 'bom-ref'=$rootRef
+        } }
+        components = $components
+        dependencies = $dependencies
+    } |
+        ConvertTo-Json -Depth 10 | Set-Content $path
+    return $path
+}
+
+try {
+    Test-PolicyCase 'build layout rejects unsupported schema' {
+        $path = Join-Path $reactorRoot 'layout.json'
+        @{ schemaVersion=2; rootProject='jbsa-parent'; ownedOutputRoots=@(); outputs=@() } |
+            ConvertTo-Json -Depth 10 | Set-Content $path
+        Get-ValidatedBuildLayoutLookup $path
+    } 'schema 1'
+    foreach ($invalidPath in @('../outside.json', 'README.md', 'docs/target/forged.json', ([IO.Path]::GetFullPath((Join-Path $reactorRoot 'target/absolute.json'))))) {
+        Test-PolicyCase "build layout rejects unowned path $invalidPath" {
+            $path = Join-Path $reactorRoot 'layout.json'
+            @{
+                schemaVersion=1; rootProject='jbsa-parent'; ownedOutputRoots=@(
+                    'jbsa-benchmarks/target','jbsa-cli/target','jbsa-conformance-tests/target',
+                    'jbsa-dist/target','jbsa-test-support/target','jbsa/target','target'
+                ); outputs=@(@{
+                    id='invalid'; kind='internal-manifest'; path=$invalidPath; producerTask=':invalid'
+                })
+            } | ConvertTo-Json -Depth 10 | Set-Content $path
+            Get-ValidatedBuildLayoutLookup $path
+        } 'contained generated path'
+    }
+    Test-PolicyCase 'resolved production manifest rejects unsupported schema' {
+        $path = Join-Path $reactorRoot 'resolved.json'
+        @{ schemaVersion=2; dependencies=@() } | ConvertTo-Json -Depth 10 | Set-Content $path
+        Read-ResolvedProductionDependencyManifest $path
+    } 'schema 1'
+    Test-PolicyCase 'approved dependency clears blockers' {
+        Get-ValidatedDependencyLookup ([pscustomobject]@{ entries = @((New-ApprovedDependency)) })
+    }
+    Test-PolicyCase 'approved dependency rejects unresolved blockers' {
+        $entry = New-ApprovedDependency
+        $entry.blockedBy = @('still unresolved')
+        Get-ValidatedDependencyLookup ([pscustomobject]@{ entries = @($entry) })
+    } 'blockedBy'
+    foreach ($invalid in @('[null]', '[{}]', '"jbsa-cli-1.0-windows-x64.zip"', '["unknown.zip"]',
+            '["jbsa-cli-1.0-windows-x64.zip","jbsa-cli-1.0-windows-x64.zip"]')) {
+        Test-PolicyCase "invalid release identities $invalid" {
+            $entry = New-ApprovedDependency
+            $entry.redistribution.releaseArtifacts = ConvertFrom-Json -NoEnumerate $invalid
+            Assert-ProvenanceRecord $entry 'candidate'
+        } 'releaseArtifacts|containing artifact'
+    }
+    Test-PolicyCase 'SBOM same-group artifact is not implicitly approved' {
+        $entry = New-ApprovedDependency
+        $entry.groupId = 'io.github.evildarkarchon'
+        $entry.artifactId = 'unreviewed-code'
+        Test-GeneratedSbom ([pscustomobject]@{ entries = @() }) (Write-TestSbom $entry $entry.sha256)
+    } 'uninventoried external component'
+    Test-PolicyCase 'SBOM project exemption requires expected packaging' {
+        $entry = New-ApprovedDependency
+        $entry.groupId = 'io.github.evildarkarchon'
+        $entry.artifactId = 'jbsa-parent'
+        $entry.version = '1.0'
+        Test-GeneratedSbom ([pscustomobject]@{ entries = @() }) (Write-TestSbom $entry $entry.sha256)
+    } 'uninventoried external component'
+    Test-PolicyCase 'SBOM current Gradle library is accepted' {
+        $entry = New-ApprovedDependency
+        $entry.groupId = 'io.github.evildarkarchon'
+        $entry.artifactId = 'jbsa'
+        $entry.version = '1.0'
+        Test-GeneratedSbom ([pscustomobject]@{ entries = @() }) (Write-TestSbom $entry $entry.sha256)
+    }
+    Test-PolicyCase 'SBOM rejects altered dependency digest' {
+        $entry = New-ApprovedDependency
+        Test-GeneratedSbom ([pscustomobject]@{ entries = @($entry) }) (Write-TestSbom $entry ('0' * 64))
+    } 'SHA-256|digest|checksum'
+    Test-PolicyCase 'SBOM accepts approved dependency digest' {
+        $entry = New-ApprovedDependency
+        Test-GeneratedSbom ([pscustomobject]@{ entries = @($entry) }) (Write-TestSbom $entry $entry.sha256)
+    }
+    foreach ($kind in @('license', 'notice', 'release-notes', 'sbom', 'provenance', 'checksum', 'documentation')) {
+        Test-PolicyCase "evidence $kind must match source bytes" {
+            $inputs = New-Item -ItemType Directory (Join-Path $reactorRoot 'inputs')
+            Set-Content (Join-Path $reactorRoot 'LICENSE') 'authentic source'
+            $payload = Join-Path $inputs.FullName 'evidence.txt'
+            Set-Content $payload 'forged staged bytes'
+            $manifest = Join-Path $reactorRoot 'manifest.json'
+            @{schemaVersion=1; entries=@(@{path='evidence.txt';sha256=(Get-LowercaseSha256 $payload);kind=$kind;source='LICENSE'})} |
+                ConvertTo-Json -Depth 10 | Set-Content $manifest
+            Test-ReleaseInputs $inputs.FullName $manifest @{} @{} @{} '1.0'
+        } 'does not match.*source'
+    }
+    Test-PolicyCase 'empty release tree rejects manifested missing files' {
+        $inputs = New-Item -ItemType Directory (Join-Path $reactorRoot 'inputs')
+        $source = Join-Path $reactorRoot 'LICENSE'
+        Set-Content $source 'authentic source'
+        $manifest = Join-Path $reactorRoot 'manifest.json'
+        @{schemaVersion=1; entries=@(@{path='LICENSE';sha256=(Get-LowercaseSha256 $source);kind='license';source='LICENSE'})} |
+            ConvertTo-Json -Depth 10 | Set-Content $manifest
+        Test-ReleaseInputs $inputs.FullName $manifest @{} @{} @{} '1.0'
+    } 'manifest names a missing file'
+    Test-PolicyCase 'empty release tree rejects absent explicitly requested manifest' {
+        $inputs = New-Item -ItemType Directory (Join-Path $reactorRoot 'inputs')
+        Test-ReleaseInputs $inputs.FullName (Join-Path $reactorRoot 'missing-manifest.json') @{} @{} @{} '1.0'
+    } 'Missing compliance inventory'
+    Test-PolicyCase 'empty optional release tree remains allowed without manifest' {
+        $inputs = New-Item -ItemType Directory (Join-Path $reactorRoot 'inputs')
+        Test-ReleaseInputs $inputs.FullName '' @{} @{} @{} '1.0'
+    }
+    Test-PolicyCase 'hidden release input cannot evade inventory' {
+        $inputs = New-Item -ItemType Directory (Join-Path $reactorRoot 'inputs')
+        $payload = Join-Path $inputs.FullName '.hidden.dll'
+        Set-Content $payload 'unapproved native'
+        if ($IsWindows) { (Get-Item -Force $payload).Attributes = 'Hidden' }
+        Test-ReleaseInputs $inputs.FullName '' @{} @{} @{} '1.0'
+    } 'Unapproved native payload'
+    foreach ($magic in @('00010000', '42534100', '42544458', '44445320', '54455334', '54455333')) {
+        foreach ($nested in @($false, $true)) {
+            Test-PolicyCase "renamed proprietary magic $magic nested=$nested" {
+                $inputs = New-Item -ItemType Directory (Join-Path $reactorRoot 'inputs')
+                $bytes = [Convert]::FromHexString($magic + '000000000000000000000000')
+                if ($nested) { Write-TestZip (Join-Path $inputs.FullName 'container.zip') 'harmless.bin' $bytes }
+                else { [System.IO.File]::WriteAllBytes((Join-Path $inputs.FullName 'harmless.bin'), $bytes) }
+                Test-ReleaseInputs $inputs.FullName '' @{} @{} @{} '1.0'
+            } 'Proprietary or local fixture material'
+        }
+    }
+    Test-PolicyCase 'tracked non-ASCII filename is audited losslessly' {
+        $name = ([char]0xe9).ToString() + '.dll'
+        Set-Content (Join-Path $reactorRoot $name) 'unapproved native'
+        & git -C $reactorRoot add -- $name
+        Test-TrackedRepositoryBytes @{} @{}
+    } 'Unapproved native payload'
+    Test-PolicyCase 'tracked ZIP recursively audits payload' {
+        Write-TestZip (Join-Path $reactorRoot 'container.zip') 'native.dll' ([byte[]]@(1,2,3))
+        & git -C $reactorRoot add -- container.zip
+        Test-TrackedRepositoryBytes @{} @{}
+    } 'Unapproved native payload'
+    Test-PolicyCase 'ZIP inspection bounds aggregate entry count' {
+        $path = Join-Path $reactorRoot 'container.zip'
+        Write-TestZipEntries $path @{
+            'a.txt' = [byte[]]@(1)
+            'b.txt' = [byte[]]@(2)
+            'c.txt' = [byte[]]@(3)
+        }
+        $previous = $script:maximumArchiveEntries
+        try {
+            $script:maximumArchiveEntries = 2
+            $stream = [System.IO.File]::OpenRead($path)
+            try { Test-ZipArchiveContents $stream 'container.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally { $script:maximumArchiveEntries = $previous }
+    } 'aggregate entry count limit'
+    Test-PolicyCase 'ZIP inspection bounds aggregate expanded bytes' {
+        $path = Join-Path $reactorRoot 'container.zip'
+        Write-TestZipEntries $path @{
+            'a.txt' = [byte[]]@(1,2,3)
+            'b.txt' = [byte[]]@(4,5,6)
+        }
+        $previous = $script:maximumArchiveExpandedBytes
+        try {
+            $script:maximumArchiveExpandedBytes = 5
+            $stream = [System.IO.File]::OpenRead($path)
+            try { Test-ZipArchiveContents $stream 'container.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally { $script:maximumArchiveExpandedBytes = $previous }
+    } 'aggregate expanded-byte limit'
+    Test-PolicyCase 'ZIP inspection counts nested entry fanout' {
+        $innerPath = Join-Path $reactorRoot 'inner.zip'
+        Write-TestZipEntries $innerPath @{
+            'a.txt' = [byte[]]@(1)
+            'b.txt' = [byte[]]@(2)
+        }
+        $outerPath = Join-Path $reactorRoot 'outer.zip'
+        Write-TestZip $outerPath 'inner.zip' ([System.IO.File]::ReadAllBytes($innerPath))
+        $previous = $script:maximumArchiveEntries
+        try {
+            $script:maximumArchiveEntries = 2
+            $stream = [System.IO.File]::OpenRead($outerPath)
+            try { Test-ZipArchiveContents $stream 'outer.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally { $script:maximumArchiveEntries = $previous }
+    } 'aggregate entry count limit'
+    Test-PolicyCase 'ZIP inspection charges nested expanded bytes' {
+        $innerPath = Join-Path $reactorRoot 'inner.zip'
+        Write-TestZip $innerPath 'payload.bin' ([byte[]]@(1,2,3))
+        $innerBytes = [System.IO.File]::ReadAllBytes($innerPath)
+        $outerPath = Join-Path $reactorRoot 'outer.zip'
+        Write-TestZip $outerPath 'inner.zip' $innerBytes
+        $previous = $script:maximumArchiveExpandedBytes
+        try {
+            # The outer member fits; its child needs three bytes with only two remaining.
+            $script:maximumArchiveExpandedBytes = $innerBytes.Length + 2
+            $stream = [System.IO.File]::OpenRead($outerPath)
+            try { Test-ZipArchiveContents $stream 'outer.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally { $script:maximumArchiveExpandedBytes = $previous }
+    } 'aggregate expanded-byte limit'
+    Test-PolicyCase 'ZIP inspection accepts exact aggregate limits' {
+        $path = Join-Path $reactorRoot 'container.zip'
+        Write-TestZipEntries $path @{
+            'a.txt' = [byte[]]@(1,2,3)
+            'b.txt' = [byte[]]@(4,5,6)
+        }
+        $previousEntries = $script:maximumArchiveEntries
+        $previousBytes = $script:maximumArchiveExpandedBytes
+        try {
+            $script:maximumArchiveEntries = 2
+            $script:maximumArchiveExpandedBytes = 6
+            $stream = [System.IO.File]::OpenRead($path)
+            try { Test-ZipArchiveContents $stream 'container.zip' @{} @{} }
+            finally { $stream.Dispose() }
+        } finally {
+            $script:maximumArchiveEntries = $previousEntries
+            $script:maximumArchiveExpandedBytes = $previousBytes
+        }
+    }
+    Test-PolicyCase 'reference pin is accepted without checkout' { Test-TrackedRepositoryBytes @{} @{} }
+    Test-PolicyCase 'reference revision drift is rejected' {
+        & git -C $reactorRoot update-index --cacheinfo '160000,1111111111111111111111111111111111111111,TES5Edit'
+        Test-TrackedRepositoryBytes @{} @{}
+    } 'pinned.*gitlink|gitlink.*pin'
+    Test-PolicyCase 'reference ordinary file index entry is rejected' {
+        $objectId = 'ordinary reference' | & git -C $reactorRoot hash-object -w --stdin
+        & git -C $reactorRoot update-index --cacheinfo "100644,$objectId,TES5Edit"
+        Test-TrackedRepositoryBytes @{} @{}
+    } 'pinned.*gitlink|gitlink.*pin'
+    Test-PolicyCase 'reference URL drift is rejected' {
+        & git config --file (Join-Path $reactorRoot '.gitmodules') submodule.TES5Edit.url 'https://example.com/replaced.git'
+        Test-TrackedRepositoryBytes @{} @{}
+    } 'reference.*(path|URL)|TES5Edit.*(path|URL)'
+    Test-PolicyCase 'post-staging generated evidence audit is read-only' {
+        $path = Join-Path $reactorRoot 'target/compliance/evidence.txt'
+        New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
+        $expected = "stable generated evidence`n"
+        [IO.File]::WriteAllText($path, $expected, [Text.UTF8Encoding]::new($false))
+        $before = [IO.File]::ReadAllBytes($path)
+        Write-OrVerifyGeneratedText $path $expected $true 'fixture evidence'
+        if ([Convert]::ToHexString($before) -cne [Convert]::ToHexString([IO.File]::ReadAllBytes($path))) {
+            throw 'Post-staging audit rewrote generated evidence.'
+        }
+    }
+    Test-PolicyCase 'post-staging generated evidence audit rejects stale bytes' {
+        $path = Join-Path $reactorRoot 'target/compliance/evidence.txt'
+        New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
+        [IO.File]::WriteAllText($path, "stale generated evidence`n", [Text.UTF8Encoding]::new($false))
+        Write-OrVerifyGeneratedText $path "expected generated evidence`n" $true 'fixture evidence'
+    } 'stale generated fixture evidence'
+    Test-PolicyCase 'post-staging generated evidence audit rejects alternate encoding' {
+        $path = Join-Path $reactorRoot 'target/compliance/evidence.txt'
+        New-Item -ItemType Directory -Path (Split-Path $path) -Force | Out-Null
+        $expected = "same decoded evidence`n"
+        [IO.File]::WriteAllText($path, $expected, [Text.UnicodeEncoding]::new($false, $true))
+        Write-OrVerifyGeneratedText $path $expected $true 'fixture evidence'
+    } 'stale generated fixture evidence'
+} finally {
+    $script:reactorRoot = $originalRoot
+    # Only this script's freshly created temp subtree is eligible for recursive cleanup.
+    $resolvedOwnedRoot = [System.IO.Path]::GetFullPath($ownedRoot)
+    if (-not $resolvedOwnedRoot.StartsWith([System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()), [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'Refusing cleanup outside the owned temporary directory.'
+    }
+    Remove-Item -LiteralPath $resolvedOwnedRoot -Recurse -Force
+}
+if ($failures.Count) { throw "$($failures.Count) / $caseCount compliance regressions failed.`n$($failures -join "`n")" }
+Write-Output "All $caseCount compliance regression cases passed."

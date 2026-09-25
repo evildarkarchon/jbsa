@@ -1,0 +1,157 @@
+{
+  "active_catalog": {
+    "path": "tests/conformance/catalog.json",
+    "sha256": "17637d41de209ce4f2cdba75235ddc64bfa9e2b6fb0b3a61764e9b53370a9359"
+  },
+  "approval": {
+    "approved_at": "2026-09-08T22:09:43Z",
+    "approver": "evildarkarchon",
+    "decision": "approved"
+  },
+  "approval_source": "Maintainer explicitly replied \"approved\" to the CV1 activation request in this implementation conversation.",
+  "approved_review": {
+    "path": "docs/reviews/issue39-cv1/review.json",
+    "sha256": "f0e5260d872ac86f593c2c986f4d83200c2c23f00dd6b7d2a7fd297ed9077186"
+  },
+  "case_count": 33,
+  "metadata_correction": "Golden labels normalized to lowercase hyphenated IDs required by the existing rebaseline schema; manifest and descriptor digests rebound. Case identities, fixture bytes and golden bytes are unchanged.",
+  "previous_catalog": {
+    "path": "tests/conformance/catalog.json",
+    "sha256": "1d722d578f0f8b6c4e73498be0fdcd0deaa01ed4f5b3751278585b8eca65c49a"
+  },
+  "rebaseline_records": [
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-base-fo4-gnrl-v1-lz4-frame-v1.lz4-frame.standard-v1.json",
+      "sha256": "5490b9aec9dda803ddcb1dad2b8a381c8fca558632df08fdf6410e4d9ab49c35"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-base-fo4-gnrl-v1-mixed-v1.mixed.standard-v1.json",
+      "sha256": "211655861149d654b2ca3ed3cd667da00b1339b7b3731470a13474ddbdd9f07a"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-base-fo4-gnrl-v1-raw-deflate-v1.raw-deflate.standard-v1.json",
+      "sha256": "328d30f8c425eb18cf7247c403a16a84917ceb58b05b35e7af83947848f58dc8"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-base-fo4-gnrl-v1-raw-lz4-v1.raw-lz4.standard-v1.json",
+      "sha256": "e1f7f551d0e481d5e36dc9c5f876dca7ffca231ff2a28e2f842eb3eab6298b9b"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-base-fo4-gnrl-v1-stored-v1.stored.standard-v1.json",
+      "sha256": "5a5227c585504c56d0a5e2bd9b737e0640a49b6eb852c83531206c20e8903185"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-base-fo4-gnrl-v1-zlib-v1.zlib.standard-v1.json",
+      "sha256": "9375a34510788cae7b33fbdbab67fbdf5fb937761cc631640323c77a61ead4e0"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-arithmetic-overflow-v1.stored.standard-v1.json",
+      "sha256": "b3bbbc75e83ea02f8f743a81097b3ee078d2e28b13aeca5c96b06a66b1be4b34"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-decompression-mismatch-v1.stored.standard-v1.json",
+      "sha256": "f30f07e0b80543de4ce24117a27cd7e181de9bf37a50de5b25cb648222f165a9"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-equal-name-identities-v1.stored.standard-v1.json",
+      "sha256": "556180a2c4f26efa774fa2477859e67e533656529a1d8282205014e675912b74"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-exact-shared-spans-v1.stored.standard-v1.json",
+      "sha256": "80c66a0f3e1f113f3ed582ea31a8f3d7063094f2f9c60f4686fe109448d223cb"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-harmless-trailing-bytes-v1.stored.standard-v1.json",
+      "sha256": "4f54432d2f6a7e91ab12458a16e7dbf490cf764d2182454c4931b55beacb0a48"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-ignorable-constants-v1.stored.standard-v1.json",
+      "sha256": "7555c4b6f6b08b698e532508f798b4ae5bd692b2cabf3da92a916e94af27d9fc"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-illegal-tuples-v1.stored.standard-v1.json",
+      "sha256": "8d8c8f091cb6e3cc649fa2ada6bf8606e818fed720d9eac84657c4dd5d254373"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-impossible-counts-v1.stored.standard-v1.json",
+      "sha256": "f357c52aebf65e20351ac9447720f9f142599c09f591689c7bc00182bf7ae0dd"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-missing-name-tables-v1.stored.standard-v1.json",
+      "sha256": "2cf982520ea7251e2966f23c638ab378ba5eb4812d2f10553a2766f8532985e0"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-out-of-range-spans-v1.stored.standard-v1.json",
+      "sha256": "74d7a532f7dd9e6eec880d41a854d694804d173319eb2b941bcea5bb4a558438"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-owning-dispositions-v1.stored.standard-v1.json",
+      "sha256": "9ea9617a4545d466692e68611ead20b921e94ed80bfb721079223e1e7bbf8276"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-partial-overlap-v1.stored.standard-v1.json",
+      "sha256": "108583a9f4bb16ff0197074682743d740c478dcc21181f7a8de8e62218d70e7d"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-truncated-spans-v1.stored.standard-v1.json",
+      "sha256": "d92df8c82389e5ba8c35882a4ba52c8ddfc739e8f9387c45c0a1150ef4b0329b"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-undecodable-wire-names-v1.stored.standard-v1.json",
+      "sha256": "d2855e1cb3d2e313b756168139ed7d3ef8a563dd34f84292e4830c6055d93090"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-unsafe-absolute-names-v1.stored.standard-v1.json",
+      "sha256": "f79c5cca06027f88f102db0d111ba4b455580ae73e6099da5166a4c2e9b5d330"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-unsafe-traversal-names-v1.stored.standard-v1.json",
+      "sha256": "0ba6b81750a847cccfa0f1061680094a08b20f4eaaae55dbf5e5c60466c026f6"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-usable-name-hash-mismatch-v1.stored.standard-v1.json",
+      "sha256": "4b65e86f37cf96333dbaf5b9254cba7505cbd7b3bd1ea582225fc5e88fa8988f"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.decode.fo4-general-malformed-windows-invalid-names-v1.stored.standard-v1.json",
+      "sha256": "9b5c1e91f3e625c98e72c762a148186dcf14a37efce42a45125073a66863c57d"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-lz4-frame-v1.lz4-frame.standard-v1.json",
+      "sha256": "a671aa125af6ef3292b12aebe3875a06399facd11cbbcb7179f83f8c59aa46b8"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-mixed-v1.mixed.standard-v1.json",
+      "sha256": "8767ad7dd3afd8dc89ff89a904e5dd8924461e07a3d03d8d89f4163bfd2df4ab"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-raw-deflate-v1.raw-deflate.standard-v1.json",
+      "sha256": "ca0341b6c3fe5f600528cf7fa3d967371372093b5796ebc12bfe82178f4bf954"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-raw-lz4-v1.raw-lz4.standard-v1.json",
+      "sha256": "d9db4468c749cd3f356a85fbb7210ac1c4a4d01283d6487097f083e0ea0bd631"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-stored-v1.stored.standard-v1.json",
+      "sha256": "ec2264eee24cddc5655beebf0a546397c754167d639f76a9c31370ca79a97a09"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-zlib-v1.zlib.standard-v1.json",
+      "sha256": "5f9dbbfe969313af639aa56653cfb5f2e889a95682add3fca99ba34a03c68c3f"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.extract.fo4-general-malformed-unsafe-name-extraction-v1.stored.standard-v1.json",
+      "sha256": "1600f0657eafd4456de8978cf89ab5b1cf3d02d44a6e924bd190d42a94832953"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.scenario.fo4-general-gnrl-name-tables-v1.stored.standard-v1.json",
+      "sha256": "1880b0330d3c7723bd7f55084ce36b65be27d3c7597e1b61d11809866ddc8ab8"
+    },
+    {
+      "path": "tests/conformance/rebaselines/CV1-fo4-gnrl-v1.scenario.fo4-general-input-zero-length-v1.stored.standard-v1.json",
+      "sha256": "546f70f898930ec26aa80536f02684920e25de612959654f1dc2e5c0393f534e"
+    }
+  ],
+  "status": "approved-and-activated"
+}

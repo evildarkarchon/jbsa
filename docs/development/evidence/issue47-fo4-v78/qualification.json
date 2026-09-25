@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "issue": 47,
+  "kind": "fallout4-ba2-v7-v8-decode-development-qualification",
+  "recorded_on": "2026-09-14",
+  "automated_conformance": true,
+  "assurance_capsule": {
+    "path": "tests/assurance/issue47-local-capsule.json",
+    "result": "PASS",
+    "tier": "affected",
+    "scenario_count": 40,
+    "digest": "sha256:525ac556cb63483da7ee510892229d416ffcc68594dfa81d94607d9ebd59b9ec"
+  },
+  "capabilities": {
+    "fo4-gnrl-v7": "INCOMPLETE_NO_KNOWN_PRODUCER_OR_SHIPPING_ARCHIVE",
+    "fo4-gnrl-v8": "PASS",
+    "fo4-dx10-v7": "PASS",
+    "fo4-dx10-v8": "PASS"
+  },
+  "producer_observations": {
+    "creation_kit_general_version": 8,
+    "common_third_party_general_version": 1,
+    "known_general_version_7_producer": null
+  },
+  "commands": [
+    {
+      "command": "python build/test-ba2-wire.py",
+      "result": "PASS",
+      "tests": 2
+    },
+    {
+      "command": "python build/test-dds-wire.py",
+      "result": "PASS",
+      "tests": 7
+    },
+    {
+      "command": ".\\gradlew.bat :jbsa-conformance-tests:ba2ConformanceTest --tests '*Fallout4V78GeneralBa2ConformanceIT' :jbsa-conformance-tests:ddsConformanceTest --tests '*Fallout4V78DdsBa2ConformanceIT'",
+      "result": "PASS"
+    },
+    {
+      "command": ".\\gradlew.bat '-Djbsa.ba2.local=true' '-Djbsa.dds.local=true' :jbsa-conformance-tests:ba2ConformanceTest --tests '*Fallout4V78GeneralBa2ConformanceIT' :jbsa-conformance-tests:ddsConformanceTest --tests '*Fallout4V78DdsBa2ConformanceIT'",
+      "result": "PASS"
+    }
+  ],
+  "fixtures": [
+    "tests/fixtures/synthetic/artifacts/archives/fo4-gnrl-v7-stored.ba2",
+    "tests/fixtures/synthetic/artifacts/archives/fo4-gnrl-v7-zlib.ba2",
+    "tests/fixtures/synthetic/artifacts/archives/fo4-gnrl-v8-stored.hex",
+    "tests/fixtures/synthetic/artifacts/archives/fo4-gnrl-v8-zlib.hex",
+    "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v7-zlib.hex",
+    "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v8-zlib.hex"
+  ],
+  "independent_validators": [
+    {
+      "path": "build/validate-ba2-wire.py",
+      "result": "PASS"
+    },
+    {
+      "path": "build/validate-dds-wire.py",
+      "result": "PASS"
+    }
+  ],
+  "local_oracle": {
+    "result": "PASS",
+    "sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2",
+    "direction": "jbsa-project-vector-to-oracle-decode",
+    "raw_evidence_roots": [
+      "target/ba2-local-evidence/issue47",
+      "target/dds-local-evidence/issue47"
+    ]
+  },
+  "local_shipping_observations": {
+    "fo4-gnrl-v7": "UNAVAILABLE_BY_PRODUCER_DESIGN",
+    "fo4-gnrl-v8": "PASS",
+    "fo4-dx10-v7": "PASS",
+    "fo4-dx10-v8": "PASS",
+    "redistribution": "prohibited-local-only"
+  },
+  "claims_excluded": [
+    "Fallout 4 General v7 shipping compatibility",
+    "v7/v8 encode support",
+    "Binary Conformance",
+    "release-wide Performance Qualification"
+  ]
+}

@@ -1,0 +1,193 @@
+package io.github.evildarkarchon.jbsa.build
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.security.MessageDigest
+import java.util.Properties
+import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
+
+/** Rejects stale legacy build instructions from repository surfaces that remain operational. */
+@DisableCachingByDefault(because = "The task has no outputs and exists solely as a verification gate.")
+abstract class VerifyActiveReferences : DefaultTask() {
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val activeFiles: ConfigurableFileCollection
+
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val legacyBuildFiles: ConfigurableFileCollection
+
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val allowlistFile: RegularFileProperty
+
+    @get:Internal abstract val repositoryRoot: DirectoryProperty
+
+    /** Scans active text one line at a time so failures identify an actionable source location. */
+    @TaskAction
+    fun verifyReferences() {
+        val root = repositoryRoot.get().asFile.toPath().toAbsolutePath().normalize()
+        val activeLegacyBuildFiles =
+            legacyBuildFiles.files
+                .asSequence()
+                .map { it.toPath().toAbsolutePath().normalize() }
+                .filter(Files::isRegularFile)
+                .map { root.relativize(it).toString().replace('\\', '/') }
+                .sorted()
+                .toList()
+        if (activeLegacyBuildFiles.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("Active legacy build files are prohibited:")
+                    activeLegacyBuildFiles.forEach { appendLine("  $it") }
+                }.trimEnd()
+            )
+        }
+        val violations =
+            activeFiles.files
+                .asSequence()
+                .map { it.toPath().toAbsolutePath().normalize() }
+                .filter(Files::isRegularFile)
+                .flatMap { path ->
+                    Files.readAllLines(path).asSequence().mapIndexedNotNull { index, line ->
+                        if (PROHIBITED_REFERENCES.any { it.containsMatchIn(line) }) {
+                            val relative = root.relativize(path).toString().replace('\\', '/')
+                            ReferenceViolation(
+                                relative,
+                                index + 1,
+                                line.trim(),
+                                sha256(line.toByteArray(Charsets.UTF_8)),
+                            )
+                        } else {
+                            null
+                        }
+                    }
+                }
+                .sortedWith(compareBy(ReferenceViolation::path, ReferenceViolation::lineNumber))
+                .toList()
+        val remainingApprovals =
+            loadAllowlist(root, violations)
+                .groupingBy(AllowedReference::key)
+                .eachCount()
+                .toMutableMap()
+        val unapproved =
+            violations.filter { violation ->
+                val approvedCount = remainingApprovals[violation.key] ?: 0
+                if (approvedCount > 0) {
+                    remainingApprovals[violation.key] = approvedCount - 1
+                    false
+                } else {
+                    true
+                }
+            }
+
+        if (unapproved.isNotEmpty()) {
+            throw GradleException(
+                buildString {
+                    appendLine("Active legacy build instructions are prohibited:")
+                    unapproved.forEach { appendLine("  ${it.diagnostic}") }
+                }.trimEnd()
+            )
+        }
+    }
+
+    /** Loads and validates exact-line exceptions before any matching instruction is suppressed. */
+    private fun loadAllowlist(root: Path, violations: List<ReferenceViolation>): List<AllowedReference> {
+        val properties = Properties()
+        Files.newInputStream(allowlistFile.get().asFile.toPath()).use(properties::load)
+        try {
+            require(properties.getProperty("allowlistVersion") == "1") {
+                "The active-reference allowlist must declare allowlistVersion=1."
+            }
+            val entryCount = properties.required("entryCount").toInt()
+            require(entryCount >= 0) { "The active-reference allowlist entryCount must not be negative." }
+            val allowed =
+                (0 until entryCount).map { index ->
+                    val prefix = "entry.$index."
+                    val pathText = properties.required(prefix + "path").replace('\\', '/')
+                    val relative = Path.of(pathText)
+                    require(!relative.isAbsolute && relative.none { it.toString() == ".." }) {
+                        "Allowlist path must stay repository-relative: $pathText"
+                    }
+                    val lineSha256 = properties.required(prefix + "lineSha256")
+                    require(lineSha256.matches(Regex("[0-9a-f]{64}"))) {
+                        "Allowlist lineSha256 must be lowercase SHA-256 for $pathText."
+                    }
+                    val category = properties.required(prefix + "category")
+                    require(category in ALLOWLIST_CATEGORIES) {
+                        "Unsupported active-reference allowlist category '$category' for $pathText."
+                    }
+                    require(properties.required(prefix + "rationale").isNotBlank()) {
+                        "Allowlist entry $pathText must explain why its reference remains."
+                    }
+                    require(properties.getProperty(prefix + "expiresWhenClosed").isNullOrBlank()) {
+                        "Completed-cutover allowlist entry $pathText cannot declare expiresWhenClosed."
+                    }
+                    AllowedReference(pathText, lineSha256)
+                }
+            val available = violations.groupingBy(ReferenceViolation::key).eachCount()
+            val requested = allowed.groupingBy(AllowedReference::key).eachCount()
+            requested.forEach { (key, count) ->
+                require((available[key] ?: 0) >= count) {
+                    "Allowlist entry ${key.path} with line SHA256 ${key.lineSha256} does not match any prohibited line."
+                }
+            }
+            return allowed
+        } catch (exception: IllegalArgumentException) {
+            throw GradleException(exception.message ?: "Invalid active-reference allowlist.", exception)
+        }
+    }
+
+    /** Returns the required nonblank property value for one allowlist field. */
+    private fun Properties.required(name: String): String =
+        getProperty(name)?.takeIf(String::isNotBlank)
+            ?: throw IllegalArgumentException("Missing active-reference allowlist property '$name'.")
+
+    /** Returns a lowercase SHA-256 digest for exact reviewed line bytes. */
+    private fun sha256(bytes: ByteArray): String =
+        MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+
+    private data class ReferenceKey(val path: String, val lineSha256: String)
+
+    private data class ReferenceViolation(
+        val path: String,
+        val lineNumber: Int,
+        val lineText: String,
+        val lineSha256: String,
+    ) {
+        val key = ReferenceKey(path, lineSha256)
+        val diagnostic = "$path:$lineNumber: [lineSha256=$lineSha256] $lineText"
+    }
+
+    private data class AllowedReference(val path: String, val lineSha256: String) {
+        val key = ReferenceKey(path, lineSha256)
+    }
+
+    private companion object {
+        val ALLOWLIST_CATEGORIES = setOf("historical-provenance", "scanner-test-fixture")
+        // Match actionable build syntax and tool-specific instructions, while leaving consumer-POM
+        // requirements, package URLs, publication APIs, and the Maven Central proper name intact.
+        val PROHIBITED_REFERENCES =
+            listOf(
+                Regex("(?i)(?<![A-Za-z0-9_-])(?:[.][\\\\/])?mvnw(?:[.]cmd)?(?=[\\s`'\"]|$)"),
+                Regex("(?i)(?<![A-Za-z0-9_-])mvn(?:[.]cmd|[.]exe)?(?=\\s)"),
+                Regex("(?i)(?:^|[\\s`'\"/\\\\])pom[.]xml\\b"),
+                Regex("(?i)[.]mvn[\\\\/]"),
+                Regex("(?i)\\bmaven-wrapper\\b"),
+                Regex(
+                    "(?i)\\bMaven(?:-specific)?\\s+(?:build|reactor|wrapper|lifecycle|gate|command|invocation|verification|tests?|testing|Surefire|Failsafe|plugins?)\\b"
+                ),
+            )
+    }
+}

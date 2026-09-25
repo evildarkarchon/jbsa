@@ -1,0 +1,539 @@
+{
+  "issue": 40,
+  "kind": "development-evidence",
+  "synthetic_only": true,
+  "raw_report_sha256": "9cd66ee110456c486f7f0dc4441f231b77123b37eec4975a11332bad59d147dd",
+  "result": "PASS",
+  "automated_conformance": false,
+  "performance_qualification": false,
+  "candidate_artifacts": [
+    {
+      "name": "jbsa-0.1.0-SNAPSHOT.jar",
+      "sha256": "6860148ca931b93fb01af43e31f05ac107518a3dc7c95a1e336c385bac89b41e"
+    },
+    {
+      "name": "jbsa-cli-0.1.0-SNAPSHOT.jar",
+      "sha256": "3085508ac877fe6ad4fe175d75e50283b742365cb0b543a60956cb8564a53e8c"
+    }
+  ],
+  "java_sha256": "5808527e3dfc4eb285c7664ba356bc267055ef906e83ed4660d9f7976da7349b",
+  "scanner_sha256": "2ffe7f822dc7f06dac409f5d22ed4234985c1dc4f53f021eab97cb2943c4932b",
+  "source_count": 33,
+  "output_bytes": {
+    "candidate": 18439,
+    "oracle": 20818
+  },
+  "payload_and_metadata_errors": [],
+  "reconstruction_bytes_equal": false,
+  "reference_differences": [
+    {
+      "file": "textures/bc7-odd.dds",
+      "requirement": "JBSA-DDS-009",
+      "candidate_linear_size": 64,
+      "oracle_linear_size": 35,
+      "explained_by_accepted_specification": true
+    },
+    {
+      "file": "textures/bc1-odd-chunks.dds",
+      "requirement": "JBSA-DDS-009",
+      "candidate_linear_size": 133128,
+      "oracle_linear_size": 132097,
+      "explained_by_accepted_specification": true
+    },
+    {
+      "file": "textures/bc1-small.dds",
+      "requirement": "JBSA-DDS-009",
+      "candidate_linear_size": 8,
+      "oracle_linear_size": 0,
+      "explained_by_accepted_specification": true
+    }
+  ],
+  "directxtex": {
+    "release": "may2026",
+    "sha256": "411c303c98ba73e4423376f717ac139347dd749bf80a7fc1a22368ab1088ff56",
+    "validated_reconstructions": 33
+  },
+  "process_development_seconds": {
+    "oracle-pack": 1.3124326,
+    "candidate-pack": 0.3515151,
+    "candidate-unpack": 0.2657274,
+    "oracle-unpack": 0.8877707
+  },
+  "cv1_cases": [
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-lz4-frame.lz4-frame.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-mixed.mixed.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-raw-deflate.raw-deflate.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-raw-lz4.raw-lz4.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-stored.stored.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.base-fo4-dx10-v1-zlib.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-arithmetic-overflow.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-decompression-mismatch.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-equal-name-identities.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-exact-shared-spans.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-harmless-trailing-bytes.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-ignorable-constants.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-illegal-tuples.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-impossible-counts.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-missing-name-tables.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-out-of-range-spans.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-owning-dispositions.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-partial-overlap.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-truncated-spans.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-undecodable-wire-names.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-unsafe-absolute-names.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-unsafe-traversal-names.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-usable-name-hash-mismatch.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.decode.malformed-windows-invalid-names.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-lz4-frame.lz4-frame.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-mixed.mixed.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-raw-deflate.raw-deflate.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-raw-lz4.raw-lz4.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-stored.stored.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.base-fo4-dx10-v1-zlib.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.dds-target-mismatch-pc.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.dds-target-mismatch-xbox.zlib.xbox-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.dds-target-pc.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.encode.dds-target-xbox.zlib.xbox-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.extract.malformed-unsafe-name-extraction.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-bc16-boundaries.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-bc8-boundaries.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-cli-selector.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-cubemaps.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-dimensions-mips.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-name-tables.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-nonsquare-mips.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-odd-multichunk.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-partitions.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-reconstruction-selection.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-reconstruction.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    },
+    {
+      "case_id": "CV1-fo4-dx10-v1.scenario.dds-writable-formats.zlib.pc-v1",
+      "status": "NOT_EXECUTED_BY_CV1_RUNNER",
+      "missing": [
+        "materialized immutable case bindings",
+        "reviewed assertion golden",
+        "registered public adapter execution"
+      ]
+    }
+  ],
+  "pv1_missing": [
+    "bound profile and executable inventory",
+    "passed DDS CV1 prerequisites",
+    "corpus and independent expected-projection bindings",
+    "idle and no-concurrent-work environment attestation"
+  ],
+  "limits": [
+    "Three exact oracle header discrepancies follow JBSA-DDS-009; raw byte equality is false.",
+    "Development timings are not normative throughput ratios or memory qualification.",
+    "DirectXTex validates reconstructed DDS; it does not approve CV1 golden replacement."
+  ],
+  "checkpoint": {
+    "sha256": "ac2cafa6003be9631594cab3f55835bd4cba18b1a897ee02679598285575a0a0",
+    "rows": [
+      {
+        "round": "1",
+        "entries": "33",
+        "input_bytes": "4562004",
+        "archive_bytes": "18439",
+        "pack_seconds": "0.059388400",
+        "reconstruction_seconds": "0.033784600",
+        "inspect_seconds": "0.001490700",
+        "random_prefix_seconds": "0.001294400",
+        "random_prefix_count": "64",
+        "heap_pool_peak_sum_bytes": "97446168"
+      },
+      {
+        "round": "2",
+        "entries": "33",
+        "input_bytes": "4562004",
+        "archive_bytes": "18439",
+        "pack_seconds": "0.055529900",
+        "reconstruction_seconds": "0.031816600",
+        "inspect_seconds": "0.001073300",
+        "random_prefix_seconds": "0.001318200",
+        "random_prefix_count": "64",
+        "heap_pool_peak_sum_bytes": "139389208"
+      },
+      {
+        "round": "3",
+        "entries": "33",
+        "input_bytes": "4562004",
+        "archive_bytes": "18439",
+        "pack_seconds": "0.055213400",
+        "reconstruction_seconds": "0.030785300",
+        "inspect_seconds": "0.000980500",
+        "random_prefix_seconds": "0.001172200",
+        "random_prefix_count": "64",
+        "heap_pool_peak_sum_bytes": "189720856"
+      }
+    ]
+  }
+}

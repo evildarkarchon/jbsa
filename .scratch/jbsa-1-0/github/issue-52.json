@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nUse complete conformance and measured evidence to promote or defer the optional jlibdeflate provider and select bounded whole-buffer dispatch without changing an existing immutable profile.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-CODEC-*\n- JBSA-PERF-*\n- JBSA-CONF-*\n\n## Acceptance\n\n- Qualify decode, encode, malformed input, provider fallback, deterministic output, memory credits, native loading, packaging, and notice behavior against the JDK zlib baseline.\n- Measure every required codec throughput, memory, size, and relevant binary-repeatability case, accounting explicitly for the libdeflate 1.25 versus reference 1.24 mismatch.\n- Select evidence-backed input-size and memory-credit dispatch thresholds or defer promotion if any conformance, performance, memory, native, or compliance gate fails.\n- If promoted, create a new digest-identified immutable codec profile and rerun every affected CV1 and PV1 case; never silently mutate the existing profile.\n- Keep provider selection and thresholds internal and document the exact decision, evidence, fallback, and requalification triggers.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:26Z",
+  "labels": [],
+  "milestone": null,
+  "number": 52,
+  "state": "OPEN",
+  "title": "Qualify jlibdeflate and select the standard zlib dispatch",
+  "updatedAt": "2026-09-03T06:54:26Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/52"
+}

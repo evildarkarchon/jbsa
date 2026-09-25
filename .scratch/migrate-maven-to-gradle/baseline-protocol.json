@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "migrationBranch": "initial-implementation",
+  "candidateVersion": "0.1.0-SNAPSHOT",
+  "mavenVersion": "3.9.16",
+  "qualificationJdk": {
+    "implementorVersion": "Temurin-25.0.4+7",
+    "distributionSha256": "7caab7db43bf4b94a2e6252c699e70d90084f9aa7c943cd3414761fd540937ae"
+  },
+  "comparison": {
+    "sameRevision": true,
+    "separateDetachedWorktreePerBuildTool": true,
+    "compareArchiveEntryPayloadsAcrossBuildTools": true,
+    "compareWholeArchiveBytesAcrossBuildTools": false
+  },
+  "normativeGaps": [
+    {
+      "id": "verified-resolution",
+      "status": "not-implemented-by-maven-baseline",
+      "requirement": "Strict SHA-256 verification and locking for plugins, dependencies, metadata, sources, Javadocs, and every resolvable graph, followed by a verified-cache offline build."
+    },
+    {
+      "id": "resolved-production-manifest",
+      "status": "not-implemented-by-maven-baseline",
+      "requirement": "A deterministic schema-versioned manifest of project, usage, requested and resolved coordinates, selected variants, and artifact SHA-256 values."
+    },
+    {
+      "id": "build-layout-manifest",
+      "status": "not-implemented-by-maven-baseline",
+      "requirement": "A deterministic schema-versioned manifest that names every build output consumed by repository automation."
+    },
+    {
+      "id": "candidate-version-validation",
+      "status": "not-implemented-by-maven-baseline",
+      "requirement": "Reject invalid candidate versions before applying one identical group and version identity to all projects."
+    },
+    {
+      "id": "exact-qualification-jdk-enforcement",
+      "status": "not-implemented-by-maven-baseline",
+      "requirement": "Evidence commands enforce the exact qualification JDK identity rather than accepting any Java 25 runtime."
+    },
+    {
+      "id": "linux-portability",
+      "status": "not-implemented-by-maven-baseline",
+      "requirement": "Linux executes the portable compile, formatting, unit-test, and integration-test subset."
+    },
+    {
+      "id": "gradle-foundation-policy",
+      "status": "not-applicable-to-maven-oracle",
+      "requirement": "The Gradle wrapper, centralized repositories, publication reachability, dependency policy, and configuration-cache behavior meet the approved migration specification."
+    }
+  ]
+}

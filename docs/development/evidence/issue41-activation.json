@@ -1,0 +1,532 @@
+{
+  "issue": 41,
+  "status": "activated-after-explicit-maintainer-approval",
+  "review_sha256": "a2e9702750796da6cad78a0e36458475c14bbdaf9b2d3da69c16825710b93c3c",
+  "active_catalog_sha256": "bb37f9b75333149d56f5e0c8ab98cfebfdcb526bac6241d7282e1d421fb742ba",
+  "approver": "evildarkarchon",
+  "approved_unique_golden_count": 109,
+  "rebaseline_verification": "PASS: immutable CV1 identities and 145 approved golden replacements",
+  "runtime_qualification": "pending-fresh-artifact-execution",
+  "approved_records": [
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-equal-name-identities-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-arithmetic-overflow-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-mixed-v1-interface-v1-mixed-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-usable-name-hash-mismatch-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-raw-lz4-v1-interface-v1-raw-lz4-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-ignorable-constants-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-stored-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-scenario-fo4-general-gnrl-name-tables-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-lz4-frame-v1-interface-v1-lz4-frame-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-mixed-v1-interface-v1-mixed-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-lz4-frame-v1-interface-v1-lz4-frame-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-unsafe-traversal-names-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-raw-deflate-v1-interface-v1-raw-deflate-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-harmless-trailing-bytes-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-truncated-spans-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-out-of-range-spans-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-unsafe-absolute-names-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-decompression-mismatch-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-scenario-fo4-general-input-zero-length-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-raw-deflate-v1-interface-v1-raw-deflate-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-zlib-v1-interface-v1-zlib-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-illegal-tuples-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-missing-name-tables-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-extract-fo4-general-malformed-unsafe-name-extraction-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-stored-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-windows-invalid-names-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-partial-overlap-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-exact-shared-spans-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-impossible-counts-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-undecodable-wire-names-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-malformed-owning-dispositions-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-encode-fo4-general-base-fo4-gnrl-v1-zlib-v1-interface-v1-zlib-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-gnrl-v1-decode-fo4-general-base-fo4-gnrl-v1-raw-lz4-v1-interface-v1-raw-lz4-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-name-tables-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-exact-shared-spans-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-raw-lz4-v1-interface-v1-raw-lz4-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-owning-dispositions-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-lz4-frame-v1-interface-v1-lz4-frame-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-mixed-v1-interface-v1-mixed-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-raw-deflate-v1-interface-v1-raw-deflate-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-dimensions-mips-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-odd-multichunk-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-bc8-boundaries-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-partial-overlap-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-zlib-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-harmless-trailing-bytes-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-reconstruction-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-impossible-counts-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-stored-v1-interface-v1-stored-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-arithmetic-overflow-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-writable-formats-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-ignorable-constants-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-dds-target-mismatch-pc-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-usable-name-hash-mismatch-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-out-of-range-spans-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-cli-selector-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-stored-v1-interface-v1-stored-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-windows-invalid-names-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-unsafe-absolute-names-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-dds-target-pc-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-raw-lz4-v1-interface-v1-raw-lz4-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-equal-name-identities-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-bc16-boundaries-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-mixed-v1-interface-v1-mixed-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-truncated-spans-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-undecodable-wire-names-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-decompression-mismatch-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-cubemaps-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-extract-fo4-dds-malformed-unsafe-name-extraction-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-unsafe-traversal-names-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-partitions-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-zlib-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-base-fo4-dx10-v1-raw-deflate-v1-interface-v1-raw-deflate-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-missing-name-tables-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-scenario-fo4-dds-dds-nonsquare-mips-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-encode-fo4-dds-base-fo4-dx10-v1-lz4-frame-v1-interface-v1-lz4-frame-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-fo4-dx10-v1-decode-fo4-dds-malformed-illegal-tuples-v1-interface-v1-zlib-pc-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-stored-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-lz4-frame-v1-interface-v1-lz4-frame-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-unsafe-traversal-names-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-arithmetic-overflow-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-harmless-trailing-bytes-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-windows-invalid-names-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-out-of-range-spans-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-truncated-spans-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-raw-deflate-v1-interface-v1-raw-deflate-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-raw-lz4-v1-interface-v1-raw-lz4-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-illegal-tuples-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-undecodable-wire-names-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-equal-name-identities-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-zlib-v1-interface-v1-zlib-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-impossible-counts-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-mixed-v1-interface-v1-mixed-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-usable-name-hash-mismatch-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-lz4-frame-v1-interface-v1-lz4-frame-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-exact-shared-spans-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-raw-deflate-v1-interface-v1-raw-deflate-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-extract-bsa-067-malformed-unsafe-name-extraction-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-missing-name-tables-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-unsafe-absolute-names-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-partial-overlap-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-raw-lz4-v1-interface-v1-raw-lz4-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-owning-dispositions-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-encode-bsa-067-zlib-v1-interface-v1-zlib-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-ignorable-constants-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-malformed-decompression-mismatch-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-scenario-bsa-067-xml-v1-interface-v1-stored-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-mixed-v1-interface-v1-mixed-standard-v1.json"
+    },
+    {
+      "path": "tests/conformance/rebaselines/cv1-bsa-067-decode-bsa-067-stored-v1-interface-v1-stored-standard-v1.json"
+    }
+  ],
+  "approval_record_time_first": "2026-09-10T09:49:06.076459+00:00",
+  "approval_record_time_last": "2026-09-10T09:49:06.078741+00:00",
+  "tools": [
+    {
+      "path": "build/activate-interface-candidate-review.py",
+      "sha256": "f09581e5bc3dd8913b06dbac596940bed1b65bbdffd3b743ccc53c6e5570028a"
+    },
+    {
+      "path": "build/verify-conformance-rebaseline.ps1",
+      "sha256": "a756a8fa4a83c2f0bd1948eb5fcef0ebb015786a1f86bc644433e45a203d9e93"
+    }
+  ],
+  "old_specification_set": [
+    {
+      "path": "docs/spec/requirements.yaml",
+      "sha256": "659dcf5dc4bfcf70a0cb7f17436426e3521865e0798996ec75d6b3725f846f97"
+    },
+    {
+      "path": "docs/spec/bsarch-cli.md",
+      "sha256": "b57a1ba9e40a2178a7cce9e53af66f32bcbe829358024a752e94c257956df0c7"
+    },
+    {
+      "path": "docs/spec/codecs.md",
+      "sha256": "a5e29d203b9b5d7cee807e9426d86fa5625216ac18ad339d5cd1cfe5b4facdb8"
+    },
+    {
+      "path": "docs/spec/compatibility-profiles.md",
+      "sha256": "0ecaa3f12fac00b31832363750263a2d0560ab8848c04a29c9e8ae5554d34bd7"
+    },
+    {
+      "path": "docs/spec/compliance.md",
+      "sha256": "f0e46e64cf891f6dc4f55482bc287d28ddb737df13f4c20f5eee5a997a9c4359"
+    },
+    {
+      "path": "docs/spec/conformance-v1.md",
+      "sha256": "3700a944098890cccda7f3f529b643abb1bf13522b0079f6a34bdc5cc5696c10"
+    },
+    {
+      "path": "docs/spec/distribution.md",
+      "sha256": "d06e7bc32b0c88e26159e39114a61545feb7b33856b0f69e069ed5bb9fa3a8a4"
+    },
+    {
+      "path": "docs/spec/execution-model.md",
+      "sha256": "6411e7f4934ef6c2253ee5db73de7524616499069013a008d9f11b35df6f84bf"
+    },
+    {
+      "path": "docs/spec/formats/dds-ba2.md",
+      "sha256": "89be9f4703eb946a6dc2447441a5bfbfa4124fa2a0deec667039eb7d51f492df"
+    },
+    {
+      "path": "docs/spec/formats/dds-payload.md",
+      "sha256": "db1c9ef24ac6b70177a204772ed5640e69925980717f08083bbb4019132d159e"
+    },
+    {
+      "path": "docs/spec/formats/detection.md",
+      "sha256": "3a27a373015f77b0d6e2d5325ff935b40026051fe782e0d4a16eb56c4e0345eb"
+    },
+    {
+      "path": "docs/spec/formats/general-ba2.md",
+      "sha256": "f027220dccaaf7f8e0cbeedca5b4e5bd7f39171ba183318f0d31e6c08ddc2540"
+    },
+    {
+      "path": "docs/spec/formats/tes3-bsa.md",
+      "sha256": "af9e12d19e34ac1af24e4ec31426d1d7a686386972c98cb300c53d8d054f74f7"
+    },
+    {
+      "path": "docs/spec/formats/versioned-bsa.md",
+      "sha256": "aaf584a7fcb49a2a03a599bca0b1c8257c27e4c567b3d8940582367de0dca98b"
+    },
+    {
+      "path": "docs/spec/io-and-publication.md",
+      "sha256": "08066d775d365f912b5e084db164f469fbd9588d1c3d31561b4c1efcb2932c6c"
+    },
+    {
+      "path": "docs/spec/library-interface.md",
+      "sha256": "a9bbc52eda28c1d061caba2c8bf2e205df1f489750e94d4670802641affa372f"
+    },
+    {
+      "path": "docs/spec/modules-and-build.md",
+      "sha256": "bc857ed5584d5092b47eceafc3ddcd6ce6479f799ba96c35c4608a23ffdfe4de"
+    },
+    {
+      "path": "docs/spec/operation-semantics.md",
+      "sha256": "8f2f331dd6e70394d3836bc3c8ec388bc67c272eba80369499e9dcfc89747130"
+    },
+    {
+      "path": "docs/spec/performance-v1.md",
+      "sha256": "0ac0168c8356ac41418c314d4c8a0ee79599330df83d800a5c17e9d67a9e7639"
+    },
+    {
+      "path": "docs/spec/README.md",
+      "sha256": "8b5d50ce46f1b9d6efcf10a8b2d9bcb81aeaecc49b1740173303058e711eb4f7"
+    },
+    {
+      "path": "docs/spec/release-gates.md",
+      "sha256": "0a6573320a858ab2595eebaa208af0929a49afe3378c6a4d0feaf91e003cfaea"
+    },
+    {
+      "path": "docs/spec/scope.md",
+      "sha256": "10f1c0dda648c0547009112c394dca9feae29088df497ac84e53fab588e9e9c5"
+    }
+  ],
+  "activated_specification_set": [
+    {
+      "path": "docs/spec/requirements.yaml",
+      "sha256": "1ea69e39a5dd7259aa15b63678f86d33d3a38084523dfcccf40da095134ca7bc"
+    },
+    {
+      "path": "docs/spec/bsarch-cli.md",
+      "sha256": "f0c2f5addc72bae5cc35cc26f40efea853528cbdeb62cca49b3f4cd0604797eb"
+    },
+    {
+      "path": "docs/spec/codecs.md",
+      "sha256": "a5e29d203b9b5d7cee807e9426d86fa5625216ac18ad339d5cd1cfe5b4facdb8"
+    },
+    {
+      "path": "docs/spec/compatibility-profiles.md",
+      "sha256": "bdfd7d55307654567a4ecb82131c7283a91f4b8e16469f7bf0ff07768adcb496"
+    },
+    {
+      "path": "docs/spec/compliance.md",
+      "sha256": "f0e46e64cf891f6dc4f55482bc287d28ddb737df13f4c20f5eee5a997a9c4359"
+    },
+    {
+      "path": "docs/spec/conformance-v1.md",
+      "sha256": "54980ecaed6d3ef2eb1f9c5a69c249f45c2af2f235fa4a6bf1106581e39f8868"
+    },
+    {
+      "path": "docs/spec/distribution.md",
+      "sha256": "d06e7bc32b0c88e26159e39114a61545feb7b33856b0f69e069ed5bb9fa3a8a4"
+    },
+    {
+      "path": "docs/spec/execution-model.md",
+      "sha256": "6411e7f4934ef6c2253ee5db73de7524616499069013a008d9f11b35df6f84bf"
+    },
+    {
+      "path": "docs/spec/formats/dds-ba2.md",
+      "sha256": "89be9f4703eb946a6dc2447441a5bfbfa4124fa2a0deec667039eb7d51f492df"
+    },
+    {
+      "path": "docs/spec/formats/dds-payload.md",
+      "sha256": "aff99cd84bbec8b0b9e423985b9c65a7689999f3d57fe2de8b6c1823d597e780"
+    },
+    {
+      "path": "docs/spec/formats/detection.md",
+      "sha256": "3a27a373015f77b0d6e2d5325ff935b40026051fe782e0d4a16eb56c4e0345eb"
+    },
+    {
+      "path": "docs/spec/formats/general-ba2.md",
+      "sha256": "f027220dccaaf7f8e0cbeedca5b4e5bd7f39171ba183318f0d31e6c08ddc2540"
+    },
+    {
+      "path": "docs/spec/formats/tes3-bsa.md",
+      "sha256": "af9e12d19e34ac1af24e4ec31426d1d7a686386972c98cb300c53d8d054f74f7"
+    },
+    {
+      "path": "docs/spec/formats/versioned-bsa.md",
+      "sha256": "aaf584a7fcb49a2a03a599bca0b1c8257c27e4c567b3d8940582367de0dca98b"
+    },
+    {
+      "path": "docs/spec/io-and-publication.md",
+      "sha256": "08066d775d365f912b5e084db164f469fbd9588d1c3d31561b4c1efcb2932c6c"
+    },
+    {
+      "path": "docs/spec/library-interface.md",
+      "sha256": "025b2dfb2edd9f755a9eb036684809dfd7db3d9e50a46401e056a33dc963ad56"
+    },
+    {
+      "path": "docs/spec/modules-and-build.md",
+      "sha256": "bc857ed5584d5092b47eceafc3ddcd6ce6479f799ba96c35c4608a23ffdfe4de"
+    },
+    {
+      "path": "docs/spec/operation-semantics.md",
+      "sha256": "8f2f331dd6e70394d3836bc3c8ec388bc67c272eba80369499e9dcfc89747130"
+    },
+    {
+      "path": "docs/spec/performance-v1.md",
+      "sha256": "0ac0168c8356ac41418c314d4c8a0ee79599330df83d800a5c17e9d67a9e7639"
+    },
+    {
+      "path": "docs/spec/README.md",
+      "sha256": "8b5d50ce46f1b9d6efcf10a8b2d9bcb81aeaecc49b1740173303058e711eb4f7"
+    },
+    {
+      "path": "docs/spec/release-gates.md",
+      "sha256": "898eefd4d9d5e2142bcb494a096431c28267cb81f0fd5c17f40c031d618ba864"
+    },
+    {
+      "path": "docs/spec/scope.md",
+      "sha256": "02362fb20062654afad46a1b5b9546b269b87d601d408fe1c95c1cf942b1ad7d"
+    }
+  ],
+  "compatibility_profile_semantics": "Immutable canonical compatibility-profile payload unchanged; release applicability follows JBSA-SCOPE-009."
+}

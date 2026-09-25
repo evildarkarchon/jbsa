@@ -1,0 +1,176 @@
+name: Hosted build gates
+
+on:
+  # Feature branches are covered by pull_request; only main needs the push trigger.
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  reuse-compliance:
+    name: REUSE 3.3 metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source without the separately licensed Reference Snapshot
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+
+      - name: Verify per-file SPDX and REUSE metadata
+        uses: fsfe/reuse-action@676e2d560c9a403aa252096d99fcab3e1132b0f5 # v6
+
+  build-gate:
+    name: ${{ matrix.gate }} (hosted evidence; not Release Qualification)
+    runs-on: windows-2025
+    strategy:
+      fail-fast: false
+      matrix:
+        gate:
+          - compile
+          - unit
+          - architecture
+          - formatting
+          - policy
+          - conformance
+
+    steps:
+      - name: Check out source without the Reference Snapshot submodule
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+
+      - name: Set up the pinned Java 25 build
+        uses: ./.github/actions/setup-qualified-jdk
+        with:
+          platform: windows-x64
+
+      - name: Verify frozen v1 history and digest index
+        if: matrix.gate == 'conformance'
+        shell: pwsh
+        env:
+          JBSA_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if ($env:JBSA_BASE_REVISION -cnotmatch '^[0-9a-f]{40}$' -or $env:JBSA_BASE_REVISION -eq ('0' * 40)) {
+            throw 'An exact historical revision is required for the frozen-history audit.'
+          }
+          git cat-file -e "$env:JBSA_BASE_REVISION^{commit}"
+          if ($LASTEXITCODE -ne 0) { throw 'Historical commit is unavailable.' }
+          python build/assurance/history.py verify --repository . --baseline=$env:JBSA_BASE_REVISION --index tests/assurance/history.json
+
+      - name: Run ${{ matrix.gate }} gate
+        shell: pwsh
+        env:
+          JBSA_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: .\build\run-ci-gate.ps1 -Gate '${{ matrix.gate }}'
+
+      - name: Retain Assurance v2 evidence
+        if: always() && matrix.gate == 'conformance'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: assurance-v2-hosted-evidence
+          path: |
+            target/assurance/**
+            jbsa/target/test-results/test/**
+            jbsa-cli/target/test-results/test/**
+            jbsa-conformance-tests/target/test-results/assurancePlanTest/**
+            jbsa-conformance-tests/target/reports/tests/assurancePlanTest/**
+            jbsa-conformance-tests/target/test-results/integrationTest/**
+            jbsa-conformance-tests/target/test-results/tes3ConformanceTest/**
+            jbsa-conformance-tests/target/test-results/bsaConformanceTest/**
+            jbsa-conformance-tests/target/test-results/ba2ConformanceTest/**
+          if-no-files-found: error
+
+  windows-authoritative:
+    name: Complete Windows gate (hosted evidence; not Release Qualification)
+    runs-on: windows-2025
+    steps:
+      - name: Check out source without the Reference Snapshot submodule
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+
+      - name: Set up the pinned Java 25 build
+        uses: ./.github/actions/setup-qualified-jdk
+        with:
+          platform: windows-x64
+
+      - name: Verify frozen v1 history and digest index
+        shell: pwsh
+        env:
+          JBSA_BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if ($env:JBSA_BASE_REVISION -cnotmatch '^[0-9a-f]{40}$' -or $env:JBSA_BASE_REVISION -eq ('0' * 40)) {
+            throw 'An exact historical revision is required for the frozen-history audit.'
+          }
+          git cat-file -e "$env:JBSA_BASE_REVISION^{commit}"
+          if ($LASTEXITCODE -ne 0) { throw 'Historical commit is unavailable.' }
+          python build/assurance/history.py verify --repository . --baseline=$env:JBSA_BASE_REVISION --index tests/assurance/history.json
+
+      - name: Run the complete authoritative Windows gate
+        shell: pwsh
+        run: .\gradlew.bat clean verify --no-daemon
+
+      - name: Retain complete-gate Assurance v2 evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: assurance-v2-windows-authoritative-evidence
+          path: |
+            target/assurance/**
+            build-logic/target/test-results/test/**
+            build-logic/target/reports/tests/test/**
+            jbsa/target/test-results/test/**
+            jbsa-cli/target/test-results/test/**
+            jbsa-conformance-tests/target/test-results/assurancePlanTest/**
+            jbsa-conformance-tests/target/reports/tests/assurancePlanTest/**
+            jbsa-conformance-tests/target/test-results/integrationTest/**
+            jbsa-conformance-tests/target/test-results/tes3ConformanceTest/**
+            jbsa-conformance-tests/target/test-results/bsaConformanceTest/**
+            jbsa-conformance-tests/target/test-results/ba2ConformanceTest/**
+          if-no-files-found: error
+
+  linux-portability:
+    name: Portable Linux compilation and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source without the Reference Snapshot submodule
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          submodules: false
+
+      - name: Set up the pinned Java 25 build
+        uses: ./.github/actions/setup-qualified-jdk
+        with:
+          platform: linux-x64
+
+      - name: Compile portable sources through the public gate
+        shell: pwsh
+        run: ./build/run-ci-gate.ps1 -Gate compile
+
+      - name: Check Java formatting through the public gate
+        shell: pwsh
+        run: ./build/run-ci-gate.ps1 -Gate formatting
+
+      - name: Run portable build-logic tests
+        shell: pwsh
+        run: ./gradlew -p build-logic test --no-daemon
+
+      - name: Run portable unit tests through the public gate
+        shell: pwsh
+        run: ./build/run-ci-gate.ps1 -Gate unit
+
+      - name: Run ordinary portable integration tests
+        shell: pwsh
+        run: ./gradlew --no-daemon :jbsa:integrationTest :jbsa-cli:integrationTest :jbsa-test-support:integrationTest :jbsa-conformance-tests:integrationTest :jbsa-benchmarks:integrationTest

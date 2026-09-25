@@ -1,0 +1,86 @@
+* text=auto
+
+.gitattributes text eol=lf
+.gitignore text eol=lf
+*.java text eol=lf
+*.kt text eol=lf
+*.md text eol=lf
+*.ps1 text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.gradle.kts text eol=lf
+*.lockfile text eol=lf
+gradle.properties text eol=lf
+gradle/libs.versions.toml text eol=lf
+gradle/wrapper/gradle-wrapper.properties text eol=lf
+gradle/wrapper/gradle-wrapper.jar -text
+gradlew text eol=lf
+gradlew.bat text eol=crlf
+
+# Release Qualification binds the checked-out bytes of these staged text inputs.
+LICENSE text eol=crlf
+NOTICE text eol=crlf
+compliance/licenses/LWJGL-3.4.3.txt text eol=crlf
+compliance/licenses/LZ4-1.10.0.txt text eol=crlf
+build/windows-runtime/launch-policy.json text eol=crlf
+
+tests/fixtures/synthetic/**/*.json text eol=lf
+# Hex fixture digests bind their LF terminator across Windows and Linux checkouts.
+tests/fixtures/synthetic/**/*.hex text eol=lf
+tests/fixtures/synthetic/**/*.ba2 -text
+tests/fixtures/synthetic/**/*.bin -text
+tests/fixtures/tes3/*.hex text eol=lf
+tests/fixtures/tes3/*.json text eol=lf
+tests/fixtures/tes4/*.hex text eol=lf
+tests/fixtures/tes4/*.json text eol=lf
+tests/fixtures/fo4-general/** text eol=lf
+tests/fixtures/bsa067/** text eol=lf
+docs/reviews/issue38-cv1/**/*.hex text eol=lf
+docs/reviews/issue38-cv1/**/*.json text eol=lf
+docs/reviews/issue38-cv1/*.json text eol=lf
+docs/reviews/issue39-cv1/** text eol=lf
+docs/reviews/issue40-cv1/** text eol=lf
+# Interface evidence binds exact bytes, including scripts and line endings.
+docs/reviews/issue41-interface/**/*.json text eol=lf
+docs/reviews/issue41-interface/**/*.hex text eol=lf
+docs/reviews/issue41-interface/**/*.ba2 -text
+docs/reviews/issue41-interface/**/*.bin -text
+docs/development/interface-candidate-api.txt text eol=lf
+docs/development/evidence/issue41-*.json text eol=lf
+build/*interface*.py text eol=lf
+build/*bsa*.py text eol=lf
+build/*ba2*.py text eol=lf
+build/*dds*.py text eol=lf
+
+tests/conformance/**/*.json text eol=lf
+
+build/performance/**/*.py text eol=lf
+build/performance-memory.cs text eol=lf
+tests/performance/**/*.json text eol=lf
+tests/performance/**/*.gz -text
+# Packaged codec profiles bind exact LF bytes through their checked-in digests.
+jbsa/src/main/resources/META-INF/jbsa-*-profile.* text eol=lf
+docs/reviews/issue43-lz4-runtime/** text eol=lf
+docs/reviews/issue43-lz4-runtime/**/*.ba2 -text
+docs/reviews/issue43-lz4-runtime/**/*.bin -text
+build/*lz4*.py text eol=lf
+
+# These fixtures and review inputs bind the authored bytes, including native JSON newlines.
+# Prevent checkout conversion from invalidating recorded digests or regeneration comparisons.
+# Retained CRLF is a line ending, while ordinary trailing-space checks still apply.
+build/bsa68-*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/fixtures/bsa068/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/fixtures/bsa069/*.json text eol=lf
+tests/fixtures/bsa069/*.hex text eol=lf
+tests/fixtures/starfield-dds/*.json text eol=lf
+tests/fixtures/starfield-dds/*.hex text eol=lf
+tests/fixtures/starfield-general/*.json text eol=lf
+tests/fixtures/starfield-general/*.hex text eol=lf
+docs/reviews/issue42-cv1/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/development/evidence/issue42-build.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/development/evidence/issue42-performance/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+
+# Maven-to-Gradle parity reports bind retained command and graph bytes by SHA-256.
+.scratch/migrate-maven-to-gradle/baseline/**/*.json -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol
+.scratch/migrate-maven-to-gradle/baseline/**/*.log -text whitespace=-blank-at-eol,-blank-at-eof,cr-at-eol

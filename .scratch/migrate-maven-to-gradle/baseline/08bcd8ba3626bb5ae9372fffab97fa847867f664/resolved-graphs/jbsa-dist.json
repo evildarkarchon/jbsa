@@ -1,0 +1,67 @@
+{
+  "groupId": "io.github.evildarkarchon",
+  "artifactId": "jbsa-dist",
+  "version": "0.1.0-SNAPSHOT",
+  "type": "pom",
+  "scope": "",
+  "classifier": "",
+  "optional": "false",
+  "children": [
+    {
+      "groupId": "io.github.evildarkarchon",
+      "artifactId": "jbsa",
+      "version": "0.1.0-SNAPSHOT",
+      "type": "jar",
+      "scope": "compile",
+      "classifier": "",
+      "optional": "false",
+      "children": [
+        {
+          "groupId": "org.lwjgl",
+          "artifactId": "lwjgl",
+          "version": "3.4.3",
+          "type": "jar",
+          "scope": "compile",
+          "classifier": "",
+          "optional": "false"
+        },
+        {
+          "groupId": "org.lwjgl",
+          "artifactId": "lwjgl-lz4",
+          "version": "3.4.3",
+          "type": "jar",
+          "scope": "compile",
+          "classifier": "",
+          "optional": "false"
+        },
+        {
+          "groupId": "org.lwjgl",
+          "artifactId": "lwjgl",
+          "version": "3.4.3",
+          "type": "jar",
+          "scope": "runtime",
+          "classifier": "natives-windows",
+          "optional": "false"
+        },
+        {
+          "groupId": "org.lwjgl",
+          "artifactId": "lwjgl-lz4",
+          "version": "3.4.3",
+          "type": "jar",
+          "scope": "runtime",
+          "classifier": "natives-windows",
+          "optional": "false"
+        }
+        ]
+    },
+    {
+      "groupId": "io.github.evildarkarchon",
+      "artifactId": "jbsa-cli",
+      "version": "0.1.0-SNAPSHOT",
+      "type": "jar",
+      "scope": "compile",
+      "classifier": "",
+      "optional": "false"
+    }
+    ]
+}

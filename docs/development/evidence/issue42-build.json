@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "command": "mvnw.cmd -B -ntp -C -Djbsa.bsa.local=true -Djbsa.bsa.performance=true clean verify",
+  "java_home": "D:/Programs/store/OpenJDK25U-jdk_x64_windows_hotspot_25.0.4.1_1",
+  "finished": "2026-09-10T21:43:34-07:00",
+  "totals": {
+    "failures": 0,
+    "skipped": 7,
+    "errors": 0,
+    "tests": 445
+  },
+  "artifacts": [
+    {
+      "sha256": "d1ad45deb336f960062f5156ac81e656e4a2883eeae81a9fe6a077d7b137dbdc",
+      "path": "jbsa/target/jbsa-0.1.0-SNAPSHOT.jar"
+    },
+    {
+      "sha256": "2e1fd6a3bcc5e8a805c1c969ea42d99a26dccd5373090dedeaf6959ece50507f",
+      "path": "jbsa-cli/target/jbsa-cli-0.1.0-SNAPSHOT.jar"
+    }
+  ],
+  "notes": [
+    "All seven reactor modules passed.",
+    "Optional skips concern other families/local qualification.",
+    "Bsa068ConformanceIT completed all four tests including the pinned local oracle.",
+    "BsaPerformanceCheckpointIT completed both versions.",
+    "Scenario adapters are additionally exercised by the separate untrusted CV1 proposal run."
+  ]
+}

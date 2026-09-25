@@ -1,0 +1,19 @@
+Development checkpoint; NOT release-wide performance qualification.
+One discarded warmup and three measured rounds; sequential public operations.
+Four 1 MiB entries alternate compressible and seeded-random bytes.
+Archive bytes derive output size from the measured pack; no duplicate size run.
+Extraction bytes are compared outside timing; 16 random 4 KiB prefix reads are timed.
+Heap is the sum of pool peaks; process peak is Windows PeakWorkingSet64 since JVM start.
+Process peak is sampled after each round and is cumulative, so later rows cannot decrease.
+Scratch is the enforced request ceiling; no observed scratch peak is claimed.
+native_loading_test=io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts
+native_loading_result=PASS
+zlib_provider=java.util.zip.Deflater/Inflater
+zlib_profile=RFC1950-level9-default-strategy-nowrap-false
+shared_codec_manifest_id=jbsa-lz4-v1
+shared_codec_manifest_sha256=f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e
+raw_lz4_profile_id=jbsa-starfield-general-lz4-v1
+raw_lz4_profile_sha256=7bf05e18f8baf343fd7ff3252b8544b6782c5940ec883bbf7e931254ba354bc9
+java.version=25.0.4.1
+os.name=Windows 11
+availableProcessors=16

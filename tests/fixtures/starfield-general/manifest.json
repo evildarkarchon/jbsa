@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "generated_on": "2026-09-14",
+  "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+  "fixtures": [
+    {
+      "id": "starfield-general-v2-zlib",
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "redistribution_class": "project-authored-redistributable",
+      "source": "independently authored JBSA-GNRL-001 through JBSA-GNRL-005 wire literal",
+      "input_sha256": "ca358758f6d27e6cf45272937977a748fd88391db679ceda7dc7bf1f005ee879",
+      "generation": {
+        "command": "[IO.File]::WriteAllBytes('starfield-general-v2-zlib.ba2',[Convert]::FromHexString((Get-Content -Raw 'starfield-general-v2-zlib.hex').Trim()))",
+        "procedure": "Write one canonical version-2 General BA2 record and RFC 1950 stored block for payload byte 07, then append the a/b.txt name table.",
+        "options": {
+          "archive_family": "sf-gnrl-v2",
+          "codec": "zlib",
+          "unknown_value_at_24": 1
+        }
+      },
+      "output": {
+        "path": "starfield-general-v2-zlib.hex",
+        "sha256": "eab239336d215fd1d0f82dd42edb1e68f85b9ba272dba6df7c9cb3ea8e1f347e",
+        "decoded_archive_sha256": "f19bc25cb551c02108879fbcdc4b7ee9469508b4a883c7423e034d0db023036f"
+      }
+    }
+  ]
+}

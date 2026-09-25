@@ -1,0 +1,28 @@
+Issue 45 focused qualification results; 2026-09-14 America/Los_Angeles.
+No Binary Conformance or release-wide Performance Qualification claim is made.
+
+assurance_capsule.result=PASS
+assurance_capsule.path=tests/assurance/issue45-local-capsule.json
+assurance_capsule.digest=sha256:6221f16574d39ce33fd974dd80d3f8204730aec99572b299fbc5d22aa8634e9b
+assurance_capsule.environment=local
+assurance_capsule.tier=affected
+assurance_capsule.scenario_count=30
+
+native_loading.result=PASS
+native_loading.selector=io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts
+native_loading.command=.\gradlew.bat :jbsa:test --tests io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest.qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts
+native_loading.runtime_profile=jbsa-lz4-v1
+native_loading.runtime_profile_sha256=f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e
+
+oracle.result=PASS
+oracle.selector=io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#pinnedLocalOracleCrossDecodesEveryStarfieldCodec
+oracle.command=.\gradlew.bat '-Djbsa.ba2.local=true' :jbsa-conformance-tests:ba2ConformanceTest --tests io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT.pinnedLocalOracleCrossDecodesEveryStarfieldCodec
+oracle.sha256=4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2
+oracle.directions=oracle-to-jbsa,jbsa-to-oracle
+oracle.codecs=stored,zlib,raw-lz4
+oracle.payloads=project-authored-deterministic
+
+performance.result=PASS
+performance.selector=io.github.evildarkarchon.jbsa.verification.StarfieldGeneralPerformanceCheckpointIT#recordsZlibAndRawLz4Checkpoint
+performance.command=.\gradlew.bat '-Djbsa.ba2.performance=true' :jbsa-conformance-tests:ba2ConformanceTest --tests io.github.evildarkarchon.jbsa.verification.StarfieldGeneralPerformanceCheckpointIT
+performance.evidence=docs/development/evidence/issue45-performance/measurements.csv,docs/development/evidence/issue45-performance/conditions.txt

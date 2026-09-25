@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nReview and stabilize the public interface after TES3, versioned BSA, General BA2, and DDS BA2 have exercised every major structural branch.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-LIB-*\n- JBSA-OPS-*\n- JBSA-IO-*\n\n## Acceptance\n\n- Audit public packages, names, immutable values, requests, results, errors, diagnostics, ownership, resource limits, progress, cancellation, and artifact semantics against all four representative consumers.\n- Run compiled CLI-like and embedded consumer contract tests and the deletion/depth tests for the deep library module.\n- Remove accidental public provider, storage, executor, buffer, pool, transaction, native, and third-party seams while preserving required caller control.\n- Resolve every interface finding with specification and requirement-registry updates plus compatibility tests.\n- Declare the Interface Candidate milestone; later breaking corrections require explicit evidence and gate reset, while 1.0 remains unfrozen.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:01Z",
+  "labels": [],
+  "milestone": null,
+  "number": 41,
+  "state": "OPEN",
+  "title": "Establish the Interface Candidate after representative Archive Families",
+  "updatedAt": "2026-09-03T06:54:01Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/41"
+}

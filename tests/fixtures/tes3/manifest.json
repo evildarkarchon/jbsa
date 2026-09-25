@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "corpus_id": "jbsa-tes3-wire-vectors-v1",
+  "creator": "JBSA project contributors",
+  "spdx_license": "CC0-1.0",
+  "redistribution_class": "project-authored-redistributable",
+  "generated_on": "2026-09-08",
+  "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+  "generator": {
+    "path": "build/generate-tes3-fixtures.ps1",
+    "version": "1",
+    "spdx_license": "Apache-2.0",
+    "sha256": "f10096e839d652fb731246bd4c6d1e56a6bb237d10777c7995933d5ce18d816a",
+    "command": "pwsh -NoProfile -File build/generate-tes3-fixtures.ps1 -OutputDirectory <empty-directory>"
+  },
+  "fixtures": [
+    {
+      "id": "tes3-stored",
+      "path": "tes3-stored.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 86,
+      "wire_sha256": "3ecbb6e1bd75c2c88f66869ec9f96bc4c3da1eab7ebd9b86bd7737af116bac4b",
+      "file_sha256": "5edc616e61b7319defa5d1c5b3dc47e3d4a62d0bac72b4089f909b54c9a03ea7",
+      "source": "independently authored JBSA-TES3-002/003 wire vector; one-field mutation stored",
+      "oracle_sha256": null
+    },
+    {
+      "id": "tes3-truncated-payload",
+      "path": "tes3-truncated-payload.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 85,
+      "wire_sha256": "65fc8f452a57cc7ab48fe24ac8aa43eea6916be3d5a49ca9a65d4a3092a5d1ad",
+      "file_sha256": "eb6c6a6ad34ed39eed5876f170868a1438beb18851673e48055f37787e74fd62",
+      "source": "independently authored JBSA-TES3-002/003 wire vector; one-field mutation truncated-payload",
+      "oracle_sha256": null
+    },
+    {
+      "id": "tes3-impossible-count",
+      "path": "tes3-impossible-count.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 86,
+      "wire_sha256": "f669ed66026e5b6b78120805ebf03c8bf70d23be9dd4d9783dec13508adb9386",
+      "file_sha256": "d2c214d661bde703ff05c117c26828e9b73ddd9915fb2396c887f71d53fcf046",
+      "source": "independently authored JBSA-TES3-002/003 wire vector; one-field mutation impossible-count",
+      "oracle_sha256": null
+    },
+    {
+      "id": "tes3-partial-overlap",
+      "path": "tes3-partial-overlap.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 86,
+      "wire_sha256": "2d5c20022d4029096274582f9395e6d069d193a6f34d89483a991a5f68fe2148",
+      "file_sha256": "11a62982c377ff554d1dfc0cb7bc30ba456b750dbf7860e850eef76e90c617ca",
+      "source": "independently authored JBSA-TES3-002/003 wire vector; one-field mutation partial-overlap",
+      "oracle_sha256": null
+    },
+    {
+      "id": "tes3-name-offset",
+      "path": "tes3-name-offset.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 86,
+      "wire_sha256": "fddb6a8d2291de63b1d5598c2c24a20191cad67c15e7f488bd8084bb4a7ad59b",
+      "file_sha256": "730c4c490b85dd9ec0829ad7f659aa31b12593439ac1040a3bb8efaa199134e4",
+      "source": "independently authored JBSA-TES3-002/003 wire vector; one-field mutation name-offset",
+      "oracle_sha256": null
+    },
+    {
+      "id": "tes3-stored-hash",
+      "path": "tes3-stored-hash.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 86,
+      "wire_sha256": "19609d22570c87c0e4d92f4fa14027f3ba4b231a391a5afacefd59a49236a8bf",
+      "file_sha256": "4a064a23199c48fa094bac8b1f60bfb5b662a31ade9f88a97712dcebd51b785f",
+      "source": "independently authored JBSA-TES3-002/003 wire vector; one-field mutation stored-hash",
+      "oracle_sha256": null
+    },
+    {
+      "id": "tes3-trailing-data",
+      "path": "tes3-trailing-data.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 87,
+      "wire_sha256": "c1616121493b71e02e803ae90fdb8a8c6d26770b7a6cb922a5a68cff882ad4c4",
+      "file_sha256": "07b9f6778637b76a5fb4676862b84f1e4516e34fc96c94288b829a6ac9fcea53",
+      "source": "independently authored JBSA-TES3-002/003 wire vector; one-field mutation trailing-data",
+      "oracle_sha256": null
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "corpus_id": "jbsa-bsa-069-wire-vectors-v1",
+  "creator": "JBSA project contributors",
+  "spdx_license": "CC0-1.0",
+  "redistribution_class": "project-authored-redistributable",
+  "source": "docs/spec/formats/versioned-bsa.md; independently authored SSE/AE vectors",
+  "generators": [
+    {
+      "path": "build/generate-bsa069-fixtures.py",
+      "sha256": "34a2adb726a5b6febe419b75c29607507c2051c4c611e1357729fafc652db1f8"
+    }
+  ],
+  "validators": [
+    {
+      "path": "build/validate-bsa-wire.py",
+      "sha256": "40ac1d2cfe16480a06c95d46ba38973aa527467684ce8bea1b715ac44f75eed7"
+    }
+  ],
+  "payloads": [
+    {
+      "name": "meshes/a.nif",
+      "size": 1024,
+      "sha256": "6ab72eeb9e77b07540897e0c8d6d23ec8eef0f8c3a47e1b3f4e93443d9536bed"
+    },
+    {
+      "name": "meshes/b.nif",
+      "size": 4,
+      "sha256": "3d1f57c984978ef98a18378c8166c1cb8ede02c03eeb6aee7e2f121dfeee3e56"
+    }
+  ],
+  "fixtures": [
+    {
+      "id": "skyrim-se-stored",
+      "path": "skyrim-se-stored.hex",
+      "game": "skyrim-se",
+      "cli_selector": "-sse",
+      "compression": "stored",
+      "embedded_names": false,
+      "wire_size": 1140,
+      "wire_sha256": "b0f7b20449eaac6b5eafbcc914c7aa72ba269fe9d3afdca09e9f87493ff84d85",
+      "file_sha256": "43edad95c2e69fe3e6433fa24499cb19252e9f58776560e20e69ab6a32f20fef",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-se-stored-embedded",
+      "path": "skyrim-se-stored-embedded.hex",
+      "game": "skyrim-se",
+      "cli_selector": "-sse",
+      "compression": "stored",
+      "embedded_names": true,
+      "wire_size": 1166,
+      "wire_sha256": "87f536ceb55e5e89466fd8e1ba749e694a6593d9ea93836ea46e267b4e9bdddf",
+      "file_sha256": "693de477ff8b022585a5635a6aec0a85e6c6520764225baf2725fc8a7a460f3c",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-se-lz4-frame",
+      "path": "skyrim-se-lz4-frame.hex",
+      "game": "skyrim-se",
+      "cli_selector": "-sse",
+      "compression": "lz4-frame",
+      "embedded_names": false,
+      "wire_size": 1178,
+      "wire_sha256": "45b03bc0c63e39f32a862db3fd57e41cde62c971fc383563cb1ddd4779c7632f",
+      "file_sha256": "e2b3954da3fed775c631156f794cf63d7a6fec4198ebfaa71868900334f12076",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-se-lz4-frame-embedded",
+      "path": "skyrim-se-lz4-frame-embedded.hex",
+      "game": "skyrim-se",
+      "cli_selector": "-sse",
+      "compression": "lz4-frame",
+      "embedded_names": true,
+      "wire_size": 1204,
+      "wire_sha256": "44e5c11b53a009df0238d894ed6e40876bc3ee0d9c01435dabb090a89f601799",
+      "file_sha256": "5efb0529ffa389b966f0ce2636c6a08036cd7cebcf11d8282bb81df52c3b5f88",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-se-mixed",
+      "path": "skyrim-se-mixed.hex",
+      "game": "skyrim-se",
+      "cli_selector": "-sse",
+      "compression": "mixed",
+      "embedded_names": false,
+      "wire_size": 1159,
+      "wire_sha256": "387b13f2f00ab90afc9e85813f41feae432198ef8170eb4bdd78f55e981a70e1",
+      "file_sha256": "213b5ee7c703ec805853e6e7cee6e433e2599a776fa9f9002866096250f601bb",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-se-mixed-embedded",
+      "path": "skyrim-se-mixed-embedded.hex",
+      "game": "skyrim-se",
+      "cli_selector": "-sse",
+      "compression": "mixed",
+      "embedded_names": true,
+      "wire_size": 1185,
+      "wire_sha256": "97abc1b229150d171786fb0040d6f72487003e201ad8aa3fea3dbc05163121bd",
+      "file_sha256": "522c221873633e3f90927c50e24d1e77be1d0e1d97d753646b86d5541cefed50",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-ae-stored",
+      "path": "skyrim-ae-stored.hex",
+      "game": "skyrim-ae",
+      "cli_selector": "-sse",
+      "compression": "stored",
+      "embedded_names": false,
+      "wire_size": 1140,
+      "wire_sha256": "b0f7b20449eaac6b5eafbcc914c7aa72ba269fe9d3afdca09e9f87493ff84d85",
+      "file_sha256": "43edad95c2e69fe3e6433fa24499cb19252e9f58776560e20e69ab6a32f20fef",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-ae-stored-embedded",
+      "path": "skyrim-ae-stored-embedded.hex",
+      "game": "skyrim-ae",
+      "cli_selector": "-sse",
+      "compression": "stored",
+      "embedded_names": true,
+      "wire_size": 1166,
+      "wire_sha256": "87f536ceb55e5e89466fd8e1ba749e694a6593d9ea93836ea46e267b4e9bdddf",
+      "file_sha256": "693de477ff8b022585a5635a6aec0a85e6c6520764225baf2725fc8a7a460f3c",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-ae-lz4-frame",
+      "path": "skyrim-ae-lz4-frame.hex",
+      "game": "skyrim-ae",
+      "cli_selector": "-sse",
+      "compression": "lz4-frame",
+      "embedded_names": false,
+      "wire_size": 1178,
+      "wire_sha256": "45b03bc0c63e39f32a862db3fd57e41cde62c971fc383563cb1ddd4779c7632f",
+      "file_sha256": "e2b3954da3fed775c631156f794cf63d7a6fec4198ebfaa71868900334f12076",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-ae-lz4-frame-embedded",
+      "path": "skyrim-ae-lz4-frame-embedded.hex",
+      "game": "skyrim-ae",
+      "cli_selector": "-sse",
+      "compression": "lz4-frame",
+      "embedded_names": true,
+      "wire_size": 1204,
+      "wire_sha256": "44e5c11b53a009df0238d894ed6e40876bc3ee0d9c01435dabb090a89f601799",
+      "file_sha256": "5efb0529ffa389b966f0ce2636c6a08036cd7cebcf11d8282bb81df52c3b5f88",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-ae-mixed",
+      "path": "skyrim-ae-mixed.hex",
+      "game": "skyrim-ae",
+      "cli_selector": "-sse",
+      "compression": "mixed",
+      "embedded_names": false,
+      "wire_size": 1159,
+      "wire_sha256": "387b13f2f00ab90afc9e85813f41feae432198ef8170eb4bdd78f55e981a70e1",
+      "file_sha256": "213b5ee7c703ec805853e6e7cee6e433e2599a776fa9f9002866096250f601bb",
+      "oracle_sha256": null
+    },
+    {
+      "id": "skyrim-ae-mixed-embedded",
+      "path": "skyrim-ae-mixed-embedded.hex",
+      "game": "skyrim-ae",
+      "cli_selector": "-sse",
+      "compression": "mixed",
+      "embedded_names": true,
+      "wire_size": 1185,
+      "wire_sha256": "97abc1b229150d171786fb0040d6f72487003e201ad8aa3fea3dbc05163121bd",
+      "file_sha256": "522c221873633e3f90927c50e24d1e77be1d0e1d97d753646b86d5541cefed50",
+      "oracle_sha256": null
+    }
+  ]
+}

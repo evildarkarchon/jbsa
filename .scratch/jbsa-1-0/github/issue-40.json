@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nExercise the highest-risk BA2 payload branch early by implementing Fallout 4 DX10 v1 chunking, zlib payloads, and canonical DDS reconstruction end to end.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-DX10-*\n- JBSA-DDS-*\n- JBSA-CLI-*\n- JBSA-CONF-*\n- JBSA-PERF-*\n\n## Acceptance\n\n- Implement BTDX/DX10 v1 metadata, texture formats, dimensions, arrays/cubemaps, mip partitioning, chunk records, zlib-per-chunk decoding, and writable output.\n- Implement the internal DDS envelope, canonical header reconstruction, input analysis, mip slicing, and output comparison without exposing DDS internals as a public provider seam.\n- Always produce valid compressed production chunks under the safe default and implement the specified immutable CLI compatibility deviation separately.\n- Pass bidirectional oracle differentials, DirectXTex or equivalent independent validation, malformed/boundary fixtures, reconstruction byte checks, and applicable CV1 cases.\n- Run and record targeted DDS chunking, reconstruction, compression, peak-memory, output-size, and random-access performance cases before merge.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-08T23:49:24Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:59Z",
+  "labels": [],
+  "milestone": null,
+  "number": 40,
+  "state": "CLOSED",
+  "title": "Implement the Fallout 4 DDS BA2 vertical slice",
+  "updatedAt": "2026-09-08T23:49:24Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/40"
+}

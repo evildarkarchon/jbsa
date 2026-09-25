@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nPublish the complete operator-facing and release evidence package for the frozen interface, selected provider profile, compatibility behavior, limitations, and safe operation.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-DIST-*\n- JBSA-LIC-*\n- JBSA-REL-*\n- JBSA-CODEC-*\n\n## Acceptance\n\n- Publish the digest-identified codec-profile manifest with exact providers, parameters, dispatch rules, fallback, native configuration, and requalification identity.\n- Complete library and CLI usage, native-access, resource-limit, progress/cancellation, partial-output, residual-cleanup, profile/deviation, and troubleshooting documentation.\n- Publish dependency/native notices, fixture provenance, SBOM/provenance procedures, license obligations, checksums, and release-evidence locations.\n- Document oracle attestation limits, unsupported operations, random-access meaning, consistency rather than snapshot semantics, atomicity/durability limits, and cancellation caveats.\n- Verify every public claim and example against requirement identifiers and current Automated Conformance evidence without overstating Binary or Release Qualification.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:31Z",
+  "labels": [],
+  "milestone": null,
+  "number": 54,
+  "state": "OPEN",
+  "title": "Complete release provenance, notices, and operator documentation",
+  "updatedAt": "2026-09-03T06:54:31Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/54"
+}

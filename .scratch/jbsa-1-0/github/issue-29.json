@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nMake independent authorship, fixture rights, dependency/native provenance, notices, SBOM generation, and release-input inspection enforceable from the first implementation commit.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-LIC-*\n- JBSA-DIST-*\n\n## Acceptance\n\n- Add Apache-2.0 LICENSE and NOTICE materials plus the CC0-1.0 synthetic-fixture policy and required SPDX/REUSE metadata.\n- Document and enforce the prohibition on copied, mechanically translated, or structure-preserving adaptation from the Reference Snapshot.\n- Create maintained dependency and native-byte inventories with license, source, version, checksum, notice, and redistribution evidence.\n- Generate an SBOM and required notices and prevent proprietary/local fixtures, unapproved native payloads, and ambiguous artifacts from entering release inputs.\n- Document the DCO path for external contributions and make unclear rights, branding, EULA, patent, or provenance evidence a stop-before-merge or release condition.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-04T00:52:30Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:32Z",
+  "labels": [],
+  "milestone": null,
+  "number": 29,
+  "state": "CLOSED",
+  "title": "Establish licensing and dependency provenance gates",
+  "updatedAt": "2026-09-04T00:52:30Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/29"
+}

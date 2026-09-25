@@ -1,0 +1,3 @@
+Exception in thread "main" java.lang.NullPointerException: Cannot invoke "java.lang.module.ModuleDescriptor.rawVersion()" because the return value of "java.lang.Module.getDescriptor()" is null
+	at io.github.evildarkarchon.jbsa.cli.Main.execute(Main.java:69)
+	at io.github.evildarkarchon.jbsa.cli.Main.main(Main.java:48)

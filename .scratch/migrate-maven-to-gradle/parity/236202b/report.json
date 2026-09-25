@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "236202b8203d35340fe364c669cf18be07a054e6",
+  "candidateVersion": "0.1.0-SNAPSHOT",
+  "qualificationJdk": {
+    "implementorVersion": "Temurin-25.0.4+7",
+    "distributionSha256": "7caab7db43bf4b94a2e6252c699e70d90084f9aa7c943cd3414761fd540937ae"
+  },
+  "rawEvidence": {
+    "location": "target/qualification-evidence/236202b",
+    "committed": false,
+    "mavenBaselineSha256": "e15ad9ee248a04ead4c479d94a5123f34710b88d337835c0b783744af02b8768",
+    "mavenSnapshotSha256": "2837a42c686e51e351cf210f24b166a8a0a8c8b8e0701eb337c63dc756609cb7",
+    "gradleSnapshotSha256": "5c1876505a3f52705a2057b55cd4a28b4997f12fa61774cdef97106bf75e2d02",
+    "rawParityReportSha256": "32b9272621a257ead0e6224ddb362f05279cd7939419b90cefb6d409e308fc03",
+    "completedLogSha256": {
+      "gradle-version.log": "5a21b44c47f29e7ccfad901b82ba06c2ca6ad961b7903e33bebbe9786b7ab446",
+      "artifact-inspector-tests.log": "c86e7dcad863625f4dda7d6e9e0ed01c9cdf9476e4f05b0e0c5df9e591aecd6c",
+      "prime-verified-cache.log": "ecc71ac6085435cf3d0e6b2ae9bc5fda10794d0f6987c6e0699a9ddc1a155439",
+      "prime-build-logic-cache.log": "163c4ddc2827317f0f01c436cde91d6d39652b31846bfca518b8d61d3d996ea9",
+      "verified-cache-offline-build.log": "03c2e1232f55cb8cc33950e8a0e529b7ce9e9e4db2347b101b24490ef3ae8de3",
+      "verified-cache-offline-build-logic.log": "8bc62ec5ae880b0df2b38a8261ef35a0513802eb27056b067502982f19f25c2c",
+      "inspect-gradle-artifacts.log": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "compare-normalized-artifacts.log": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "gradle-reproducibility.log": "47c0af14eba0011de608c6d9e5a887eb8bf6336d505fad124fc9630ba5e20e64",
+      "strict-verification-negative.log": "853d1e7927a3958438c22e43d6cd4b825659039d539fb088104e03e8099df434",
+      "configuration-cache-first.log": "6210313e95c34fee98f183a6f1e9db022be70fe6e005e4ccfe930408b4168801",
+      "configuration-cache-second.log": "49c6c83216a7782373ce335eaf0082253bb8c7e770d6808e6dc447fdcb44ff92",
+      "configuration-cache-incompatible.log": "951e9e915a52284b1511a821700b78d9744514cbb6a9c252b8567baf6c6f66a8",
+      "gate-compile.log": "7e87ecc60ce0321c2f1ddd702abaeccafc07dfbddac89ba3944af26d6426f447",
+      "gate-unit.log": "72f3bbf4e05c0cdf98a0a4c7d9f2abc49b4939c197508a38d432df4cf865eb43",
+      "gate-architecture.log": "6fdd78e423f68fe15486c3b0fe7050cc9789129ec07d1bf9e1e4b623772c4ab1",
+      "gate-formatting.log": "c140b6d82830541b617565766d42cfa8ff43fc97c306f39d19a3c19419a33d89",
+      "gate-policy.log": "40fd143b9736bd30b5a4db195a83a32becdbb7d2d6898d9af007cd0c3591af29",
+      "gate-conformance.log": "92efa138198031a989640563a47984088b474fa0764007ff79c7898cdc2b3b26",
+      "gate-conformance-observation.log": "aef4b7001bca13efbd3d8b39bfaed309579af110e2d8f021897987299c649e88",
+      "restage-cli-inputs.log": "d64e0c74cc4e2f14dc78b5e7fc50941a8c89b0f3e9ad77cfe754f0a6ee2995e2",
+      "cli-module-version.log": "c7cd014d10cc1e2e72ce566de57047756c6e0a10f916a1b8c591af4444ff3e6e",
+      "cli-classpath-version.log": "bf17bd01872ca87b3c679407b4b50a3995d2a9f6ca6a4b3036c46a88e2715928",
+      "timing-clean.log": "ec5bfd3cffe6afeeb0bde5bc7344ab8f1bfeab44201a648a28e251f0e2dee78c"
+    }
+  },
+  "parity": {
+    "unexplainedDifferenceCount": 0,
+    "rawDifferenceCount": 423,
+    "archiveEnvelopeDifferencesIgnored": true,
+    "differenceCategories": {
+      "javadocTaskPresentation": 360,
+      "mavenBuildProvenance": 25,
+      "manifestToolProvenance": 10,
+      "optionalPackageInfoBytecode": 4,
+      "moduleAttributeEncoding": 4,
+      "serviceFileSerialization": 2,
+      "derivedStagingBytes": 18
+    },
+    "matchingNormativeSeams": [
+      "artifact entry payloads outside assessed build-tool representations",
+      "JPMS identity and package set",
+      "public API signatures",
+      "source contents",
+      "normalized consumer POM",
+      "normalized production SBOM and SHA-256 identities",
+      "runtime dependency filenames and SHA-256 identities",
+      "notices",
+      "staging names and manifest semantics",
+      "CLI behavior",
+      "gate outcomes with Maven failures kept non-normative"
+    ]
+  },
+  "reproducibility": {
+    "matches": true,
+    "artifacts": {
+      "jbsa/target/publications/library/pom-default.xml": "30f84c26f373990e2af545f5b3df6bf2d8b21d9cddb32eb1fe9143ae5cbffb8b",
+      "jbsa/target/libs/jbsa-0.1.0-SNAPSHOT.jar": "e14394380bf90e6d3854c72b4d6b2e2899aca150593a49bb1f67e515c9008735",
+      "jbsa/target/libs/jbsa-0.1.0-SNAPSHOT-sources.jar": "e55f377ea370b0a186d3e4d7764d8f9a86122655f5cc2a24493792239db95bc2",
+      "jbsa/target/libs/jbsa-0.1.0-SNAPSHOT-javadoc.jar": "3f2c330134a73043f6a8593a5cf6caf6c1d4c78e1124894dde91dedd80dda43d",
+      "jbsa-cli/target/libs/jbsa-cli-0.1.0-SNAPSHOT.jar": "5e9eaa3a7f355cd6a4bbb77457b1e1d237248df525cec11e992fca3de8594b4c"
+    }
+  },
+  "offline": {
+    "strictVerification": true,
+    "productBuildPassed": true,
+    "includedBuildPassed": true,
+    "productBuildDuration": "3m49s",
+    "includedBuildDuration": "51s",
+    "strictVerificationFailureObserved": true,
+    "lockfilesByteConsistent": true,
+    "lockfileCount": 10
+  },
+  "configurationCache": {
+    "enabledByDefault": false,
+    "compatibleFirstRunStored": true,
+    "compatibleSecondRunReused": true,
+    "incompatibleTasksRejected": true
+  },
+  "gates": {
+    "compile": "PASS",
+    "unit": "PASS",
+    "architecture": "PASS",
+    "formatting": "PASS",
+    "policy": "PASS (Maven observation FAIL; Gradle normative improvement)",
+    "conformance": "PASS",
+    "conformanceObservation": "BLOCKED (matches Maven; no qualification claim)"
+  },
+  "timings": {
+    "machine": {
+      "operatingSystem": "Microsoft Windows NT 10.0.26200.0",
+      "machineName": "ENTERPRISE-J",
+      "processorCount": 8
+    },
+    "commandScope": "offline --rerun-tasks library publication, thin CLI, standalone benchmark, and formatting; no tests",
+    "coldOutputSeconds": 27.112,
+    "warmOutputSeconds": 26.764,
+    "speedClaim": null
+  },
+  "completion": {
+    "allRequiredTestPhasesPassed": true,
+    "canonicalReportCompleted": true,
+    "finalizationMode": "operator-directed composite qualification",
+    "note": "The operator stopped the harness after the final policy run and before duplicate policy-bearing timing runs. This canonical compact report binds every completed phase log and the replacement two-run non-test timing pair from the same revision, JDK, machine, worktree, and verified cache."
+  }
+}

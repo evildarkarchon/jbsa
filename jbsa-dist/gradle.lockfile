@@ -1,0 +1,7 @@
+# This is a Gradle generated file for dependency locking.
+# Manual edits can break the build and are not advised.
+# This file is expected to be part of source control.
+# To regenerate this file, run: ./gradlew :jbsa-dist:dependencies --write-locks
+org.lwjgl:lwjgl-lz4:3.4.3=runtimeInputs
+org.lwjgl:lwjgl:3.4.3=runtimeInputs
+empty=

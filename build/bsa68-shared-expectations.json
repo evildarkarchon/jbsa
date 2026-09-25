@@ -1,0 +1,202 @@
+{
+  "input-nested": {
+    "scenario": "input-nested",
+    "checks": {
+      "names": [
+        "meshes\\actors\\hero\\a.nif",
+        "textures\\actors\\hero\\a.dds"
+      ],
+      "entry_count": 2,
+      "payload_sizes": [
+        3,
+        4
+      ]
+    }
+  },
+  "names-ascii-lowercase": {
+    "scenario": "names-ascii-lowercase",
+    "checks": {
+      "names": [
+        "meshes\\foo.nif",
+        "textures\\bar.dds"
+      ],
+      "wire_names": [
+        "meshes\\foo.nif",
+        "textures\\bar.dds"
+      ],
+      "entry_count": 2
+    }
+  },
+  "names-case-and-separators": {
+    "scenario": "names-case-and-separators",
+    "checks": {
+      "names": [
+        "meshes\\thing.nif"
+      ],
+      "entry_count": 1,
+      "surviving_payload_hex": "0908"
+    }
+  },
+  "names-nonascii-lowercase": {
+    "scenario": "names-nonascii-lowercase",
+    "checks": {
+      "rejected_count": 4,
+      "failure_kinds": [
+        "POLICY",
+        "POLICY",
+        "POLICY",
+        "POLICY"
+      ],
+      "payload_factory_calls": 0,
+      "output_count": 0
+    }
+  },
+  "names-normalized-rejections": {
+    "scenario": "names-normalized-rejections",
+    "checks": {
+      "rejected_count": 8,
+      "failure_kinds": [
+        "POLICY",
+        "POLICY",
+        "POLICY",
+        "POLICY",
+        "POLICY",
+        "POLICY",
+        "POLICY",
+        "POLICY"
+      ],
+      "payload_factory_calls": 0,
+      "output_count": 0
+    }
+  },
+  "names-unmappable-encode": {
+    "scenario": "names-unmappable-encode",
+    "checks": {
+      "rejected_count": 2,
+      "failure_kinds": [
+        "POLICY",
+        "POLICY"
+      ],
+      "payload_factory_calls": 0,
+      "output_count": 0
+    }
+  },
+  "names-undecodable-components": {
+    "scenario": "names-undecodable-components",
+    "checks": {
+      "components": [
+        "folder",
+        "basename"
+      ],
+      "retained_wire_hex": [
+        "816573686573",
+        "812e6e6966"
+      ],
+      "identities_present": [
+        false,
+        false
+      ],
+      "payload_sizes": [
+        1024,
+        1024
+      ],
+      "diagnostic_identifier": "archive-name.undecodable-wire-bytes",
+      "display_names": [
+        "__jbsa_hash__\\f00000000-322f3a9a6d066573\\e00000000-92cd45fd61018061",
+        "__jbsa_hash__\\f00000000-322f3a9a6d066573\\e00000000-92cd45fd61018061"
+      ],
+      "diagnostic_ordinals": [
+        0,
+        0
+      ],
+      "diagnostic_offsets": [
+        53,
+        92
+      ],
+      "diagnostic_lengths": [
+        6,
+        5
+      ]
+    }
+  },
+  "source-sharing": {
+    "scenario": "source-sharing",
+    "checks": {
+      "entry_count": 3,
+      "equal_payloads_share_offset": true,
+      "different_payload_offset_distinct": true,
+      "unshared_unique_offsets": 3,
+      "saved_bytes": 32,
+      "payload_sizes": [
+        32,
+        32,
+        32
+      ]
+    }
+  },
+  "compression-boundaries": {
+    "scenario": "compression-boundaries",
+    "checks": {
+      "input_sizes": [
+        0,
+        1,
+        65535,
+        65536
+      ],
+      "decoded_sizes": [
+        0,
+        1,
+        65535,
+        65536
+      ],
+      "compressed": [
+        true,
+        true,
+        true,
+        true
+      ]
+    }
+  },
+  "names-wire-encodings": {
+    "scenario": "names-wire-encodings",
+    "checks": {
+      "default_encoding": "windows-1252",
+      "wire_hex": [
+        "636166e92e747874",
+        "8365835883672e747874"
+      ],
+      "decoded_names": [
+        "data\\café.txt",
+        "data\\ƒeƒXƒg.txt"
+      ],
+      "hash_mismatch_warnings": [
+        false,
+        false
+      ],
+      "windows932_profile_decode_claimed": false
+    }
+  },
+  "source-splitting": {
+    "scenario": "source-splitting",
+    "checks": {
+      "original_recipe_failure": "POLICY",
+      "original_factory_calls": 0,
+      "logical_bytes": 4563402752,
+      "part_count": 3,
+      "part_entry_counts": [
+        2,
+        1,
+        1
+      ],
+      "entry_sizes": [
+        805306368,
+        805306368,
+        805306368,
+        2147483648
+      ],
+      "payload_digests_match": true,
+      "scratch_files_after_pack": 0,
+      "bulk_files_after_cleanup": 0
+    }
+  }
+}

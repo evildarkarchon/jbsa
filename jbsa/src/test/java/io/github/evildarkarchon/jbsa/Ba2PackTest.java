@@ -1,0 +1,486 @@
+package io.github.evildarkarchon.jbsa;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.ByteArrayInputStream;
+import java.nio.*;
+import java.nio.channels.Channels;
+import java.nio.file.*;
+import java.util.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.io.TempDir;
+
+/** Canonical General BA2 output observed through the public packing boundary. */
+@EnabledOnOs(OS.WINDOWS)
+class Ba2PackTest {
+  @TempDir Path temporary;
+
+  /** Starfield emits v3/method-3 only for raw LZ4 and otherwise emits the v2 extra header. */
+  @Test
+  void selectsStarfieldWireVersionFromCompressionAndRoundTrips() throws Exception {
+    byte[] payload =
+        "starfield-general".repeat(100).getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+    for (PackOptions.Compression compression :
+        List.of(
+            PackOptions.Compression.STORED,
+            PackOptions.Compression.ZLIB,
+            PackOptions.Compression.LZ4_RAW)) {
+      Path target = temporary.resolve(compression.name().toLowerCase(Locale.ROOT) + ".ba2");
+      BethesdaArchives.standard()
+          .pack(
+              starfieldRequest(
+                  target, options(compression, false, 0), generated("Data/Entry.bin", payload)),
+              OperationControl.standard());
+      ByteBuffer wire = ByteBuffer.wrap(Files.readAllBytes(target)).order(ByteOrder.LITTLE_ENDIAN);
+      int expectedVersion = compression == PackOptions.Compression.LZ4_RAW ? 3 : 2;
+      assertEquals(expectedVersion, wire.getInt(4));
+      assertEquals(1, wire.getLong(24));
+      if (expectedVersion == 3) assertEquals(3, wire.getInt(32));
+      try (OpenArchive archive = BethesdaArchives.standard().open(target, OpenOptions.standard());
+          EntryContent content = archive.entry(0).openContent()) {
+        assertEquals(ArchiveFamily.STARFIELD_GENERAL_BA2, archive.inspection().metadata().family());
+        assertArrayEquals(payload, Channels.newInputStream(content).readAllBytes());
+      }
+    }
+  }
+
+  /**
+   * Foreign or conflicting Starfield codecs fail before payload factories or destination effects.
+   */
+  @Test
+  void rejectsInvalidStarfieldCodecCombinationsBeforePayloads() throws Exception {
+    List<PackOptions> invalid =
+        List.of(
+            options(PackOptions.Compression.LZ4_FRAME, false, 0),
+            new PackOptions(
+                List.of(),
+                PackOptions.Compression.LZ4_RAW,
+                false,
+                new PackOptions.Splitting.UpToBytes(0),
+                FlagSelection.AUTOMATIC,
+                FlagSelection.AUTOMATIC,
+                Map.of(
+                    new NormalizedNameIdentity("data\\entry.bin"), PackOptions.Compression.ZLIB)));
+    for (int index = 0; index < invalid.size(); index++) {
+      PackOptions selected = invalid.get(index);
+      var opens = new java.util.concurrent.atomic.AtomicInteger();
+      PackSource source =
+          new PackSource.GeneratedEntry(
+              "Data/Entry.bin",
+              1,
+              () -> {
+                opens.incrementAndGet();
+                return Channels.newChannel(new ByteArrayInputStream(new byte[] {7}));
+              });
+      Path target = temporary.resolve("invalid-starfield-" + index + ".ba2");
+      ArchiveException failure =
+          assertThrows(
+              ArchiveException.class,
+              () ->
+                  BethesdaArchives.standard()
+                      .pack(
+                          starfieldRequest(target, selected, source), OperationControl.standard()));
+      assertEquals(FailureKind.UNSUPPORTED, failure.kind());
+      assertEquals(0, opens.get());
+      assertFalse(Files.exists(target));
+    }
+  }
+
+  /** Fallout 4 v7/v8 encode requests fail before opening sources or touching destinations. */
+  @Test
+  void rejectsFallout4VersionsSevenAndEightBeforeEffects() throws Exception {
+    int ordinal = 0;
+    for (int version : new int[] {7, 8}) {
+      for (ArchiveFamily family :
+          new ArchiveFamily[] {ArchiveFamily.FO4_GENERAL_BA2, ArchiveFamily.FO4_DDS_BA2}) {
+        Ba2Subtype subtype =
+            family == ArchiveFamily.FO4_GENERAL_BA2 ? Ba2Subtype.GNRL : Ba2Subtype.DX10;
+        var opens = new java.util.concurrent.atomic.AtomicInteger();
+        PackSource source =
+            new PackSource.GeneratedEntry(
+                subtype.equals(Ba2Subtype.GNRL) ? "Data/Entry.bin" : "Textures/Entry.dds",
+                1,
+                () -> {
+                  opens.incrementAndGet();
+                  return Channels.newChannel(new ByteArrayInputStream(new byte[] {7}));
+                });
+        Path target = temporary.resolve("unsupported-v" + version + "-" + ordinal++ + ".ba2");
+        PackRequest request =
+            PackRequest.standard(
+                target,
+                family,
+                new ArchiveEncoding(
+                    Optional.of(new WireVersion(version)),
+                    Optional.of(subtype),
+                    OptionalLong.empty()),
+                List.of(source),
+                subtype.equals(Ba2Subtype.DX10) ? Optional.of(DdsTarget.PC) : Optional.empty());
+        ArchiveException failure =
+            assertThrows(
+                ArchiveException.class,
+                () -> BethesdaArchives.standard().pack(request, OperationControl.standard()));
+        assertEquals(FailureKind.UNSUPPORTED, failure.kind());
+        assertEquals("archive.unsupported-encoding", failure.getMessage());
+        assertEquals(0, opens.get());
+        assertFalse(Files.exists(target));
+      }
+    }
+  }
+
+  /** Canonical metadata and payload order retain the caller's spelling and insertion order. */
+  @Test
+  void writesStoredRecordsInLogicalOrderWithCasePreserved() throws Exception {
+    Path target = temporary.resolve("stored.ba2");
+    BethesdaArchives.standard()
+        .pack(
+            request(
+                target,
+                options(PackOptions.Compression.STORED, false, 0),
+                generated("Textures/Z.DDS", new byte[] {1, 2, 3}),
+                generated("Meshes/A.NIF", new byte[] {4})),
+            OperationControl.standard());
+    ByteBuffer wire = ByteBuffer.wrap(Files.readAllBytes(target)).order(ByteOrder.LITTLE_ENDIAN);
+    assertEquals(0x58445442, wire.getInt(0));
+    assertEquals(1, wire.getInt(4));
+    assertEquals(0x4c524e47, wire.getInt(8));
+    assertEquals(2, wire.getInt(12));
+    assertEquals(100, wire.getLong(16));
+    assertEquals(96, wire.getLong(40));
+    assertEquals(0, wire.getInt(48));
+    assertEquals(3, wire.getInt(52));
+    assertEquals(0xbaadf00d, wire.getInt(56));
+    assertEquals(1, wire.get(37));
+    assertEquals(16, wire.getShort(38));
+    assertArrayEquals(new byte[] {1, 2, 3, 4}, Arrays.copyOfRange(wire.array(), 96, 100));
+    assertEquals(
+        "Textures/Z.DDS",
+        new String(wire.array(), 102, 14, java.nio.charset.StandardCharsets.US_ASCII));
+  }
+
+  /** Equal decoded bytes share the earliest representation even across entry codec overrides. */
+  @Test
+  void sharesEarliestCompressedRepresentationAndRoundTripsAnExpandingPayload() throws Exception {
+    Path target = temporary.resolve("shared.ba2");
+    var options =
+        new PackOptions(
+            List.of(),
+            PackOptions.Compression.ZLIB,
+            true,
+            new PackOptions.Splitting.FamilyDefault(),
+            FlagSelection.AUTOMATIC,
+            FlagSelection.AUTOMATIC,
+            Map.of(new NormalizedNameIdentity("data\\second.bin"), PackOptions.Compression.STORED));
+    BethesdaArchives.standard()
+        .pack(
+            request(
+                target,
+                options,
+                generated("Data/First.bin", new byte[] {42}),
+                generated("Data/Second.bin", new byte[] {42})),
+            OperationControl.standard());
+    ByteBuffer wire = ByteBuffer.wrap(Files.readAllBytes(target)).order(ByteOrder.LITTLE_ENDIAN);
+    assertTrue(wire.getInt(48) > 1);
+    assertEquals(wire.getLong(40), wire.getLong(76));
+    assertEquals(wire.getInt(48), wire.getInt(84));
+    try (var archive = BethesdaArchives.standard().open(target, OpenOptions.standard())) {
+      for (int i = 0; i < 2; i++) {
+        try (var channel = archive.entry(i).openContent()) {
+          assertArrayEquals(new byte[] {42}, Channels.newInputStream(channel).readAllBytes());
+        }
+      }
+    }
+  }
+
+  /** Split siblings remain independent and overlays retain the first logical insertion slot. */
+  @Test
+  void overlaysArchiveSourcesThenSplitsWholeEntries() throws Exception {
+    Path source = temporary.resolve("source.ba2"), target = temporary.resolve("parts.ba2");
+    BethesdaArchives.standard()
+        .pack(
+            request(
+                source,
+                options(PackOptions.Compression.STORED, false, 0),
+                generated("Data/A.bin", new byte[] {1}),
+                generated("Data/B.bin", new byte[] {2})),
+            OperationControl.standard());
+    var report =
+        BethesdaArchives.standard()
+            .pack(
+                request(
+                    target,
+                    options(PackOptions.Compression.ZLIB, true, 1),
+                    new PackSource.DetectedPath(source),
+                    generated("DATA/A.BIN", new byte[] {9})),
+                OperationControl.standard());
+    assertEquals(2, report.archiveParts().size());
+    try (var archive = BethesdaArchives.standard().open(target, OpenOptions.standard());
+        var content = archive.entry(0).openContent()) {
+      assertEquals("DATA\\A.BIN", archive.entry(0).metadata().displayName());
+      assertArrayEquals(new byte[] {9}, Channels.newInputStream(content).readAllBytes());
+    }
+    try (var archive =
+        BethesdaArchives.standard()
+            .open(report.archiveParts().get(1).path(), OpenOptions.standard())) {
+      assertEquals("Data\\B.bin", archive.entry(0).metadata().displayName());
+    }
+  }
+
+  /** Invalid canonical names and unresolved hash-only sources fail before destination effects. */
+  @Test
+  void rejectsInvalidNamesWithoutOpeningGeneratedPayloads() throws Exception {
+    for (String name :
+        List.of("root.bin", "Data/caf\u00e9.bin", "../Data/a.bin", "Data/" + "a".repeat(65536))) {
+      var opens = new java.util.concurrent.atomic.AtomicInteger();
+      Path target = temporary.resolve("invalid.ba2");
+      var source =
+          new PackSource.GeneratedEntry(
+              name,
+              0,
+              () -> {
+                opens.incrementAndGet();
+                return Channels.newChannel(new ByteArrayInputStream(new byte[0]));
+              });
+      assertThrows(
+          ArchiveException.class,
+          () ->
+              BethesdaArchives.standard()
+                  .pack(
+                      request(target, options(PackOptions.Compression.STORED, false, 0), source),
+                      OperationControl.standard()));
+      assertEquals(0, opens.get());
+      assertFalse(Files.exists(target));
+    }
+    Path source = temporary.resolve("nameless.ba2"), target = temporary.resolve("repacked.ba2");
+    BethesdaArchives.standard()
+        .pack(
+            request(
+                source,
+                options(PackOptions.Compression.STORED, false, 0),
+                generated("Data/a.bin", new byte[] {1})),
+            OperationControl.standard());
+    byte[] bytes = Files.readAllBytes(source);
+    ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).putLong(16, 0);
+    Files.write(source, bytes);
+    assertThrows(
+        ArchiveException.class,
+        () ->
+            BethesdaArchives.standard()
+                .pack(
+                    request(
+                        target,
+                        options(PackOptions.Compression.STORED, false, 0),
+                        new PackSource.DetectedPath(source)),
+                    OperationControl.standard()));
+    assertFalse(Files.exists(target));
+  }
+
+  /** Every part independently preserves a selected zlib encoding for even an empty entry. */
+  @Test
+  void writesEmptyCompressedPayloadAndStoredFirstSharing() throws Exception {
+    Path target = temporary.resolve("empty.ba2");
+    var selected =
+        new PackOptions(
+            List.of(),
+            PackOptions.Compression.ZLIB,
+            true,
+            new PackOptions.Splitting.UpToBytes(0),
+            FlagSelection.AUTOMATIC,
+            FlagSelection.AUTOMATIC,
+            Map.of(new NormalizedNameIdentity("data\\stored.bin"), PackOptions.Compression.STORED));
+    BethesdaArchives.standard()
+        .pack(
+            request(
+                target,
+                selected,
+                generated("Data/Empty.bin", new byte[0]),
+                generated("Data/Stored.bin", new byte[] {7}),
+                generated("Data/Equal.bin", new byte[] {7})),
+            OperationControl.standard());
+    ByteBuffer wire = ByteBuffer.wrap(Files.readAllBytes(target)).order(ByteOrder.LITTLE_ENDIAN);
+    assertTrue(wire.getInt(48) > 0);
+    assertEquals(0, wire.getInt(52));
+    assertEquals(0, wire.getInt(84));
+    assertEquals(0, wire.getInt(120));
+    assertEquals(wire.getLong(76), wire.getLong(112));
+    try (var archive = BethesdaArchives.standard().open(target, OpenOptions.standard());
+        var content = archive.entry(0).openContent()) {
+      assertEquals(-1, content.read(ByteBuffer.allocate(1)));
+    }
+  }
+
+  /** BSA-only flag fields cannot be silently discarded by a General BA2 writer. */
+  @Test
+  void rejectsFlagsWithoutOpeningPayloads() throws Exception {
+    for (boolean archiveFlag : List.of(true, false)) {
+      var opens = new java.util.concurrent.atomic.AtomicInteger();
+      Path target = temporary.resolve("flags.ba2");
+      var selected =
+          new PackOptions(
+              List.of(),
+              PackOptions.Compression.STORED,
+              false,
+              new PackOptions.Splitting.FamilyDefault(),
+              archiveFlag ? new FlagSelection.Explicit(0) : FlagSelection.AUTOMATIC,
+              archiveFlag ? FlagSelection.AUTOMATIC : new FlagSelection.Explicit(0));
+      var source =
+          new PackSource.GeneratedEntry(
+              "Data/a.bin",
+              0,
+              () -> {
+                opens.incrementAndGet();
+                return Channels.newChannel(new ByteArrayInputStream(new byte[0]));
+              });
+      assertThrows(
+          ArchiveException.class,
+          () ->
+              BethesdaArchives.standard()
+                  .pack(request(target, selected, source), OperationControl.standard()));
+      assertEquals(0, opens.get());
+      assertFalse(Files.exists(target));
+    }
+  }
+
+  /**
+   * ACP932's ASCII-byte aliases qualify by encoded bytes and cannot create duplicate wire names.
+   */
+  @Test
+  void qualifiesActiveAnsiEncodedBytesBeforePayloadAccess() throws Throwable {
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        System.getProperty("os.name").startsWith("Windows"));
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        Ba2PackTest.class.getModule().isNativeAccessEnabled());
+    try (var arena = java.lang.foreign.Arena.ofConfined()) {
+      var lookup = java.lang.foreign.SymbolLookup.libraryLookup("kernel32", arena);
+      var function =
+          java.lang.foreign.Linker.nativeLinker()
+              .downcallHandle(
+                  lookup.find("GetACP").orElseThrow(),
+                  java.lang.foreign.FunctionDescriptor.of(java.lang.foreign.ValueLayout.JAVA_INT));
+      org.junit.jupiter.api.Assumptions.assumeTrue(
+          (int) function.invokeExact() == 932,
+          "Requires the real Windows ACP932 environment; the test never changes the machine ACP");
+    }
+    Path target = temporary.resolve("ansi.ba2");
+    var selected = options(PackOptions.Compression.STORED, false, 0);
+    BethesdaArchives.standard()
+        .pack(
+            withActiveAnsi(request(target, selected, generated("Data/\u203e.bin", new byte[] {3}))),
+            OperationControl.standard());
+    try (var archive = BethesdaArchives.standard().open(target, OpenOptions.standard())) {
+      assertEquals("Data\\~.bin", archive.entry(0).metadata().displayName());
+    }
+    for (String alias : List.of("Data/\u203e.bin", "Data/\u00a5..\u00a5evil.bin")) {
+      var opens = new java.util.concurrent.atomic.AtomicInteger();
+      var source =
+          new PackSource.GeneratedEntry(
+              alias,
+              0,
+              () -> {
+                opens.incrementAndGet();
+                return Channels.newChannel(new ByteArrayInputStream(new byte[0]));
+              });
+      Path rejected = temporary.resolve("alias.ba2");
+      assertThrows(
+          ArchiveException.class,
+          () ->
+              BethesdaArchives.standard()
+                  .pack(
+                      withActiveAnsi(
+                          request(
+                              rejected, selected, generated("Data/~.bin", new byte[0]), source)),
+                      OperationControl.standard()));
+      assertEquals(0, opens.get());
+      assertFalse(Files.exists(rejected));
+    }
+  }
+
+  /** Selects only the public profile that snapshots the actual Windows ANSI code page. */
+  private static PackRequest withActiveAnsi(PackRequest request) {
+    return new PackRequest(
+        request.destination(),
+        request.family(),
+        request.encoding(),
+        Optional.of(CompatibilityProfile.BSARCH_1_0_V1),
+        request.sources(),
+        request.targetPolicy(),
+        request.diagnosticPolicy(),
+        request.resourceLimits(),
+        request.workerSelection(),
+        request.options(),
+        request.ddsTarget());
+  }
+
+  /** Constructs caller-selected wire compression and split behavior. */
+  private static PackOptions options(
+      PackOptions.Compression compression, boolean sharing, long split) {
+    return new PackOptions(
+        List.of(),
+        compression,
+        sharing,
+        new PackOptions.Splitting.UpToBytes(split),
+        FlagSelection.AUTOMATIC,
+        FlagSelection.AUTOMATIC);
+  }
+
+  /** Builds the public canonical Fallout 4 General request. */
+  private static PackRequest request(Path target, PackOptions options, PackSource... sources) {
+    var standard =
+        PackRequest.standard(
+            target,
+            ArchiveFamily.FO4_GENERAL_BA2,
+            new ArchiveEncoding(
+                Optional.of(new WireVersion(1)),
+                Optional.of(Ba2Subtype.GNRL),
+                OptionalLong.empty()),
+            List.of(sources),
+            Optional.empty());
+    return new PackRequest(
+        standard.destination(),
+        standard.family(),
+        standard.encoding(),
+        standard.compatibilityProfile(),
+        standard.sources(),
+        standard.targetPolicy(),
+        standard.diagnosticPolicy(),
+        standard.resourceLimits(),
+        standard.workerSelection(),
+        options,
+        standard.ddsTarget());
+  }
+
+  /** Builds a public Starfield General request whose selectors agree with the selected codec. */
+  private static PackRequest starfieldRequest(
+      Path target, PackOptions options, PackSource... sources) {
+    boolean raw = options.compression() == PackOptions.Compression.LZ4_RAW;
+    var standard =
+        PackRequest.standard(
+            target,
+            ArchiveFamily.STARFIELD_GENERAL_BA2,
+            new ArchiveEncoding(
+                Optional.of(new WireVersion(raw ? 3 : 2)),
+                Optional.of(Ba2Subtype.GNRL),
+                raw ? OptionalLong.of(3) : OptionalLong.empty()),
+            List.of(sources),
+            Optional.empty());
+    return new PackRequest(
+        standard.destination(),
+        standard.family(),
+        standard.encoding(),
+        standard.compatibilityProfile(),
+        standard.sources(),
+        standard.targetPolicy(),
+        standard.diagnosticPolicy(),
+        standard.resourceLimits(),
+        standard.workerSelection(),
+        options,
+        standard.ddsTarget());
+  }
+
+  /** Supplies a fresh channel with its declared exact source length. */
+  private static PackSource generated(String name, byte[] bytes) {
+    return new PackSource.GeneratedEntry(
+        name, bytes.length, () -> Channels.newChannel(new ByteArrayInputStream(bytes)));
+  }
+}

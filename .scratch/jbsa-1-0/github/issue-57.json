@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nInspect the exact assembled release artifacts and prove that every shipped byte, legal notice, dependency, native payload, fixture, checksum, SBOM entry, and provenance statement is authorized and complete.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-LIC-*\n- JBSA-DIST-*\n- JBSA-REL-*\n\n## Acceptance\n\n- Enumerate and inspect the final library, POM, sources/Javadoc, application image, ZIP, native libraries, licenses, notices, SBOM, provenance, and checksum artifacts.\n- Match every dependency and native byte to the approved inventory, source, license, version, checksum, notices, and redistribution evidence.\n- Prove no proprietary corpus, local oracle, ignored fixture, opaque binary, unapproved adaptation, credential, or build-machine residue entered the artifacts.\n- Verify SPDX/REUSE, Apache-2.0/NOTICE, CC0 fixture, DCO, trademark/branding, and fixture-provenance obligations and stop on unresolved counsel-dependent questions.\n- Record a reproducible audit result against exact release digests; remediation requires rebuilt artifacts and a fresh audit.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:38Z",
+  "labels": [],
+  "milestone": null,
+  "number": 57,
+  "state": "OPEN",
+  "title": "Audit release bytes, licenses, notices, SBOM, and provenance",
+  "updatedAt": "2026-09-03T06:54:38Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/57"
+}

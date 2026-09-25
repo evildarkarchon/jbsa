@@ -1,0 +1,53 @@
+{
+  "kind": "fixture-or-scenario-descriptor",
+  "token": "unsupported-v3-method",
+  "description": "Reject unsupported Starfield version-3 method 2 in safe default.",
+  "binding": {
+    "state": "available",
+    "files": [
+      {
+        "path": "tests/fixtures/synthetic/artifacts/malformed/unsupported-v3-method.ba2",
+        "sha256": "e53d0bf336fb396d59feb69b2d81631688ea92f6bdbbb410ccab720d8de7d481"
+      }
+    ],
+    "generator": {
+      "id": "jbsa-synthetic-fixture-generator",
+      "version": "1",
+      "configuration": {
+        "procedure": "Write a complete empty version-3 GNRL header with unsupported compression method 2.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {
+          "expected_disposition": "rejected",
+          "method": "2"
+        }
+      },
+      "recipe_sha256": "89149d3f366892300273edbda7c97c35f2bc59c6e3aaa83bff848b2c249edc28",
+      "descriptor": {
+        "path": "tests/fixtures/synthetic/generator.json",
+        "sha256": "efca538ab2357f4253c93d0004382b2e1d676569a1ab79c79eb633083eec3a22"
+      },
+      "implementation": {
+        "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/FixtureCorpusGenerator.java",
+        "sha256": "ee33c5b01f32cb46321a138ab71498f400df33a1f6154e986be1f8f88be01cac"
+      }
+    },
+    "provenance": {
+      "fixture_id": "malformed-unsupported-v3-method",
+      "manifest": {
+        "path": "tests/fixtures/synthetic/manifest.json",
+        "sha256": "f674df5c134b9e26782c860c875b4eb37644f59ad7c1f852fb9d6db751ce0216"
+      },
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "source": "project-authored generator recipe malformed-unsupported-v3-method",
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null
+    },
+    "missing_reason": null
+  },
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0",
+    "source": "Project-authored conformance-v1 scenario assignment; this descriptor is not archive bytes or successful evidence."
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "groupId": "io.github.evildarkarchon",
+  "artifactId": "jbsa-test-support",
+  "version": "0.1.0-SNAPSHOT",
+  "type": "jar",
+  "scope": "",
+  "classifier": "",
+  "optional": "false"
+}

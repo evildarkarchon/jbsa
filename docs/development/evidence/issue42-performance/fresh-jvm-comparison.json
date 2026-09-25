@@ -1,0 +1,74 @@
+[
+  {
+    "run": "103-junit-12766878562371595243",
+    "codec": "STORED",
+    "archive_bytes": 16777484.0,
+    "pack_seconds": 0.0331278,
+    "extract_seconds": 0.0344252,
+    "random_prefix_seconds": 0.0012017,
+    "heap_pool_peak_sum_bytes": 96939768.0
+  },
+  {
+    "run": "103-junit-12766878562371595243",
+    "codec": "ZLIB",
+    "archive_bytes": 8399716.0,
+    "pack_seconds": 0.2130964,
+    "extract_seconds": 0.0490469,
+    "random_prefix_seconds": 0.0017538,
+    "heap_pool_peak_sum_bytes": 122105592.0
+  },
+  {
+    "run": "104-junit-2505032157195509284",
+    "codec": "STORED",
+    "archive_bytes": 16777484.0,
+    "pack_seconds": 0.0391855,
+    "extract_seconds": 0.034345,
+    "random_prefix_seconds": 0.0012282,
+    "heap_pool_peak_sum_bytes": 164048632.0
+  },
+  {
+    "run": "104-junit-2505032157195509284",
+    "codec": "ZLIB",
+    "archive_bytes": 8399716.0,
+    "pack_seconds": 0.2139985,
+    "extract_seconds": 0.0454955,
+    "random_prefix_seconds": 0.0017728,
+    "heap_pool_peak_sum_bytes": 189214456.0
+  },
+  {
+    "run": "103-fresh-jvm-103-16585499667860730498",
+    "codec": "STORED",
+    "archive_bytes": 16777484.0,
+    "pack_seconds": 0.0344132,
+    "extract_seconds": 0.0245159,
+    "random_prefix_seconds": 0.0011565,
+    "heap_pool_peak_sum_bytes": 47552736.0
+  },
+  {
+    "run": "103-fresh-jvm-103-16585499667860730498",
+    "codec": "ZLIB",
+    "archive_bytes": 8399716.0,
+    "pack_seconds": 0.2058014,
+    "extract_seconds": 0.0375179,
+    "random_prefix_seconds": 0.0014904,
+    "heap_pool_peak_sum_bytes": 24147168.0
+  },
+  {
+    "run": "104-fresh-jvm-104-1520118109001017114",
+    "codec": "STORED",
+    "archive_bytes": 16777484.0,
+    "pack_seconds": 0.0338748,
+    "extract_seconds": 0.0231589,
+    "random_prefix_seconds": 0.0011591,
+    "heap_pool_peak_sum_bytes": 47552736.0
+  },
+  {
+    "run": "104-fresh-jvm-104-1520118109001017114",
+    "codec": "ZLIB",
+    "archive_bytes": 8399716.0,
+    "pack_seconds": 0.2117613,
+    "extract_seconds": 0.0349634,
+    "random_prefix_seconds": 0.0013575,
+    "heap_pool_peak_sum_bytes": 24271072.0
+  }
+]

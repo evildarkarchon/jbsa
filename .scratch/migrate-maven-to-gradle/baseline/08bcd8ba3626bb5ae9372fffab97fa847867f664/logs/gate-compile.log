@@ -1,0 +1,136 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] JBSA reactor                                                       [pom]
+[INFO] JBSA archive library                                               [jar]
+[INFO] JBSA command-line interface                                        [jar]
+[INFO] JBSA build-only test support                                       [jar]
+[INFO] JBSA build-only conformance tests                                  [jar]
+[INFO] JBSA build-only benchmarks                                         [jar]
+[INFO] JBSA build-only distribution assembly                              [pom]
+[INFO] 
+[INFO] ----------------< io.github.evildarkarchon:jbsa-parent >----------------
+[INFO] Building JBSA reactor 0.1.0-SNAPSHOT                               [1/7]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-parent ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireMavenVersion passed
+[INFO] Rule 1: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 3: org.apache.maven.enforcer.rules.ReactorModuleConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] -------------------< io.github.evildarkarchon:jbsa >--------------------
+[INFO] Building JBSA archive library 0.1.0-SNAPSHOT                       [2/7]
+[INFO]   from jbsa\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa ---
+[INFO] Copying 2 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- flatten:1.8.0:flatten (flatten-consumer-pom) @ jbsa ---
+[INFO] Generating flattened POM of project io.github.evildarkarchon:jbsa:jar:0.1.0-SNAPSHOT...
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-cli >------------------
+[INFO] Building JBSA command-line interface 0.1.0-SNAPSHOT                [3/7]
+[INFO]   from jbsa-cli\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-cli ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-cli ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-cli\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-cli ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 4 source files with javac [debug parameters release 25 module-path] to target\classes
+[INFO] JDK-8318913 workaround: patched module-info.class requires version from [25] to [25] on 1 JDK modules [java.base]
+[INFO] 
+[INFO] -------------< io.github.evildarkarchon:jbsa-test-support >-------------
+[INFO] Building JBSA build-only test support 0.1.0-SNAPSHOT               [4/7]
+[INFO]   from jbsa-test-support\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-test-support ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-test-support ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-test-support\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-test-support ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] ----------< io.github.evildarkarchon:jbsa-conformance-tests >-----------
+[INFO] Building JBSA build-only conformance tests 0.1.0-SNAPSHOT          [5/7]
+[INFO]   from jbsa-conformance-tests\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-conformance-tests ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-conformance-tests ---
+[INFO] skip non existing resourceDirectory C:\Users\evild\AppData\Local\Temp\jbsa-maven-parity-df46409b73df4b6ea642ec3c83171031\source\jbsa-conformance-tests\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-conformance-tests ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --------------< io.github.evildarkarchon:jbsa-benchmarks >--------------
+[INFO] Building JBSA build-only benchmarks 0.1.0-SNAPSHOT                 [6/7]
+[INFO]   from jbsa-benchmarks\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-benchmarks ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ jbsa-benchmarks ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.16.0:compile (default-compile) @ jbsa-benchmarks ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 5 source files with javac [debug parameters release 25] to target\classes
+[INFO] 
+[INFO] -----------------< io.github.evildarkarchon:jbsa-dist >-----------------
+[INFO] Building JBSA build-only distribution assembly 0.1.0-SNAPSHOT      [7/7]
+[INFO]   from jbsa-dist\pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- enforcer:3.6.3:enforce (enforce-build-foundation) @ jbsa-dist ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.dependency.DependencyConvergence passed
+[INFO] Rule 4: org.apache.maven.enforcer.rules.RequirePluginVersions passed
+[INFO] Rule 5: org.apache.maven.enforcer.rules.dependency.RequireReleaseDeps passed
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for JBSA reactor 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] JBSA reactor ....................................... SUCCESS [  0.247 s]
+[INFO] JBSA archive library ............................... SUCCESS [  0.460 s]
+[INFO] JBSA command-line interface ........................ SUCCESS [  0.626 s]
+[INFO] JBSA build-only test support ....................... SUCCESS [  0.016 s]
+[INFO] JBSA build-only conformance tests .................. SUCCESS [  0.007 s]
+[INFO] JBSA build-only benchmarks ......................... SUCCESS [  0.439 s]
+[INFO] JBSA build-only distribution assembly .............. SUCCESS [  0.004 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.897 s
+[INFO] Finished at: 2026-09-12T00:30:35-07:00
+[INFO] ------------------------------------------------------------------------

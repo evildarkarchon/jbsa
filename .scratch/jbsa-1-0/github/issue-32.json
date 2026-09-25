@@ -1,0 +1,27 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nCreate deterministic performance inputs and local paired-run tooling early enough to gate codec, I/O, DDS, native, concurrency, random-access, and packaging decisions.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-PERF-*\n\n## Acceptance\n\n- Implement the versioned Benchmark Corpus generators, seeds, manifests, structural templates, and content-addressed materialization process.\n- Implement same-machine candidate, Conformance Oracle, and later Performance Baseline runners with pinned JVM/provider/protocol identities.\n- Measure throughput, random-access latency, peak heap/native/scratch memory, output size, and 1/2/4/8/16-worker scaling as applicable.\n- Encode the accepted thresholds, confidence handling, warmup/order controls, invalid-run rules, raw result schema, and non-waivable independent metric outcomes.\n- Expose explicit targeted and full local qualification commands; do not run benchmarks in GitHub Actions or ordinary mvn verify.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": "2026-09-05T11:03:36Z",
+  "comments": [],
+  "createdAt": "2026-09-03T06:53:39Z",
+  "labels": [
+    {
+      "id": "LA_kwDOULuKyc8AAAACzh8JpA",
+      "name": "ready-for-agent",
+      "description": "Fully specified, unblocked, and ready for an AFK agent",
+      "color": "0E8A16"
+    }
+  ],
+  "milestone": null,
+  "number": 32,
+  "state": "CLOSED",
+  "title": "Build the performance-v1 harness and Benchmark Corpus",
+  "updatedAt": "2026-09-05T11:04:27Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/32"
+}

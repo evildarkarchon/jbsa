@@ -1,0 +1,20 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjExMjA0Nzgz",
+    "is_bot": false,
+    "login": "evildarkarchon",
+    "name": ""
+  },
+  "body": "## Objective\n\nProvide required replaceable internal LZ4-frame and raw-LZ4 adapters with pinned native artifacts, bounded dispatch, deterministic behavior, and qualified Windows launch policy.\n\n## Planning context\n\nThis is a child of [Implement and qualify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/23). It implements the accepted sequence and gates recorded in [Choose the implementation sequence and specification release gates](https://github.com/evildarkarchon/jbsa/issues/17) under [Specify the Java 25 Bethesda archive library and BSArch-compatible CLI](https://github.com/evildarkarchon/jbsa/issues/1).\n\nBefore implementation begins, trace this issue to the exact permanent requirements in docs/spec/requirements.yaml. Expected namespaces:\n\n- JBSA-CODEC-*\n- JBSA-PERF-*\n- JBSA-LIC-*\n\n## Acceptance\n\n- Pin LWJGL and upstream LZ4 artifacts and checksums, notices, native classifiers, and explicit Java 25 native-access requirements.\n- Implement separate internal LZ4-frame and raw-LZ4 profiles with lazy native loading, capability preflight, bounded input/output checks, and provider-neutral failures.\n- Keep native handles, buffers, dispatch thresholds, and adapter types out of the public interface and make failure before destination effects deterministic.\n- Pass codec corpus, malformed-frame/block, memory-credit, cancellation-delay, deterministic-output, and native-loading tests.\n- Run targeted throughput, memory, output-size, and launch qualification before the adapters may block or enable Archive Family slices.\n\n## Ownership\n\nAgent-driven when unblocked and labelled ready-for-agent.\n\n## Non-goals\n\n- Do not expand this issue beyond its independently mergeable outcome or bypass a native blocker relationship.\n- Never modify the pinned TES5Edit Reference Snapshot or commit proprietary/local game assets.\n- Do not add GUI behavior, non-Windows guarantees, Maven Central/GitHub Packages publication, or moving-reference compatibility.",
+  "closedAt": null,
+  "comments": [],
+  "createdAt": "2026-09-03T06:54:06Z",
+  "labels": [],
+  "milestone": null,
+  "number": 43,
+  "state": "OPEN",
+  "title": "Integrate and qualify the Windows x64 LZ4 runtime",
+  "updatedAt": "2026-09-03T06:54:06Z",
+  "url": "https://github.com/evildarkarchon/jbsa/issues/43"
+}

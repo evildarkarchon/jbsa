@@ -1,0 +1,14 @@
+Development checkpoint; NOT formal PV1 qualification.
+Requested issue regression measurement; no idle or reboot attestation.
+wire_version=105
+Concurrent development work may affect timings.
+One warmup and three measured rounds; sequential library calls; 16 MiB mixed corpus.
+Random access measures 64 entry opens with 4 KiB prefix reads, not seeking.
+Heap is the sum of memory-pool peaks, not simultaneous live heap or process memory.
+Scratch is the enforced request ceiling; no observed peak is claimed.
+No oracle timing comparison, JMH, confidence interval, or release qualification.
+codec_profile_id=jbsa-bsa-069-lz4-v1
+codec_profile_sha256=3eb01cfdf11f0052406682b4cb0ffd7814de095d7dd2a543ed9d9441fa41ef85
+java.version=25.0.4.1
+os.name=Windows 11
+availableProcessors=16

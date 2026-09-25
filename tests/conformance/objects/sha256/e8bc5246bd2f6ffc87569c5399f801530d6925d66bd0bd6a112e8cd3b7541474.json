@@ -1,0 +1,17 @@
+{
+  "kind": "fixture-or-scenario-descriptor",
+  "token": "dds-bc16-boundaries",
+  "description": "16-byte BC blocks at 1x1 and 5x7",
+  "binding": {
+    "state": "missing",
+    "files": [],
+    "generator": null,
+    "provenance": null,
+    "missing_reason": "Required fixture bytes and accepted observations have not been implemented or approved."
+  },
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0",
+    "source": "Project-authored conformance-v1 scenario assignment; this descriptor is not archive bytes or successful evidence."
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "generated_on": "2026-09-14",
+  "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+  "fixtures": [
+    {
+      "id": "starfield-dds-v2-zlib",
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "redistribution_class": "project-authored-redistributable",
+      "source": "independently authored JBSA-GNRL-001 and JBSA-DX10-001 through JBSA-DX10-005 wire literal",
+      "input_sha256": "4aae08ff0c39c4203e44b4f8e5f518ea5cdf2e0c510958d58e552e3b577961ee",
+      "generation": {
+        "procedure": "Encode one canonical 4x4 BC1 texture record and independently framed zlib chunk under the Starfield version-2 header.",
+        "options": {
+          "archive_family": "sf-dx10-v2",
+          "codec": "zlib",
+          "unknown_value_at_24": "1"
+        }
+      },
+      "output": {
+        "path": "starfield-dds-v2-zlib.hex",
+        "sha256": "f3c405c6d1da74a50d3df5fe85d8dc9381495d950e52a8ba220a9b0ba71583e0",
+        "decoded_archive_sha256": "d71b8908fd343998a9bf0a024474f5b31daf065d53dc292e686fccc2ba616ce7"
+      }
+    },
+    {
+      "id": "starfield-dds-v3-raw-lz4",
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "redistribution_class": "project-authored-redistributable",
+      "source": "independently authored JBSA-GNRL-001, JBSA-GNRL-005, and JBSA-DX10-001 through JBSA-DX10-005 wire literal",
+      "input_sha256": "4aae08ff0c39c4203e44b4f8e5f518ea5cdf2e0c510958d58e552e3b577961ee",
+      "generation": {
+        "procedure": "Encode the same canonical 4x4 BC1 texture record as one complete raw-LZ4 literal block under the Starfield version-3 method-3 header.",
+        "options": {
+          "archive_family": "sf-dx10-v3-m3",
+          "codec": "raw-lz4",
+          "compression_method": "3",
+          "unknown_value_at_24": "1"
+        }
+      },
+      "output": {
+        "path": "starfield-dds-v3-raw-lz4.hex",
+        "sha256": "1ed5ce61d9a94bd39d06591159d4f12ff50243981f1e9e77df4ff36651cf98bb",
+        "decoded_archive_sha256": "a641bb9f520369176457ed95a71a8775d8b2b2620bda2a7c280a1a9fbe5a1f72"
+      }
+    }
+  ]
+}

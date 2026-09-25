@@ -1,0 +1,816 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "revision": "c3404f789bdc1a82e777efef5b46dbf53a3121ea",
+    "shortRevision": "c3404f7",
+    "branch": "initial-implementation",
+    "clean": true,
+    "candidateVersion": "0.1.0-SNAPSHOT"
+  },
+  "toolchains": {
+    "windows": {
+      "implementorVersion": "Temurin-25.0.4+7",
+      "distributionArchive": "OpenJDK25U-jdk_x64_windows_hotspot_25.0.4_7.zip",
+      "distributionSha256": "7caab7db43bf4b94a2e6252c699e70d90084f9aa7c943cd3414761fd540937ae",
+      "extractedSha256": "37dd2d76f421c52fc8aaf60f4ca31419c27a98272cd5e6b4190f0803c689cd02",
+      "releaseSha256": "151541557e2cc19f36f991cf077741504962c6a16e1d2cc5d9157fddfee74583",
+      "javaExecutableSha256": "1dfe0b08636bc74b56db5e246f038cfe67c18f567053373fa601d310f29ed9da",
+      "matchesMaven": true
+    },
+    "linux": {
+      "implementorVersion": "Temurin-25.0.4+7",
+      "distributionArchive": "OpenJDK25U-jdk_x64_linux_hotspot_25.0.4_7.tar.gz",
+      "distributionSha256": "e58fcdcd637b25c03ca84cbbcefc70d11efb8f4b4cbd05decc9f661769d77f94",
+      "environment": "Ubuntu WSL2 x86_64 portability evidence; not Windows Release Qualification"
+    },
+    "gradle": {
+      "version": "9.7.1",
+      "launcherSha256": "d228565307df93fcd8dcaf83f7cdbaf17de2f147fc602f4c8e6938033aa3bc20",
+      "wrapperJarSha256": "7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d",
+      "wrapperPropertiesSha256": "5689676b853a52fb04ac6a62d9e49872247f47c61b115f85c5377eb61cb586f9"
+    }
+  },
+  "rawEvidence": {
+    "location": "target/qualification-evidence/c3404f7",
+    "committed": false,
+    "completeTreeSha256": "dc8a57a55994d1b19ed849d403e7062b5a56ddb85d33944e6d1b501ec10eb21a",
+    "mavenOracleTreeSha256": "688aa39dc71808fe8032a5eacfcc21ae97e2427901b485e08947c621ea5a5985",
+    "gradleTreeSha256": "266af391c2f556d2f54f1a515ca10a01e5cd2c6d238d9f5e34ff890f0ee15a81",
+    "gradleQualification": {
+      "path": "gradle/gradle-qualification.json",
+      "sha256": "a1a7fee61ce7dc292740a6c65ec8b00003ed7e60b75386c3c5bba27267ca12dc"
+    },
+    "normalizedParity": {
+      "path": "gradle/parity-report.json",
+      "sha256": "32b9272621a257ead0e6224ddb362f05279cd7939419b90cefb6d409e308fc03"
+    },
+    "handoffManifest": {
+      "path": "gradle/release-qualification/manifest.json",
+      "sha256": "b569a1e238d68ee5b4b063d50c9e1f68088da1d3b176e666325e22f9cc2621b1"
+    },
+    "linuxTranscript": {
+      "path": "linux-portability.log",
+      "sha256": "a627579d5b74114ba3336afe7239719a1c10a52abbdb9a864b163e7f259dfba8"
+    },
+    "linuxProcedure": {
+      "path": "run-linux-portability.sh",
+      "sha256": "b2652bb592378702d8d298f4d07db0271ee9282659475b7478358c9e70c53c12"
+    }
+  },
+  "windowsCompleteVerification": {
+    "outcome": "PASS",
+    "exactJdk": true,
+    "noDaemon": true,
+    "prime": {
+      "name": "prime-verified-cache",
+      "command": [
+        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
+        "--no-daemon",
+        "--dependency-verification",
+        "strict",
+        "-Pversion=0.1.0-SNAPSHOT",
+        "clean",
+        "verify",
+        "spotlessCheck"
+      ],
+      "exitCode": 0,
+      "outcome": "PASS",
+      "milliseconds": 256577,
+      "startedAt": "2026-09-13T14:31:24.8616895-07:00",
+      "completedAt": "2026-09-13T14:35:41.4392419-07:00",
+      "category": "gradle",
+      "resumed": false,
+      "reusedFrom": null,
+      "outputs": [],
+      "log": {
+        "path": "logs/prime-verified-cache.log",
+        "sha256": "40b2c5de2bb0e1371b7939f704bbb1182d2ff2506fbfea953e7598ee95432a07"
+      }
+    },
+    "verifiedOffline": {
+      "name": "verified-cache-offline-build",
+      "command": [
+        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
+        "--no-daemon",
+        "--dependency-verification",
+        "strict",
+        "-Pversion=0.1.0-SNAPSHOT",
+        "--offline",
+        "clean",
+        "verify",
+        "spotlessCheck",
+        ":jbsa-conformance-tests:architectureTest",
+        ":jbsa-conformance-tests:buildPolicyTest"
+      ],
+      "exitCode": 0,
+      "outcome": "PASS",
+      "milliseconds": 290996,
+      "startedAt": "2026-09-13T14:36:30.1407089-07:00",
+      "completedAt": "2026-09-13T14:41:21.1371669-07:00",
+      "category": "gradle",
+      "resumed": false,
+      "reusedFrom": null,
+      "outputs": [],
+      "log": {
+        "path": "logs/verified-cache-offline-build.log",
+        "sha256": "4922578020a94b89fef545c8ccb2af4475540883d28c08e48f4d8b94bae9de46"
+      }
+    },
+    "includedBuildPrime": {
+      "name": "prime-build-logic-cache",
+      "command": [
+        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
+        "--no-daemon",
+        "--dependency-verification",
+        "strict",
+        "-Pversion=0.1.0-SNAPSHOT",
+        "-p",
+        "build-logic",
+        "test"
+      ],
+      "exitCode": 0,
+      "outcome": "PASS",
+      "milliseconds": 48693,
+      "startedAt": "2026-09-13T14:35:41.443647-07:00",
+      "completedAt": "2026-09-13T14:36:30.1368183-07:00",
+      "category": "gradle",
+      "resumed": false,
+      "reusedFrom": null,
+      "outputs": [],
+      "log": {
+        "path": "logs/prime-build-logic-cache.log",
+        "sha256": "df9684b3d3117136813ac571b383ded17cd873301e5c1559b547d375fa20dc64"
+      }
+    },
+    "includedBuildOffline": {
+      "name": "verified-cache-offline-build-logic",
+      "command": [
+        "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
+        "--no-daemon",
+        "--dependency-verification",
+        "strict",
+        "-Pversion=0.1.0-SNAPSHOT",
+        "--offline",
+        "-p",
+        "build-logic",
+        "test"
+      ],
+      "exitCode": 0,
+      "outcome": "PASS",
+      "milliseconds": 43101,
+      "startedAt": "2026-09-13T14:41:21.1415362-07:00",
+      "completedAt": "2026-09-13T14:42:04.2431644-07:00",
+      "category": "gradle",
+      "resumed": false,
+      "reusedFrom": null,
+      "outputs": [],
+      "log": {
+        "path": "logs/verified-cache-offline-build-logic.log",
+        "sha256": "b9c3e9bd6e5af4dd11ad5dc3ee9223649faceb70d29ff830c09b8fd2fd8f481a"
+      }
+    },
+    "gates": {
+      "gate-compile": {
+        "outcome": "PASS",
+        "mavenOracleOutcome": "PASS",
+        "acceptedDifference": false
+      },
+      "gate-unit": {
+        "outcome": "PASS",
+        "mavenOracleOutcome": "FAIL",
+        "acceptedDifference": true
+      },
+      "gate-architecture": {
+        "outcome": "PASS",
+        "mavenOracleOutcome": "FAIL",
+        "acceptedDifference": true
+      },
+      "gate-formatting": {
+        "outcome": "PASS",
+        "mavenOracleOutcome": "PASS",
+        "acceptedDifference": false
+      },
+      "gate-policy": {
+        "outcome": "PASS",
+        "mavenOracleOutcome": "FAIL",
+        "acceptedDifference": true
+      },
+      "gate-conformance": {
+        "outcome": "PASS",
+        "mavenOracleOutcome": "FAIL",
+        "acceptedDifference": true
+      },
+      "gate-conformance-observation": {
+        "outcome": "BLOCKED",
+        "mavenOracleOutcome": "BLOCKED",
+        "acceptedDifference": false
+      }
+    }
+  },
+  "linuxPortability": {
+    "outcome": "PASS",
+    "commandCount": 5,
+    "commands": [
+      "./build/run-ci-gate.ps1 -Gate compile",
+      "./build/run-ci-gate.ps1 -Gate formatting",
+      "./gradlew -p build-logic test --no-daemon",
+      "./build/run-ci-gate.ps1 -Gate unit",
+      "./gradlew --no-daemon :jbsa:integrationTest :jbsa-cli:integrationTest :jbsa-test-support:integrationTest :jbsa-conformance-tests:integrationTest :jbsa-benchmarks:integrationTest"
+    ],
+    "transcriptSha256": "a627579d5b74114ba3336afe7239719a1c10a52abbdb9a864b163e7f259dfba8",
+    "sourceCleanBeforeAndAfter": true
+  },
+  "activeReferenceScan": {
+    "outcome": "PASS",
+    "task": "verifyActiveReferences",
+    "allowlistPath": "build/active-maven-reference-allowlist.properties",
+    "allowlistSha256": "b56e401e376bd6622df00eacea1749fbe8d88d7ab96c247b3bcf6ccb92ecd50d",
+    "policy": "Only reviewed history, factual consumer-POM/Maven Central terminology, and bounded pre-cutover comparison machinery are allowed."
+  },
+  "publicationAndStaging": {
+    "outcome": "PASS",
+    "manifestPath": "gradle/release-qualification/release-inputs.json",
+    "manifestSha256": "7f8663da22327ffc7c0a924aa823ec5e648f7f1684f368e20619c075dc42c6f6",
+    "entryCount": 18,
+    "entries": [
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT.jar",
+        "sha256": "e14394380bf90e6d3854c72b4d6b2e2899aca150593a49bb1f67e515c9008735",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT.pom",
+        "sha256": "30f84c26f373990e2af545f5b3df6bf2d8b21d9cddb32eb1fe9143ae5cbffb8b",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT-sources.jar",
+        "sha256": "e55f377ea370b0a186d3e4d7764d8f9a86122655f5cc2a24493792239db95bc2",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT-javadoc.jar",
+        "sha256": "3f2c330134a73043f6a8593a5cf6caf6c1d4c78e1124894dde91dedd80dda43d",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-cli-0.1.0-SNAPSHOT.jar",
+        "sha256": "5e9eaa3a7f355cd6a4bbb77457b1e1d237248df525cec11e992fca3de8594b4c",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa-cli:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "LICENSE",
+        "sha256": "3ddf9be5c28fe27dad143a5dc76eea25222ad1dd68934a047064e56ed2fa40c5",
+        "kind": "license",
+        "source": "LICENSE"
+      },
+      {
+        "path": "NOTICE",
+        "sha256": "e5e27c40e0d9b8039ece0cea0ba962b9c475aaf88ffa654451b20dfbd122288e",
+        "kind": "notice",
+        "source": "NOTICE"
+      },
+      {
+        "path": "THIRD-PARTY-NOTICES.md",
+        "sha256": "dc952b598a5fff8b643a754d41dd0d1b1e794defb558b7fb22b4591ea0f26c25",
+        "kind": "notice",
+        "source": "target/compliance/THIRD-PARTY-NOTICES.md"
+      },
+      {
+        "path": "RELEASE-NOTES.md",
+        "sha256": "132539a245947413b836a195af54ff801b443432913de3c4982eb9d0a8cb773f",
+        "kind": "release-notes",
+        "source": "target/compliance/RELEASE-NOTES.md"
+      },
+      {
+        "path": "jbsa.cdx.json",
+        "sha256": "90d921d686a8c8cdce9e07c34e0e9aa658e221f493393b1aebf05c78511f164a",
+        "kind": "sbom",
+        "source": "target/compliance/jbsa.cdx.json"
+      },
+      {
+        "path": "licenses/LWJGL-3.4.3.txt",
+        "sha256": "8d49218208a78400a7fdbcfd21c7b830085eb2ead24e217a229a1c4ddd74266b",
+        "kind": "license",
+        "source": "compliance/licenses/LWJGL-3.4.3.txt"
+      },
+      {
+        "path": "licenses/LZ4-1.10.0.txt",
+        "sha256": "862c882ee58eaffdbefb4e789aaec2a5ed0310315be989c4404c77827ea7fe96",
+        "kind": "license",
+        "source": "compliance/licenses/LZ4-1.10.0.txt"
+      },
+      {
+        "path": "jbsa.ps1",
+        "sha256": "388d8216114a424fc686e7a438a514f7387196f5f4147a6148a00b6672a43ffd",
+        "kind": "provenance",
+        "source": "build/windows-runtime/jbsa.ps1"
+      },
+      {
+        "path": "launch-policy.json",
+        "sha256": "6b30be2b9a119db0dfd9ecaa2838f8939b9279e8e41c754398255fc26428bee4",
+        "kind": "provenance",
+        "source": "build/windows-runtime/launch-policy.json"
+      },
+      {
+        "path": "lib/lwjgl-3.4.3.jar",
+        "sha256": "46eeca5471833c3cf5da3c1da015b41e3bb3eb16dd3da03f366886da10096751",
+        "kind": "dependency",
+        "source": "org.lwjgl:lwjgl:jar::3.4.3"
+      },
+      {
+        "path": "lib/lwjgl-lz4-3.4.3.jar",
+        "sha256": "fd81606cbfdd7084cdbf576f6260087a2ae68bcfb53ca1ccbec0707ae603f876",
+        "kind": "dependency",
+        "source": "org.lwjgl:lwjgl-lz4:jar::3.4.3"
+      },
+      {
+        "path": "lib/lwjgl-3.4.3-natives-windows.jar",
+        "sha256": "19949bca7b780f55e5d2db12ac061a7657a4c1b7c860c30607f5406e7017aa2b",
+        "kind": "native-container",
+        "source": "org.lwjgl:lwjgl:jar:natives-windows:3.4.3"
+      },
+      {
+        "path": "lib/lwjgl-lz4-3.4.3-natives-windows.jar",
+        "sha256": "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc",
+        "kind": "native-container",
+        "source": "org.lwjgl:lwjgl-lz4:jar:natives-windows:3.4.3"
+      }
+    ],
+    "canonicalArtifacts": [
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT.jar",
+        "sha256": "e14394380bf90e6d3854c72b4d6b2e2899aca150593a49bb1f67e515c9008735",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT.pom",
+        "sha256": "30f84c26f373990e2af545f5b3df6bf2d8b21d9cddb32eb1fe9143ae5cbffb8b",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT-sources.jar",
+        "sha256": "e55f377ea370b0a186d3e4d7764d8f9a86122655f5cc2a24493792239db95bc2",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT-javadoc.jar",
+        "sha256": "3f2c330134a73043f6a8593a5cf6caf6c1d4c78e1124894dde91dedd80dda43d",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-cli-0.1.0-SNAPSHOT.jar",
+        "sha256": "5e9eaa3a7f355cd6a4bbb77457b1e1d237248df525cec11e992fca3de8594b4c",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa-cli:0.1.0-SNAPSHOT"
+      }
+    ]
+  },
+  "compliance": {
+    "outcome": "PASS",
+    "preStagingAudit": "PASS",
+    "postStagingAudit": "PASS",
+    "files": {
+      "build-layout.json": {
+        "path": "gradle/release-qualification/compliance/build-layout.json",
+        "sha256": "50251482de59ec326b250db731c9d3ba45caecad2f66d2c535b03b646c56752e"
+      },
+      "resolved-production-dependencies.json": {
+        "path": "gradle/release-qualification/compliance/resolved-production-dependencies.json",
+        "sha256": "36d187a18bfce09f7ef409026d02497b62aac96bd84bbe925c8a2b13c6b53a80"
+      },
+      "jbsa.cdx.json": {
+        "path": "gradle/release-qualification/compliance/jbsa.cdx.json",
+        "sha256": "90d921d686a8c8cdce9e07c34e0e9aa658e221f493393b1aebf05c78511f164a"
+      },
+      "THIRD-PARTY-NOTICES.md": {
+        "path": "gradle/release-qualification/compliance/THIRD-PARTY-NOTICES.md",
+        "sha256": "dc952b598a5fff8b643a754d41dd0d1b1e794defb558b7fb22b4591ea0f26c25"
+      },
+      "RELEASE-NOTES.md": {
+        "path": "gradle/release-qualification/compliance/RELEASE-NOTES.md",
+        "sha256": "132539a245947413b836a195af54ff801b443432913de3c4982eb9d0a8cb773f"
+      }
+    }
+  },
+  "parity": {
+    "outcome": "PASS",
+    "matches": true,
+    "rawDifferenceCount": 423,
+    "unexplainedDifferenceCount": 0,
+    "archiveEnvelopeDifferencesIgnored": true,
+    "differenceCategories": {
+      "derived-staging-byte": 18,
+      "javadoc-task-presentation": 360,
+      "manifest-tool-provenance": 10,
+      "maven-build-provenance": 25,
+      "module-attribute-encoding": 4,
+      "optional-package-info-bytecode": 4,
+      "service-file-serialization": 2
+    },
+    "coverage": [
+      "artifact entry payloads",
+      "JPMS and public API",
+      "consumer POM",
+      "SBOM",
+      "notices",
+      "runtime dependencies",
+      "staging manifest and bytes"
+    ]
+  },
+  "reproducibility": {
+    "outcome": "PASS",
+    "matches": true,
+    "artifactCount": 5,
+    "artifacts": [
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT.jar",
+        "sha256": "e14394380bf90e6d3854c72b4d6b2e2899aca150593a49bb1f67e515c9008735",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT.pom",
+        "sha256": "30f84c26f373990e2af545f5b3df6bf2d8b21d9cddb32eb1fe9143ae5cbffb8b",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT-sources.jar",
+        "sha256": "e55f377ea370b0a186d3e4d7764d8f9a86122655f5cc2a24493792239db95bc2",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-0.1.0-SNAPSHOT-javadoc.jar",
+        "sha256": "3f2c330134a73043f6a8593a5cf6caf6c1d4c78e1124894dde91dedd80dda43d",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa:0.1.0-SNAPSHOT"
+      },
+      {
+        "path": "jbsa-cli-0.1.0-SNAPSHOT.jar",
+        "sha256": "5e9eaa3a7f355cd6a4bbb77457b1e1d237248df525cec11e992fca3de8594b4c",
+        "kind": "project-artifact",
+        "source": "io.github.evildarkarchon:jbsa-cli:0.1.0-SNAPSHOT"
+      }
+    ],
+    "commandLogSha256": "8d1c5aaf4f909cc0e15082ee78facc73c3be5c530dff6a451338b682678c6657"
+  },
+  "offlineAndDependencyPolicy": {
+    "outcome": "PASS",
+    "verifiedCacheBuildPassed": true,
+    "strictVerificationFailureObserved": true,
+    "lockfilesByteConsistent": true,
+    "lockfileCount": 10,
+    "configurationCache": {
+      "enabledByDefault": false,
+      "compatibleTasks": {
+        "tasks": [
+          ":jbsa:compileJava",
+          ":jbsa-cli:compileJava",
+          ":jbsa:test",
+          ":jbsa-cli:test",
+          "spotlessCheck"
+        ],
+        "firstStored": true,
+        "secondReused": true,
+        "first": {
+          "name": "configuration-cache-first",
+          "command": [
+            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
+            "--no-daemon",
+            "--dependency-verification",
+            "strict",
+            "-Pversion=0.1.0-SNAPSHOT",
+            "--offline",
+            "--configuration-cache",
+            "--configuration-cache-problems=fail",
+            ":jbsa:compileJava",
+            ":jbsa-cli:compileJava",
+            ":jbsa:test",
+            ":jbsa-cli:test",
+            "spotlessCheck"
+          ],
+          "exitCode": 0,
+          "outcome": "PASS",
+          "milliseconds": 7034,
+          "startedAt": "2026-09-13T14:42:08.928992-07:00",
+          "completedAt": "2026-09-13T14:42:15.9632965-07:00",
+          "category": "gradle",
+          "resumed": false,
+          "reusedFrom": null,
+          "outputs": [],
+          "log": {
+            "path": "logs/configuration-cache-first.log",
+            "sha256": "c2b07835a310648b88b31ab2290c0b1a440fa0522cd9d50b9e585ff40dd1c6a5"
+          }
+        },
+        "second": {
+          "name": "configuration-cache-second",
+          "command": [
+            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
+            "--no-daemon",
+            "--dependency-verification",
+            "strict",
+            "-Pversion=0.1.0-SNAPSHOT",
+            "--offline",
+            "--configuration-cache",
+            "--configuration-cache-problems=fail",
+            ":jbsa:compileJava",
+            ":jbsa-cli:compileJava",
+            ":jbsa:test",
+            ":jbsa-cli:test",
+            "spotlessCheck"
+          ],
+          "exitCode": 0,
+          "outcome": "PASS",
+          "milliseconds": 3112,
+          "startedAt": "2026-09-13T14:42:15.9667998-07:00",
+          "completedAt": "2026-09-13T14:42:19.0791164-07:00",
+          "category": "gradle",
+          "resumed": false,
+          "reusedFrom": null,
+          "outputs": [],
+          "log": {
+            "path": "logs/configuration-cache-second.log",
+            "sha256": "2b35f6e2bf49bfef1693914504eec2740b35aa02a4b3eb736fafda46d6423e06"
+          }
+        }
+      },
+      "incompatibleTasks": {
+        "tasks": [
+          "verify",
+          "automatedConformance",
+          "captureAutomatedConformance",
+          "generateResolvedProductionDependencies",
+          "smokeTestBenchmarkLauncher",
+          "smokeTestThinCli",
+          "stageReleaseInputs",
+          "verifyCompliance",
+          "verifyStagedReleaseInputs"
+        ],
+        "rejected": true,
+        "diagnostic": "Configuration cache is not supported for evidence, staging, or external-process tasks",
+        "command": {
+          "name": "configuration-cache-incompatible",
+          "command": [
+            "C:\\Users\\evild\\AppData\\Local\\Temp\\jgq-594777f1\\s\\gradlew.bat",
+            "--no-daemon",
+            "--dependency-verification",
+            "strict",
+            "-Pversion=0.1.0-SNAPSHOT",
+            "--offline",
+            "--configuration-cache",
+            "verify",
+            "automatedConformance",
+            "captureAutomatedConformance",
+            "generateResolvedProductionDependencies",
+            "smokeTestBenchmarkLauncher",
+            "smokeTestThinCli",
+            "stageReleaseInputs",
+            "verifyCompliance",
+            "verifyStagedReleaseInputs"
+          ],
+          "exitCode": 1,
+          "outcome": "FAIL",
+          "milliseconds": 4462,
+          "startedAt": "2026-09-13T14:42:19.0836622-07:00",
+          "completedAt": "2026-09-13T14:42:23.5466445-07:00",
+          "category": "gradle",
+          "resumed": false,
+          "reusedFrom": null,
+          "outputs": [],
+          "log": {
+            "path": "logs/configuration-cache-incompatible.log",
+            "sha256": "c5be643547074f6510e75bccd405411e6eef829f078277fef83824e62a80a91c"
+          }
+        }
+      }
+    },
+    "resolvedProductionDependencies": {
+      "path": "gradle/release-qualification/compliance/resolved-production-dependencies.json",
+      "sha256": "36d187a18bfce09f7ef409026d02497b62aac96bd84bbe925c8a2b13c6b53a80"
+    }
+  },
+  "automatedConformance": {
+    "outcome": "BLOCKED",
+    "automatedConformance": false,
+    "contract": "conformance-v1",
+    "caseCount": 508,
+    "resultCounts": {
+      "INVALID": 508
+    },
+    "reason": "Every required case received a fresh INVALID result because no public-interface execution adapter is registered; this is retained evidence, not a PASS claim.",
+    "caseManifestSha256": "17a573a623e30ba2287b9cb514e01f7257fbf29d99de90bf4c0cc3efadc9c6ba",
+    "specificationSetSha256": "674e1e373a4558dbb50b5853043a238f27f9bdd6ef6331f35ae63160ec9b75f9",
+    "reportSha256": "ff60d45f3a6a5f794f4969e5b9871f1b960f3340ccab8babf44cdfe004c5e282",
+    "matrixSha256": "877fc7dd1f14e945d74d76599bd5d518abd61bfe7eedc6270d1e95f446c41042",
+    "candidateArtifacts": [
+      {
+        "path": "jbsa/target/libs/jbsa-0.1.0-SNAPSHOT.jar",
+        "sha256": "e14394380bf90e6d3854c72b4d6b2e2899aca150593a49bb1f67e515c9008735"
+      },
+      {
+        "path": "jbsa-cli/target/libs/jbsa-cli-0.1.0-SNAPSHOT.jar",
+        "sha256": "5e9eaa3a7f355cd6a4bbb77457b1e1d237248df525cec11e992fca3de8594b4c"
+      }
+    ]
+  },
+  "releaseQualificationHandoff": {
+    "status": "prepared-not-qualified",
+    "manualQualificationPerformed": false,
+    "publicReleaseBlocked": true,
+    "prerequisiteTicket": ".scratch/jbsa-1-0/issues/58-run-writable-family-release-qualification-with-games-and-official-tools.md",
+    "prerequisiteState": "open and blocked by tickets 50 and 53",
+    "requiredEnvironment": "Windows 11 x64 on NTFS with the relevant game or official tool",
+    "handoffRoot": "target/qualification-evidence/c3404f7/gradle/release-qualification",
+    "handoffManifestSha256": "b569a1e238d68ee5b4b063d50c9e1f68088da1d3b176e666325e22f9cc2621b1",
+    "writableConformanceCaseCount": 23,
+    "writableConformanceCases": [
+      {
+        "caseId": "CV1-bsa-067.encode.bsa-067-mixed-v1-interface-v1-runtime-v1-profile-v1.mixed.standard-v1",
+        "archiveFamily": "bsa-067",
+        "fixture": "bsa-067-mixed-v1-interface-v1-runtime-v1-profile-v1",
+        "codec": "mixed",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-bsa-067.encode.bsa-067-stored-v1-interface-v1-runtime-v1-profile-v1.stored.standard-v1",
+        "archiveFamily": "bsa-067",
+        "fixture": "bsa-067-stored-v1-interface-v1-runtime-v1-profile-v1",
+        "codec": "stored",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-bsa-067.encode.bsa-067-zlib-v1-interface-v1-runtime-v1-profile-v1.zlib.standard-v1",
+        "archiveFamily": "bsa-067",
+        "fixture": "bsa-067-zlib-v1-interface-v1-runtime-v1-profile-v1",
+        "codec": "zlib",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-bsa-068.encode.bsa-068-mixed-v1.mixed.standard-v1",
+        "archiveFamily": "bsa-068",
+        "fixture": "bsa-068-mixed-v1",
+        "codec": "mixed",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-bsa-068.encode.bsa-068-stored-v1.stored.standard-v1",
+        "archiveFamily": "bsa-068",
+        "fixture": "bsa-068-stored-v1",
+        "codec": "stored",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-bsa-068.encode.bsa-068-zlib-v1.zlib.standard-v1",
+        "archiveFamily": "bsa-068",
+        "fixture": "bsa-068-zlib-v1",
+        "codec": "zlib",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-bsa-069.encode.base-bsa-069-lz4-frame.lz4-frame.standard-v1",
+        "archiveFamily": "bsa-069",
+        "fixture": "base-bsa-069-lz4-frame",
+        "codec": "lz4-frame",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-bsa-069.encode.base-bsa-069-mixed.mixed.standard-v1",
+        "archiveFamily": "bsa-069",
+        "fixture": "base-bsa-069-mixed",
+        "codec": "mixed",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-bsa-069.encode.base-bsa-069-stored.stored.standard-v1",
+        "archiveFamily": "bsa-069",
+        "fixture": "base-bsa-069-stored",
+        "codec": "stored",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-fo4-dx10-v1.encode.fo4-dds-base-fo4-dx10-v1-zlib-v1-interface-v1-runtime-v1-profile-v1.zlib.pc-v1",
+        "archiveFamily": "fo4-dx10-v1",
+        "fixture": "fo4-dds-base-fo4-dx10-v1-zlib-v1-interface-v1-runtime-v1-profile-v1",
+        "codec": "zlib",
+        "configuration": "pc-v1"
+      },
+      {
+        "caseId": "CV1-fo4-dx10-v1.encode.fo4-dds-dds-target-pc-v1-interface-v1-runtime-v1-profile-v1.zlib.pc-v1",
+        "archiveFamily": "fo4-dx10-v1",
+        "fixture": "fo4-dds-dds-target-pc-v1-interface-v1-runtime-v1-profile-v1",
+        "codec": "zlib",
+        "configuration": "pc-v1"
+      },
+      {
+        "caseId": "CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-mixed-v1-interface-v1-runtime-v1-profile-v1.mixed.standard-v1",
+        "archiveFamily": "fo4-gnrl-v1",
+        "fixture": "fo4-general-base-fo4-gnrl-v1-mixed-v1-interface-v1-runtime-v1-profile-v1",
+        "codec": "mixed",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-stored-v1-interface-v1-runtime-v1-profile-v1.stored.standard-v1",
+        "archiveFamily": "fo4-gnrl-v1",
+        "fixture": "fo4-general-base-fo4-gnrl-v1-stored-v1-interface-v1-runtime-v1-profile-v1",
+        "codec": "stored",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-fo4-gnrl-v1.encode.fo4-general-base-fo4-gnrl-v1-zlib-v1-interface-v1-runtime-v1-profile-v1.zlib.standard-v1",
+        "archiveFamily": "fo4-gnrl-v1",
+        "fixture": "fo4-general-base-fo4-gnrl-v1-zlib-v1-interface-v1-runtime-v1-profile-v1",
+        "codec": "zlib",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-sf-dx10-v2.encode.base-sf-dx10-v2-zlib.zlib.pc-v1",
+        "archiveFamily": "sf-dx10-v2",
+        "fixture": "base-sf-dx10-v2-zlib",
+        "codec": "zlib",
+        "configuration": "pc-v1"
+      },
+      {
+        "caseId": "CV1-sf-dx10-v3-m3.encode.base-sf-dx10-v3-m3-raw-lz4.raw-lz4.pc-v1",
+        "archiveFamily": "sf-dx10-v3-m3",
+        "fixture": "base-sf-dx10-v3-m3-raw-lz4",
+        "codec": "raw-lz4",
+        "configuration": "pc-v1"
+      },
+      {
+        "caseId": "CV1-sf-gnrl-v2.encode.base-sf-gnrl-v2-mixed.mixed.standard-v1",
+        "archiveFamily": "sf-gnrl-v2",
+        "fixture": "base-sf-gnrl-v2-mixed",
+        "codec": "mixed",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-sf-gnrl-v2.encode.base-sf-gnrl-v2-stored.stored.standard-v1",
+        "archiveFamily": "sf-gnrl-v2",
+        "fixture": "base-sf-gnrl-v2-stored",
+        "codec": "stored",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-sf-gnrl-v2.encode.base-sf-gnrl-v2-zlib.zlib.standard-v1",
+        "archiveFamily": "sf-gnrl-v2",
+        "fixture": "base-sf-gnrl-v2-zlib",
+        "codec": "zlib",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-sf-gnrl-v3-m3.encode.base-sf-gnrl-v3-m3-mixed-interface-v1-tracked-source-v1-runtime-v1-profile-v1-tracked-source-v2.mixed.standard-v1",
+        "archiveFamily": "sf-gnrl-v3-m3",
+        "fixture": "base-sf-gnrl-v3-m3-mixed-interface-v1-tracked-source-v1-runtime-v1-profile-v1-tracked-source-v2",
+        "codec": "mixed",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-sf-gnrl-v3-m3.encode.base-sf-gnrl-v3-m3-raw-lz4-interface-v1-tracked-source-v1-runtime-v1-profile-v1-tracked-source-v2.raw-lz4.standard-v1",
+        "archiveFamily": "sf-gnrl-v3-m3",
+        "fixture": "base-sf-gnrl-v3-m3-raw-lz4-interface-v1-tracked-source-v1-runtime-v1-profile-v1-tracked-source-v2",
+        "codec": "raw-lz4",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-sf-gnrl-v3-m3.encode.base-sf-gnrl-v3-m3-stored.stored.standard-v1",
+        "archiveFamily": "sf-gnrl-v3-m3",
+        "fixture": "base-sf-gnrl-v3-m3-stored",
+        "codec": "stored",
+        "configuration": "standard-v1"
+      },
+      {
+        "caseId": "CV1-tes3.encode.base-tes3-stored.stored.standard-v1",
+        "archiveFamily": "tes3",
+        "fixture": "base-tes3-stored",
+        "codec": "stored",
+        "configuration": "standard-v1"
+      }
+    ],
+    "operatorRecordRequirements": [
+      "exact candidate and codec/profile identity",
+      "game or official-tool name and version",
+      "Windows environment and archive configuration",
+      "representative fixture/input and output SHA-256 values",
+      "exact commands, observed acceptance, and diagnostics",
+      "human operator sign-off"
+    ],
+    "proprietaryEvidencePolicy": "Keep proprietary inputs and resulting game assets outside version control."
+  },
+  "historicalEvidence": {
+    "location": ".scratch/migrate-maven-to-gradle/parity/236202b",
+    "unchanged": true,
+    "treeSha256": "13bd228776bc6db852d5aa374d9427cdb17cc333f588411136cc54f883cc38a7"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "compression-consumption": {"scenario": "compression-consumption", "checks": {"failure_kind": "FORMAT", "mutated_size": "record"}},
+  "compression-size-mismatch": {"scenario": "compression-size-mismatch", "checks": {"failure_kind": "FORMAT", "mutated_size": "decoded"}},
+  "compression-mixed": {"scenario": "compression-mixed", "checks": {"compressed": [true, false], "decoded_sizes": [1024, 4], "names": ["meshes\\a.nif", "meshes\\b.nif"]}},
+  "source-later-part-collision": {"scenario": "source-later-part-collision", "checks": {"failure_kind": "POLICY", "first_exists": false, "later_content": "existing", "scratch_files": 0, "residual_artifacts": 0, "output_files": ["out2.bsa"], "publishing_entered": false}},
+  "source-split-names": {"scenario": "source-split-names", "checks": {"part_names": {"packed.part.bsa": ["packed.part.bsa", "packed.part2.bsa", "packed.part3.bsa"], "archive": ["archive", "archive2", "archive3"], ".archive": [".archive", "2.archive", "3.archive"]}, "entry_counts": [1, 1, 1, 1, 1, 1, 1, 1, 1], "trailing_failure": "POLICY", "trailing_files": 0}}
+}

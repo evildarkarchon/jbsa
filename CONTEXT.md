@@ -12,6 +12,10 @@ _Avoid_: Package, bundle
 A distinct Bethesda Archive encoding identified by its game generation, container version, and payload kind, such as TES3, SSE BSA, Fallout 4 General BA2, or Starfield DDS BA2.
 _Avoid_: Game format, archive type
 
+**Versioned BSA**:
+The `BSA\0` format lineage spanning wire versions `0x67`, `0x68`, and `0x69` and their distinct Archive Families. It is colloquially called TES4 BSA; TES4 / Oblivion BSA denotes only the `0x67` Archive Family.
+_Avoid_: TES4 / Oblivion BSA when naming the whole lineage
+
 **Tolerated Noncanonical Archive**:
 A Bethesda Archive whose structure is noncanonical but remains bounded, unambiguous, and safely decodable. It produces a stable diagnostic and is never a valid encoder output.
 _Avoid_: Malformed-but-valid archive, lenient archive
@@ -44,13 +48,29 @@ _Avoid_: Upstream, latest TES5Edit
 The locally provisioned BSArch executable whose identity is fixed by digest and whose behavior is used for differential and golden testing against the Reference Snapshot.
 _Avoid_: Reference binary, latest BSArch
 
+**Assurance Plan**:
+The compact, versioned rules and generators that select the conformance and performance evidence required for a change or release.
+_Avoid_: Expanded case catalog, compatibility checklist
+
 **Conformance Contract**:
-The versioned authority, case matrix, and pass/fail rules governing compatibility claims. The initial contract is identified as `conformance-v1`.
-_Avoid_: Test plan, compatibility checklist
+The frozen `conformance-v1` authority and expanded case rules retained only as historical Assurance v2 migration evidence.
+_Avoid_: Assurance Plan, compatibility checklist
+
+**Assurance Scenario**:
+A stable behavioral scenario generated from the Assurance Plan and judged independently as `PASS`, `FAIL`, or `INVALID`.
+_Avoid_: Test row, matrix cell
 
 **Conformance Case**:
-The smallest independently gated compatibility scenario, identified by its Archive Family, operation, fixture, codec, and configuration. Every required case must pass; `N/A` is reserved for structurally inapplicable combinations.
-_Avoid_: Test row, matrix cell
+A legacy `conformance-v1` matrix scenario retained as frozen, digest-indexed migration evidence.
+_Avoid_: Assurance Scenario, test row
+
+**Assurance Tier**:
+The affected, full, or release scope selected by a change trigger; a tier determines which Assurance Scenarios and evidence are required.
+_Avoid_: Test level, coverage percentage
+
+**Semantic Expectation**:
+A content-addressed expected behavior for an Assurance Scenario whose identity changes only when the asserted semantics change.
+_Avoid_: Run snapshot, whole-specification golden
 
 **Decode Conformance**:
 For a supported Bethesda Archive, reproducing the reference entry names, metadata, and uncompressed entry bytes exactly.
@@ -65,7 +85,7 @@ Producing byte-for-byte identical archive output to the Reference Snapshot for a
 _Avoid_: Exact compatibility
 
 **Automated Conformance**:
-The claim that every required Conformance Case runnable in hosted continuous integration passes. It does not imply current game or official-tool acceptance evidence.
+The claim that every Assurance Scenario selected by the applicable automated tier passes. It does not imply current game or official-tool acceptance evidence.
 _Avoid_: Full conformance, CI certification
 
 **CLI Observation**:
@@ -79,6 +99,18 @@ _Avoid_: Example CLI, BSArch clone
 **Archive Name Encoding**:
 The explicit Windows code page used to translate archive name bytes without losing their original wire representation. Windows-1252 is the deterministic default; the `bsarch-1.0` Compatibility Profile may select the active Windows ANSI code page.
 _Avoid_: Platform default encoding, implicit ANSI
+
+**Normalized Name Identity**:
+The optional locale-independent archive-entry key formed from a structurally safe complete name by canonical separator mapping and ASCII-only case folding. It is distinct from display spelling, original wire-name bytes, hashes, and host filesystem identity.
+_Avoid_: Normalized path, lowercase name
+
+**DDS Target**:
+The explicit PC or Xbox platform selection used to validate DDS input for packing or choose canonical DDS reconstruction. It is distinct from Archive Family, codec, and destination Target Policy.
+_Avoid_: Archive target, inferred platform
+
+**Resource Limits**:
+The immutable semantic ceilings a caller applies to archive entries, metadata, decoded content, scratch use, outputs, diagnostics, and Secondary Failures. They are distinct from implementation buffer and scheduling controls.
+_Avoid_: Memory settings, tuning parameters
 
 **Conformance Diagnostic**:
 A machine-comparable identifier, severity, operation, phase, structured location, and canonically represented value set emitted for a warning or failure. An optional human explanation is not part of library conformance.
@@ -129,7 +161,7 @@ An advisory observation of an archive operation's stable phase and monotonic com
 _Avoid_: Progress tick, console percentage
 
 **Independent Validator**:
-A tool independent of the Reference Snapshot and Conformance Oracle that corroborates a Conformance Case without becoming its normative authority. A disagreement blocks release until investigated.
+A tool independent of the Reference Snapshot and Conformance Oracle that corroborates an Assurance Scenario without becoming its normative authority. A disagreement blocks release until investigated.
 _Avoid_: Secondary oracle
 
 **Compatibility Deviation**:
@@ -148,13 +180,29 @@ _Avoid_: Game test, self-hosted CI check
 The versioned generators, seeds, manifests, and small structural templates from which content-addressed performance inputs are materialized deterministically. Ignored proprietary game assets may corroborate results but are not part of this corpus.
 _Avoid_: Game corpus, performance fixtures
 
+**Performance Lane**:
+A performance-risk category—throughput, random access, peak memory, parallel scaling, or output size—covered by representative implementation-path scenarios rather than a Cartesian product.
+_Avoid_: Benchmark matrix, performance score
+
 **Performance Case**:
-The smallest independently gated performance scenario, identified by its measured surface, Benchmark Corpus workload, Archive Family or layout, codec and provider configuration, and worker count. Every applicable metric passes independently rather than contributing to a composite score.
-_Avoid_: Benchmark test, performance score
+A legacy `performance-v1` product-matrix measurement retained as frozen, digest-indexed historical evidence.
+_Avoid_: Performance Scenario, benchmark row
+
+**Performance Scenario**:
+An Assurance Scenario that measures one materially distinct implementation path in a Performance Lane under a pinned workload and protocol.
+_Avoid_: Benchmark row, product permutation
+
+**Performance Qualification**:
+The same-machine evaluation of the required Performance Lanes for an exact candidate, using the current released baseline when one exists and a small Conformance Oracle canary set where applicable.
+_Avoid_: Cross-machine comparison, canonical benchmark machine
 
 **Reference Performance Qualification**:
-A paired comparison between JBSA and the Conformance Oracle rerun on the same available Windows machine under one protocol. Hardware and Windows builds are recorded only as diagnostic context; no particular machine or build defines acceptance.
-_Avoid_: CI benchmark, cross-machine comparison, canonical benchmark machine
+The legacy performance-v1 paired comparison between JBSA and the Conformance Oracle, retained only as historical provenance.
+_Avoid_: Performance Qualification, CI benchmark
+
+**Evidence Capsule**:
+The content-addressed record binding one assurance run's plan, candidate, selected scenarios, outcomes, identities, and retained evidence.
+_Avoid_: Review packet, committed raw run directory
 
 **Performance Baseline**:
 An immutable, versioned JBSA artifact and its Benchmark Corpus, JVM, provider, and protocol identities, rerun beside a candidate on the same machine. Stored absolute timings are evidence rather than portable acceptance standards, and replacing the artifact is a deliberate requalification.

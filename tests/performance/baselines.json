@@ -1,0 +1,6 @@
+{
+  "contract": "performance-v1",
+  "current": null,
+  "history": [],
+  "note": "No public release exists. Issue #55 establishes the first immutable baseline; replacements require full paired qualification and explicit maintainer approval."
+}

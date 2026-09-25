@@ -1,0 +1,222 @@
+{
+  "status": "PASS",
+  "scope": "BSA 0x68",
+  "required_cases": 52,
+  "passed_cases": 52,
+  "other_cases_without_registrations": 456,
+  "automated_conformance": false,
+  "active_catalog_sha256": "ef912247053ac719165b1c6e9af90db3b4c3d714245061eed87683791f70aa2d",
+  "report_sha256": "c1034abb5e793fa0ed5af1c6542ff264722a2dc0e02af0dfb4bfbd2db03ea7c4",
+  "registration_sha256": "ee76b0d9c098c39b0197257f52a89e9de8c3ca9464cef0c79f9dcdcb2cecc995",
+  "reporting_helper_sha256": "a131261c8d949250007c7b001cfabc9edd0f65910f05a6b20bf3ddbff1f8cefe",
+  "cases": [
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-lz4-frame-v1.lz4-frame.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-arithmetic-overflow-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-decompression-mismatch-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-equal-name-identities-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-exact-shared-spans-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-harmless-trailing-bytes-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-ignorable-constants-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-illegal-tuples-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-impossible-counts-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-missing-name-tables-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-out-of-range-spans-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-owning-dispositions-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-partial-overlap-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-truncated-spans-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-undecodable-wire-names-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-unsafe-absolute-names-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-unsafe-traversal-names-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-usable-name-hash-mismatch-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-malformed-windows-invalid-names-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-mixed-v1.mixed.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-raw-deflate-v1.raw-deflate.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-raw-lz4-v1.raw-lz4.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-stored-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.decode.bsa-068-zlib-v1.zlib.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.encode.bsa-068-lz4-frame-v1.lz4-frame.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.encode.bsa-068-mixed-v1.mixed.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.encode.bsa-068-raw-deflate-v1.raw-deflate.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.encode.bsa-068-raw-lz4-v1.raw-lz4.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.encode.bsa-068-stored-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.encode.bsa-068-zlib-v1.zlib.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.extract.bsa-068-malformed-unsafe-name-extraction-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-bsa-automatic-flags-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-bsa-dds-empty-stem-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-bsa-embedded-068-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-bsa-hash-collisions-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-bsa-name-flags-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-compression-boundaries-v1.zlib.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-compression-consumption-v1.zlib.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-compression-mixed-v1.mixed.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-compression-size-mismatch-v1.zlib.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-input-nested-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-names-ascii-lowercase-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-names-case-and-separators-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-names-nonascii-lowercase-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-names-normalized-rejections-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-names-undecodable-components-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-names-unmappable-encode-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-names-wire-encodings-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-source-later-part-collision-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-source-sharing-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-source-split-names-v1.stored.standard-v1",
+      "result": "PASS"
+    },
+    {
+      "case_id": "CV1-bsa-068.scenario.bsa-068-scenario-source-splitting-v1.stored.standard-v1",
+      "result": "PASS"
+    }
+  ]
+}

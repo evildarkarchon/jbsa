@@ -1,0 +1,52 @@
+{
+  "kind": "fixture-or-scenario-descriptor",
+  "token": "source-overlay",
+  "description": "Later-source-wins overlay order",
+  "binding": {
+    "state": "available",
+    "files": [
+      {
+        "path": "tests/fixtures/synthetic/artifacts/scenarios/overlay.json",
+        "sha256": "35e89c31f8aa195c304fb6873e6fd9826a540a98139c5c3629daa1334f09832f"
+      }
+    ],
+    "generator": {
+      "id": "jbsa-synthetic-fixture-generator",
+      "version": "1",
+      "configuration": {
+        "procedure": "Declare two source layers whose later duplicate retains the first insertion ordinal.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {
+          "policy": "later-source-wins"
+        }
+      },
+      "recipe_sha256": "14693e3344a4c977c9e5c7d1d88174e3f49b0948abb63feffe6bbe32c34b99b1",
+      "descriptor": {
+        "path": "tests/fixtures/synthetic/generator.json",
+        "sha256": "efca538ab2357f4253c93d0004382b2e1d676569a1ab79c79eb633083eec3a22"
+      },
+      "implementation": {
+        "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/FixtureCorpusGenerator.java",
+        "sha256": "ee33c5b01f32cb46321a138ab71498f400df33a1f6154e986be1f8f88be01cac"
+      }
+    },
+    "provenance": {
+      "fixture_id": "later-source-wins-overlay",
+      "manifest": {
+        "path": "tests/fixtures/synthetic/manifest.json",
+        "sha256": "f674df5c134b9e26782c860c875b4eb37644f59ad7c1f852fb9d6db751ce0216"
+      },
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "source": "project-authored generator recipe later-source-wins-overlay",
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null
+    },
+    "missing_reason": null
+  },
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0",
+    "source": "Project-authored conformance-v1 scenario assignment; this descriptor is not archive bytes or successful evidence."
+  }
+}

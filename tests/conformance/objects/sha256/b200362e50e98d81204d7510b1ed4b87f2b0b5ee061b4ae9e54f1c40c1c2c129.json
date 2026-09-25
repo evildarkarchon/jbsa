@@ -1,0 +1,52 @@
+{
+  "kind": "fixture-or-scenario-descriptor",
+  "token": "limits-standard-boundaries",
+  "description": "Every ResourceLimits.standard ceiling exactly at and one unit above its boundary",
+  "binding": {
+    "state": "available",
+    "files": [
+      {
+        "path": "tests/fixtures/synthetic/artifacts/scenarios/resource-limit-boundaries.json",
+        "sha256": "fce59d06c12f3fa15a73c1b0ff857aebb4616dff4f4e4f09748c795a22f6ca00"
+      }
+    ],
+    "generator": {
+      "id": "jbsa-synthetic-fixture-generator",
+      "version": "1",
+      "configuration": {
+        "procedure": "Declare each ResourceLimits.standard ceiling at and one unit above the boundary.",
+        "command": "java -cp jbsa-test-support/target/classes io.github.evildarkarchon.jbsa.fixtures.FixtureCorpusGenerator --output <empty-directory>",
+        "options": {
+          "boundary_policy": "equal-allowed-next-rejected"
+        }
+      },
+      "recipe_sha256": "db7b9316002e9542767e80f7bc262333652daffb6314712627a4d5aa82c33038",
+      "descriptor": {
+        "path": "tests/fixtures/synthetic/generator.json",
+        "sha256": "efca538ab2357f4253c93d0004382b2e1d676569a1ab79c79eb633083eec3a22"
+      },
+      "implementation": {
+        "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/FixtureCorpusGenerator.java",
+        "sha256": "ee33c5b01f32cb46321a138ab71498f400df33a1f6154e986be1f8f88be01cac"
+      }
+    },
+    "provenance": {
+      "fixture_id": "resource-limit-boundaries",
+      "manifest": {
+        "path": "tests/fixtures/synthetic/manifest.json",
+        "sha256": "f674df5c134b9e26782c860c875b4eb37644f59ad7c1f852fb9d6db751ce0216"
+      },
+      "creator": "JBSA project contributors",
+      "spdx_license": "CC0-1.0",
+      "source": "project-authored generator recipe resource-limit-boundaries",
+      "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+      "oracle_sha256": null
+    },
+    "missing_reason": null
+  },
+  "provenance": {
+    "creator": "JBSA project contributors",
+    "spdx_license": "CC0-1.0",
+    "source": "Project-authored conformance-v1 scenario assignment; this descriptor is not archive bytes or successful evidence."
+  }
+}
