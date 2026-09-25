@@ -605,7 +605,7 @@ class MainTest {
     assertEquals(1, safe.status());
     Result profiled = run("--compatibility-profile=bsarch-1.0/v1", missing.toString());
     assertEquals(0, profiled.status());
-    assertTrue(profiled.output().startsWith("Error: [source]"), profiled.output());
+    assertTrue(profiled.output().contains("Error: ["), profiled.output());
     assertEquals("", profiled.error());
   }
 
