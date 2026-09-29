@@ -38,12 +38,13 @@ foreach ($artifact in $policy.runtimeArtifacts) {
     }
     $paths += $path
 }
-$launch = @('--illegal-native-access=deny', '-Dfile.encoding=UTF-8')
+# The CLI owns Ctrl+C through its Win32 handler, so HotSpot must not start shutdown first.
+$launch = @('--illegal-native-access=deny', '-Dfile.encoding=UTF-8', '-Xrs')
 if ($ClassPath) {
     $launch += @('--enable-native-access=ALL-UNNAMED', '--class-path', ($paths -join ';'), $policy.mainClass)
 } else {
     # Native-resource modules are not required by Java bindings and must be explicit roots.
-    $launch += @('--enable-native-access=io.github.evildarkarchon.jbsa,org.lwjgl,org.lwjgl.lz4', '--add-modules', 'org.lwjgl.natives,org.lwjgl.lz4.natives', '--module-path', ($paths -join ';'), '--module', ($policy.mainModule + '/' + $policy.mainClass))
+    $launch += @('--enable-native-access=io.github.evildarkarchon.jbsa.cli,io.github.evildarkarchon.jbsa,org.lwjgl,org.lwjgl.lz4', '--add-modules', 'org.lwjgl.natives,org.lwjgl.lz4.natives', '--module-path', ($paths -join ';'), '--module', ($policy.mainModule + '/' + $policy.mainClass))
 }
 & $java @launch @CliArguments
 exit $LASTEXITCODE

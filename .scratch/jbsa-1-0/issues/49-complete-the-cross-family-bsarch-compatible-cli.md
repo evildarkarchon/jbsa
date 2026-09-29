@@ -1,15 +1,15 @@
 # Complete the cross-family BSArch-compatible CLI
 
-Status: ready-for-agent
-State: open
+Status: none
+State: closed
 GitHub issue: #49
 Source: https://github.com/evildarkarchon/jbsa/issues/49
 Author: evildarkarchon
 Created: 2026-09-03T06:54:19Z
 Source updated: 2026-09-03T06:54:19Z
-Closed: none
+Closed: 2026-09-28
 Migrated: 2026-09-10
-Labels: ready-for-agent
+Labels: none
 Assignees: none
 Blocked by: [#47](../issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md), [#48](../issues/48-introduce-bounded-deterministic-parallel-archive-operations.md)
 Parent: [#23](../map.md)
@@ -55,3 +55,15 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+## Outcome
+
+Completed the public-library-backed CLI across all eight writable Archive Families, including
+strict and profiled parsing, deterministic information and mutation records, interactive
+snapshot progress, and a cooperative Windows Ctrl+C handler. Process tests cover pack, dump,
+unpack, overlays, filters, replacement, and single versus automatic worker equivalence.
+
+`gradle verify -x :build-logic:test` and the focused thin-application functional test passed.
+The full `gradle clean verify` run was blocked only in thirteen nested Gradle TestKit cases by
+unavailable DNS for Maven Central; all other executed tests passed. Packaged `jbsa.exe` signal
+and exit-status qualification remains with #53.

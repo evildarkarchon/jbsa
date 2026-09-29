@@ -121,9 +121,14 @@ class ThinApplicationPluginFunctionalTest {
         )
         assertTrue(result.output.contains("FIXTURE 0.1.0-SNAPSHOT"), result.output)
         assertTrue(result.output.contains("--illegal-native-access=deny"), result.output)
+        if (System.getProperty("os.name", "").startsWith("Windows")) {
+            assertTrue(result.output.contains("-Xrs"), result.output)
+        } else {
+            assertFalse(result.output.contains("-Xrs"), result.output)
+        }
         assertTrue(
             result.output.contains(
-                "--enable-native-access=io.github.evildarkarchon.jbsa,org.lwjgl,org.lwjgl.lz4"
+                "--enable-native-access=io.github.evildarkarchon.jbsa.cli,io.github.evildarkarchon.jbsa,org.lwjgl,org.lwjgl.lz4"
             ),
             result.output,
         )

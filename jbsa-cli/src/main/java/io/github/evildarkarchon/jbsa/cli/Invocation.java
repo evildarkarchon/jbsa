@@ -91,13 +91,31 @@ record Invocation(
     PackOptions.Splitting splitting = new PackOptions.Splitting.FamilyDefault();
     List<String> masks = List.of();
     Set<String> seen = new HashSet<>();
+    Set<String> operationSwitches =
+        Set.of(
+            "-z",
+            "-af",
+            "-ff",
+            "-list",
+            "-dump",
+            "--replace",
+            "--no-progress",
+            "-share",
+            "-mt",
+            "-split",
+            "-f");
     for (; index < args.length; index++) {
       String original = args[index];
       String option = lower(original);
       String key = option.split(":", 2)[0];
-      if (!seen.add(key)) {
+      // Unknown profile tail arguments are ignored on every occurrence, so they never enter seen.
+      boolean recognized =
+          operationSwitches.contains(key) || familyPriority(key) != Integer.MAX_VALUE;
+      if (recognized && !seen.add(key)) {
         if (profile.isPresent()
-            && Set.of("-share", "-mt", "-split", "-f", "-af", "-ff", "-z").contains(key)) {
+            && (Set.of("-share", "-mt", "-split", "-f", "-af", "-ff", "-z").contains(key)
+                || familyPriority(key) != Integer.MAX_VALUE)) {
+          // The first value wins; repeating a family cannot change fixed profile priority.
           continue;
         }
         require(false, "Duplicate switch: " + key);
@@ -199,7 +217,9 @@ record Invocation(
           // Profiles cannot activate safety options at another position.
           require(
               profile.isPresent()
-                  && !option.startsWith("--")
+                  && !option.equals("--help")
+                  && !option.equals("--version")
+                  && !option.startsWith("--compatibility-profile")
                   && !key.equals("-z")
                   && !key.equals("-af")
                   && !key.equals("-ff"),
@@ -279,7 +299,7 @@ record Invocation(
         true);
   }
 
-  /** Orders implemented CLI selectors under the immutable BSArch family-priority profile. */
+  /** Returns the profile priority, or the last rank for a non-selector switch. */
   private static int familyPriority(String selector) {
     return switch (selector) {
       case "-tes3" -> 0;
@@ -292,7 +312,7 @@ record Invocation(
       case "-fo4dds" -> 7;
       case "-sf1" -> 8;
       case "-sf1dds" -> 9;
-      default -> throw new IllegalArgumentException("Unsupported family selector: " + selector);
+      default -> Integer.MAX_VALUE;
     };
   }
 

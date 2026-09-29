@@ -213,6 +213,7 @@ class MainTest {
     assertTrue(dumped.output().contains("Target: PC"));
     assertTrue(dumped.output().contains("Codec: ZLIB"));
     assertTrue(dumped.output().contains("Dimensions: 1x1"));
+    assertTrue(dumped.output().contains("DDS flags: 0"));
     assertTrue(dumped.output().contains("Mip range: 0..0"));
     Path xboxNamed = temporary.resolve("dds_xbox.ba2");
     Files.copy(archive, xboxNamed);
@@ -342,6 +343,7 @@ class MainTest {
       Result dumped = run(archive.toString(), "-dump");
       assertEquals(0, dumped.status(), dumped.error());
       assertTrue(dumped.output().contains("Family: STARFIELD_GENERAL_BA2"));
+      assertTrue(dumped.output().contains("Unknown value at 24: 1"), dumped.output());
       assertTrue(
           dumped
               .output()
@@ -352,6 +354,10 @@ class MainTest {
               .contains(
                   "Codec: "
                       + (codec == null ? "STORED" : codec.equals("-z:lz4") ? "LZ4_RAW" : "ZLIB")));
+      assertTrue(dumped.output().contains("  Compressed: " + (codec != null)), dumped.output());
+      if ("-z:lz4".equals(codec)) {
+        assertTrue(dumped.output().contains("Compression method: 3"), dumped.output());
+      }
       Path destination = Files.createDirectory(temporary.resolve("sf-output-" + index));
       Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
       assertEquals(0, unpacked.status(), unpacked.error());
@@ -451,6 +457,7 @@ class MainTest {
     assertTrue(dumped.output().contains("Compressed entries: 1"));
     assertTrue(dumped.output().contains("Codec: ZLIB"));
     assertTrue(dumped.output().contains("Folder hash:"));
+    assertTrue(dumped.output().contains("Folder file count: 1"));
     assertTrue(dumped.output().contains("Archive flags:"));
     Path destination = Files.createDirectory(temporary.resolve("tes4-output"));
     Result unpacked = run("unpack", archive.toString(), destination.toString(), "--no-progress");
@@ -509,6 +516,25 @@ class MainTest {
       assertEquals(0, result.status(), result.error());
       assertTrue(run(archive.toString()).output().contains("Family: TES3_BSA"));
     }
+  }
+
+  /** Repeating a profile family selector preserves the same priority choice. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileAcceptsRepeatedFamilySelector() throws Exception {
+    Path source = Files.createDirectory(temporary.resolve("repeated-family-source"));
+    Files.writeString(source.resolve("entry.txt"), "payload");
+    Path archive = temporary.resolve("repeated-family.bsa");
+    Result packed =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            source.toString(),
+            archive.toString(),
+            "-tes3",
+            "-tes3");
+    assertEquals(0, packed.status(), packed.output() + packed.error());
+    assertTrue(run(archive.toString()).output().contains("Family: TES3_BSA"));
   }
 
   @Test
@@ -609,6 +635,92 @@ class MainTest {
     assertEquals("", profiled.error());
   }
 
+  /** The selected profile places invocation errors on the qualified reference stream. */
+  @Test
+  void profilePlacesInvalidInvocationOnStandardOutput() throws Exception {
+    Path archive = temporary.resolve("invalid.bsa");
+    Result invalid =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            "missing",
+            archive.toString(),
+            "-tes3",
+            "-z");
+    assertEquals(2, invalid.status());
+    assertTrue(invalid.output().startsWith("Error: [invocation]"), invalid.output());
+    assertEquals("", invalid.error());
+    assertTrue(Files.notExists(archive));
+  }
+
+  /** Empty plus components remain usage errors before profile source omission can run. */
+  @Test
+  void profileRejectsEmptyPackSourceComponent() throws Exception {
+    Path archive = temporary.resolve("empty-component.bsa");
+    Result invalid =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            "missing+",
+            archive.toString(),
+            "-tes3");
+    assertEquals(2, invalid.status());
+    assertTrue(invalid.output().contains("Empty pack source component"), invalid.output());
+    assertEquals("", invalid.error());
+    assertTrue(Files.notExists(archive));
+  }
+
+  /** Only the explicit profile ignores unknown long switches after required operands. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileIgnoresUnknownLongTailSwitch() throws Exception {
+    Path source = Files.createDirectory(temporary.resolve("source"));
+    Files.writeString(source.resolve("entry.txt"), "payload");
+    Path safeArchive = temporary.resolve("safe.bsa");
+    Result safe =
+        run("pack", source.toString(), safeArchive.toString(), "-tes3", "--oracle-unknown");
+    assertEquals(2, safe.status());
+    assertTrue(Files.notExists(safeArchive));
+
+    Path profileArchive = temporary.resolve("profile.bsa");
+    Result profiled =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            source.toString(),
+            profileArchive.toString(),
+            "-tes3",
+            "--oracle-unknown",
+            "extra-tail");
+    assertEquals(0, profiled.status(), profiled.output() + profiled.error());
+    assertTrue(Files.isRegularFile(profileArchive));
+  }
+
+  /** Repeated unknown switches and extra operands remain ignored by the selected profile. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileIgnoresRepeatedUnknownTailArguments() throws Exception {
+    Path source = Files.createDirectory(temporary.resolve("repeated-tail-source"));
+    Files.writeString(source.resolve("entry.txt"), "payload");
+    List<List<String>> tails =
+        List.of(List.of("--vendor-flag", "--vendor-flag"), List.of("extra-tail", "extra-tail"));
+    for (int index = 0; index < tails.size(); index++) {
+      Path archive = temporary.resolve("repeated-tail-" + index + ".bsa");
+      var arguments =
+          new ArrayList<>(
+              List.of(
+                  "--compatibility-profile=bsarch-1.0/v1",
+                  "pack",
+                  source.toString(),
+                  archive.toString(),
+                  "-tes3"));
+      arguments.addAll(tails.get(index));
+      Result packed = run(arguments.toArray(String[]::new));
+      assertEquals(0, packed.status(), tails.get(index) + ": " + packed.output() + packed.error());
+      assertTrue(Files.isRegularFile(archive), archive.toString());
+    }
+  }
+
   /** Profiled packing omits unusable roots but still needs an entry after library discovery. */
   @Test
   @EnabledOnOs(OS.WINDOWS)
@@ -698,6 +810,280 @@ class MainTest {
     assertTrue(missing.error().contains("phase=PREFLIGHT"));
   }
 
+  /**
+   * Every writable family produces identical archive bytes and semantic CLI records with one or
+   * automatic workers. The DDS sources use valid, distinct textures so this exercises real chunk
+   * compression rather than an empty or rejected pack request.
+   */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void workerSelectionPreservesCrossFamilyObservationsAndBytes() throws Exception {
+    List<WorkerCase> cases =
+        List.of(
+            new WorkerCase("-tes3", null, false),
+            new WorkerCase("-tes4", "-z:zlib", false),
+            new WorkerCase("-fo3", "-z:zlib", false),
+            new WorkerCase("-sse", "-z:lz4f", false),
+            new WorkerCase("-fo4", "-z:zlib", false),
+            new WorkerCase("-fo4dds", "-z:zlib", true),
+            new WorkerCase("-sf1", "-z:lz4", false),
+            new WorkerCase("-sf1dds", "-z:lz4", true));
+    for (WorkerCase testCase : cases) {
+      String name = testCase.selector().substring(1);
+      Path source = Files.createDirectory(temporary.resolve(name + "-workers-source"));
+      Path entries = Files.createDirectory(source.resolve(testCase.dds() ? "Textures" : "meshes"));
+      for (int index = 0; index < 4; index++) {
+        Path entry = entries.resolve("entry" + index + (testCase.dds() ? ".dds" : ".nif"));
+        if (testCase.dds()) {
+          Files.write(entry, workerDdsFixture(index));
+        } else {
+          Files.writeString(entry, ("payload-" + index).repeat(2_048));
+        }
+      }
+      String extension =
+          testCase.selector().contains("fo4") || testCase.selector().contains("sf1")
+              ? ".ba2"
+              : ".bsa";
+      Path singleArchive = temporary.resolve(name + "-single" + extension);
+      Path automaticArchive = temporary.resolve(name + "-automatic" + extension);
+      List<String> singleArguments =
+          new ArrayList<>(
+              List.of("pack", source.toString(), singleArchive.toString(), testCase.selector()));
+      List<String> automaticArguments =
+          new ArrayList<>(
+              List.of("pack", source.toString(), automaticArchive.toString(), testCase.selector()));
+      if (testCase.codec() != null) {
+        singleArguments.add(testCase.codec());
+        automaticArguments.add(testCase.codec());
+      }
+      singleArguments.addAll(List.of("-mt:no", "--no-progress"));
+      automaticArguments.addAll(List.of("-mt:yes", "--no-progress"));
+      Result single = run(singleArguments.toArray(String[]::new));
+      Result automatic = run(automaticArguments.toArray(String[]::new));
+      assertEquals(0, single.status(), name + ": " + single.error());
+      assertEquals(0, automatic.status(), name + ": " + automatic.error());
+      assertEquals(
+          structuredDiagnostics(single.error()),
+          structuredDiagnostics(automatic.error()),
+          name + " diagnostics");
+      assertArrayEquals(
+          Files.readAllBytes(singleArchive), Files.readAllBytes(automaticArchive), name);
+      assertEquals(
+          normalizedArchiveObservation(single.output(), singleArchive),
+          normalizedArchiveObservation(automatic.output(), automaticArchive),
+          name + " pack observation");
+
+      Result singleDump = run(singleArchive.toString(), "-dump");
+      Result automaticDump = run(automaticArchive.toString(), "-dump");
+      assertEquals(0, singleDump.status(), name + ": " + singleDump.error());
+      assertEquals(0, automaticDump.status(), name + ": " + automaticDump.error());
+      assertEquals(
+          normalizedArchiveObservation(singleDump.output(), singleArchive),
+          normalizedArchiveObservation(automaticDump.output(), automaticArchive),
+          name + " dump observation");
+
+      Path singleDestination = Files.createDirectory(temporary.resolve(name + "-single-output"));
+      Path automaticDestination =
+          Files.createDirectory(temporary.resolve(name + "-automatic-output"));
+      Result singleUnpack =
+          run(
+              "unpack",
+              singleArchive.toString(),
+              singleDestination.toString(),
+              "-mt:no",
+              "--no-progress");
+      Result automaticUnpack =
+          run(
+              "unpack",
+              automaticArchive.toString(),
+              automaticDestination.toString(),
+              "-mt:yes",
+              "--no-progress");
+      assertEquals(0, singleUnpack.status(), name + ": " + singleUnpack.error());
+      assertEquals(0, automaticUnpack.status(), name + ": " + automaticUnpack.error());
+      assertEquals(
+          normalizedArchiveObservation(singleUnpack.output(), singleDestination),
+          normalizedArchiveObservation(automaticUnpack.output(), automaticDestination),
+          name + " unpack observation");
+      List<Path> singleFiles;
+      List<Path> automaticFiles;
+      try (var paths = Files.walk(singleDestination)) {
+        singleFiles =
+            paths.filter(Files::isRegularFile).map(singleDestination::relativize).sorted().toList();
+      }
+      try (var paths = Files.walk(automaticDestination)) {
+        automaticFiles =
+            paths
+                .filter(Files::isRegularFile)
+                .map(automaticDestination::relativize)
+                .sorted()
+                .toList();
+      }
+      assertEquals(singleFiles, automaticFiles, name + " extracted tree");
+      for (Path entry : singleFiles) {
+        assertArrayEquals(
+            Files.readAllBytes(singleDestination.resolve(entry)),
+            Files.readAllBytes(automaticDestination.resolve(entry)),
+            name + " extracted " + entry);
+      }
+    }
+  }
+
+  /** Archive and directory sources retain operand order when a basename filter selects entries. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void archiveSourceOverlayAndBasenameFilterReachTheLibrary() throws Exception {
+    Path base = Files.createDirectory(temporary.resolve("overlay-base"));
+    Files.writeString(base.resolve("common.txt"), "base");
+    Files.writeString(base.resolve("old.txt"), "old");
+    Files.writeString(base.resolve("excluded.bin"), "excluded");
+    Path baseArchive = temporary.resolve("base.bsa");
+    Result first = run("pack", base.toString(), baseArchive.toString(), "-tes3");
+    assertEquals(0, first.status(), first.error());
+
+    Path overlay = Files.createDirectory(temporary.resolve("overlay-later"));
+    Files.writeString(overlay.resolve("common.txt"), "replacement");
+    Files.writeString(overlay.resolve("new.txt"), "new");
+    Files.writeString(overlay.resolve("selected.BIN"), "selected");
+    Files.writeString(overlay.resolve("also-excluded.bin"), "excluded");
+    Path combined = temporary.resolve("combined.bsa");
+    Result packed =
+        run(
+            "pack",
+            baseArchive + "+" + overlay,
+            combined.toString(),
+            "-tes3",
+            "-f:*.TXT,selected.?in",
+            "--no-progress");
+    assertEquals(0, packed.status(), packed.error());
+    Path destination = Files.createDirectory(temporary.resolve("overlay-output"));
+    Result unpacked = run("unpack", combined.toString(), destination.toString());
+    assertEquals(0, unpacked.status(), unpacked.error());
+    assertEquals("replacement", Files.readString(destination.resolve("common.txt")));
+    assertEquals("old", Files.readString(destination.resolve("old.txt")));
+    assertEquals("new", Files.readString(destination.resolve("new.txt")));
+    assertEquals("selected", Files.readString(destination.resolve("selected.BIN")));
+    assertTrue(Files.notExists(destination.resolve("excluded.bin")));
+    assertTrue(Files.notExists(destination.resolve("also-excluded.bin")));
+  }
+
+  /** Omitting unpack's destination selects the archive's containing directory. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void unpackDefaultsToArchiveContainingDirectory() throws Exception {
+    Path source = Files.createDirectories(temporary.resolve("default-source/meshes"));
+    Files.writeString(source.resolve("default-entry.txt"), "destination payload");
+    Path archive = temporary.resolve("default-destination.bsa");
+    Result packed = run("pack", source.getParent().toString(), archive.toString(), "-tes3");
+    assertEquals(0, packed.status(), packed.error());
+
+    Result unpacked = run("unpack", archive.toString(), "--no-progress");
+    assertEquals(0, unpacked.status(), unpacked.error());
+    assertTrue(
+        unpacked.output().contains("Destination: " + temporary.toAbsolutePath().normalize()));
+    assertTrue(unpacked.output().contains("Published entries: 1"), unpacked.output());
+    assertEquals(
+        "destination payload", Files.readString(temporary.resolve("meshes/default-entry.txt")));
+  }
+
+  /** The complete profile selects implicit replacement for both pack and unpack mutations. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileImplicitlyReplacesPackAndUnpackTargets() throws Exception {
+    String profile = "--compatibility-profile=bsarch-1.0/v1";
+    Path source = Files.createDirectory(temporary.resolve("replace-source"));
+    Path entry = source.resolve("entry.txt");
+    Files.writeString(entry, "first");
+    Path archive = temporary.resolve("replace-profile.bsa");
+    Result first = run(profile, "pack", source.toString(), archive.toString(), "-tes3");
+    assertEquals(0, first.status(), first.output() + first.error());
+    byte[] predecessor = Files.readAllBytes(archive);
+
+    Files.writeString(entry, "second");
+    Result second = run(profile, "pack", source.toString(), archive.toString(), "-tes3");
+    assertEquals(0, second.status(), second.output() + second.error());
+    assertTrue(!java.util.Arrays.equals(predecessor, Files.readAllBytes(archive)));
+
+    Path destination = Files.createDirectory(temporary.resolve("replace-output"));
+    Files.writeString(destination.resolve("entry.txt"), "predecessor");
+    Result unpacked = run(profile, "unpack", archive.toString(), destination.toString());
+    assertEquals(0, unpacked.status(), unpacked.output() + unpacked.error());
+    assertEquals("second", Files.readString(destination.resolve("entry.txt")));
+  }
+
+  /** Profile zero flags retain automatic selection and a negative split packs whole entries. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileZeroFlagsAndNegativeSplitPublishOnePartPerEntry() throws Exception {
+    Path source = Files.createDirectories(temporary.resolve("legacy-options-source/meshes"));
+    Files.writeString(source.resolve("first.nif"), "first");
+    Files.writeString(source.resolve("second.nif"), "second");
+    Path archive = temporary.resolve("legacy-options.bsa");
+    Result packed =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            source.getParent().toString(),
+            archive.toString(),
+            "-tes4",
+            "-af:0",
+            "-ff:0",
+            "-split:-1");
+    assertEquals(0, packed.status(), packed.output() + packed.error());
+    assertEquals(
+        2, packed.output().lines().filter(line -> line.startsWith("Archive part:")).count());
+    assertTrue(Files.isRegularFile(archive));
+    assertTrue(Files.isRegularFile(temporary.resolve("legacy-options2.bsa")));
+    Result first = run(archive.toString());
+    assertEquals(0, first.status(), first.error());
+    assertTrue(first.output().contains("Entries: 1"), first.output());
+    Path automatic = temporary.resolve("automatic-options.bsa");
+    Result omittedFlags =
+        run(
+            "--compatibility-profile=bsarch-1.0/v1",
+            "pack",
+            source.getParent().toString(),
+            automatic.toString(),
+            "-tes4",
+            "-split:-1");
+    assertEquals(0, omittedFlags.status(), omittedFlags.output() + omittedFlags.error());
+    assertArrayEquals(Files.readAllBytes(automatic), Files.readAllBytes(archive));
+  }
+
+  /** Returns the semantic CLI records after replacing only the archive path operand. */
+  private static String normalizedArchiveObservation(String output, Path archive) {
+    return output.replace(archive.toAbsolutePath().normalize().toString(), "<archive>");
+  }
+
+  /** Keeps CLI-owned diagnostics while ignoring warnings written by the Java runtime itself. */
+  private static List<String> structuredDiagnostics(String stderr) {
+    return stderr
+        .lines()
+        .filter(line -> line.startsWith("Warning: [") || line.startsWith("Error: ["))
+        .toList();
+  }
+
+  /** Supplies a small valid DXT1 source with distinct payload bytes for worker comparisons. */
+  private static byte[] workerDdsFixture(int marker) {
+    var texture = java.nio.ByteBuffer.allocate(160).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+    texture
+        .putInt(0, 0x20534444)
+        .putInt(4, 124)
+        .putInt(12, 7)
+        .putInt(16, 5)
+        .putInt(28, 1)
+        .putInt(76, 32)
+        .putInt(80, 4)
+        .putInt(84, 0x31545844);
+    for (int index = 128; index < texture.capacity(); index++) {
+      texture.put(index, (byte) (index + marker));
+    }
+    return texture.array();
+  }
+
+  /** One selected writable family and its valid compression and source type. */
+  private record WorkerCase(String selector, String codec, boolean dds) {}
+
   /** Launches the modular entry point from the Gradle JARs and captures UTF-8. */
   private Result run(String... arguments) throws Exception {
     List<String> command = new ArrayList<>();
@@ -706,7 +1092,9 @@ class MainTest {
     String cliJar = System.getProperty("jbsa.cli.jar");
     String modulePath;
     if (cliJar == null) {
-      command.add("--enable-native-access=io.github.evildarkarchon.jbsa");
+      if (System.getProperty("os.name").startsWith("Windows")) command.add("-Xrs");
+      command.add(
+          "--enable-native-access=io.github.evildarkarchon.jbsa.cli,io.github.evildarkarchon.jbsa");
       modulePath =
           Path.of("target/classes").toAbsolutePath()
               + java.io.File.pathSeparator
