@@ -73,7 +73,7 @@ class PackCharacterizationTest {
             source(UNSAFE_NAME, 1)),
         FailureKind.UNSUPPORTED,
         "tes3.flags-inapplicable");
-    // D5: the shared source planner will emit pack.invalid-encode-name for every family.
+    // D5: the shared source planner emits pack.invalid-encode-name for every family.
     assertRejected(
         request(
             target,
@@ -82,7 +82,7 @@ class PackCharacterizationTest {
             admitted,
             source(UNSAFE_NAME, 1)),
         FailureKind.POLICY,
-        "tes3.invalid-encode-name");
+        "pack.invalid-encode-name");
     assertRejected(
         request(target, ArchiveFamily.TES3_BSA, ArchiveEncoding.tes3(), admitted),
         FailureKind.POLICY,
@@ -146,11 +146,11 @@ class PackCharacterizationTest {
         FailureKind.UNSUPPORTED,
         "bsa.unsupported-entry-codec");
     var stored = options(PackOptions.Compression.STORED, FlagSelection.AUTOMATIC, unmatched);
-    // D5: the shared source planner will emit pack.invalid-encode-name for every family.
+    // D5: the shared source planner emits pack.invalid-encode-name for every family.
     assertRejected(
         request(target, ArchiveFamily.TES4_BSA, BSA_67, stored, source(UNSAFE_NAME, 1)),
         FailureKind.POLICY,
-        "tes3.invalid-encode-name");
+        "pack.invalid-encode-name");
     // A BSA name needs a folder; the per-entry name rule precedes the unmatched-override check.
     assertRejected(
         request(target, ArchiveFamily.TES4_BSA, BSA_67, stored, source("a.txt", 1)),
@@ -221,11 +221,11 @@ class PackCharacterizationTest {
         FailureKind.UNSUPPORTED,
         "ba2.unsupported-entry-codec");
     var stored = options(PackOptions.Compression.STORED, FlagSelection.AUTOMATIC, unmatched);
-    // D5: the shared source planner will emit pack.invalid-encode-name for every family.
+    // D5: the shared source planner emits pack.invalid-encode-name for every family.
     assertRejected(
         request(target, ArchiveFamily.FO4_GENERAL_BA2, FO4_GNRL, stored, source(UNSAFE_NAME, 1)),
         FailureKind.POLICY,
-        "tes3.invalid-encode-name");
+        "pack.invalid-encode-name");
     // A BA2 name needs a directory; the per-entry name rule precedes the unmatched-override check.
     assertRejected(
         request(target, ArchiveFamily.FO4_GENERAL_BA2, FO4_GNRL, stored, source("a.txt", 1)),
@@ -409,41 +409,31 @@ class PackCharacterizationTest {
         "ba2.duplicate-encode-name");
   }
 
-  /** TES3 has no compressed wire form, and today it silently stores a global compressed choice. */
+  /** TES3 has no compressed wire form, so it rejects a global compressed choice. */
   @ParameterizedTest
   @EnumSource(
       value = PackOptions.Compression.class,
       names = {"ZLIB", "LZ4_RAW", "LZ4_FRAME"})
-  void tes3IgnoresGlobalCompression(PackOptions.Compression compression) throws Exception {
-    Path stored = temporary.resolve("stored.bsa");
-    Path hinted = temporary.resolve("hinted.bsa");
-    var admitted = options(PackOptions.Compression.STORED, FlagSelection.AUTOMATIC, Map.of());
-    BethesdaArchives.standard()
-        .pack(
-            request(
-                stored, ArchiveFamily.TES3_BSA, ArchiveEncoding.tes3(), admitted, source("a", 3)),
-            OperationControl.standard());
-    // D6: TES3 will reject a global ZLIB or LZ4 choice with UNSUPPORTED tes3.unsupported-codec.
-    var report =
-        BethesdaArchives.standard()
-            .pack(
-                request(
-                    hinted,
-                    ArchiveFamily.TES3_BSA,
-                    ArchiveEncoding.tes3(),
-                    options(compression, FlagSelection.AUTOMATIC, Map.of()),
-                    source("a", 3)),
-                OperationControl.standard());
-    assertEquals(ArtifactState.PUBLISHED, report.artifacts().getFirst().state());
-    assertArrayEquals(Files.readAllBytes(stored), Files.readAllBytes(hinted));
+  void tes3RejectsGlobalCompression(PackOptions.Compression compression) throws Exception {
+    // D6: TES3 rejects a global ZLIB or LZ4 choice with UNSUPPORTED tes3.unsupported-codec.
+    assertRejected(
+        request(
+            temporary.resolve("hinted.bsa"),
+            ArchiveFamily.TES3_BSA,
+            ArchiveEncoding.tes3(),
+            options(compression, FlagSelection.AUTOMATIC, Map.of()),
+            source("a", 3)),
+        FailureKind.UNSUPPORTED,
+        "tes3.unsupported-codec");
   }
 
   /**
-   * TES3 charges the decoded-size limit in its hash-sorted order. Single-character names hash to c
-   * (0x6000000C) before b (0x80000018) before a (0x80000030), the reverse of plan order here.
+   * TES3 charges the decoded-size limit in Logical Plan Order, not its hash-sorted order.
+   * Single-character names hash to c (0x6000000C) before b (0x80000018) before a (0x80000030), the
+   * reverse of plan order here.
    */
   @Test
-  void tes3DecodedLimitIsChargedInSortedOrder() throws Exception {
+  void tes3DecodedLimitIsChargedInLogicalPlanOrder() throws Exception {
     var failure =
         assertRejected(
             withLimits(
@@ -461,8 +451,8 @@ class PackCharacterizationTest {
     var diagnostic = failure.diagnostics().getFirst();
     assertEquals("maxDecodedBytes", diagnostic.values().get("field"));
     assertEquals("5", diagnostic.values().get("ceiling"));
-    // Q14: charged in Logical Plan Order (a, b, c), the limit trips at b and observes 6 instead.
-    assertEquals("7", diagnostic.values().get("observed"));
+    // Q14: charged in Logical Plan Order (a, b, c), the limit trips at b and observes 6, not 7.
+    assertEquals("6", diagnostic.values().get("observed"));
     assertEquals(OperationPhase.PREFLIGHT, failure.primaryFailure().phase());
     assertEquals(OptionalLong.empty(), failure.primaryFailure().ordinal());
   }

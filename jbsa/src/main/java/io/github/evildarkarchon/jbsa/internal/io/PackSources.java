@@ -168,7 +168,7 @@ public final class PackSources {
               for (long ordinal = 0; ordinal < archive.entryCount(); ordinal++) {
                 EntryMetadata metadata = archive.entry(ordinal).metadata();
                 if (metadata.normalizedNameIdentity().isEmpty())
-                  throw context.failure(FailureKind.POLICY, "tes3.invalid-encode-name", null);
+                  throw context.failure(FailureKind.POLICY, "pack.invalid-encode-name", null);
                 long selected = ordinal;
                 admit(
                     entry(
@@ -383,7 +383,7 @@ public final class PackSources {
       throws ArchiveException {
     var identity = NormalizedNameIdentity.from(name, encoding);
     if (identity.isEmpty())
-      throw context.failure(FailureKind.POLICY, "tes3.invalid-encode-name", null);
+      throw context.failure(FailureKind.POLICY, "pack.invalid-encode-name", null);
     byte[] bytes;
     try {
       ByteBuffer encoded =
@@ -391,7 +391,7 @@ public final class PackSources {
       bytes = new byte[encoded.remaining()];
       encoded.get(bytes);
     } catch (CharacterCodingException failure) {
-      throw context.failure(FailureKind.POLICY, "tes3.invalid-encode-name", failure);
+      throw context.failure(FailureKind.POLICY, "pack.invalid-encode-name", failure);
     }
     return new Entry(
         name, identity.orElseThrow().value(), bytes, Tes3Names.hash(bytes), size, source);

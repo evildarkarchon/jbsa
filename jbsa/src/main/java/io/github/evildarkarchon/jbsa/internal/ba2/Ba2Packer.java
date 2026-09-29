@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.ba2;
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.*;
+import io.github.evildarkarchon.jbsa.internal.pack.TransformStage;
 import java.io.IOException;
 import java.nio.*;
 import java.nio.channels.ReadableByteChannel;
@@ -23,7 +24,7 @@ public final class Ba2Packer {
     var context = IoContext.of(request.destination(), Operation.PACK);
     boolean publicationOwnsSession = false;
     SpillBuffer scratch = null;
-    ParallelSources sources = null;
+    TransformStage sources = null;
     OperationReport result = null;
     var failures = new FailureRetention(request.resourceLimits(), Operation.PACK);
     ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context);
@@ -150,7 +151,7 @@ public final class Ba2Packer {
       scratch = SpillBuffer.open(Path.of(System.getProperty("java.io.tmpdir")), budget, context);
       SpillBuffer stable = scratch;
       sources =
-          new ParallelSources(
+          new TransformStage(
               items.stream().map(item -> item.source).toList(),
               selectedWorkers,
               budget,
@@ -159,7 +160,7 @@ public final class Ba2Packer {
               ordinal -> {
                 Item item = items.get(ordinal);
                 if (dds || rawLz4 || !item.compressed) return null;
-                return new ParallelSources.Encoding(
+                return new TransformStage.Encoding(
                     zlibBound(item.source.size()),
                     JdkZlib.ENCODE_HEAP_BYTES,
                     JdkZlib.ENCODE_NATIVE_BYTES,
@@ -182,7 +183,7 @@ public final class Ba2Packer {
         Map<String, List<Item>> candidates = new HashMap<>();
         Map<String, List<Chunk>> chunkCandidates = new HashMap<>();
         for (int ordinal = 0; ordinal < items.size(); ordinal++) {
-          try (ParallelSources.Input staged = sources.next(operation)) {
+          try (TransformStage.Input staged = sources.next(operation)) {
             Item item = items.get(ordinal);
             var processing =
                 new IoContext(

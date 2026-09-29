@@ -2,7 +2,6 @@ package io.github.evildarkarchon.jbsa;
 
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveInput;
 import io.github.evildarkarchon.jbsa.internal.io.Detection;
-import io.github.evildarkarchon.jbsa.internal.io.OperationSession;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -132,51 +131,16 @@ public final class BethesdaArchives {
     Objects.requireNonNull(control, "control");
     try (var interruption =
         io.github.evildarkarchon.jbsa.internal.io.OrderedWorkerRunner.enterOperation()) {
-      if (request.family() == ArchiveFamily.TES3_BSA)
-        return io.github.evildarkarchon.jbsa.internal.tes3.Tes3Packer.pack(request, control);
-      if (request.family() == ArchiveFamily.TES4_BSA
-          || request.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
-          || request.family() == ArchiveFamily.SSE_BSA)
-        return io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
-      if (request.family() == ArchiveFamily.FO4_GENERAL_BA2
-          || request.family() == ArchiveFamily.FO4_DDS_BA2
-          || request.family() == ArchiveFamily.STARFIELD_GENERAL_BA2
-          || request.family() == ArchiveFamily.STARFIELD_DDS_BA2)
-        return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Packer.pack(request, control);
-      return unavailableMutation(
-          Operation.PACK,
-          request.destination(),
-          request.resourceLimits(),
-          request.diagnosticPolicy(),
-          control);
+      return switch (request.family()) {
+        case TES3_BSA ->
+            io.github.evildarkarchon.jbsa.internal.pack.PackPipeline.pack(
+                request, control, io.github.evildarkarchon.jbsa.internal.tes3.Tes3Adapter.INSTANCE);
+        case TES4_BSA, FO3_FNV_SKYRIM_LE_BSA, SSE_BSA ->
+            io.github.evildarkarchon.jbsa.internal.bsa.BsaPacker.pack(request, control);
+        case FO4_GENERAL_BA2, FO4_DDS_BA2, STARFIELD_GENERAL_BA2, STARFIELD_DDS_BA2 ->
+            io.github.evildarkarchon.jbsa.internal.ba2.Ba2Packer.pack(request, control);
+      };
     }
-  }
-
-  /** Applies shared outcome and progress semantics while family execution remains unavailable. */
-  private static OperationReport unavailableMutation(
-      Operation operation,
-      Path path,
-      ResourceLimits limits,
-      DiagnosticPolicy policy,
-      OperationControl control)
-      throws ArchiveException {
-    var session = new OperationSession(operation, limits, policy, control);
-    try {
-      session.begin();
-      session.accept(unavailable(operation, path));
-    } catch (ArchiveException failure) {
-      // begin() has already accepted cancellation or observer failure into this invocation.
-    } finally {
-      session.cleanup();
-      session.cleaned(0);
-    }
-    return session.finish(List.of());
-  }
-
-  /** Keeps an unimplemented family slice distinct from unsupported encoded semantics. */
-  private static ArchiveException unavailable(Operation operation, Path path) {
-    return failure(
-        operation, FailureKind.CAPABILITY, "baseline.archive-operation-unavailable", path, null);
   }
 
   /**

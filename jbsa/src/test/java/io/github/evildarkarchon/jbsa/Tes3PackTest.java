@@ -88,13 +88,16 @@ class Tes3PackTest {
     }
   }
 
-  /** Split membership follows hash order and compression never alters TES3's stored payloads. */
+  /**
+   * Split membership follows hash order. TES3 has no compressed wire form; a compressed choice is
+   * rejected (D6), so this pack names the stored default.
+   */
   @Test
   void splitsInCanonicalOrderAndIgnoresCompressionHints() throws Exception {
     var options =
         new PackOptions(
             List.of(),
-            PackOptions.Compression.ZLIB,
+            PackOptions.Compression.FAMILY_DEFAULT,
             false,
             new PackOptions.Splitting.UpToBytes(1),
             FlagSelection.AUTOMATIC,

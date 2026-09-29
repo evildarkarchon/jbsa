@@ -47,7 +47,7 @@ public final class ResourceBudget implements AutoCloseable {
   }
 
   /** Returns immutable semantic limits to operation-owned cleanup reporters. */
-  ResourceLimits limits() {
+  public ResourceLimits limits() {
     return limits;
   }
 

@@ -1,6 +1,7 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -10,10 +11,12 @@ import java.util.OptionalLong;
 import java.util.function.IntFunction;
 
 /**
- * Bounded source prefetch for pack stabilization. Workers retain private raw and optional encoded
- * spools; sharing decisions, split assignment, and archive writes remain on the caller thread.
+ * The Pack Pipeline's parallel ordered-transform stage: bounded source prefetch with an optional
+ * per-entry transform. Workers retain private raw and optional encoded spools; sharing decisions,
+ * split assignment, and archive writes remain on the caller thread. It replaces the former
+ * ParallelSources and, once versioned BSA migrates onto the pipeline, BsaTransformedSources.
  */
-public final class ParallelSources implements AutoCloseable {
+public final class TransformStage implements AutoCloseable {
   private static final int WINDOW_BYTES = 65536;
   private final List<PackSources.Entry> sources;
   private final ResourceBudget budget;
@@ -26,19 +29,11 @@ public final class ParallelSources implements AutoCloseable {
   private boolean closed;
 
   /**
-   * Captures a complete Logical Plan Order and an operation-start worker snapshot. An explicit
-   * one-worker request keeps the established direct source path.
+   * Captures a complete Logical Plan Order and an operation-start worker snapshot, preserving the
+   * operation-wide ordinal when a writer processes one split part at a time. An explicit one-worker
+   * request keeps the established direct source path.
    */
-  public ParallelSources(
-      List<PackSources.Entry> sources,
-      WorkerSelection.UpTo selection,
-      ResourceBudget budget,
-      IoContext context) {
-    this(sources, selection, budget, context, 0, ignored -> null);
-  }
-
-  /** Preserves the operation-wide ordinal when a writer processes one split part at a time. */
-  public ParallelSources(
+  public TransformStage(
       List<PackSources.Entry> sources,
       WorkerSelection.UpTo selection,
       ResourceBudget budget,
@@ -48,7 +43,7 @@ public final class ParallelSources implements AutoCloseable {
   }
 
   /** Configures optional independent transforms without changing ordered source consumption. */
-  public ParallelSources(
+  public TransformStage(
       List<PackSources.Entry> sources,
       WorkerSelection.UpTo selection,
       ResourceBudget budget,
@@ -319,7 +314,7 @@ public final class ParallelSources implements AutoCloseable {
 
     /** Exposes a sequential view of the private spool without transferring its ownership. */
     public ReadableByteChannel channel() {
-      return ParallelSources.channel(result.raw());
+      return TransformStage.channel(result.raw());
     }
 
     /** Reports whether a worker also finished the independent transform for this source. */
@@ -330,7 +325,7 @@ public final class ParallelSources implements AutoCloseable {
     /** Exposes the private transformed bytes for ordered coordinator copy into archive scratch. */
     public ReadableByteChannel encodedChannel() {
       if (!hasEncoded()) throw new IllegalStateException("This source was not transformed");
-      return ParallelSources.channel(result.encoded());
+      return TransformStage.channel(result.encoded());
     }
 
     /** Returns the exact transformed extent after the worker has sealed its private result. */
