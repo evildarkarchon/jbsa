@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.OptionalLong;
 
 /**
- * The synchronous, stateless Bethesda Archive module, at pre-1.0 Contract Baseline.
+ * The synchronous, stateless Bethesda Archive module.
  *
  * <p>Queries check source access and selectors before family dispatch. Implemented Archive Families
  * support inspection, owned content, extraction, and their specified encoding directions through

@@ -1,22 +1,22 @@
 # Freeze the JBSA 1.0 public archive interface
 
-Status: ready-for-agent
-State: open
+Status: none
+State: closed
 GitHub issue: #51
 Source: https://github.com/evildarkarchon/jbsa/issues/51
 Author: evildarkarchon
 Created: 2026-09-03T06:54:24Z
 Source updated: 2026-09-03T06:54:24Z
-Closed: none
+Closed: 2026-09-29
 Migrated: 2026-09-10
-Labels: ready-for-agent
+Labels: none
 Assignees: none
 Blocked by: [#50](../issues/50-complete-the-mandatory-automated-conformance-matrix.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-28
-Triage rationale: #50 is closed with its hosted Automated Conformance evaluation. The public-interface freeze acceptance remains current and has no open prerequisite.
+Triage reviewed: 2026-09-29
+Triage rationale: Completed after the all-family consumer and API baseline checks, a full local verification, and the hosted exact-candidate Interface Freeze evaluation.
 
 ## Original issue body
 
@@ -55,3 +55,30 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+## Outcome
+
+The [Interface Freeze audit](../../../docs/development/interface-freeze.md)
+traces every `JBSA-LIB-*` and `JBSA-OPS-*` contract and the `JBSA-REL-006/007`
+gate to public API checks. The compiled source and JVM descriptor baselines
+cover 77 exported types. Isolated embedded and CLI-like consumers exercised all
+eight Archive Families with worker limits 1 and 4. The module architecture
+check found no third-party or internal implementation types in caller-visible
+signatures. The Java source changes are three corrections to obsolete
+pre-1.0 Javadocs; no executable production behavior changed.
+
+The complete local Windows `gradle clean verify --no-daemon` gate passed. PR
+[#65](https://github.com/evildarkarchon/jbsa/pull/65) passed all nine hosted
+checks on head `16e00e1b20b63be2663342d2ad6f593c4e4f5bdb`. Its tested
+merge commit `8c7fbcee2c8f270fea5b4c3a739e9fe9b46b7a69` produced a
+content-addressed hosted `full` Evidence Capsule with 138 of 138 scenarios
+`PASS`, none failed or invalid. The exact candidate, specification, plan,
+profiles, provider, corpus, Oracle, validator, toolchain, platform, artifact
+location, evaluator, time, and procedure are retained in the
+[gate evaluation](../../../docs/development/evidence/issue51-interface-freeze/gate-evaluation.json).
+The documentation-only closure commit must receive fresh hosted CI; its exact
+candidate is evaluated through PR #65's subsequent checks and capsule.
+
+This records Interface Freeze only for a candidate with its own passing hosted
+evidence. Later breaking changes require an explicit decision, source/binary
+compatibility assessment, specification revision, and reset of affected gates.

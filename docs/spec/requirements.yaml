@@ -2133,7 +2133,9 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicModuleConsumerIT.java
   - id: JBSA-LIB-002
     owner:
       document: docs/spec/library-interface.md
@@ -2146,6 +2148,7 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence:
+      - docs/development/interface-freeze.md
       - docs/development/interface-candidate.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicMetadataContractIT.java
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
@@ -2160,7 +2163,9 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicModuleConsumerIT.java
   - id: JBSA-LIB-004
     owner:
       document: docs/spec/library-interface.md
@@ -2173,7 +2178,9 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/34-implement-bounded-positional-archive-i-o-and-owned-lifetimes.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicModuleConsumerIT.java
   - id: JBSA-LIB-005
     owner:
       document: docs/spec/library-interface.md
@@ -2186,6 +2193,7 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence:
+      - docs/development/interface-freeze.md
       - docs/development/interface-candidate.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicArchiveContractIT.java
   - id: JBSA-LIB-006
@@ -2201,7 +2209,9 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicMetadataContractIT.java
   - id: JBSA-LIB-007
     owner:
       document: docs/spec/library-interface.md
@@ -2216,7 +2226,9 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicRequestContractIT.java
   - id: JBSA-LIB-008
     owner:
       document: docs/spec/library-interface.md
@@ -2233,7 +2245,9 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicRequestContractIT.java
   - id: JBSA-LIB-009
     owner:
       document: docs/spec/library-interface.md
@@ -2248,7 +2262,9 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicRequestContractIT.java
   - id: JBSA-LIB-010
     owner:
       document: docs/spec/library-interface.md
@@ -2261,7 +2277,9 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
   - id: JBSA-LIB-011
     owner:
       document: docs/spec/library-interface.md
@@ -2276,6 +2294,7 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
     test_evidence:
+      - docs/development/interface-freeze.md
       - docs/development/interface-candidate.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java
   - id: JBSA-LIB-012
@@ -2293,7 +2312,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/33-establish-the-contract-baseline-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicMetadataContractIT.java
   - id: JBSA-LIC-001
     owner:
       document: docs/spec/compliance.md
@@ -2539,7 +2560,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
   - id: JBSA-OPS-002
     owner:
       document: docs/spec/operation-semantics.md
@@ -2550,7 +2573,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
   - id: JBSA-OPS-003
     owner:
       document: docs/spec/operation-semantics.md
@@ -2565,7 +2590,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicArchiveContractIT.java
   - id: JBSA-OPS-004
     owner:
       document: docs/spec/operation-semantics.md
@@ -2579,7 +2606,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
   - id: JBSA-OPS-005
     owner:
       document: docs/spec/operation-semantics.md
@@ -2591,7 +2620,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
   - id: JBSA-OPS-006
     owner:
       document: docs/spec/operation-semantics.md
@@ -2604,7 +2635,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelPackTest.java
   - id: JBSA-OPS-007
     owner:
       document: docs/spec/operation-semantics.md
@@ -2616,7 +2649,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
   - id: JBSA-OPS-008
     owner:
       document: docs/spec/operation-semantics.md
@@ -2629,7 +2664,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelExtractTest.java
   - id: JBSA-OPS-009
     owner:
       document: docs/spec/operation-semantics.md
@@ -2641,7 +2678,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicModuleConsumerIT.java
   - id: JBSA-OPS-010
     owner:
       document: docs/spec/operation-semantics.md
@@ -2653,7 +2692,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicModuleConsumerIT.java
   - id: JBSA-OPS-011
     owner:
       document: docs/spec/operation-semantics.md
@@ -2665,7 +2706,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/35-implement-safe-staging-publication-rollback-and-extraction-containment.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
   - id: JBSA-PERF-001
     owner:
       document: docs/spec/performance-v1.md
@@ -3054,7 +3097,9 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/evidence/issue50-automated-conformance/README.md
+      - docs/development/evidence/issue50-automated-conformance/gate-evaluation.json
   - id: JBSA-REL-006
     owner:
       document: docs/spec/release-gates.md
@@ -3066,7 +3111,13 @@ requirements:
     verification_class: automated-test
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/51-freeze-the-jbsa-1-0-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
+      - docs/development/interface-freeze-source-api.txt
+      - docs/development/interface-freeze-binary-api.txt
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicApiFreezeIT.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicModuleConsumerIT.java
+      - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java
   - id: JBSA-REL-007
     owner:
       document: docs/spec/release-gates.md
@@ -3078,7 +3129,8 @@ requirements:
     verification_class: document-review
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/51-freeze-the-jbsa-1-0-public-archive-interface.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/interface-freeze.md
   - id: JBSA-REL-008
     owner:
       document: docs/spec/release-gates.md

@@ -15,8 +15,8 @@ Blocked by: [#51](../issues/51-freeze-the-jbsa-1-0-public-archive-interface.md),
 Parent: [#23](../map.md)
 
 Intended owner: human
-Triage reviewed: 2026-09-13
-Triage rationale: Reassess readiness after open prerequisites close: #51, #58, #55, #57. Final review uses the compact Assurance v2 traceability and result capsule; Binary Conformance is optional and case-scoped.
+Triage reviewed: 2026-09-29
+Triage rationale: #51 is closed. Reassess readiness after open prerequisites #58, #55, and #57 close. Final review uses the compact Assurance v2 traceability and result capsule; Binary Conformance is optional and case-scoped.
 
 ## Original issue body
 

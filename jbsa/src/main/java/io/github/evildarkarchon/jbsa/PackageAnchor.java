@@ -1,6 +1,8 @@
 package io.github.evildarkarchon.jbsa;
 
-/** Materializes the exported package until the Contract Baseline introduces its public types. */
+/**
+ * Gives architecture checks a stable anchor inside the exported package without adding public API.
+ */
 final class PackageAnchor {
   private PackageAnchor() {}
 }
