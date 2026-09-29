@@ -224,7 +224,7 @@
       },
       "evidence_refs": {
         "fo4-gnrl-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2ConformanceIT.java", "tests/fixtures/fo4-general/manifest.json"],
-        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java", "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v7-zlib.hex"],
+        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java", "tests/fixtures/fo4-dds-v1/manifest.json", "tests/fixtures/fo4-dds-v1/fo4-dx10-v1-zlib.hex"],
         "bsa-069": [
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java",
           "tests/fixtures/bsa069/manifest.json"
@@ -1506,6 +1506,10 @@
     {
       "paths": ["tests/fixtures/fo4-general/**", "build/generate-ba2-fixtures.py", "build/validate-ba2-wire.py"],
       "capabilities": ["fo4-gnrl-v1"]
+    },
+    {
+      "paths": ["tests/fixtures/fo4-dds-v1/**", "jbsa-test-support/src/main/java/**/Fo4DdsV1FixtureGenerator.java"],
+      "capabilities": ["fo4-dx10-v1"]
     },
     {
       "paths": ["tests/fixtures/starfield-dds/**", "tests/fixtures/starfield-general/**", "tests/fixtures/synthetic/artifacts/archives/sf-gnrl-*.ba2"],
