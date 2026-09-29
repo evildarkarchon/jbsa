@@ -7,11 +7,14 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
  * Checks independently generated TES4 vectors through the public archive and generator boundaries.
  */
+@Tag("bsa")
+@Tag("archive-fixtures")
 final class BsaFixtureCorpusIT {
   /** Regeneration binds every declared fixture and recipe without admitting proposal goldens. */
   @Test
@@ -22,14 +25,29 @@ final class BsaFixtureCorpusIT {
       BsaCv1FixtureGenerator.materialize(staged);
       Path committed =
           Path.of(System.getProperty("jbsa.reactor.root")).resolve("tests/fixtures/bsa067");
+      List<Path> generated;
       try (var paths = Files.walk(staged)) {
-        List<Path> generated = paths.filter(Files::isRegularFile).toList();
-        assertEquals(29, generated.size(), "26 vectors and three generated metadata files");
-        for (Path path : generated)
-          assertEquals(
-              -1L,
-              Files.mismatch(path, committed.resolve(staged.relativize(path))),
-              staged.relativize(path).toString());
+        generated = paths.filter(Files::isRegularFile).map(staged::relativize).sorted().toList();
+      }
+      Set<Path> generatedMetadata =
+          Set.of(
+              Path.of("manifest.json"), Path.of("generator.json"), Path.of("goldens/index.json"));
+      List<Path> committedGenerated;
+      try (var paths = Files.walk(committed)) {
+        committedGenerated =
+            paths
+                .filter(Files::isRegularFile)
+                .map(committed::relativize)
+                // Accepted goldens and review documents are deliberately outside this generator.
+                .filter(path -> path.startsWith("artifacts") || generatedMetadata.contains(path))
+                .sorted()
+                .toList();
+      }
+      assertEquals(29, generated.size(), "26 vectors and three generated metadata files");
+      assertEquals(generated, committedGenerated, "Committed generated-object inventory differs");
+      for (Path path : generated) {
+        assertEquals(
+            -1L, Files.mismatch(staged.resolve(path), committed.resolve(path)), path.toString());
       }
       assertThrows(java.io.IOException.class, () -> BsaCv1FixtureGenerator.materialize(staged));
     } finally {

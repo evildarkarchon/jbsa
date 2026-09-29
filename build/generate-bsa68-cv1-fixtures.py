@@ -25,12 +25,12 @@ def generate(output):
     output.mkdir(parents=True, exist_ok=True)
     java = (Path(os.environ["JAVA_HOME"]) / "bin/java.exe" if os.environ.get("JAVA_HOME")
             else Path(shutil.which("java") or "java")).resolve()
-    runtime = subprocess.run([str(java), "--version"], check=True, capture_output=True, text=True)
     with tempfile.TemporaryDirectory(dir=ROOT / "target") as temporary:
-        subprocess.run([str(java), "-cp", str(ROOT / "jbsa-test-support/target/classes"),
+        subprocess.run([str(java), "-cp", str(ROOT / "jbsa-test-support/target/classes/java/main"),
             "io.github.evildarkarchon.jbsa.fixtures.BsaCv1FixtureGenerator", "--output", temporary], check=True)
         source = Path(temporary)
         manifest = json.loads((source / "manifest.json").read_text())
+        common_generator = {key: manifest["generator"][key] for key in ("id", "version")}
         recipes = []
         for fixture in manifest["fixtures"]:
             raw = bytearray.fromhex((source / fixture["output"]["path"]).read_text())
@@ -87,9 +87,7 @@ def generate(output):
         (output / "generator.json").write_bytes(canonical({"schema_version": 1,
             "generator_id": "jbsa-bsa068-cv1-fixture-generator", "generator_version": "1",
             "algorithm": "independent-common-records-version104-v1", "recipes": recipes,
-            "common_generator_runtime": {"sha256": hashlib.sha256(java.read_bytes()).hexdigest(), "version": runtime.stdout.strip()},
-            "common_generator_class_sha256": hashlib.sha256((ROOT / "jbsa-test-support/target/classes/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.class").read_bytes()).hexdigest(),
-            "common_generator_sha256": hashlib.sha256((ROOT / "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/BsaCv1FixtureGenerator.java").read_bytes()).hexdigest()}))
+            "common_generator": common_generator}))
 
 
 if __name__ == "__main__":

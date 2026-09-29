@@ -101,6 +101,9 @@ Retired in specification `0.18.0`. The former Interface Freeze Gate and its
 source and binary declaration baselines are historical evidence only. Current
 public-interface coverage comes from the Automated Conformance Gate, compiled
 consumers, and module architecture checks.
+The `:jbsa-conformance-tests:apiStabilityTest` suite groups fixed source and
+previously compiled binary consumers, public behavior contracts, and module
+architecture checks without an exact declaration snapshot or source digest.
 
 _Decision: [retire Interface Freeze](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md). Historical source decisions: [milestone](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [issue 51](https://github.com/evildarkarchon/jbsa/issues/51)._
 

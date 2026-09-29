@@ -7,10 +7,10 @@
   "generated_on": "2026-09-08",
   "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
   "generator": {
-    "path": "build/generate-tes3-fixtures.ps1",
-    "version": "1",
+    "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/Tes3FixtureGenerator.java",
+    "version": "2",
     "spdx_license": "Apache-2.0",
-    "command": "pwsh -NoProfile -File build/generate-tes3-fixtures.ps1 -OutputDirectory <empty-directory>"
+    "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.Tes3FixtureGenerator --output <empty-directory>"
   },
   "fixtures": [
     {

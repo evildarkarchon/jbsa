@@ -44,6 +44,9 @@ substitutes for the repository's complete `verify` task. Examples:
 .\gradlew.bat verifyCompliance
 ```
 
+For project-authored archive fixtures, use the [generation and JUnit verification
+workflow](archive-fixtures.md).
+
 Check the reproducibility of the library inputs and CLI JAR with two clean builds:
 
 ```powershell

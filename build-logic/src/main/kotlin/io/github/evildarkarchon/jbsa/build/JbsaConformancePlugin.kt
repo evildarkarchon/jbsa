@@ -20,6 +20,7 @@ class JbsaConformancePlugin : Plugin<Project> {
         configureDependencies(project)
         configureArtifactBackedTests(project)
         configureTaggedTests(project)
+        configureApiStability(project)
         configureAutomatedConformance(project)
         configureAutomatedAssurance(project)
     }
@@ -109,6 +110,15 @@ class JbsaConformancePlugin : Plugin<Project> {
             }
     }
 
+    /** Groups caller contracts and module architecture checks without regenerating compatibility bytecode. */
+    private fun configureApiStability(project: Project) {
+        project.tasks.register(JbsaConformanceIdentity.API_STABILITY_TASK) {
+            group = LifecycleBasePlugin.VERIFICATION_GROUP
+            description = "Checks source, binary, behavioral, and module API stability."
+            dependsOn(project.tasks.named("integrationTest"), project.tasks.named("architectureTest"))
+        }
+    }
+
     /** Orders packaged candidates, harness regression coverage, evidence capture, and final interpretation. */
     private fun configureAutomatedConformance(project: Project) {
         val root = project.rootProject
@@ -171,7 +181,7 @@ class JbsaConformancePlugin : Plugin<Project> {
             project.project(JbsaThinApplicationIdentity.PROJECT_PATH).tasks.named("jar", Jar::class.java)
         val libraryTests = project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named("test")
         val cliTests = project.project(JbsaThinApplicationIdentity.PROJECT_PATH).tasks.named("test")
-        val contractTests = project.tasks.named("integrationTest")
+        val apiStabilityTests = project.tasks.named(JbsaConformanceIdentity.API_STABILITY_TASK)
         val familyTests = selectedFamilyTasks(project)
         val assuranceTests = root.layout.projectDirectory.dir("tests/assurance")
         val javaLauncher =
@@ -251,7 +261,7 @@ class JbsaConformancePlugin : Plugin<Project> {
                     cliJar,
                     libraryTests,
                     cliTests,
-                    contractTests,
+                    apiStabilityTests,
                     project.tasks.named("assurancePlanTest"),
                     familyTests,
                     planValidation,

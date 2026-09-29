@@ -1,9 +1,12 @@
 # Fallout 4 General BA2 v1 wire vectors
 
 These CC0 project-authored fixtures implement the published General BA2 layout
-independently of JBSA and the Reference Snapshot. Run
-`python build/generate-ba2-fixtures.py --output <directory>` to reproduce the
-hex files and their digest-bound manifest. Decode hexadecimal before archive use.
+independently of JBSA and the Reference Snapshot. Build `:jbsa-test-support:classes`,
+then run `java -cp jbsa-test-support/target/classes/java/main
+io.github.evildarkarchon.jbsa.fixtures.Fo4GeneralBa2FixtureGenerator --output
+<empty-directory>` to reproduce the hex files and their digest-bound manifest.
+The Java generator rejects a nonempty destination. Decode hexadecimal before
+archive use.
 
 Stored, zlib and mixed archives contain `meshes/a.nif` (1,024 ASCII `A` bytes)
 and `meshes/b.nif` (`00 01 02 ff`) in that order. Mutations cover bounded tolerated

@@ -1,16 +1,24 @@
 {
   "schema_version": 1,
-  "generated_on": "2026-09-14",
+  "generated_on": "2026-09-29",
   "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+  "generator": {
+    "id": "jbsa-starfield-dds-wire-v1",
+    "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/StarfieldArchiveFixtureGenerator.java",
+    "version": "1",
+    "spdx_license": "Apache-2.0",
+    "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.StarfieldArchiveFixtureGenerator --dds-output <directory>"
+  },
   "fixtures": [
     {
       "id": "starfield-dds-v2-zlib",
       "creator": "JBSA project contributors",
       "spdx_license": "CC0-1.0",
       "redistribution_class": "project-authored-redistributable",
-      "source": "independently authored JBSA-GNRL-001 and JBSA-DX10-001 through JBSA-DX10-005 wire literal",
+      "source": "independently authored JBSA-GNRL-001 and JBSA-DX10-001 through JBSA-DX10-005 wire recipe",
       "input_sha256": "4aae08ff0c39c4203e44b4f8e5f518ea5cdf2e0c510958d58e552e3b577961ee",
       "generation": {
+        "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.StarfieldArchiveFixtureGenerator --dds-output <directory>",
         "procedure": "Encode one canonical 4x4 BC1 texture record and independently framed zlib chunk under the Starfield version-2 header.",
         "options": {
           "archive_family": "sf-dx10-v2",
@@ -29,9 +37,10 @@
       "creator": "JBSA project contributors",
       "spdx_license": "CC0-1.0",
       "redistribution_class": "project-authored-redistributable",
-      "source": "independently authored JBSA-GNRL-001, JBSA-GNRL-005, and JBSA-DX10-001 through JBSA-DX10-005 wire literal",
+      "source": "independently authored JBSA-GNRL-001, JBSA-GNRL-005, and JBSA-DX10-001 through JBSA-DX10-005 wire recipe",
       "input_sha256": "4aae08ff0c39c4203e44b4f8e5f518ea5cdf2e0c510958d58e552e3b577961ee",
       "generation": {
+        "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.StarfieldArchiveFixtureGenerator --dds-output <directory>",
         "procedure": "Encode the same canonical 4x4 BC1 texture record as one complete raw-LZ4 literal block under the Starfield version-3 method-3 header.",
         "options": {
           "archive_family": "sf-dx10-v3-m3",

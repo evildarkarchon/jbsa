@@ -3,6 +3,8 @@ package io.github.evildarkarchon.jbsa.verification;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.fixtures.Fo4DdsV1FixtureGenerator;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.Channels;
@@ -29,6 +31,44 @@ final class Fallout4V1DdsBa2ConformanceIT {
       "22c32e6b1fc203a2a9e2d469efe300d4d024e530cc3c038e9a752a6ff7891b3d";
 
   @TempDir Path directory;
+
+  /** Reproduces the committed v1 DX10 wire vector and manifest without product encoding. */
+  @Test
+  @Tag("archive-fixtures")
+  void independentlyGeneratedVersionOneCorpusMatchesCommittedInventory() throws Exception {
+    Path generated = directory.resolve("generated-v1");
+    Fo4DdsV1FixtureGenerator.materialize(generated);
+    Path committed = root().resolve("tests/fixtures/fo4-dds-v1");
+    try (var fresh = Files.list(generated);
+        var recorded = Files.list(committed)) {
+      List<String> expected = fresh.map(path -> path.getFileName().toString()).sorted().toList();
+      List<String> actual =
+          recorded
+              .map(path -> path.getFileName().toString())
+              .filter(name -> !name.equals("README.md"))
+              .sorted()
+              .toList();
+      assertEquals(List.of("fo4-dx10-v1-zlib.hex", "manifest.json"), expected);
+      assertEquals(expected, actual);
+      for (String name : expected) {
+        assertEquals(-1L, Files.mismatch(generated.resolve(name), committed.resolve(name)), name);
+      }
+    }
+    byte[] previousWire =
+        HexFormat.of()
+            .parseHex(
+                Files.readString(
+                        root()
+                            .resolve(
+                                "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v7-zlib.hex"))
+                    .strip());
+    ByteBuffer.wrap(previousWire).order(ByteOrder.LITTLE_ENDIAN).putInt(4, 1);
+    assertArrayEquals(
+        previousWire,
+        HexFormat.of()
+            .parseHex(Files.readString(generated.resolve("fo4-dx10-v1-zlib.hex")).strip()));
+    assertThrows(IOException.class, () -> Fo4DdsV1FixtureGenerator.materialize(generated));
+  }
 
   /** Reads, independently validates, and extracts a project-authored version 1 texture. */
   @Test
@@ -271,17 +311,13 @@ final class Fallout4V1DdsBa2ConformanceIT {
     return Files.write(source.resolve("checker.dds"), dds.array());
   }
 
-  /** Retargets the independent v7 fixture to the identical v1 DX10 record envelope. */
+  /** Decodes the committed, independently serialized version-1 DX10 archive. */
   private Path versionOneFixture() throws Exception {
     byte[] wire =
         HexFormat.of()
             .parseHex(
-                Files.readString(
-                        root()
-                            .resolve(
-                                "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v7-zlib.hex"))
+                Files.readString(root().resolve("tests/fixtures/fo4-dds-v1/fo4-dx10-v1-zlib.hex"))
                     .strip());
-    ByteBuffer.wrap(wire).order(ByteOrder.LITTLE_ENDIAN).putInt(4, 1);
     return Files.write(directory.resolve("fo4-dx10-v1-zlib.ba2"), wire);
   }
 

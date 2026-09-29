@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "corpus_id": "jbsa-fo4-dds-v1-wire-vectors-v1",
+  "creator": "JBSA project contributors",
+  "spdx_license": "CC0-1.0",
+  "redistribution_class": "project-authored-redistributable",
+  "source": "docs/spec/formats/dds-ba2.md; independently authored DX10 v1 wire vector",
+  "generator": {
+    "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/Fo4DdsV1FixtureGenerator.java",
+    "version": "1",
+    "spdx_license": "Apache-2.0",
+    "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.Fo4DdsV1FixtureGenerator --output <directory>"
+  },
+  "fixtures": [
+    {
+      "id": "fo4-dx10-v1-zlib",
+      "path": "fo4-dx10-v1-zlib.hex",
+      "representation": "lowercase hexadecimal followed by LF; decode before archive use",
+      "wire_size": 113,
+      "expected_disposition": "CONFORMING",
+      "wire_sha256": "60dcbc5510a3a852579a46a06c15fc5c8ef0c2604595c5411ef997ebbbadc5da",
+      "file_sha256": "55e4268226b7f332341073a3f6b8732d16f77ab9bfa1983a82c7d7dc2f61a814",
+      "oracle_sha256": null
+    }
+  ]
+}

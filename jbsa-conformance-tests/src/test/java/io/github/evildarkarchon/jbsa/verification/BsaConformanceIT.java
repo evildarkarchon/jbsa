@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.verification;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.fixtures.Tes4FixtureGenerator;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,15 +43,10 @@ final class BsaConformanceIT {
 
   /** Reproduces all committed vectors and provenance without invoking the product writer. */
   @Test
+  @Tag("archive-fixtures")
   void independentlyGeneratedCorpusMatchesCommittedInventory() throws Exception {
     Path generated = directory.resolve("generated");
-    run(
-        List.of(
-            "python",
-            root().resolve("build/generate-bsa-fixtures.py").toString(),
-            "--output",
-            generated.toString()),
-        directory.resolve("generation.log"));
+    Tes4FixtureGenerator.materialize(generated);
     Path committed = root().resolve("tests/fixtures/tes4");
     try (var fresh = Files.list(generated);
         var recorded = Files.list(committed)) {

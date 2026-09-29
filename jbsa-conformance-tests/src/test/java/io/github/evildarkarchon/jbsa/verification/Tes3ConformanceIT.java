@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.verification;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.fixtures.Tes3FixtureGenerator;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,32 +25,11 @@ final class Tes3ConformanceIT {
    * Reproduces the complete text-vector inventory, provenance manifest and every decoded digest.
    */
   @Test
+  @Tag("archive-fixtures")
   void independentlyGeneratedCorpusMatchesCommittedInventory() throws Exception {
     Path root = Path.of(System.getProperty("jbsa.reactor.root"));
     Path generated = directory.resolve("generated");
-    Path transcript = directory.resolve("generation.log");
-    Process process =
-        new ProcessBuilder(
-                "pwsh",
-                "-NoLogo",
-                "-NoProfile",
-                "-NonInteractive",
-                "-File",
-                root.resolve("build/generate-tes3-fixtures.ps1").toString(),
-                "-OutputDirectory",
-                generated.toString())
-            .redirectErrorStream(true)
-            .redirectOutput(transcript.toFile())
-            .start();
-    try {
-      assertTrue(process.waitFor(30, TimeUnit.SECONDS), "Fixture generator timed out");
-      assertEquals(0, process.exitValue(), Files.readString(transcript));
-    } finally {
-      // The test owns its child even if the generator's deadline assertion fails.
-      if (process.isAlive()) {
-        process.destroyForcibly();
-      }
-    }
+    Tes3FixtureGenerator.materialize(generated);
     Path committed = root.resolve("tests/fixtures/tes3");
     try (var fresh = Files.list(generated);
         var recorded = Files.list(committed)) {

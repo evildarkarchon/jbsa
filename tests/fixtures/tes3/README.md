@@ -14,7 +14,8 @@ compares the complete inventory, then exercises the materialized archives only
 through the public API. Additional unaccounted files fail its inventory audit.
 
 ```powershell
-pwsh -NoProfile -File build/generate-tes3-fixtures.ps1 -OutputDirectory target/new-tes3-vectors
+gradle :jbsa-test-support:classes
+java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.Tes3FixtureGenerator --output target/new-tes3-vectors
 ```
 
 The generator refuses a nonempty destination. The two-entry canonical vector has

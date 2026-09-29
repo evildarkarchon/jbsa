@@ -520,6 +520,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
                     .tasks
                     .named(JbsaConformanceIdentity.AUTOMATED_ASSURANCE_TASK),
                 project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named("check"),
+                project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named("archiveFixtureTest"),
                 JbsaConformanceIdentity.ARCHIVE_FAMILY_TASKS.map { taskName ->
                     project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named(taskName)
                 },

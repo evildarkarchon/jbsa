@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Tag("build-policy")
+@Tag("archive-fixtures")
 final class FixtureCorpusIT {
   /**
    * Runs the public, read-only fixture audit command against one corpus root.

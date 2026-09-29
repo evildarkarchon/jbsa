@@ -23,6 +23,8 @@ __pycache__/
 *.tar.gz
 *.rar
 !/gradle/wrapper/gradle-wrapper.jar
+# Fixed caller bytecode must remain versioned to catch binary API breaks.
+!/jbsa-conformance-tests/src/test/resources/api-stability/consumer.jar
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
