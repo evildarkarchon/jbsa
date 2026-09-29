@@ -143,6 +143,46 @@ class PackPipelineTest {
     assertTrue(Files.exists(temporary.resolve("split2.mem")));
   }
 
+  /**
+   * D9: a stabilized plan's preflight counts exactly the parts it is certain to publish. Predicted
+   * stored sizes split exactly; with an unknown encoded size only "never splits" and "no two
+   * entries fit one part" are certain, and any other plan is certain only of its first part.
+   */
+  @Test
+  void knownPartCountCoversOnlyCertainParts() throws Exception {
+    var context = IoContext.of(Path.of("x").toAbsolutePath(), Operation.PACK);
+    var stored = List.of(planned("a", 3), planned("b", 3), planned("c", 1));
+    var cheap = new MemoryEncoder(4, false, new ArrayList<>(), 0).admit(null, context);
+    assertEquals(
+        2,
+        PackPipeline.knownPartCount(
+            stored, cheap, new PackOptions.Splitting.FamilyDefault(), context));
+
+    var encoded = List.of(encoded("a", 3), encoded("b", 3), encoded("c", 1));
+    assertEquals(
+        1,
+        PackPipeline.knownPartCount(
+            encoded, cheap, new PackOptions.Splitting.UpToBytes(0), context));
+    // A zero minimum cost lets entries share a part, so only the first part is certain.
+    assertEquals(
+        1,
+        PackPipeline.knownPartCount(
+            encoded, cheap, new PackOptions.Splitting.LegacyPerEntry(), context));
+    var costly = new MemoryEncoder(0, false, new ArrayList<>(), 200).admit(null, context);
+    assertEquals(
+        3,
+        PackPipeline.knownPartCount(
+            encoded, costly, new PackOptions.Splitting.LegacyPerEntry(), context));
+    assertEquals(
+        3,
+        PackPipeline.knownPartCount(
+            encoded, costly, new PackOptions.Splitting.UpToBytes(200), context));
+    assertEquals(
+        1,
+        PackPipeline.knownPartCount(
+            encoded, costly, new PackOptions.Splitting.UpToBytes(201), context));
+  }
+
   /** Preflight checks exactly the known part set before any source payload is opened. */
   @Test
   void preflightChecksTheKnownPartCountBeforeReadingSources() throws Exception {
@@ -422,6 +462,12 @@ class PackPipelineTest {
     return new Admitted.Planned<>(entry, name, Codec.STORED, new byte[0]);
   }
 
+  /** A planned zlib entry, whose stored size stays unknown until stabilization. */
+  private static Admitted.Planned<String> encoded(String name, long size) {
+    var stored = planned(name, size);
+    return new Admitted.Planned<>(stored.source(), name, Codec.ZLIB, new byte[0]);
+  }
+
   /** Builds a request; the family and encoding are ignored by the memory adapter. */
   private static PackRequest request(
       Path target,
@@ -519,14 +565,20 @@ class PackPipelineTest {
    * @param defaultSplitTarget the FamilyDefault split target
    * @param refuse whether admission fails with UNSUPPORTED {@code memory.admit-refused}
    * @param events the adapter calls made, in order
+   * @param fixedCost the fixed per-entry split cost
    */
-  private record MemoryEncoder(long defaultSplitTarget, boolean refuse, List<String> events)
+  private record MemoryEncoder(
+      long defaultSplitTarget, boolean refuse, List<String> events, long fixedCost)
       implements FamilyAdapter<String> {
     private static final int HEADER = 8;
     private static final int RECORD = 16;
 
     MemoryEncoder(long defaultSplitTarget) {
       this(defaultSplitTarget, false, Collections.synchronizedList(new ArrayList<>()));
+    }
+
+    MemoryEncoder(long defaultSplitTarget, boolean refuse, List<String> events) {
+      this(defaultSplitTarget, refuse, events, 0);
     }
 
     @Override
@@ -556,7 +608,7 @@ class PackPipelineTest {
 
         @Override
         public SplitCost<String> splitCost() {
-          return new SplitCost<>(0, name -> 0, PayloadCost.DECODED);
+          return new SplitCost<>(fixedCost, name -> 0, PayloadCost.DECODED);
         }
 
         @Override

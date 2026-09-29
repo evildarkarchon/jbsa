@@ -5,6 +5,7 @@ import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.security.MessageDigest;
 
 /**
  * Bounded 64 KiB window copies between sources, scratch, and staged output. Every caller reserves
@@ -67,6 +68,25 @@ final class PayloadWindows {
       count += read;
     }
     if (count != length) throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+  }
+
+  /**
+   * Digests a stabilized range to shortlist Content Sharing candidates; the digest never proves
+   * equality on its own. One window is live.
+   */
+  static byte[] digest(Reader source, long start, long size, Checkpoint checkpoint)
+      throws IOException {
+    MessageDigest digest = ContentSharing.sha256();
+    ByteBuffer bytes = ByteBuffer.allocate(WINDOW_BYTES);
+    for (long offset = 0; offset < size; ) {
+      checkpoint.check();
+      int count = (int) Math.min(bytes.capacity(), size - offset);
+      bytes.clear().limit(count);
+      source.read(start + offset, bytes);
+      digest.update(bytes.flip());
+      offset += count;
+    }
+    return digest.digest();
   }
 
   /** Confirms a shortlisted candidate with exact bounded reads. Two windows are live. */

@@ -13,8 +13,12 @@ import java.util.function.IntFunction;
 /**
  * The Pack Pipeline's parallel ordered-transform stage: bounded source prefetch with an optional
  * per-entry transform. Workers retain private raw and optional encoded spools; sharing decisions,
- * split assignment, and archive writes remain on the caller thread. It replaces the former
- * ParallelSources and, once versioned BSA migrates onto the pipeline, BsaTransformedSources.
+ * split assignment, and archive writes remain on the caller thread. It is the only parallel
+ * stabilization path: it replaced the former ParallelSources and BsaTransformedSources.
+ *
+ * <p>Every non-successful worker outcome maps the same way for every family: a skipped outcome is
+ * INTERNAL (D1), an unstructured {@link IOException} is SOURCE {@code operation.source-io}, and any
+ * other non-fatal throwable, including a non-fatal {@link Error}, is INTERNAL (D2).
  */
 public final class TransformStage implements AutoCloseable {
   private static final int WINDOW_BYTES = 65536;
@@ -56,15 +60,17 @@ public final class TransformStage implements AutoCloseable {
     this.firstOrdinal = firstOrdinal;
     this.encodings = encodings;
     long requested = selection.workers();
+    // D4: one headroom rule for every family, the sum of each entry's codec bound (its declared
+    // size when it is not transformed) against a sixth of the scratch ceiling.
     long plannedBytes = 0;
-    for (PackSources.Entry source : sources) {
-      // Include per-entry wrapper and record slack when many tiny zlib streams dominate bytes.
-      if (plannedBytes > Long.MAX_VALUE - 64
-          || source.size() > Long.MAX_VALUE - plannedBytes - 64) {
+    for (int ordinal = 0; ordinal < this.sources.size(); ordinal++) {
+      Encoding encoding = encodings.apply(ordinal);
+      long bound = encoding == null ? this.sources.get(ordinal).size() : encoding.outputBound();
+      if (bound > Long.MAX_VALUE - plannedBytes) {
         plannedBytes = Long.MAX_VALUE;
         break;
       }
-      plannedBytes += source.size() + 64;
+      plannedBytes += bound;
     }
     runner =
         requested <= 1
@@ -81,8 +87,14 @@ public final class TransformStage implements AutoCloseable {
     return runner != null;
   }
 
-  /** Complete worst-case transformed result cost and its worker-only encoder. */
-  public record Encoding(long outputBound, long heapBytes, long nativeBytes, Encoder encoder) {
+  /**
+   * Complete worst-case transformed result cost and its worker-only encoder.
+   *
+   * @param retainsRaw whether the worker also keeps the raw source spool; when false the source
+   *     streams straight into the encoder and only the encoded spool is retained
+   */
+  public record Encoding(
+      long outputBound, long heapBytes, long nativeBytes, boolean retainsRaw, Encoder encoder) {
     /** Rejects missing or negative transform costs before work can be admitted. */
     public Encoding {
       if (outputBound < 0 || heapBytes < 0 || nativeBytes < 0)
@@ -91,15 +103,44 @@ public final class TransformStage implements AutoCloseable {
     }
   }
 
-  /** Encodes one independent raw source into a private result under a worker stop checkpoint. */
+  /**
+   * Returns the codec map's worker encoding for one source: its worst-case bound and heap/native
+   * costs, and an encoder that borrows the worker's admission. A stored codec needs no transform.
+   *
+   * @param retainsRaw whether the worker also keeps the raw spool for the caller
+   * @return the encoding, or null for {@link Codec#STORED}
+   * @throws ArithmeticException when the codec bound does not fit a signed long
+   */
+  public static Encoding encoding(
+      Codec codec, long decodedSize, boolean retainsRaw, ResourceBudget budget) {
+    if (codec == Codec.STORED) return null;
+    Codecs.Cost cost = Codecs.cost(codec, decodedSize);
+    return new Encoding(
+        cost.bound(),
+        cost.heap(),
+        cost.nativeBytes(),
+        retainsRaw,
+        (input, size, encoded, checkpoint, lease, processing) ->
+            Codecs.encode(
+                codec, input, size, encoded::write, checkpoint::check, budget, lease, processing));
+  }
+
+  /** Encodes one independent source into a private result under a worker stop checkpoint. */
   @FunctionalInterface
   public interface Encoder {
-    /** Writes encoded bytes without choosing sharing ownership or archive output positions. */
+    /**
+     * Writes encoded bytes without choosing sharing ownership or archive output positions.
+     *
+     * @param raw the raw spool, or the source itself when the encoding does not retain raw bytes
+     * @param lease the worker's admission, which already covers the encoding's heap and native
+     *     costs; an encoder that would otherwise reserve them borrows it instead
+     */
     void encode(
         ReadableByteChannel raw,
         long decodedSize,
         SpillBuffer encoded,
         OrderedWorkerRunner.Checkpoint checkpoint,
+        ResourceBudget.Lease lease,
         IoContext processing)
         throws IOException;
   }
@@ -122,14 +163,7 @@ public final class TransformStage implements AutoCloseable {
       PackSources.Entry source = sources.get(ordinal);
       IoContext processing = processing(ordinal);
       Encoding encoding = encodings.apply(ordinal);
-      long scratch =
-          encoding == null ? source.size() : Math.addExact(source.size(), encoding.outputBound());
-      OrderedWorkerRunner.Cost cost =
-          new OrderedWorkerRunner.Cost(
-              2L * WINDOW_BYTES + (encoding == null ? 0 : WINDOW_BYTES + encoding.heapBytes()),
-              encoding == null ? 0 : encoding.nativeBytes(),
-              encoding == null ? 2 : 3,
-              scratch);
+      OrderedWorkerRunner.Cost cost = cost(source, encoding);
       boolean submitted =
           runner.trySubmit(
               ordinal,
@@ -146,21 +180,61 @@ public final class TransformStage implements AutoCloseable {
     nextConsumption++;
     if (outcome.failure() != null) {
       try (outcome) {
-        Throwable failure = outcome.failure();
-        if (failure instanceof IOException io) throw io;
-        if (failure instanceof Error fatal) throw fatal;
-        throw processing(outcome.ordinal())
-            .failure(FailureKind.INTERNAL, "operation.internal-failure", failure);
+        throw failure(outcome.failure(), processing(outcome.ordinal()));
       }
     }
     if (outcome.skipped()) {
       outcome.close();
+      // An accepted cancellation or earlier failure is the real outcome; report it if present.
       operation.checkpoint(
           OperationPhase.PROCESSING, OptionalLong.of(firstOrdinal + outcome.ordinal()));
-      throw processing(outcome.ordinal())
-          .failure(FailureKind.CANCELLED, "operation.cancelled", null);
+      throw skipped(processing(outcome.ordinal()));
     }
     return new Input(outcome.result(), outcome);
+  }
+
+  /**
+   * Maps a worker failure (D2). A structured failure keeps its evidence, an unstructured I/O
+   * failure is SOURCE {@code operation.source-io}, and every other non-fatal throwable, including a
+   * non-fatal {@link Error}, is INTERNAL {@code operation.internal-failure}.
+   *
+   * @param processing the failing entry's PROCESSING location
+   * @return the structured failure for the caller to throw
+   * @throws Error a virtual machine error or thread death, which is never wrapped
+   */
+  static ArchiveException failure(Throwable failure, IoContext processing) {
+    if (failure instanceof VirtualMachineError || failure instanceof ThreadDeath)
+      throw (Error) failure;
+    if (failure instanceof ArchiveException archive) return archive;
+    if (failure instanceof IOException io)
+      return processing.failure(FailureKind.SOURCE, "operation.source-io", io);
+    return processing.failure(FailureKind.INTERNAL, "operation.internal-failure", failure);
+  }
+
+  /**
+   * Maps a skipped worker outcome that reached the caller (D1). Outcomes are consumed in Logical
+   * Plan Order and an earlier failure or cancellation is thrown first, so a skipped outcome here
+   * means JBSA broke its own ordering contract: INTERNAL, never CANCELLED.
+   */
+  static ArchiveException skipped(IoContext processing) {
+    return processing.failure(FailureKind.INTERNAL, "operation.internal-failure", null);
+  }
+
+  /**
+   * Returns one task's worst-case admission. Each live spool holds one memory window and may spill
+   * to one handle; the source holds one more handle, and an encoder adds its own window and costs.
+   */
+  private static OrderedWorkerRunner.Cost cost(PackSources.Entry source, Encoding encoding) {
+    if (encoding == null)
+      return new OrderedWorkerRunner.Cost(2L * WINDOW_BYTES, 0, 2, source.size());
+    if (!encoding.retainsRaw())
+      return new OrderedWorkerRunner.Cost(
+          WINDOW_BYTES + encoding.heapBytes(), encoding.nativeBytes(), 2, encoding.outputBound());
+    return new OrderedWorkerRunner.Cost(
+        3L * WINDOW_BYTES + encoding.heapBytes(),
+        encoding.nativeBytes(),
+        3,
+        Math.addExact(source.size(), encoding.outputBound()));
   }
 
   /** Joins every admitted worker and closes unconsumed private results before budget settlement. */
@@ -190,6 +264,8 @@ public final class TransformStage implements AutoCloseable {
       OrderedWorkerRunner.Checkpoint checkpoint,
       ResourceBudget.Lease lease)
       throws IOException {
+    if (encoding != null && !encoding.retainsRaw())
+      return encodeSource(source, processing, encoding, checkpoint, lease);
     SpillBuffer raw =
         SpillBuffer.openPrecharged(
             Path.of(System.getProperty("java.io.tmpdir")),
@@ -236,7 +312,7 @@ public final class TransformStage implements AutoCloseable {
                 lease,
                 encoding.outputBound());
         try (ReadableByteChannel input = channel(raw)) {
-          encoding.encoder().encode(input, source.size(), encoded, checkpoint, processing);
+          encoding.encoder().encode(input, source.size(), encoded, checkpoint, lease, processing);
         }
         encoded.seal();
       }
@@ -278,7 +354,61 @@ public final class TransformStage implements AutoCloseable {
     }
   }
 
-  /** Owns both staged representations until the coordinator closes the ordered result. */
+  /**
+   * Streams one source straight into its encoder, retaining only the encoded spool. The encoder
+   * enforces the declared source length itself.
+   */
+  private PrivateResult encodeSource(
+      PackSources.Entry source,
+      IoContext processing,
+      Encoding encoding,
+      OrderedWorkerRunner.Checkpoint checkpoint,
+      ResourceBudget.Lease lease)
+      throws IOException {
+    SpillBuffer encoded =
+        SpillBuffer.openPrecharged(
+            Path.of(System.getProperty("java.io.tmpdir")),
+            budget,
+            processing,
+            lease,
+            encoding.outputBound());
+    try {
+      PackSources.consume(
+          source,
+          input ->
+              encoding
+                  .encoder()
+                  .encode(input, source.size(), encoded, checkpoint, lease, processing),
+          processing);
+      encoded.seal();
+      return new PrivateResult(null, encoded, budget.limits());
+    } catch (IOException failure) {
+      var failures = new FailureRetention(budget.limits(), Operation.PACK);
+      failures.accept(
+          failure instanceof ArchiveException archive
+              ? archive
+              : processing.failure(FailureKind.SOURCE, "operation.source-io", failure));
+      try {
+        encoded.close();
+      } catch (ArchiveException cleanup) {
+        failures.accept(cleanup);
+      }
+      throw failures.finish(List.of());
+    } catch (RuntimeException | Error failure) {
+      // Even an unexpected caller/provider failure cannot strand private spool ownership.
+      try {
+        encoded.close();
+      } catch (ArchiveException cleanup) {
+        failure.addSuppressed(cleanup);
+      }
+      throw failure;
+    }
+  }
+
+  /**
+   * Owns the staged representations until the coordinator closes the ordered result. The raw spool
+   * is null when the encoding streamed its source directly into the encoder.
+   */
   private record PrivateResult(SpillBuffer raw, SpillBuffer encoded, ResourceLimits limits)
       implements AutoCloseable {
     /** Settles both private spools even if the first cleanup fails. */
@@ -292,10 +422,12 @@ public final class TransformStage implements AutoCloseable {
           failures.accept(cleanup);
         }
       }
-      try {
-        raw.close();
-      } catch (ArchiveException cleanup) {
-        failures.accept(cleanup);
+      if (raw != null) {
+        try {
+          raw.close();
+        } catch (ArchiveException cleanup) {
+          failures.accept(cleanup);
+        }
       }
       if (failures.failed()) throw failures.finish(List.of());
     }
@@ -314,6 +446,7 @@ public final class TransformStage implements AutoCloseable {
 
     /** Exposes a sequential view of the private spool without transferring its ownership. */
     public ReadableByteChannel channel() {
+      if (result.raw() == null) throw new IllegalStateException("This source kept no raw spool");
       return TransformStage.channel(result.raw());
     }
 
