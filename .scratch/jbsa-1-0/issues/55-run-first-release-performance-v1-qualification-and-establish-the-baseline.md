@@ -15,8 +15,8 @@ Blocked by: [#32](../issues/32-build-the-performance-v1-harness-and-benchmark-co
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-13
-Triage rationale: Reassess readiness after open prerequisites close: #53, #50. Qualification will use the curated Assurance v2 hot-path plan rather than the historical 1,384-case product matrix.
+Triage reviewed: 2026-09-28
+Triage rationale: #50 is closed; #53 remains open. Reassess readiness after #53 closes. Qualification uses the curated Assurance v2 hot-path plan rather than the historical 1,384-case product matrix.
 
 ## Original issue body
 

@@ -15,8 +15,8 @@ Blocked by: [#50](../issues/50-complete-the-mandatory-automated-conformance-matr
 Parent: [#23](../map.md)
 
 Intended owner: human
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #50, #53.
+Triage reviewed: 2026-09-28
+Triage rationale: #50 is closed; #53 remains open. Reassess readiness after #53 closes.
 
 ## Original issue body
 

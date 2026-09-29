@@ -1,9 +1,10 @@
 # Issue 50 Automated Conformance evidence register
 
-**Gate state: OPEN. Automated Conformance is not claimed.** The candidate, fresh
-hosted `full` selection, Evidence Capsule digest, CI run, and gate evaluator are
-pending. A passing test method listed below is evidence for its stated behavior;
-it does not by itself qualify a Compatibility Deviation or award the gate.
+**Gate state: PASS for the candidate identified in the
+[gate evaluation](gate-evaluation.json).** The hosted `full` Evidence Capsule
+records 138 of 138 selected scenarios as `PASS`. This is an exact-candidate
+Automated Conformance claim; later commits require a fresh hosted evaluation.
+A passing test method alone does not qualify a Compatibility Deviation.
 
 The active obligations are [JBSA-ASR-002/003/004/006](../../../spec/assurance-v2.md),
 [JBSA-COMPAT-001/003/004/005/006/007](../../../spec/compatibility-profiles.md),
@@ -122,14 +123,14 @@ deferral in [JBSA-SCOPE-009](../../../spec/scope.md#jbsa-scope-009).
 
 | Gate field | Value |
 | --- | --- |
-| Exact candidate and specification | Pending fresh hosted run |
-| Full selection and plan digest | Pending fresh hosted run |
-| Evidence Capsule and CI artifact location | Pending fresh hosted run |
+| Exact candidate and specification | Tested merge commit `b7f5c6ca8a7ca36db8992c8ee41ae86c2af6075e`, PR head `a5969e6e8d5ef00e978cf87501d67a1a3acaea8d`, product `0.1.0-SNAPSHOT`, specification `0.17.0` with exact digests in the [evaluation](gate-evaluation.json) |
+| Full selection and plan digest | Hosted `full`, 138 selected, 138 `PASS`; plan `sha256:94e3823c3d3d94b81c6e04af011f36510efb2d60373ac5fc7ee28fced539926f` |
+| Evidence Capsule and CI artifact location | Capsule `sha256:59481354af14aebccf3838141a74f761253e95493833abf258d205820ca6e15f` in [GitHub Actions run 36525054690](https://github.com/evildarkarchon/jbsa/actions/runs/36525054690), artifact `assurance-v2-hosted-evidence` (ID `11014802569`) |
 | Deviation fixture, oracle, safety, and approval review | Approved for the 12 applicable rows against oracle record `38307fddcd7bfbf2840de419ea63dc19480dc0deccd7e46375942ac6ef2642d9`; Xbox deferred |
-| Gate evaluator, time, procedure version, and result | `OPEN`; pending fresh evaluation |
+| Gate evaluator, time, procedure version, and result | Codex, `2026-09-29T05:20:59Z`, `JBSA-REL-001/005 Assurance v2 hosted-full evaluation v1`, `PASS` for the identified candidate; [complete record](gate-evaluation.json) |
 
-The gate changes to `PASS` only after the row-level deviations are approved and
-revalidated, the fresh hosted `full` capsule reports the exact selected set as
-`PASS`, and a [JBSA-REL-001](../../../spec/release-gates.md#jbsa-rel-001)
-evaluation binds that evidence. No percentage, waiver, expected failure,
-historical CV1 result, or earlier capsule substitutes for that evaluation.
+The 12 applicable deviation rows were approved and revalidated, the hosted
+`full` capsule reported the exact selected set as `PASS`, and the
+[JBSA-REL-001](../../../spec/release-gates.md#jbsa-rel-001) evaluation binds
+that evidence. No percentage, waiver, expected failure, historical CV1 result,
+or earlier capsule substitutes for a fresh evaluation of a later candidate.

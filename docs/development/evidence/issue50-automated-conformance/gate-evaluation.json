@@ -1,0 +1,65 @@
+{
+  "schema_version": "jbsa-automated-conformance-evaluation-v1",
+  "gate": "Automated Conformance",
+  "result": "PASS",
+  "evaluated_at_utc": "2026-09-29T05:20:59Z",
+  "evaluator": "Codex; verified GitHub Actions checks and downloaded the content-addressed Evidence Capsule",
+  "procedure_version": "JBSA-REL-001/005 Assurance v2 hosted-full evaluation v1",
+  "candidate": {
+    "pull_request_head_commit": "a5969e6e8d5ef00e978cf87501d67a1a3acaea8d",
+    "tested_git_commit": "b7f5c6ca8a7ca36db8992c8ee41ae86c2af6075e",
+    "content_digest": "sha256:55f91fad0ddc7815178e7a1edd1e498b50626b12bdeb37915c783a60fb0a1ee3",
+    "product_version": "0.1.0-SNAPSHOT",
+    "specification_version": "0.17.0",
+    "specification_digest": "sha256:a90f5051928b11a729293d5dcd28cdeb6a4a3f37cea80cf4b504ed02b0c4d55d",
+    "compatibility_profile": {
+      "id": "bsarch-1.0/v1",
+      "sha256": "9577d821c40982e7f988d311d5ba7cf55b0f098af2c3f5fd5c5a531360dde1c4"
+    },
+    "codec_profiles": [
+      {"id": "jbsa-bsa-069-lz4-v1", "sha256": "3eb01cfdf11f0052406682b4cb0ffd7814de095d7dd2a543ed9d9441fa41ef85"},
+      {"id": "jbsa-lz4-v1", "sha256": "f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e"},
+      {"id": "jbsa-starfield-dds-lz4-v1", "sha256": "9512e3246a202ecbf2249a394f0b8ded09d6acfd6388293c71b5321d17488e9a"},
+      {"id": "jbsa-starfield-general-lz4-v1", "sha256": "7bf05e18f8baf343fd7ff3252b8544b6782c5940ec883bbf7e931254ba354bc9"}
+    ]
+  },
+  "inputs": {
+    "plan_digest": "sha256:94e3823c3d3d94b81c6e04af011f36510efb2d60373ac5fc7ee28fced539926f",
+    "generator_digest": "sha256:1b865f3c4c5d1c6cc26d7efb7acd0b77ca875ef3b00016b7b4af7482e7445f5f",
+    "corpus_digest": "sha256:6971491662cfff152b709ba105116383138bb8a55fea6e77a64f9ddc4edac5c8",
+    "profile_manifest_digest": "sha256:f8ae98f04ea4bd7c1f3d3c431962a8427ad1bced6193ac061302305aeae60d52",
+    "provider_manifest_digest": "sha256:ff83c00891e4093878d745704972fec9f55cf63b22f50c7b01b3102f009dce64",
+    "oracle_identity": "pinned-sha256:4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2@observation-sha256:38307fddcd7bfbf2840de419ea63dc19480dc0deccd7e46375942ac6ef2642d9",
+    "validator_digest": "sha256:f778f3db9daa9b17575b6c2d8b39e9dacd20de42d35dcb5355639538fb33becd",
+    "protocol_digest": "sha256:586a45221987413c0148ccb787c2761d3dd077a5ef16d1fc6755d58a621ed247",
+    "toolchain_digest": "sha256:7ff2bd97ba9e109c09e674d52088248c379603ebd5f99bcd70ecb93bc790c711",
+    "jvm": "openjdk version \"25.0.4.1\" 2026-08-18 LTS",
+    "platform": "Windows-2025Server-10.0.26100-SP0"
+  },
+  "selection": {
+    "requested_tier": "affected",
+    "selected_tier": "full",
+    "selection_reason": "shared-core-impact",
+    "environment": "hosted",
+    "selected_scenarios": 138,
+    "pass": 138,
+    "fail": 0,
+    "invalid": 0
+  },
+  "evidence": {
+    "capsule_digest": "sha256:59481354af14aebccf3838141a74f761253e95493833abf258d205820ca6e15f",
+    "github_actions_run": "https://github.com/evildarkarchon/jbsa/actions/runs/36525054690",
+    "hosted_artifact_id": 11014802569,
+    "hosted_artifact_name": "assurance-v2-hosted-evidence",
+    "complete_windows_artifact_id": 11013727975,
+    "checks": "9 of 9 passed",
+    "frozen_catalog": {"scoped": 485, "mapped": 476, "retired": 9, "unmapped": 0, "comparison_status": "incomplete only for unqualified synthetic-only Fallout 4 General v7"}
+  },
+  "claim_boundary": {
+    "automated_conformance": "PASS for the identified tested Git commit only",
+    "fallout4_general_v7": "incomplete synthetic-only capability; excluded from qualified results",
+    "xbox_filename_inference": "deferred after 1.0 by JBSA-SCOPE-009",
+    "binary_conformance": "not claimed",
+    "manual_release_qualification": "not claimed"
+  }
+}
