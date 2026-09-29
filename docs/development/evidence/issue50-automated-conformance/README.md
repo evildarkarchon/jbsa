@@ -74,11 +74,12 @@ The method names are exact JUnit selectors in
 [`MainTest`](../../../../jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java),
 [`PublicRequestContractIT`](../../../../jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicRequestContractIT.java),
 and the linked library test files. Probe IDs below refer to the pinned record.
-They establish the stated observations; unprobed behaviors and complete
-deviation qualification remain open. The safety column identifies the boundary to preserve
-and the current test where one exists; it is not an approval of oracle fidelity.
+The maintainer approved each applicable row for its recorded observations,
+tests, and stated limits. Unprobed variants are outside this exact evidence
+claim and require new observations and reapproval before a broader claim. The
+safety column identifies the preserved boundary and current test.
 
-| Profile deviation | Existing safe/default and profile tests | Pinned oracle observation, safety boundary, and gap |
+| Profile deviation | Existing safe/default and profile tests | Pinned oracle observation, safety boundary, and scope limit |
 | --- | --- | --- |
 | `BSARCH-1.0-V1-CLI-REPEATED-VALUE` | `MainTest.invalidTes3InvocationsFailBeforeSourceAccess`; `MainTest.profileUsesFirstValueAndPermissiveBooleanWhileRetainingTheSourceBoundary`; `MainTest.profileRepeatedCodecUsesTheFirstValue` | `repeated-value-first-zero` makes one archive part; reversed `repeated-value-first-negative` makes two. This directly shows first `-split` wins. The new JBSA test discriminates the first codec value and rejects repetition in safe mode. The first `-mt` effect remains unobserved. |
 | `BSARCH-1.0-V1-CLI-FAMILY-PRIORITY` | `MainTest.rejectsInvalidTes4SelectorsAndFlags`; `MainTest.rejectsConflictingVersion104Aliases`; `MainTest.profileChoosesTes3BeforeTes4RegardlessOfSwitchOrder`; `MainTest.profileSelectsVersion104BetweenTes4AndFallout4`; `MainTest.profileSelectsSseBetweenVersion104AndFallout4` | Five `family-priority-*` probes produce TES3, BSA `0x67`, `0x68`, `0x69`, and General BA2 v1 in that precedence order. Other aliases and DDS selector boundaries still need review. Family selection must remain confined to explicit profile parsing. |

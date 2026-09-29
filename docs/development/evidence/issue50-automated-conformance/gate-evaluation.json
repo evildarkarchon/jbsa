@@ -57,6 +57,7 @@
   },
   "claim_boundary": {
     "automated_conformance": "PASS for the identified tested Git commit only",
+    "compatibility_deviations": "approved for the 29 recorded pinned-Oracle probes and cited tests; unprobed variants are not claimed",
     "fallout4_general_v7": "incomplete synthetic-only capability; excluded from qualified results",
     "xbox_filename_inference": "deferred after 1.0 by JBSA-SCOPE-009",
     "binary_conformance": "not claimed",
