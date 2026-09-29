@@ -696,6 +696,31 @@ class MainTest {
     assertTrue(Files.isRegularFile(profileArchive));
   }
 
+  /** Repeated unknown switches and extra operands remain ignored by the selected profile. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileIgnoresRepeatedUnknownTailArguments() throws Exception {
+    Path source = Files.createDirectory(temporary.resolve("repeated-tail-source"));
+    Files.writeString(source.resolve("entry.txt"), "payload");
+    List<List<String>> tails =
+        List.of(List.of("--vendor-flag", "--vendor-flag"), List.of("extra-tail", "extra-tail"));
+    for (int index = 0; index < tails.size(); index++) {
+      Path archive = temporary.resolve("repeated-tail-" + index + ".bsa");
+      var arguments =
+          new ArrayList<>(
+              List.of(
+                  "--compatibility-profile=bsarch-1.0/v1",
+                  "pack",
+                  source.toString(),
+                  archive.toString(),
+                  "-tes3"));
+      arguments.addAll(tails.get(index));
+      Result packed = run(arguments.toArray(String[]::new));
+      assertEquals(0, packed.status(), tails.get(index) + ": " + packed.output() + packed.error());
+      assertTrue(Files.isRegularFile(archive), archive.toString());
+    }
+  }
+
   /** Profiled packing omits unusable roots but still needs an entry after library discovery. */
   @Test
   @EnabledOnOs(OS.WINDOWS)

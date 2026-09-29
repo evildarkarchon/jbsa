@@ -91,11 +91,27 @@ record Invocation(
     PackOptions.Splitting splitting = new PackOptions.Splitting.FamilyDefault();
     List<String> masks = List.of();
     Set<String> seen = new HashSet<>();
+    Set<String> operationSwitches =
+        Set.of(
+            "-z",
+            "-af",
+            "-ff",
+            "-list",
+            "-dump",
+            "--replace",
+            "--no-progress",
+            "-share",
+            "-mt",
+            "-split",
+            "-f");
     for (; index < args.length; index++) {
       String original = args[index];
       String option = lower(original);
       String key = option.split(":", 2)[0];
-      if (!seen.add(key)) {
+      // Unknown profile tail arguments are ignored on every occurrence, so they never enter seen.
+      boolean recognized =
+          operationSwitches.contains(key) || familyPriority(key) != Integer.MAX_VALUE;
+      if (recognized && !seen.add(key)) {
         if (profile.isPresent()
             && (Set.of("-share", "-mt", "-split", "-f", "-af", "-ff", "-z").contains(key)
                 || familyPriority(key) != Integer.MAX_VALUE)) {
