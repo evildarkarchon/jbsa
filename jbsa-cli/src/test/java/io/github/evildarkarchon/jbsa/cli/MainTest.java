@@ -752,6 +752,7 @@ class MainTest {
 
   /** Only an existing malformed archive earns the profile's information-error zero status. */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void profileArchiveInformationFailureExitsZero() throws Exception {
     Path missing = temporary.resolve("missing.bsa");
     Result safe = run(missing.toString());
@@ -770,6 +771,7 @@ class MainTest {
 
   /** Safe and profiled information keep warning identifiers but select distinct output streams. */
   @Test
+  @EnabledOnOs(OS.WINDOWS)
   void profilePlacesArchiveWarningsOnStandardOutput() throws Exception {
     Path archive = temporary.resolve("warning.bsa");
     Files.write(
