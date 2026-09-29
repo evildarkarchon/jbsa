@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "profile": "bsarch-1.0/v1",
+  "profile_payload_sha256": "9577d821c40982e7f988d311d5ba7cf55b0f098af2c3f5fd5c5a531360dde1c4",
+  "oracle_observation_sha256": "38307fddcd7bfbf2840de419ea63dc19480dc0deccd7e46375942ac6ef2642d9",
+  "implementation_sha256": "sha256:f7c9d40f9509971a0949804472d3b4119f0d04b6e5b96597a1dd7049f35ee0e6",
+  "required_deviations": [
+    "BSARCH-1.0-V1-CLI-BOOLEAN-NO",
+    "BSARCH-1.0-V1-CLI-FAMILY-PRIORITY",
+    "BSARCH-1.0-V1-CLI-IGNORED-ARGUMENT",
+    "BSARCH-1.0-V1-CLI-INFO-ZERO",
+    "BSARCH-1.0-V1-CLI-LEGACY-REPLACE",
+    "BSARCH-1.0-V1-CLI-REPEATED-VALUE",
+    "BSARCH-1.0-V1-CLI-SPLIT-PARSE",
+    "BSARCH-1.0-V1-CLI-STDOUT",
+    "BSARCH-1.0-V1-CLI-UNUSABLE-SOURCE",
+    "BSARCH-1.0-V1-CLI-ZERO-FLAGS",
+    "BSARCH-1.0-V1-NAME-ACTIVE-ANSI",
+    "BSARCH-1.0-V1-SF3-ZLIB-FALLBACK"
+  ],
+  "state": "approved",
+  "approved_deviations": [
+    "BSARCH-1.0-V1-CLI-BOOLEAN-NO",
+    "BSARCH-1.0-V1-CLI-FAMILY-PRIORITY",
+    "BSARCH-1.0-V1-CLI-IGNORED-ARGUMENT",
+    "BSARCH-1.0-V1-CLI-INFO-ZERO",
+    "BSARCH-1.0-V1-CLI-LEGACY-REPLACE",
+    "BSARCH-1.0-V1-CLI-REPEATED-VALUE",
+    "BSARCH-1.0-V1-CLI-SPLIT-PARSE",
+    "BSARCH-1.0-V1-CLI-STDOUT",
+    "BSARCH-1.0-V1-CLI-UNUSABLE-SOURCE",
+    "BSARCH-1.0-V1-CLI-ZERO-FLAGS",
+    "BSARCH-1.0-V1-NAME-ACTIVE-ANSI",
+    "BSARCH-1.0-V1-SF3-ZLIB-FALLBACK"
+  ],
+  "approval_reference": ".scratch/jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md#issue-50-deviation-approval-2026-09-28"
+}

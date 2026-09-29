@@ -1071,12 +1071,13 @@
           "io.github.evildarkarchon.jbsa.cli.MainTest#profileZeroFlagsAndNegativeSplitPublishOnePartPerEntry",
           "io.github.evildarkarchon.jbsa.cli.MainTest#profileOmitsUnusablePackSources",
           "io.github.evildarkarchon.jbsa.cli.MainTest#profilePlacesInvalidInvocationOnStandardOutput",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profilePlacesArchiveWarningsOnStandardOutput",
           "io.github.evildarkarchon.jbsa.cli.MainTest#profileArchiveInformationFailureExitsZero",
           "io.github.evildarkarchon.jbsa.cli.MainTest#profileImplicitlyReplacesPackAndUnpackTargets"
         ]
       },
       "evidence_refs": {
-        "shared-core": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/spec/compatibility-profiles.md", "docs/development/evidence/issue50-automated-conformance/README.md", "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"]
+        "shared-core": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/spec/compatibility-profiles.md", "docs/development/evidence/issue50-automated-conformance/README.md", "docs/development/evidence/issue50-automated-conformance/oracle-observations.json", "tests/assurance/deviation-review.json"]
       }
     },
     {
@@ -1096,7 +1097,7 @@
         ]
       },
       "evidence_refs": {
-        "shared-core": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Tes3PackTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue50-automated-conformance/README.md", "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"]
+        "shared-core": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Tes3PackTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue50-automated-conformance/README.md", "docs/development/evidence/issue50-automated-conformance/oracle-observations.json", "tests/assurance/deviation-review.json"]
       }
     },
     {
@@ -1156,6 +1157,7 @@
         "shared-core": [
           "io.github.evildarkarchon.jbsa.cli.MainTest#versionReportsArtifactAndProfileAndOperationalFailuresUseStderr",
           "io.github.evildarkarchon.jbsa.cli.MainTest#profilePlacesInvalidInvocationOnStandardOutput",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profilePlacesArchiveWarningsOnStandardOutput",
           "io.github.evildarkarchon.jbsa.cli.MainTest#profileArchiveInformationFailureExitsZero",
           "io.github.evildarkarchon.jbsa.ParallelPackTest#selectsFailureInLogicalOrderAndSettlesWorkers",
           "io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest#reportsExactBackupResidualWhenRestorationFailsWithoutDeletingPredecessor"

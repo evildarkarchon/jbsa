@@ -75,3 +75,17 @@ Binary Conformance claim is not mandatory for this gate.
 
 This current acceptance supersedes conflicting expanded-CV1 wording in the
 original body while retaining that text as historical context.
+
+### Issue #50 deviation approval — 2026-09-28
+
+The maintainer replied "looks good" to the explicit request to approve the 12
+in-scope `bsarch-1.0/v1` deviation dispositions and pinned-oracle observations
+in `docs/development/evidence/issue50-automated-conformance/README.md`. This
+approves the exact rows in `tests/assurance/deviation-review.json` against
+oracle observation digest
+`38307fddcd7bfbf2840de419ea63dc19480dc0deccd7e46375942ac6ef2642d9`.
+Xbox filename inference remains deferred under JBSA-SCOPE-009. A change to
+the pinned oracle, reviewed observations, profile specification, or product
+implementation requires revalidation. The Automated Conformance gate remains
+open until the exact candidate passes hosted full CI and its result capsule is
+retained.

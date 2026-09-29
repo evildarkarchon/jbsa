@@ -4,6 +4,7 @@ import importlib
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -55,6 +56,75 @@ class AssuranceRecordTests(unittest.TestCase):
             with self.assertRaises(record_tool.capsule_tool.CapsuleError):
                 record_tool.oracle_identity(repository)
 
+    def test_deviation_review_rejects_partial_approval_and_changed_code(self) -> None:
+        """Require every in-scope row and revalidation after affected implementation changes."""
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary)
+            observation_source = (
+                ROOT
+                / "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"
+            )
+            observation_path = repository / observation_source.relative_to(ROOT)
+            observation_path.parent.mkdir(parents=True)
+            shutil.copyfile(observation_source, observation_path)
+            source = repository / "jbsa/src/main/java/Archive.java"
+            source.parent.mkdir(parents=True)
+            source.write_text("class Archive {}\n", encoding="utf-8")
+            (repository / "jbsa-cli/src/main/java").mkdir(parents=True)
+            profile = repository / "docs/spec/compatibility-profiles.md"
+            profile.parent.mkdir(parents=True)
+            shutil.copyfile(ROOT / "docs/spec/compatibility-profiles.md", profile)
+            with patch.object(sys, "path", [str(COMMAND.parent), *sys.path]):
+                record_tool = importlib.import_module("record")
+            review = json.loads(
+                (ROOT / "tests/assurance/deviation-review.json").read_text(encoding="utf-8")
+            )
+            review["state"] = "pending"
+            review["approved_deviations"] = []
+            review["approval_reference"] = None
+            review["implementation_sha256"] = record_tool.digest_files(
+                repository,
+                [source.parent, repository / "jbsa-cli/src/main/java", profile],
+            )
+            review_path = repository / "tests/assurance/deviation-review.json"
+            review_path.parent.mkdir(parents=True)
+            review_path.write_text(json.dumps(review), encoding="utf-8")
+            self.assertEqual("pending", record_tool.deviation_review_status(repository))
+            reports = repository / "reports"
+            reports.mkdir()
+            (reports / "TEST-example.Test.xml").write_text(
+                '<testsuite><testcase classname="example.Test" name="passes()"/></testsuite>',
+                encoding="utf-8",
+            )
+            selection = {
+                "assurance_scenarios": [
+                    {
+                        "assurance_scenario_id": "shared-core:bsarch-v1-cli",
+                        "test_selectors": ["example.Test#passes"],
+                    }
+                ],
+                "performance_lanes": [],
+            }
+            pending = record_tool.results_from_reports(selection, [reports], repository)
+            self.assertEqual("INVALID", pending["results"][0]["outcome"])
+            self.assertIn("deviation-review:pending", pending["results"][0]["evidence"])
+
+            review["state"] = "approved"
+            review["approved_deviations"] = review["required_deviations"].copy()
+            review["approval_reference"] = "issue50 maintainer approval"
+            review_path.write_text(json.dumps(review), encoding="utf-8")
+            self.assertEqual("approved", record_tool.deviation_review_status(repository))
+            approved = record_tool.results_from_reports(selection, [reports], repository)
+            self.assertEqual("PASS", approved["results"][0]["outcome"])
+
+            review["approved_deviations"].pop()
+            review_path.write_text(json.dumps(review), encoding="utf-8")
+            self.assertEqual("incomplete", record_tool.deviation_review_status(repository))
+            review["approved_deviations"] = review["required_deviations"].copy()
+            review_path.write_text(json.dumps(review), encoding="utf-8")
+            source.write_text("class Archive { int changed; }\n", encoding="utf-8")
+            self.assertEqual("stale", record_tool.deviation_review_status(repository))
+
     def test_specification_digest_orders_mixed_case_paths_portably(self) -> None:
         """Use one path order for identical specification bytes on every platform."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -102,7 +172,7 @@ class AssuranceRecordTests(unittest.TestCase):
         self.assertNotEqual(first["specification"], second["specification"])
 
     def test_records_every_full_tier_result_once(self) -> None:
-        """Create a PASS capsule after the owning Gradle test graph has succeeded."""
+        """Create a PASS capsule after selectors and deviation approval both pass."""
         with tempfile.TemporaryDirectory() as temporary:
             reports = Path(temporary) / "reports"
             reports.mkdir()
@@ -178,6 +248,7 @@ class AssuranceRecordTests(unittest.TestCase):
             "docs/development/evidence/issue50-automated-conformance/oracle-observations.json",
             profile_result["evidence"],
         )
+        self.assertIn("deviation-review:approved", profile_result["evidence"])
 
 
 if __name__ == "__main__":

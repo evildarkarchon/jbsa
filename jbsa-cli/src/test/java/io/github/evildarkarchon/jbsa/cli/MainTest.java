@@ -768,6 +768,45 @@ class MainTest {
     assertEquals("", profiled.error());
   }
 
+  /** Safe and profiled information keep warning identifiers but select distinct output streams. */
+  @Test
+  void profilePlacesArchiveWarningsOnStandardOutput() throws Exception {
+    Path archive = temporary.resolve("warning.bsa");
+    Files.write(
+        archive,
+        java.util.HexFormat.of()
+            .parseHex(
+                "00010000 0e000000 01000000 01000000 00000000 01000000 6100 0000000000000000 07 ff"
+                    .replace(" ", "")));
+    Result safe = run(archive.toString());
+    Result profiled = run("--compatibility-profile=bsarch-1.0/v1", archive.toString());
+    assertEquals(0, safe.status(), safe.error());
+    assertEquals(0, profiled.status(), profiled.output());
+    for (String identifier :
+        List.of(
+            "tes3.name-offset-inconsistency", "tes3.stored-hash-mismatch", "tes3.trailing-data")) {
+      assertTrue(safe.error().contains("Warning: [" + identifier + "]"), safe.error());
+      assertTrue(profiled.output().contains("Warning: [" + identifier + "]"), profiled.output());
+    }
+    assertFalse(safe.output().contains("Warning: ["));
+    assertEquals("", profiled.error());
+
+    Path sound = temporary.resolve("sound-warning.bsa");
+    Files.write(
+        sound,
+        java.util.HexFormat.of()
+            .parseHex(
+                "00010000 14000000 01000000 01000000 00000000 00000000 536f556e445c6100 0000000000000000 07"
+                    .replace(" ", "")));
+    Result safeSound = run(sound.toString(), "-list");
+    Result profileSound = run("--compatibility-profile=bsarch-1.0/v1", sound.toString(), "-list");
+    assertEquals(0, safeSound.status(), safeSound.error());
+    assertEquals(0, profileSound.status(), profileSound.output());
+    assertTrue(safeSound.error().contains("Warning: [tes3.unsupported-asset-root]"));
+    assertTrue(profileSound.output().contains("Warning: [tes3.unsupported-asset-root]"));
+    assertEquals("", profileSound.error());
+  }
+
   /** The selected profile places invocation errors on the qualified reference stream. */
   @Test
   void profilePlacesInvalidInvocationOnStandardOutput() throws Exception {

@@ -30,6 +30,9 @@ SOURCES = {
     "source/meshes/beta.nif": b"jbsa issue50 same payload\n",
 }
 INVALID_ARCHIVE = b"not a Bethesda archive\n"
+WARNING_ARCHIVE = bytes.fromhex(
+    "00010000 14000000 01000000 01000000 00000000 00000000 536f556e445c6100 0000000000000000 07"
+)
 ANSI_SOURCE = b"jbsa issue50 accented payload\n"
 STARFIELD_V2 = {
     "general": ROOT / "tests/fixtures/starfield-general/starfield-general-v2-zlib.hex",
@@ -62,6 +65,7 @@ PROBES = (
     ("unusable-mixed", "CLI-UNUSABLE-SOURCE", (("pack", "missing+source", "archive.bsa", "-tes3", "-mt:no"),)),
     ("unusable-only", "CLI-UNUSABLE-SOURCE", (("pack", "missing", "archive.bsa", "-tes3", "-mt:no"),)),
     ("stdout-invalid", "CLI-STDOUT", (("pack",),)),
+    ("stdout-warning", "CLI-STDOUT", (("warning.bsa", "-list"),)),
     ("info-invalid-archive", "CLI-INFO-ZERO", (("invalid.bsa",),)),
     ("info-missing-path", "CLI-INFO-ZERO", (("missing.bsa",),)),
     ("replace-pack", "CLI-LEGACY-REPLACE", (("pack", "source", "archive.bsa", "-tes3", "-mt:no"), ("pack", "source", "archive.bsa", "-tes3", "-mt:no"))),
@@ -153,6 +157,8 @@ def run_probe(probe: tuple, run_root: Path) -> dict[str, object]:
         (work / "fixture.ba2").write_bytes(starfield_fixture(kind, version))
     if name == "info-invalid-archive":
         (work / "invalid.bsa").write_bytes(INVALID_ARCHIVE)
+    if name == "stdout-warning":
+        (work / "warning.bsa").write_bytes(WARNING_ARCHIVE)
     steps = []
     for index, command in enumerate(commands):
         if name == "replace-pack" and index == 1:
@@ -211,6 +217,7 @@ def main() -> int:
         "fixture_recipe": {
             **{path: {"size": len(data), "sha256": digest(data)} for path, data in sorted(SOURCES.items())},
             "invalid.bsa": {"size": len(INVALID_ARCHIVE), "sha256": digest(INVALID_ARCHIVE)},
+            "warning.bsa": {"size": len(WARNING_ARCHIVE), "sha256": digest(WARNING_ARCHIVE)},
             "source/meshes/caf\u00e9.nif": {"size": len(ANSI_SOURCE), "sha256": digest(ANSI_SOURCE)},
             **{
                 STARFIELD_V2[kind].relative_to(ROOT).as_posix(): {
