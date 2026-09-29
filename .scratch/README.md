@@ -1,6 +1,6 @@
-# Local issue tracker
+# Local issue tracker (read-only history)
 
-Create and manage tickets using [the tracker conventions](../docs/agents/issue-tracker.md). Migrated JBSA 1.0 ticket filenames retain their GitHub issue numbers (#24–#60); the parent #23 is `jbsa-1-0/map.md`. Other ticket numbers are scoped to each feature; legacy GitHub numbers map through this index.
+New work is tracked in GitHub Issues; see [the tracker conventions](../docs/agents/issue-tracker.md). This directory is retained as read-only history and is no longer updated. Migrated JBSA 1.0 ticket filenames retain their GitHub issue numbers (#24–#60); the parent #23 is `jbsa-1-0/map.md`. Other ticket numbers are scoped to each feature; legacy GitHub numbers map through this index.
 
 | GitHub source | Local ticket | State | Triage status |
 | --- | --- | --- | --- |

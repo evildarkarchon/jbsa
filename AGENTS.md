@@ -2,7 +2,7 @@
 
 ### Issue tracker
 
-Issues and specs are tracked locally under `.scratch/`. Read `docs/agents/issue-tracker.md` before creating, triaging, or fetching tickets.
+Issues and specs are tracked in GitHub Issues on `evildarkarchon/jbsa`; `.scratch/` is read-only history. Read `docs/agents/issue-tracker.md` before creating, triaging, or fetching tickets.
 
 ### Triage labels
 
