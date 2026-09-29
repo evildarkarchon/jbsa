@@ -26,8 +26,9 @@ identical to the [Interface Candidate snapshot](interface-candidate-api.txt):
 the eight-family implementation required no public type or member change from
 that earlier candidate.
 
-`PublicApiFreezeIT` enumerates every public class in the exported package from
-the built JAR and compares both snapshots exactly under the Java 25 toolchain.
+`PublicApiFreezeIT` enumerates every caller-visible class in the exported
+package from the built JAR and compares both snapshots exactly under the Java
+25 toolchain.
 An addition, removal, descriptor change, or export change fails this review
 gate. `PublicModuleConsumerIT` independently compiles two named modules with
 `--release 25` against only the library JAR and runs them with no CLI or test
@@ -120,9 +121,16 @@ reevaluated; an earlier `PASS` cannot be carried forward. This is the
 ## Gate record
 
 The issue 50 hosted `full` capsule reports 138 of 138 selected Assurance
-Scenarios `PASS` for its recorded candidate and specification identity. The
-interface changes in this issue require fresh exact-candidate evidence before
-the Interface Freeze Gate can be recorded as `PASS`.
+Scenarios `PASS` for its earlier candidate. The fresh
+[Interface Freeze evaluation](evidence/issue51-interface-freeze/gate-evaluation.json)
+records `PASS` for PR [#65](https://github.com/evildarkarchon/jbsa/pull/65)
+head `16e00e1b20b63be2663342d2ad6f593c4e4f5bdb` and hosted tested commit
+`8c7fbcee2c8f270fea5b4c3a739e9fe9b46b7a69`. All nine hosted checks passed.
+The retained `full` Evidence Capsule binds specification digest
+`b6606a5f9a3bc999d6a17e7e916565441551dc305b67cbfe9ca749ca46fe503b`
+and reports 138 of 138 selected scenarios `PASS`, with no failed or invalid
+result. The compatibility, codec, toolchain, corpus, plan, Oracle, provider,
+validator, protocol, platform, and JVM identities are in the evaluation.
 
 The approved `bsarch-1.0/v1` deviation rows and pinned Oracle observations are
 unchanged. Three production Javadocs describing the obsolete Contract Baseline
@@ -132,8 +140,8 @@ Because the deviation review hashes all production source bytes, its
 `sha256:6aab1e3f35aaacddfc32fa302f34784c2e7da63639670ed76f5ac24ad0638925`
 to `sha256:baabb9046693ef3e2010bb6f6ff3b42b983a956ad550e713d227c003f95e4791`.
 The prior maintainer approval still identifies the same 12 dispositions; this
-comment-only rebind is checked by the deviation-review validation test and must
-also pass the fresh full Assurance selection.
+comment-only rebind passed both the deviation-review validation test and the
+fresh hosted full Assurance selection.
 
 The focused checks are:
 
@@ -143,7 +151,7 @@ The focused checks are:
 .\gradlew.bat :jbsa-conformance-tests:architectureTest
 ```
 
-The final local build is `.\gradlew.bat clean verify --no-daemon`. A hosted
-`full` Assurance evaluation must bind the final candidate and the revised
-requirement-registry digest; the earlier issue 50 capsule alone cannot certify
-the later commit.
+The final local build `.\gradlew.bat clean verify --no-daemon` passed. This
+evaluation is exact to its tested commit. The documentation-only commit that
+records this result and closes issue 51 must itself receive fresh hosted checks
+and a passing `full` capsule before its exact candidate can inherit the freeze.

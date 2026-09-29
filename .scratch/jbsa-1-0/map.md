@@ -81,7 +81,7 @@ Implement and qualify the Windows-first Java 25 Bethesda archive library and thi
 | [#48 — Introduce bounded deterministic parallel archive operations](issues/48-introduce-bounded-deterministic-parallel-archive-operations.md) | closed |
 | [#49 — Complete the cross-family BSArch-compatible CLI](issues/49-complete-the-cross-family-bsarch-compatible-cli.md) | closed |
 | [#50 — Complete the mandatory Automated Conformance matrix](issues/50-complete-the-mandatory-automated-conformance-matrix.md) | closed |
-| [#51 — Freeze the JBSA 1.0 public archive interface](issues/51-freeze-the-jbsa-1-0-public-archive-interface.md) | open |
+| [#51 — Freeze the JBSA 1.0 public archive interface](issues/51-freeze-the-jbsa-1-0-public-archive-interface.md) | closed |
 | [#52 — Qualify jlibdeflate and select the standard zlib dispatch](issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md) | open |
 | [#53 — Assemble and verify the self-contained Windows x64 application image](issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md) | open |
 | [#54 — Complete release provenance, notices, and operator documentation](issues/54-complete-release-provenance-notices-and-operator-documentation.md) | open |
