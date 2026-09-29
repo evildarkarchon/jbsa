@@ -211,9 +211,6 @@ def main() -> int:
         "oracle_sha256": ORACLE_SHA256,
         "oracle_relative_path": ORACLE.relative_to(ROOT).as_posix(),
         "reference_snapshot_commit": REFERENCE_COMMIT,
-        "probe_script_sha256": digest(
-            Path(__file__).read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8")
-        ),
         "fixture_recipe": {
             **{path: {"size": len(data), "sha256": digest(data)} for path, data in sorted(SOURCES.items())},
             "invalid.bsa": {"size": len(INVALID_ARCHIVE), "sha256": digest(INVALID_ARCHIVE)},

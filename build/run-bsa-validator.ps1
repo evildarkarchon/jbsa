@@ -8,7 +8,6 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'conformance-adapters.ps1')
 $implementation = Join-Path $PSScriptRoot 'validate-bsa-wire.py'
-$implementationDigest = (Get-FileHash -LiteralPath $implementation -Algorithm SHA256).Hash.ToLowerInvariant()
 $executable = (Get-Command python).Source
 $tool = [ordered]@{
     identity = "jbsa-project-independent-$Family-wire-scanner"
@@ -19,7 +18,6 @@ $tool = [ordered]@{
     independent = $true
     derived_from_reference = $false
     implementation = $implementation
-    implementation_sha256 = $implementationDigest
     scope = 'ASCII named unshared 0x67/0x68 stored/zlib and 0x69 stored/LZ4-frame, including embedded names; independent of product and Reference Snapshot source'
 }
 $expected = @'
@@ -30,10 +28,6 @@ $result = Invoke-ConformanceValidator -Tool $tool -InputPath $InputPath `
     -InputSha256 (Get-FileHash -LiteralPath $InputPath -Algorithm SHA256).Hash.ToLowerInvariant() `
     -ExpectedProjection $expected -WorkingDirectory $WorkingDirectory -EvidenceDirectory $EvidenceDirectory `
     -Arguments @($implementation, $InputPath)
-if ((Get-FileHash -LiteralPath $implementation -Algorithm SHA256).Hash.ToLowerInvariant() -cne $implementationDigest) {
-    $result.result = 'INVALID'
-    $result.error = 'Independent validator implementation changed during observation'
-}
 [IO.Directory]::CreateDirectory($EvidenceDirectory) | Out-Null
 $json = $result | ConvertTo-Json -Depth 100
 [IO.File]::WriteAllText((Join-Path $EvidenceDirectory 'observation.json'), $json)

@@ -1,5 +1,11 @@
 # JBSA 1.0 public archive interface freeze audit
 
+> Historical record. Specification `0.18.0` retired the Interface Freeze gate,
+> the source and binary declaration baselines, and their exact-match test. The
+> hashes and gate evaluation below describe issue #51 at the time it ran; they
+> are no longer active approval or compatibility requirements. See the
+> [retirement decision](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md).
+
 Issue [51](../../.scratch/jbsa-1-0/issues/51-freeze-the-jbsa-1-0-public-archive-interface.md)
 reviews the public seam after all eight Archive Families, the thin CLI, bounded
 parallel operations, and the [Automated Conformance Gate](evidence/issue50-automated-conformance/README.md).

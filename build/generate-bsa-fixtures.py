@@ -68,7 +68,6 @@ def generate(destination):
                 "source": "docs/spec/formats/versioned-bsa.md; independently authored wire vectors",
                 "generator": {"path": "build/generate-bsa-fixtures.py", "version": "1",
                               "spdx_license": "Apache-2.0",
-                              "sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                               "command": "python build/generate-bsa-fixtures.py --output <directory>"},
                 "fixtures": []}
     for name, content in cases.items():

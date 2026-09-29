@@ -165,6 +165,10 @@ class JbsaConformancePlugin : Plugin<Project> {
     /** Aggregates the compact Assurance Plan checks and executable Archive Family scenarios. */
     private fun configureAutomatedAssurance(project: Project) {
         val root = project.rootProject
+        val libraryJar =
+            project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named("jar", Jar::class.java)
+        val cliJar =
+            project.project(JbsaThinApplicationIdentity.PROJECT_PATH).tasks.named("jar", Jar::class.java)
         val libraryTests = project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named("test")
         val cliTests = project.project(JbsaThinApplicationIdentity.PROJECT_PATH).tasks.named("test")
         val contractTests = project.tasks.named("integrationTest")
@@ -243,6 +247,8 @@ class JbsaConformancePlugin : Plugin<Project> {
                 group = LifecycleBasePlugin.VERIFICATION_GROUP
                 description = "Records selected scenario outcomes from real JUnit reports in one Evidence Capsule."
                 dependsOn(
+                    libraryJar,
+                    cliJar,
                     libraryTests,
                     cliTests,
                     contractTests,
@@ -267,6 +273,10 @@ class JbsaConformancePlugin : Plugin<Project> {
                         root.rootDir.absolutePath,
                         "--plan",
                         root.layout.projectDirectory.file("tests/assurance/plan.json").asFile.absolutePath,
+                        "--library-jar",
+                        libraryJar.get().archiveFile.get().asFile.absolutePath,
+                        "--cli-jar",
+                        cliJar.get().archiveFile.get().asFile.absolutePath,
                         "--tier",
                         "full",
                         "--environment",

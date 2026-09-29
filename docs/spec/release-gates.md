@@ -49,7 +49,8 @@ public library interface that represents the normative types, operations,
 ownership, failures, and configuration. Its evidence **MUST** identify the
 public-interface snapshot used by implementation and consumers. Passing this
 milestone **MUST NOT** claim source or binary compatibility; breaking
-conformance-driven corrections remain permitted until Interface Freeze.
+conformance-driven corrections remain permitted under the general affected-gate
+reset rule in [JBSA-REL-020](#jbsa-rel-020).
 
 _Source decision: [accepted Contract Baseline milestone](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241)._
 
@@ -70,14 +71,13 @@ progress, cancellation, and artifact semantics across those four slices. It
 module deletion/depth checks. Each finding **MUST** be resolved with owning
 specification and requirement-registry updates and compatibility tests.
 
-Before Interface Freeze, a later breaking correction **MUST** identify its
-conformance evidence, affected contract, specification and registry updates,
-and compatibility tests. It **MUST** return the Interface Candidate Gate and
-any downstream gate relying on that interface to `OPEN` before rerunning their
-applicable evidence against the corrected candidate. An earlier `PASS`
-**MUST NOT** be retained for the changed interface. This reset does not establish
-source or binary compatibility or apply the post-freeze approval rule in
-[JBSA-REL-007](#jbsa-rel-007).
+A later breaking correction **MUST** identify its conformance evidence,
+affected contract, specification and registry updates, and compatibility tests.
+It **MUST** return the Interface Candidate Gate and any downstream gate relying
+on that interface to `OPEN` before rerunning their applicable evidence against
+the corrected candidate. An earlier `PASS` **MUST NOT** be retained for the
+changed interface. No separate interface-freeze approval or source baseline is
+required.
 
 _Source decisions: [accepted Interface Candidate milestone and representative-slice order](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [Interface Candidate audit and later-correction acceptance](../../.scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#acceptance)._
 
@@ -97,33 +97,25 @@ _Source decisions: [accepted complete automated-conformance gate](https://github
 
 ## JBSA-REL-006
 
-The Interface Freeze Gate **MUST** require the Automated Conformance Gate plus
-completed coverage of every Archive Family, bounded sequential and parallel
-scheduling, the complete CLI, and the final standard codec capability through
-the public interface. It **MUST** include an audit of every exported package,
-type, invariant, ordering rule, failure, configuration, ownership contract, and
-performance characteristic; source and binary compatibility baselines; compiled
-CLI-like and embedded consumers; and proof that third-party and internal
-storage, provider, scheduler, transaction, buffer, pool, native, and dispatch
-details remain absent from the interface.
+Retired in specification `0.18.0`. The former Interface Freeze Gate and its
+source and binary declaration baselines are historical evidence only. Current
+public-interface coverage comes from the Automated Conformance Gate, compiled
+consumers, and module architecture checks.
 
-_Source decisions: [accepted Interface Freeze milestone](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [public-interface freeze acceptance](https://github.com/evildarkarchon/jbsa/issues/51)._
+_Decision: [retire Interface Freeze](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md). Historical source decisions: [milestone](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [issue 51](https://github.com/evildarkarchon/jbsa/issues/51)._
 
 ## JBSA-REL-007
 
-After Interface Freeze, a breaking public-interface change **MUST** remain
-blocked until an explicit decision supplies a compatibility assessment and a
-new specification revision. Applying the change **MUST** reset the interface
-baseline and every affected implementation, consumer, conformance,
-performance, packaging, documentation, qualification, approval, and
-publication gate; retaining an earlier `PASS` against the changed interface is
-prohibited.
+Retired in specification `0.18.0`. The former post-freeze approval and baseline
+reset rule no longer applies. Public-interface changes follow the specification
+change-control rules and the affected-gate reset rule in
+[JBSA-REL-020](#jbsa-rel-020).
 
-_Source decisions: [accepted post-freeze change policy](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [public-interface freeze acceptance](https://github.com/evildarkarchon/jbsa/issues/51)._
+_Decision: [retire Interface Freeze](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md). Historical source decisions: [change policy](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [issue 51](https://github.com/evildarkarchon/jbsa/issues/51)._
 
 ## JBSA-REL-008
 
-The Final Profile Gate **MUST** follow Interface Freeze and select or explicitly
+The Final Profile Gate **MUST** follow Automated Conformance and select or explicitly
 defer every optional provider using the conformance, deterministic-output,
 performance, memory, native-loading, packaging, and notice evidence required by
 [JBSA-CODEC-007](codecs.md#jbsa-codec-007) and
@@ -150,7 +142,7 @@ _Source decisions: [accepted final packaging sequence](https://github.com/evilda
 
 ## JBSA-REL-010
 
-The Documentation and Provenance Gate **MUST** consume the frozen interface,
+The Documentation and Provenance Gate **MUST** consume the tested public interface,
 profiles, and packaged artifact identities. It **MUST** verify operator and
 library documentation, public examples, limitations, safe operation,
 native-access and resource behavior, cancellation and residual cleanup,
@@ -236,7 +228,7 @@ The JBSA 1.0 Approval Gate **MUST** require Release Candidate status, the
 writable-family Release Qualification Gate, and complete evidence for every
 active requirement registry row. The human
 approver **MUST** review and explicitly accept the exact specification `1.0.0`,
-public-interface baseline, immutable compatibility and codec profiles,
+current documented public interface, immutable compatibility and codec profiles,
 deviations, limitations, documentation, artifact digests, conformance claim set,
 independently passing performance metrics and baseline, packaging, compliance,
 and manual qualification. The recorded result **MUST** either approve one exact
@@ -309,14 +301,13 @@ same immutable packaged-candidate identity recorded by the Packaging Gate.
 | 2 | Contract Baseline | Specification Gate |
 | 3 | Interface Candidate | Contract Baseline and representative slice evidence |
 | 4 | Automated Conformance | Complete implementation and the Assurance Plan `full` tier |
-| 5 | Interface Freeze | Automated Conformance and complete consumers/families/scheduling |
-| 6 | Final Profile | Interface Freeze and provider qualification or deferral |
-| 7 | Packaging | Final Profile |
-| 8a | Documentation and Provenance | Packaging and frozen interface/profiles |
-| 8b | Performance | Packaging and Automated Conformance |
-| 8c | Optional case-level Binary Conformance Confirmation | Packaging and Automated Conformance |
-| 8d | Compliance | Packaging |
-| 8e | Writable-family Release Qualification | Packaging |
-| 9 | Release Candidate | Packaging, Documentation and Provenance, Performance, Compliance |
-| 10 | JBSA 1.0 Approval | Release Candidate and writable-family qualification |
-| 11 | Publication | JBSA 1.0 Approval |
+| 5 | Final Profile | Automated Conformance and provider qualification or deferral |
+| 6 | Packaging | Final Profile |
+| 7a | Documentation and Provenance | Packaging and tested public interface/profiles |
+| 7b | Performance | Packaging and Automated Conformance |
+| 7c | Optional case-level Binary Conformance Confirmation | Packaging and Automated Conformance |
+| 7d | Compliance | Packaging |
+| 7e | Writable-family Release Qualification | Packaging |
+| 8 | Release Candidate | Packaging, Documentation and Provenance, Performance, Compliance |
+| 9 | JBSA 1.0 Approval | Release Candidate and writable-family qualification |
+| 10 | Publication | JBSA 1.0 Approval |

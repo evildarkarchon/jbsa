@@ -9,7 +9,6 @@
     "path": "build/generate-ba2-fixtures.py",
     "version": "1",
     "spdx_license": "Apache-2.0",
-    "sha256": "3f5629bd495848daa1a4a26a16da066c82952be0e0f060f08a97966efad285c9",
     "command": "python build/generate-ba2-fixtures.py --output <directory>"
   },
   "fixtures": [

@@ -10,7 +10,6 @@
     "path": "build/generate-tes3-fixtures.ps1",
     "version": "1",
     "spdx_license": "Apache-2.0",
-    "sha256": "f10096e839d652fb731246bd4c6d1e56a6bb237d10777c7995933d5ce18d816a",
     "command": "pwsh -NoProfile -File build/generate-tes3-fixtures.ps1 -OutputDirectory <empty-directory>"
   },
   "fixtures": [

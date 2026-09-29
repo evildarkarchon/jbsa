@@ -7,9 +7,6 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'conformance-adapters.ps1')
 $implementation = Join-Path $PSScriptRoot 'validate-ba2-wire.py'
-$implementationDigest = (Get-FileHash -LiteralPath $implementation -Algorithm SHA256).Hash.ToLowerInvariant()
-$metadataScanner = Join-Path $PSScriptRoot 'ba2-cv1-expectations.py'
-$metadataScannerDigest = (Get-FileHash -LiteralPath $metadataScanner -Algorithm SHA256).Hash.ToLowerInvariant()
 $executable = (Get-Command python).Source
 $tool = [ordered]@{
     identity = 'jbsa-project-independent-fo4-gnrl-v1-wire-scanner'
@@ -20,7 +17,6 @@ $tool = [ordered]@{
     independent = $true
     derived_from_reference = $false
     implementation = $implementation
-    implementation_sha256 = $implementationDigest
     scope = 'ASCII named canonical General BA2 stored/zlib; independent of product and Reference Snapshot source'
 }
 $expected = @'
@@ -30,10 +26,6 @@ $result = Invoke-ConformanceValidator -Tool $tool -InputPath $InputPath `
     -InputSha256 (Get-FileHash -LiteralPath $InputPath -Algorithm SHA256).Hash.ToLowerInvariant() `
     -ExpectedProjection $expected -WorkingDirectory $WorkingDirectory -EvidenceDirectory $EvidenceDirectory `
     -Arguments @($implementation, $InputPath)
-if ((Get-FileHash -LiteralPath $implementation -Algorithm SHA256).Hash.ToLowerInvariant() -cne $implementationDigest) {
-    $result.result = 'INVALID'
-    $result.error = 'Independent validator implementation changed during observation'
-}
 # Cross-provider payload invariants above cannot fix compressed stored sizes. Compare the
 # complete public metadata projection with independent parsing of this exact archive instead.
 if ($result.result -eq 'PASS') {
@@ -67,16 +59,11 @@ if ($result.result -eq 'PASS') {
         result = $(if ($equal) { 'PASS' } else { 'FAIL' })
         expected = $metadataExpected
         actual = $metadataActual
-        expectation_scanner_sha256 = $metadataScannerDigest
         public_observer_sha256 = (Get-FileHash -LiteralPath $observerClass -Algorithm SHA256).Hash.ToLowerInvariant()
         candidate_library_sha256 = (Get-FileHash -LiteralPath $library[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
         java_sha256 = (Get-FileHash -LiteralPath $java -Algorithm SHA256).Hash.ToLowerInvariant()
     }
     if (-not $equal) { $result.result = 'FAIL'; $result.error = 'Public BA2 metadata differs from independent wire interpretation.' }
-}
-if ((Get-FileHash -LiteralPath $metadataScanner -Algorithm SHA256).Hash.ToLowerInvariant() -cne $metadataScannerDigest) {
-    $result.result = 'INVALID'
-    $result.error = 'Independent metadata scanner changed during observation.'
 }
 [IO.Directory]::CreateDirectory($EvidenceDirectory) | Out-Null
 $json = $result | ConvertTo-Json -Depth 100

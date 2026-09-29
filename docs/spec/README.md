@@ -27,7 +27,7 @@ in `requirements.yaml`. Versions use semantic versioning:
   editorial.
 
 Versions below `1.0.0` are normative while the contract is being completed; they
-do not claim the Interface Freeze or JBSA 1.0 release gates. The first `1.0.0`
+do not claim the JBSA 1.0 approval or publication gates. The first `1.0.0`
 specification requires the explicit human approval gate assigned by the accepted
 implementation sequence.
 
@@ -164,12 +164,12 @@ Every normative change MUST:
 5. reset every affected gate when a requirement changes after its evidence was
    recorded.
 
-After Interface Freeze, a breaking change additionally requires an explicit
-compatibility assessment and specification revision before implementation. A
-change that reveals unresolved product behavior records the unknown and stops at
-that boundary rather than inventing a default.
+Public-interface changes use compiled consumers, architecture checks, and fresh
+affected conformance evidence; there is no separate Interface Freeze approval or
+source-hash baseline. A change that reveals unresolved product behavior records
+the unknown and stops at that boundary rather than inventing a default.
 
-_Decision sources: [Interface Freeze and affected-gate reset policy](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [framework change-control acceptance criterion](https://github.com/evildarkarchon/jbsa/issues/24)._
+_Decision sources: [retire Interface Freeze](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md), [affected-gate reset policy](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [framework change-control acceptance criterion](https://github.com/evildarkarchon/jbsa/issues/24)._
 
 ## Known contradiction and deferred specifics
 

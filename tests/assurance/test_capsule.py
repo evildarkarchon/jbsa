@@ -38,19 +38,18 @@ class EvidenceCapsuleTests(unittest.TestCase):
         }
         session = {
             "candidate": "sha256:" + "3" * 64,
-            "candidate_commit": "b" * 40,
             "runtime": "windows-x64",
             "jvm": "temurin-25.0.4.1+1",
             "profile": "sha256:" + "4" * 64,
             "corpus": "sha256:" + "5" * 64,
             "protocol": "sha256:" + "6" * 64,
-            "specification": "0.17.0",
+            "specification": "0.18.0",
             "toolchain": "gradle-9.7.1",
             "platform": "windows-2025",
             "provider": "jdk-zlib+lwjgl-lz4",
-            "generator": "sha256:" + "7" * 64,
+            "generator": "assurance-v2-generator-v1",
             "oracle": "pinned-sha256:" + "8" * 64 + "@observation-sha256:" + "9" * 64,
-            "validator": "sha256:" + "a" * 64,
+            "validator": "assurance-v2-junit-v1",
         }
         selection_path = directory / "selection.json"
         session_path = directory / "session.json"
@@ -89,8 +88,10 @@ class EvidenceCapsuleTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
             first, first_path = self.run_capsule(directory, [result])
+            self.assertEqual(0, first.returncode, first.stderr)
             first_bytes = first_path.read_bytes()
             second, second_path = self.run_capsule(directory, [result])
+            self.assertEqual(0, second.returncode, second.stderr)
             second_bytes = second_path.read_bytes()
             capsule = json.loads(second_bytes)
 
@@ -98,7 +99,8 @@ class EvidenceCapsuleTests(unittest.TestCase):
         self.assertEqual(0, second.returncode, second.stderr)
         self.assertEqual(first_bytes, second_bytes)
         self.assertEqual("PASS", capsule["outcome"])
-        self.assertEqual("assurance-v2-evidence-capsule-v1", capsule["version"])
+        self.assertEqual("assurance-v2-evidence-capsule-v2", capsule["version"])
+        self.assertNotIn("candidate_commit", capsule["session_identity"])
         self.assertRegex(capsule["capsule_digest"], r"^sha256:[0-9a-f]{64}$")
         self.assertEqual("temurin-25.0.4.1+1", capsule["session_identity"]["jvm"])
 

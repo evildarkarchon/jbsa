@@ -71,13 +71,16 @@ Semantic Expectation identity; an editorial specification change or new run
 identity with unchanged semantics **MUST** require a rerun but **MUST NOT**
 require a semantic rebaseline.
 
-Every run **MUST** bind the exact specification, plan, candidate, profile,
-provider, fixture or corpus, validator or oracle, toolchain, JVM, platform, and
+Every run **MUST** bind the reviewed specification version, exact plan,
+tested library and CLI JAR bytes, generator and validator procedure versions,
+profile, provider, fixture or corpus, Oracle, toolchain, JVM, platform, and
 protocol identities that apply to execution separately in its Evidence
-Capsule. Binary Conformance remains an optional, case-scoped claim and **MUST**
-bind exact-byte expectations and all identities required for repeatability.
+Capsule. Java, Python, PowerShell, and Git source trees are not hashed by
+active assurance. Binary Conformance remains an optional, case-scoped claim
+and **MUST** bind exact-byte expectations and all artifact identities required
+for repeatability.
 
-_Decision source: [accepted semantic/run identity separation](../../.scratch/jbsa-1-0/issues/61-implement-assurance-v2.md)._
+_Decision sources: [accepted semantic/run identity separation](../../.scratch/jbsa-1-0/issues/61-implement-assurance-v2.md), [retire source hashing](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md)._
 
 ## JBSA-ASR-005
 

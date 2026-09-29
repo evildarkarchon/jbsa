@@ -82,3 +82,10 @@ candidate is evaluated through PR #65's subsequent checks and capsule.
 This records Interface Freeze only for a candidate with its own passing hosted
 evidence. Later breaking changes require an explicit decision, source/binary
 compatibility assessment, specification revision, and reset of affected gates.
+
+## Supersession — 2026-09-29
+
+The maintainer retired the Interface Freeze gate and all active source hashing
+in [the new policy ticket](../../remove-source-hashing/issues/01-retire-interface-freeze.md).
+The outcome above remains a record of the historical issue #51 evaluation;
+the exact-match interface snapshots and post-freeze rule no longer gate changes.

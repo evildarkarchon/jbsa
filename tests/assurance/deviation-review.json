@@ -3,7 +3,6 @@
   "profile": "bsarch-1.0/v1",
   "profile_payload_sha256": "9577d821c40982e7f988d311d5ba7cf55b0f098af2c3f5fd5c5a531360dde1c4",
   "oracle_observation_sha256": "38307fddcd7bfbf2840de419ea63dc19480dc0deccd7e46375942ac6ef2642d9",
-  "implementation_sha256": "sha256:baabb9046693ef3e2010bb6f6ff3b42b983a956ad550e713d227c003f95e4791",
   "required_deviations": [
     "BSARCH-1.0-V1-CLI-BOOLEAN-NO",
     "BSARCH-1.0-V1-CLI-FAMILY-PRIORITY",

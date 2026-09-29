@@ -10,7 +10,6 @@ from typing import Any
 
 SESSION_FIELDS = (
     "candidate",
-    "candidate_commit",
     "runtime",
     "jvm",
     "profile",
@@ -131,7 +130,7 @@ def capsule(
         "selected_tier": selection.get("selected_tier"),
         "selection_reason": selection.get("selection_reason"),
         "session_identity": validate_session(session),
-        "version": "assurance-v2-evidence-capsule-v1",
+        "version": "assurance-v2-evidence-capsule-v2",
     }
     encoded = json.dumps(
         document, ensure_ascii=False, sort_keys=True, separators=(",", ":")

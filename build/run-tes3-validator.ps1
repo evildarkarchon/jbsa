@@ -7,7 +7,6 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'conformance-adapters.ps1')
 $implementation = Join-Path $PSScriptRoot 'validate-tes3-wire.ps1'
-$implementationDigest = (Get-FileHash -LiteralPath $implementation -Algorithm SHA256).Hash.ToLowerInvariant()
 $executable = (Get-Command pwsh).Source
 $tool = [ordered]@{
     identity = 'jbsa-project-independent-tes3-wire-scanner'
@@ -18,7 +17,6 @@ $tool = [ordered]@{
     independent = $true
     derived_from_reference = $false
     implementation = $implementation
-    implementation_sha256 = $implementationDigest
     scope = 'canonical ASCII stored unshared TES3; independent of product parser and Reference Snapshot source'
 }
 $expected = @'
@@ -28,10 +26,6 @@ $result = Invoke-ConformanceValidator -Tool $tool -InputPath $InputPath `
     -InputSha256 (Get-FileHash -LiteralPath $InputPath -Algorithm SHA256).Hash.ToLowerInvariant() `
     -ExpectedProjection $expected -WorkingDirectory $WorkingDirectory -EvidenceDirectory $EvidenceDirectory `
     -Arguments @('-NoLogo', '-NoProfile', '-NonInteractive', '-File', $implementation, '-InputPath', $InputPath)
-if ((Get-FileHash -LiteralPath $implementation -Algorithm SHA256).Hash.ToLowerInvariant() -cne $implementationDigest) {
-    $result.result = 'INVALID'
-    $result.error = 'Independent validator implementation changed during observation'
-}
 [IO.Directory]::CreateDirectory($EvidenceDirectory) | Out-Null
 $json = $result | ConvertTo-Json -Depth 100
 [IO.File]::WriteAllText((Join-Path $EvidenceDirectory 'observation.json'), $json)

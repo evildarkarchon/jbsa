@@ -33,56 +33,23 @@ def digest_files(repository: Path, paths: list[Path]) -> str:
     return "sha256:" + digest.hexdigest()
 
 
-def candidate_digest(repository: Path) -> str:
-    """Identify the exact tracked and untracked, non-ignored source workspace."""
-    base = subprocess.run(
-        ["git", "rev-parse", "HEAD^{tree}"],
-        cwd=repository,
-        capture_output=True,
-        check=False,
-    )
-    changes = subprocess.run(
-        ["git", "diff", "--binary", "--no-ext-diff", "HEAD", "--", ".", ":(exclude)TES5Edit"],
-        cwd=repository,
-        capture_output=True,
-        check=False,
-    )
-    untracked = subprocess.run(
-        ["git", "ls-files", "--others", "--exclude-standard", "-z"],
-        cwd=repository,
-        capture_output=True,
-        check=False,
-    )
-    if any(result.returncode != 0 for result in (base, changes, untracked)):
-        raise capsule_tool.CapsuleError("cannot enumerate candidate source identity")
+def candidate_digest(library_jar: Path, cli_jar: Path) -> str:
+    """Hash the two built product JARs by role; reject a missing artifact."""
     digest = hashlib.sha256()
-    digest.update(base.stdout.strip())
-    digest.update(b"\0")
-    digest.update(changes.stdout)
-    for entry in sorted(item for item in untracked.stdout.split(b"\0") if item):
-        path = repository / entry.decode("utf-8")
+    for label, path in (("library", library_jar), ("cli", cli_jar)):
         if not path.is_file():
-            continue
-        digest.update(entry)
+            raise capsule_tool.CapsuleError(f"missing candidate {label} JAR: {path}")
+        artifact = hashlib.sha256()
+        try:
+            with path.open("rb") as stream:
+                for block in iter(lambda: stream.read(1024 * 1024), b""):
+                    artifact.update(block)
+        except OSError as error:
+            raise capsule_tool.CapsuleError(f"cannot read candidate {label} JAR: {error}") from error
+        digest.update(label.encode("ascii"))
         digest.update(b"\0")
-        digest.update(hashlib.sha256(path.read_bytes()).hexdigest().encode("ascii"))
-        digest.update(b"\n")
+        digest.update(artifact.digest())
     return "sha256:" + digest.hexdigest()
-
-
-def candidate_commit(repository: Path) -> str:
-    """Return the exact checked-out Git commit tested by this session."""
-    result = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        cwd=repository,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    commit = result.stdout.strip()
-    if result.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
-        raise capsule_tool.CapsuleError("cannot identify tested Git commit")
-    return commit
 
 
 def command_identity(command: list[str], repository: Path) -> str:
@@ -101,53 +68,39 @@ def command_identity(command: list[str], repository: Path) -> str:
 
 
 def specification_identity(repository: Path) -> str:
-    """Bind the declared version and exact contents of the normative specification set."""
+    """Identify the normative contract by its reviewed specification version."""
     specification_root = repository / "docs/spec"
     registry = (specification_root / "requirements.yaml").read_text(encoding="utf-8")
     match = re.search(r"^\s+version:\s+(\S+)\s*$", registry, re.MULTILINE)
     if match is None:
         raise capsule_tool.CapsuleError("cannot identify specification version")
-    # The superseded v1 contracts explicitly identify themselves as non-normative history.
-    historical = {
-        specification_root / "conformance-v1.md",
-        specification_root / "performance-v1.md",
-    }
-    normative = [
-        path
-        for path in specification_root.rglob("*")
-        if path.is_file() and path not in historical
-    ]
-    return f"{match.group(1)}@{digest_files(repository, normative)}"
+    return match.group(1)
 
 
 def oracle_identity(repository: Path) -> str:
     """Bind the pinned local Oracle and a verified committed observation record."""
     path = repository / "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"
-    script = repository / "build/issue50-oracle-probes.py"
     try:
         observation = json.loads(path.read_text(encoding="utf-8"))
         claimed = observation.pop("record_sha256")
         oracle = observation["oracle_sha256"]
-        script_digest = observation["probe_script_sha256"]
         canonical = json.dumps(
             observation, ensure_ascii=False, sort_keys=True, separators=(",", ":")
         ).encode("utf-8")
         actual = hashlib.sha256(canonical).hexdigest()
-        script_bytes = script.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8")
     except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError) as error:
         raise capsule_tool.CapsuleError(f"cannot bind pinned Oracle observation: {error}") from error
     if (
         not isinstance(claimed, str)
         or claimed != actual
         or oracle != "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
-        or script_digest != hashlib.sha256(script_bytes).hexdigest()
     ):
         raise capsule_tool.CapsuleError("pinned Oracle observation or probe script changed")
     return f"pinned-sha256:{oracle}@observation-sha256:{claimed}"
 
 
 def deviation_review_status(repository: Path) -> str:
-    """Require explicit approval of every applicable deviation for current evidence and code."""
+    """Require approved deviation rows bound to the pinned Oracle observation."""
     review_path = repository / "tests/assurance/deviation-review.json"
     observation_path = (
         repository
@@ -177,20 +130,8 @@ def deviation_review_status(repository: Path) -> str:
         or observed != expected
     ):
         return "incomplete"
-    # Codec/profile resources can change fallback behavior without a Java source edit.
-    current_implementation = digest_files(
-        repository,
-        [
-            repository / "jbsa/src/main/java",
-            repository / "jbsa-cli/src/main/java",
-            repository / "jbsa/src/main/resources/META-INF",
-            profile_path,
-        ],
-    )
-    if (
-        review.get("oracle_observation_sha256") != observation.get("record_sha256")
-        or review.get("implementation_sha256") != current_implementation
-    ):
+    # Approval names the deviation decisions; each run separately binds and tests its candidate.
+    if review.get("oracle_observation_sha256") != observation.get("record_sha256"):
         return "stale"
     if review.get("state") == "pending":
         return "pending"
@@ -204,8 +145,10 @@ def deviation_review_status(repository: Path) -> str:
     return "approved"
 
 
-def session_identity(repository: Path, plan_path: Path, java_executable: str) -> dict[str, str]:
-    """Bind common candidate, runtime, profile, corpus, and protocol identities once."""
+def session_identity(
+    repository: Path, plan_version: str, java_executable: str, library_jar: Path, cli_jar: Path
+) -> dict[str, str]:
+    """Bind built candidate, procedure, runtime, and evidence-data identities once."""
     metadata = repository / "jbsa/src/main/resources/META-INF"
     fixture_root = repository / "tests/fixtures"
     fixture_inputs = [
@@ -213,9 +156,7 @@ def session_identity(repository: Path, plan_path: Path, java_executable: str) ->
     ]
     java_identity = command_identity([java_executable, "-version"], repository)
     return {
-        "candidate": candidate_digest(repository),
-        # A PR checkout may test a merge commit rather than the branch's head commit.
-        "candidate_commit": candidate_commit(repository),
+        "candidate": candidate_digest(library_jar, cli_jar),
         "runtime": java_identity,
         "jvm": java_identity,
         "profile": digest_files(repository, list(metadata.glob("*profile*.json"))),
@@ -227,27 +168,14 @@ def session_identity(repository: Path, plan_path: Path, java_executable: str) ->
         "specification": specification_identity(repository),
         "toolchain": digest_files(
             repository,
-            [
-                repository / "gradle/wrapper/gradle-wrapper.properties",
-                repository / "gradle/wrapper/gradle-wrapper.jar",
-            ],
+            [repository / "gradle/wrapper/gradle-wrapper.jar"],
         ),
         "platform": platform.platform(),
         "provider": digest_files(repository, list(metadata.glob("*codec*.json"))),
-        "generator": digest_files(
-            repository,
-            [*sorted((repository / "build/assurance").glob("*.py")), plan_path],
-        ),
+        # The plan digest binds generated data; procedure versions avoid pinning script bytes.
+        "generator": f"{plan_version}-generator-v1",
         "oracle": oracle_identity(repository),
-        "validator": digest_files(
-            repository,
-            [
-                *sorted((repository / "build").glob("validate-*.py")),
-                *sorted((repository / "build").glob("validate-*.ps1")),
-                *sorted((repository / "build").glob("test-*-validator.py")),
-                *sorted((repository / "build").glob("run-*-validator.ps1")),
-            ],
-        ),
+        "validator": "assurance-v2-junit-v1",
     }
 
 
@@ -370,9 +298,11 @@ def record(
     environment: str,
     java_executable: str,
     report_roots: list[Path],
+    library_jar: Path,
+    cli_jar: Path,
     selection_path: Path | None = None,
 ) -> dict[str, Any]:
-    """Create a capsule whose outcomes are derived from the owning JUnit reports."""
+    """Create a JUnit-backed capsule for the supplied built library and CLI JARs."""
     plan = plan_tool.load_plan(plan_path)
     plan_tool.validate(plan)
     selection = (
@@ -390,7 +320,7 @@ def record(
         raise capsule_tool.CapsuleError("selection does not match deterministic plan generation")
     return capsule_tool.capsule(
         selection,
-        session_identity(repository, plan_path, java_executable),
+        session_identity(repository, plan["version"], java_executable, library_jar, cli_jar),
         results_from_reports(selection, report_roots, repository),
     )
 
@@ -404,6 +334,8 @@ def main() -> int:
     parser.add_argument("--environment", choices=("hosted", "local", "release"), required=True)
     parser.add_argument("--java", default="java")
     parser.add_argument("--reports", action="append", required=True, type=Path)
+    parser.add_argument("--library-jar", required=True, type=Path)
+    parser.add_argument("--cli-jar", required=True, type=Path)
     parser.add_argument("--selection", type=Path)
     parser.add_argument("--output", required=True, type=Path)
     arguments = parser.parse_args()
@@ -415,6 +347,8 @@ def main() -> int:
             arguments.environment,
             arguments.java,
             [path.resolve() for path in arguments.reports],
+            arguments.library_jar.resolve(),
+            arguments.cli_jar.resolve(),
             arguments.selection.resolve() if arguments.selection is not None else None,
         )
     except (OSError, UnicodeError, plan_tool.PlanError, capsule_tool.CapsuleError) as error:
