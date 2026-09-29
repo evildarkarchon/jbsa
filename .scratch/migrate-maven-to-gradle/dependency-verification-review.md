@@ -207,3 +207,28 @@ The managed JDK archives are executable toolchain inputs rather than Gradle depe
 Their platform-specific qualification hashes and the requirement to verify them before extraction
 are recorded separately in `jdk-provisioning-evaluation.md`; dependency verification must not be
 mistaken for that qualification check.
+
+## Issue 52 extension: qualification-only jlibdeflate candidate
+
+The issue 52 Final Profile Gate declares `com.fulcrumgenomics:jlibdeflate:0.1.0` as a `:jbsa`
+test dependency only, so the explicit codec qualification lane can compare the candidate with JDK
+zlib. The lock records it solely on `testCompileClasspath` and `testRuntimeClasspath`; the consumer
+POM, resolved production manifest, SBOM, staged CLI inputs and runtime graph are unchanged.
+
+| Input | SHA-256 |
+| --- | --- |
+| `gradle/verification-metadata.xml` | `c29b16f08e2aaca5b8b4542e734e6e8ccc6cd18fb854862b6f91fd2f9d8f23a0` |
+| `gradle/libs.versions.toml` | `e5b8c4f4e11e1530c552cc017efe77247704088842d85c390b09f950a1ace17e` |
+| `jbsa/gradle.lockfile` | `e5aafcb85b3dbf3c81120467c3c3d47efc4f57bb755a99767f28855a4223e3fd` |
+
+Strict resolution requested two new artifacts. Both were freshly downloaded from Maven Central
+outside Gradle's dependency cache, and each recomputed SHA-256 matched its published `.sha256`
+sidecar and the value Gradle generated:
+
+- the 263,020-byte JAR, `c20407700e94307b80b8ed832be3fbc52370e6c3f826fe8b91b89d9db1910ef2`,
+  which also matches the existing `compliance/dependency-inventory.json` entry;
+- the 3,481-byte Gradle module metadata,
+  `023dd613065ffa21ec4c787bb2d37f681334fc84f52f9c45bd35ee6d23ced3f5`.
+
+Gradle's `--write-verification-metadata sha256` output was content-identical to the committed
+entries. The working copy keeps the repository's LF envelope for `*.xml`.

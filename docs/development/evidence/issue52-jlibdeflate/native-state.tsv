@@ -1,0 +1,4 @@
+provider_state	instances	committed_bytes_per_instance	declared_credit_bytes	jdk_baseline_credit_bytes
+level-12-compressor	32	9033216	9437184	524288
+decompressor	32	8320	16384	65536
+# cancellation	checkpoint failures before and after the provider call returned every credit

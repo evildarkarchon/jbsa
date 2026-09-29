@@ -1,0 +1,11 @@
+timestamp=2026-09-29T10:32:20.748234600Z
+java=25.0.4.1+1-LTS
+vm=OpenJDK 64-Bit Server VM
+vendor=Eclipse Adoptium
+os=Windows 11 10.0
+arch=amd64
+processors=16
+max_heap_bytes=536870912
+baseline_profile=jbsa-lz4-v1
+baseline_profile_sha256=f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e
+candidate=jbsa-jlibdeflate-candidate-v1 jlibdeflate 0.1.0 / libdeflate 1.25 level 12

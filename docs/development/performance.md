@@ -16,7 +16,8 @@ Issue #32 implements the foundation for [performance-v1](../spec/performance-v1.
 The permanent registry assigns `JBSA-PERF-001`–`003` and `005`–`013` to this issue.
 The numerical rules in `014`–`019` are executable now; passing release results,
 baseline establishment and release attachment publication remain issue #55 gates.
-Provider promotion and Binary Conformance remain separate issue #52 evidence.
+Provider promotion and Binary Conformance remain separate issue #52 evidence; issue #52 deferred
+jlibdeflate and kept JDK zlib streaming ([decision](evidence/issue52-jlibdeflate/README.md)).
 The [supplemental traceability map](../../tests/performance/requirements.json)
 links these requirements to harness checks. The existing CV1 catalog pins the
 entire requirements registry, so test-only traceability is recorded here without

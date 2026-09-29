@@ -16,7 +16,7 @@ Parent: [#23](../map.md)
 
 Intended owner: agent
 Triage reviewed: 2026-09-29
-Triage rationale: #51 is closed; reassess readiness after the remaining open prerequisite #52 closes.
+Triage rationale: #51 and #52 are closed. #52 deferred jlibdeflate, so release notices need no jlibdeflate or libdeflate text. Awaiting maintainer readiness re-triage.
 
 ## Original issue body
 

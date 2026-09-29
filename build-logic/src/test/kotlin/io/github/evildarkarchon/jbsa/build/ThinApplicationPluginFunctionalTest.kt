@@ -225,6 +225,7 @@ class ThinApplicationPluginFunctionalTest {
             """
             [versions]
             jackson = "2.22.1"
+            jlibdeflate = "0.1.0"
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
@@ -234,6 +235,7 @@ class ThinApplicationPluginFunctionalTest {
             [libraries]
             jackson-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
             snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+            jlibdeflate = { module = "com.fulcrumgenomics:jlibdeflate", version.ref = "jlibdeflate" }
             jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
             jmh-generator = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmh" }
             junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
