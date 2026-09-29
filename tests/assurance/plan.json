@@ -810,7 +810,7 @@
         "tes3": [
           "io.github.evildarkarchon.jbsa.Tes3PackTest#expandsDirectoryAndArchiveSourcesAndAppliesLaterOverlay",
           "io.github.evildarkarchon.jbsa.Tes3PackTest#hashCollisionsKeepDistinctNamesAndUseCanonicalByteTieOrder",
-          "io.github.evildarkarchon.jbsa.Tes3PackTest#splitsInCanonicalOrderAndIgnoresCompressionHints"
+          "io.github.evildarkarchon.jbsa.Tes3PackTest#splitsInCanonicalOrder"
         ],
         "bsa-067": [
           "io.github.evildarkarchon.jbsa.BsaPackTest#classifiesAutomaticFlagsByOrderedRoots",

@@ -93,7 +93,7 @@ class Tes3PackTest {
    * rejected (D6), so this pack names the stored default.
    */
   @Test
-  void splitsInCanonicalOrderAndIgnoresCompressionHints() throws Exception {
+  void splitsInCanonicalOrder() throws Exception {
     var options =
         new PackOptions(
             List.of(),
