@@ -49,6 +49,7 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
                     output.writeText(
                         """
                         open module io.github.evildarkarchon.jbsa {
+                            requires jdk.management;
                             requires jdk.unsupported;
                             requires org.junit.jupiter.api;
                             requires org.junit.jupiter.params;
@@ -69,6 +70,9 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
         project.tasks.named("compileTestJava", JavaCompile::class.java) {
             dependsOn(generateDescriptor)
             options.compilerArgs.addAll(listOf("--patch-module", "io.github.evildarkarchon.jbsa=$mainClasses"))
+            // jlibdeflate 0.1.0 has neither a descriptor nor Automatic-Module-Name, so module-path inference
+            // leaves it on the class path; the white-box test module must read the unnamed module instead.
+            options.compilerArgs.addAll(listOf("--add-reads", "io.github.evildarkarchon.jbsa=ALL-UNNAMED"))
         }
         val assembledTestModule = project.layout.buildDirectory.dir("classes/java/test-module")
         val assembleTestModule =
@@ -94,6 +98,7 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
         val lwjglVersion = catalog.dependencyVersion("org.lwjgl", "lwjgl")
         val lwjglLz4Version = catalog.dependencyVersion("org.lwjgl", "lwjgl-lz4")
         val junitVersion = catalog.dependencyVersion("org.junit.jupiter", "junit-jupiter")
+        val jlibdeflateVersion = catalog.dependencyVersion("com.fulcrumgenomics", "jlibdeflate")
         project.dependencies.add("api", "org.lwjgl:lwjgl:$lwjglVersion")
         project.dependencies.add("api", "org.lwjgl:lwjgl-lz4:$lwjglLz4Version")
         project.dependencies.add("runtimeOnly", "org.lwjgl:lwjgl:$lwjglVersion:natives-windows")
@@ -103,6 +108,9 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
             project.dependencies.platform("org.junit:junit-bom:$junitVersion"),
         )
         project.dependencies.add("testImplementation", "org.junit.jupiter:junit-jupiter:$junitVersion")
+        // JBSA-CODEC-007 keeps the unpromoted jlibdeflate candidate on build-time qualification paths only.
+        // Test scope keeps it out of the published POM, the resolved production manifest, and the CLI image.
+        project.dependencies.add("testImplementation", "com.fulcrumgenomics:jlibdeflate:$jlibdeflateVersion")
         project.dependencies.add(
             "testRuntimeOnly",
             "org.junit.platform:junit-platform-launcher:$junitVersion",
@@ -181,7 +189,9 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
                 systemProperty("jbsa.library.javadocJar", javadocs.get().archiveFile.get().asFile.absolutePath)
                 systemProperty("jbsa.library.consumerPom", consumerPom.get().asFile.absolutePath)
             }
-            jvmArgs("--enable-native-access=io.github.evildarkarchon.jbsa,org.lwjgl,org.lwjgl.lz4")
+            jvmArgs("--enable-native-access=io.github.evildarkarchon.jbsa,org.lwjgl,org.lwjgl.lz4,ALL-UNNAMED")
+            // Class-path jlibdeflate qualification code needs the unnamed-module read edge at run time as well.
+            jvmArgs("--add-reads", "io.github.evildarkarchon.jbsa=ALL-UNNAMED")
         }
     }
 

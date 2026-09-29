@@ -722,7 +722,12 @@ requirements:
     verification_class: performance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/evidence/issue52-jlibdeflate/README.md
+      - docs/development/evidence/issue52-jlibdeflate/summary.tsv
+      - docs/development/evidence/issue52-jlibdeflate/native-loading.tsv
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/JlibdeflateQualificationTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/JlibdeflateZlibTest.java
   - id: JBSA-CODEC-008
     owner:
       document: docs/spec/codecs.md
@@ -796,7 +801,11 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/evidence/issue52-jlibdeflate/README.md
+      - docs/development/evidence/issue52-jlibdeflate/conformance.tsv
+      - docs/development/evidence/issue52-jlibdeflate/malformed.tsv
+      - docs/development/evidence/issue52-jlibdeflate/oracle.tsv
   - id: JBSA-COMPAT-001
     owner:
       document: docs/spec/compatibility-profiles.md
@@ -3158,7 +3167,8 @@ requirements:
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md
-    test_evidence: []
+    test_evidence:
+      - docs/development/evidence/issue52-jlibdeflate/README.md
   - id: JBSA-REL-009
     owner:
       document: docs/spec/release-gates.md

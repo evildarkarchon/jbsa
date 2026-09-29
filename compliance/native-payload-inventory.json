@@ -33,7 +33,7 @@
       },
       "redistribution": {
         "approved": false,
-        "evidence": "MIT permits redistribution, but native zlib promotion has not passed qualification.",
+        "evidence": "MIT permits redistribution, but the issue 52 Final Profile Gate deferred native zlib promotion; see docs/development/evidence/issue52-jlibdeflate/README.md.",
         "releaseArtifacts": []
       }
     },

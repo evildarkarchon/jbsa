@@ -1,0 +1,3 @@
+case	reference_libdeflate_1.24_stream	candidate_libdeflate_1.25_stream	jdk_stream	candidate_equals_reference	jdk_equals_reference	oracle_archives
+A*1024	78da73741c05a360148c540000a4780410	78da73741c05a360148c540000a4780410	78da73741c05a360148c540000a4780410	true	true	docs/reviews/issue38-cv1/oracle/zlib.hex,docs/reviews/issue39-cv1/oracle/zlib.hex,docs/reviews/issue42-cv1/oracle/zlib.hex
+000102ff	78da010400fbff000102ff010a0103	78da010400fbff000102ff010a0103	78da636064fa0f00010a0103	true	false	docs/reviews/issue38-cv1/oracle/zlib.hex,docs/reviews/issue39-cv1/oracle/zlib.hex,docs/reviews/issue42-cv1/oracle/zlib.hex

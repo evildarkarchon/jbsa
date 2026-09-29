@@ -1,0 +1,17 @@
+case	stored_bytes	declared_decoded_bytes	jdk_outcome	candidate_outcome	candidate_published_bytes	failure_kind_parity	identifier_parity
+valid-control	12479	65536	PASS	PASS	65536	true	true
+header-invalid	12479	65536	FORMAT/codec.invalid-data	FORMAT/codec.invalid-data	0	true	true
+preset-dictionary	12479	65536	FORMAT/codec.invalid-data	FORMAT/codec.invalid-data	0	true	true
+body-corrupt	12479	65536	FORMAT/codec.size-mismatch	FORMAT/codec.size-mismatch	0	true	true
+adler-mismatch	12479	65536	FORMAT/codec.invalid-data	FORMAT/codec.invalid-data	0	true	true
+truncated-trailer	12478	65536	FORMAT/codec.invalid-data	FORMAT/codec.size-mismatch	0	true	false
+truncated-trailer-two	12477	65536	FORMAT/codec.invalid-data	FORMAT/codec.size-mismatch	0	true	false
+truncated-trailer-three	12476	65536	FORMAT/codec.invalid-data	FORMAT/codec.size-mismatch	0	true	false
+truncated-half	6239	65536	FORMAT/codec.invalid-data	FORMAT/codec.invalid-data	0	true	true
+trailing-bytes	12482	65536	FORMAT/codec.size-mismatch	FORMAT/codec.size-mismatch	0	true	true
+declared-short-by-one	12479	65535	FORMAT/codec.size-mismatch	FORMAT/codec.size-mismatch	0	true	true
+declared-long-by-one	12479	65537	FORMAT/codec.size-mismatch	FORMAT/codec.size-mismatch	0	true	true
+declared-half	12479	32768	FORMAT/codec.size-mismatch	FORMAT/codec.size-mismatch	0	true	true
+empty-stored	0	65536	FORMAT/codec.invalid-data	FORMAT/codec.invalid-data	0	true	true
+empty-stream-declared-one	8	1	FORMAT/codec.size-mismatch	FORMAT/codec.size-mismatch	0	true	true
+# no-retry	dispatchDecode(body-corrupt) failed FORMAT/codec.size-mismatch under jbsa-jlibdeflate-candidate-v1 without a JDK retry

@@ -25,14 +25,14 @@
       },
       "redistribution": {
         "approved": false,
-        "evidence": "The MIT terms permit redistribution, but JBSA provider promotion gates have not passed.",
+        "evidence": "The MIT terms permit redistribution, but the issue 52 Final Profile Gate deferred promotion; see docs/development/evidence/issue52-jlibdeflate/README.md.",
         "releaseArtifacts": []
       },
       "blockedBy": [
-        "Decode and Encode Conformance",
-        "performance and memory qualification",
-        "native-loading qualification",
-        "notice and final-byte audit"
+        "native-loading qualification: three DLL copies loaded and left in the temporary directory per process; caller-supplied jlibdeflate.library.path honored",
+        "packaging qualification: no module descriptor or Automatic-Module-Name; uninventoried non-Windows native payloads",
+        "notice audit: the JAR carries no jlibdeflate or libdeflate license text",
+        "level-12 encode performance and cancellation latency below the JDK zlib baseline"
       ]
     },
     {

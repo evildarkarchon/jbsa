@@ -16,7 +16,7 @@ Parent: [#23](../map.md)
 
 Intended owner: agent
 Triage reviewed: 2026-09-29
-Triage rationale: #51, #49, and #29 are closed. Reassess readiness after the remaining open prerequisite #52 closes; the packaged Ctrl+C exit status must be qualified on `jbsa.exe`.
+Triage rationale: #51, #49, #29, and #52 are closed. #52 deferred jlibdeflate, so the final graph keeps the unchanged `jbsa-lz4-v1` profile with no jlibdeflate bytes. The packaged Ctrl+C exit status must be qualified on `jbsa.exe`; awaiting maintainer readiness re-triage.
 
 ## Original issue body
 

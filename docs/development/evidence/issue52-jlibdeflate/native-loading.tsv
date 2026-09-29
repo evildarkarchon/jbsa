@@ -1,0 +1,6 @@
+probe	exit_status	jlibdeflate_libraries_loaded	loaded_from_override	temporary_files_left_after_exit	native_access_warning	stored_sha256_matches_in_process	detail
+default	0	3	false	3	false	true	
+repeat	0	3	false	3	false	true	
+no-native-access	0	3	false	3	true	true	
+override-missing	1	0	false	0	false	false	Exception in thread "main" java.lang.UnsatisfiedLinkError: Can't load library: <temp>\override-missing-override\jlibdeflate.dll
+override-present	0	1	true	0	false	true	

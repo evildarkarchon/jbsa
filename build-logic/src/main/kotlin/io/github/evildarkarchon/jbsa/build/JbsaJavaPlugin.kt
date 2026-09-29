@@ -118,6 +118,7 @@ class JbsaJavaPlugin : Plugin<Project> {
                 "jbsa.bsa.performance",
                 "jbsa.ba2.performance",
                 "jbsa.dds.performance",
+                "jbsa.zlib.qualification",
             )
     }
 }

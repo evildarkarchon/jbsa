@@ -1,0 +1,11 @@
+fact	value
+jar_sha256	c20407700e94307b80b8ed832be3fbc52370e6c3f826fe8b91b89d9db1910ef2
+automatic_module_name	absent
+module_descriptor	absent
+native_payloads	native/linux-x86_64/libjlibdeflate.so,native/windows-x86_64/jlibdeflate.dll,native/osx-x86_64/libjlibdeflate.dylib,native/osx-aarch64/libjlibdeflate.dylib,native/linux-aarch64/libjlibdeflate.so
+license_or_notice_entries	none
+jbsa_lock	com.fulcrumgenomics:jlibdeflate:0.1.0=testCompileClasspath,testRuntimeClasspath
+present_in:jbsa-cli/gradle.lockfile	false
+present_in:jbsa-dist/gradle.lockfile	false
+present_in:build/windows-runtime/launch-policy.json	false
+baseline_profile	jbsa-lz4-v1 f7221b24458804a454716fb89bbad9f6b3947f8484158e3950e1608e93b4732e
