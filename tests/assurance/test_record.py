@@ -167,6 +167,7 @@ class AssuranceRecordTests(unittest.TestCase):
                 record_tool = importlib.import_module("record")
             with (
                 patch.object(record_tool, "candidate_digest", return_value="candidate"),
+                patch.object(record_tool, "candidate_commit", return_value="a" * 40),
                 patch.object(record_tool, "command_identity", return_value="java"),
                 patch.object(record_tool, "oracle_identity", return_value="pinned-oracle"),
             ):
@@ -240,6 +241,7 @@ class AssuranceRecordTests(unittest.TestCase):
         )
         self.assertTrue(all(result["outcome"] == "PASS" for result in capsule["results"]))
         self.assertRegex(capsule["session_identity"]["candidate"], r"^sha256:[0-9a-f]{64}$")
+        self.assertRegex(capsule["session_identity"]["candidate_commit"], r"^[0-9a-f]{40}$")
         self.assertRegex(
             capsule["session_identity"]["oracle"],
             r"^pinned-sha256:[0-9a-f]{64}@observation-sha256:[0-9a-f]{64}$",

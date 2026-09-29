@@ -70,6 +70,21 @@ def candidate_digest(repository: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
+def candidate_commit(repository: Path) -> str:
+    """Return the exact checked-out Git commit tested by this session."""
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repository,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    commit = result.stdout.strip()
+    if result.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        raise capsule_tool.CapsuleError("cannot identify tested Git commit")
+    return commit
+
+
 def command_identity(command: list[str], repository: Path) -> str:
     """Return one normalized first-line identity for a required runtime command."""
     result = subprocess.run(
@@ -199,6 +214,8 @@ def session_identity(repository: Path, plan_path: Path, java_executable: str) ->
     java_identity = command_identity([java_executable, "-version"], repository)
     return {
         "candidate": candidate_digest(repository),
+        # A PR checkout may test a merge commit rather than the branch's head commit.
+        "candidate_commit": candidate_commit(repository),
         "runtime": java_identity,
         "jvm": java_identity,
         "profile": digest_files(repository, list(metadata.glob("*profile*.json"))),

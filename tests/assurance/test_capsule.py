@@ -38,6 +38,7 @@ class EvidenceCapsuleTests(unittest.TestCase):
         }
         session = {
             "candidate": "sha256:" + "3" * 64,
+            "candidate_commit": "b" * 40,
             "runtime": "windows-x64",
             "jvm": "temurin-25.0.4.1+1",
             "profile": "sha256:" + "4" * 64,

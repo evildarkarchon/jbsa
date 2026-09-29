@@ -10,6 +10,7 @@ from typing import Any
 
 SESSION_FIELDS = (
     "candidate",
+    "candidate_commit",
     "runtime",
     "jvm",
     "profile",
