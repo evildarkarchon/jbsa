@@ -71,6 +71,9 @@ class AssuranceRecordTests(unittest.TestCase):
             source.parent.mkdir(parents=True)
             source.write_text("class Archive {}\n", encoding="utf-8")
             (repository / "jbsa-cli/src/main/java").mkdir(parents=True)
+            codec = repository / "jbsa/src/main/resources/META-INF/jbsa-codec-profile.json"
+            codec.parent.mkdir(parents=True)
+            codec.write_text('{"profile":"first"}\n', encoding="utf-8")
             profile = repository / "docs/spec/compatibility-profiles.md"
             profile.parent.mkdir(parents=True)
             shutil.copyfile(ROOT / "docs/spec/compatibility-profiles.md", profile)
@@ -84,7 +87,7 @@ class AssuranceRecordTests(unittest.TestCase):
             review["approval_reference"] = None
             review["implementation_sha256"] = record_tool.digest_files(
                 repository,
-                [source.parent, repository / "jbsa-cli/src/main/java", profile],
+                [source.parent, repository / "jbsa-cli/src/main/java", codec.parent, profile],
             )
             review_path = repository / "tests/assurance/deviation-review.json"
             review_path.parent.mkdir(parents=True)
@@ -123,6 +126,9 @@ class AssuranceRecordTests(unittest.TestCase):
             review["approved_deviations"] = review["required_deviations"].copy()
             review_path.write_text(json.dumps(review), encoding="utf-8")
             source.write_text("class Archive { int changed; }\n", encoding="utf-8")
+            self.assertEqual("stale", record_tool.deviation_review_status(repository))
+            source.write_text("class Archive {}\n", encoding="utf-8")
+            codec.write_text('{"profile":"changed"}\n', encoding="utf-8")
             self.assertEqual("stale", record_tool.deviation_review_status(repository))
 
     def test_specification_digest_orders_mixed_case_paths_portably(self) -> None:

@@ -143,6 +143,7 @@ def deviation_review_status(repository: Path) -> str:
         review = json.loads(review_path.read_text(encoding="utf-8"))
         observation = json.loads(observation_path.read_text(encoding="utf-8"))
         profile_text = profile_path.read_text(encoding="utf-8")
+        # JBSA-SCOPE-009 defers Xbox inference; the other 12 immutable profile rows gate 1.0.
         expected = set(re.findall(r"BSARCH-1[.]0-V1-[A-Z0-9-]+", profile_text)) - {
             "BSARCH-1.0-V1-DDS-XBOX-NAME"
         }
@@ -161,11 +162,13 @@ def deviation_review_status(repository: Path) -> str:
         or observed != expected
     ):
         return "incomplete"
+    # Codec/profile resources can change fallback behavior without a Java source edit.
     current_implementation = digest_files(
         repository,
         [
             repository / "jbsa/src/main/java",
             repository / "jbsa-cli/src/main/java",
+            repository / "jbsa/src/main/resources/META-INF",
             profile_path,
         ],
     )
