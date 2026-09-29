@@ -2,6 +2,8 @@
 
 Issues and specs for this repo live in GitHub Issues on [`evildarkarchon/jbsa`](https://github.com/evildarkarchon/jbsa/issues). Use the `gh` CLI for every tracker operation.
 
+Pass `--repo evildarkarchon/jbsa` to every `gh issue` command, or give a full issue URL in its place. Agent checkouts and worktrees may have no Git remote configured, and `gh` otherwise stops with `no git remotes found` before it reaches the API.
+
 ## Conventions
 
 - A feature with more than one ticket gets a **parent issue** that holds the spec. Its implementation tickets are GitHub **sub-issues** of that parent, one ticket per issue. Never combine several tickets in one issue.
@@ -12,18 +14,21 @@ Issues and specs for this repo live in GitHub Issues on [`evildarkarchon/jbsa`](
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue with `gh issue create`. For a child ticket, create it and then attach it to its parent as a sub-issue.
+Create a GitHub issue with `gh issue create --repo evildarkarchon/jbsa`. For a child ticket, create it and then attach it to its parent as a sub-issue.
 
 ## When a skill says "fetch the relevant ticket"
 
-Run `gh issue view <number> --comments`. The user will normally pass the issue number or URL directly.
+Run `gh issue view <number> --repo evildarkarchon/jbsa --comments`. The user will normally pass the issue number or URL directly.
 
 ## Historical local tracker
 
 Before this switch, tickets lived as Markdown under `.scratch/`. That directory is now **read-only history**: the 2026-09-10 migration of GitHub #23–#62 and the local efforts that followed. `.scratch/README.md` maps legacy GitHub numbers to local paths.
 
 - Do not create new tickets under `.scratch/` or update the files there.
-- A local ticket that is still `State: open` is frozen. To resume that work, open a GitHub issue that links the local file and carries the current scope. The GitHub issue is authoritative from then on.
+- A local ticket that is still `State: open` is frozen. To resume that work, return it to GitHub, which is authoritative from then on:
+  - If the local file records a source issue (`GitHub issue: #N`), resume on that issue. Reopen it if needed, and comment with a link to the local file and the current scope. Its parent, sub-issue, and dependency links still hold, so do not open a duplicate.
+  - If the ticket is local-only (`local` in the index), open a new GitHub issue that links the local file and carries the current scope.
+- The `State` and triage columns in `.scratch/README.md` are a snapshot from the switch. Read the GitHub issue for current state.
 - Original GitHub states for migrated issues were never changed by the migration and still do not imply completion.
 
 ## Implementation triage and dependencies

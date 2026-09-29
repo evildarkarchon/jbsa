@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,10 @@ final class GradleBuildPolicyIT {
           "jbsa-dist/target",
           "jbsa-test-support/target",
           "jbsa/target");
+
+  /** Canonical form of a GitHub issue reference accepted as a registry tracker ticket. */
+  private static final Pattern GITHUB_ISSUE_URL =
+      Pattern.compile("https://github\\.com/evildarkarchon/jbsa/issues/[1-9][0-9]*");
 
   /**
    * Requires the generated layout to bind every real project and each canonical consumer artifact.
@@ -92,13 +97,13 @@ final class GradleBuildPolicyIT {
   }
 
   /**
-   * Requires requirement ownership to use authoritative local-ticket paths rather than retired
-   * GitHub issue numbers.
+   * Requires requirement ownership to use tracker ticket references (canonical GitHub issue URLs or
+   * existing historical local-ticket paths) rather than bare issue numbers.
    *
    * @throws IOException if the registry or a referenced local ticket cannot be read
    */
   @Test
-  void requirementRegistryUsesExistingLocalImplementationTickets() throws IOException {
+  void requirementRegistryUsesValidTicketReferences() throws IOException {
     Path root = reactorRoot();
     var registry = RequirementRegistryYaml.parse(root.resolve("docs/spec/requirements.yaml"));
     assertEquals(2, registry.schemaVersion());
@@ -112,11 +117,11 @@ final class GradleBuildPolicyIT {
           requirement.implementationTickets() != null
               && !requirement.implementationTickets().isEmpty(),
           () -> "Missing implementation ownership for " + requirement.id());
-      requirement.implementationTickets().forEach(ticket -> assertLocalTicket(root, ticket));
+      requirement.implementationTickets().forEach(ticket -> assertTicketReference(root, ticket));
       if (requirement.lifecycleState().equals("retired")) {
         assertTrue(
             requirement.retirement() != null, () -> "Missing retirement for " + requirement.id());
-        assertLocalTicket(root, requirement.retirement().ticket());
+        assertTicketReference(root, requirement.retirement().ticket());
       }
     }
 
@@ -133,6 +138,34 @@ final class GradleBuildPolicyIT {
         8L,
         migratedBuildRequirements,
         "Gradle build requirements must retain their current local migration ownership");
+  }
+
+  /**
+   * Verifies the ticket-reference check accepts both tracker forms and rejects bare numbers,
+   * foreign issue URLs, and paths outside the historical tracker.
+   */
+  @Test
+  void ticketReferencesAcceptGitHubIssuesAndHistoricalLocalTickets() {
+    Path root = reactorRoot();
+    assertTicketReference(root, "https://github.com/evildarkarchon/jbsa/issues/53");
+    assertTicketReference(
+        root, ".scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md");
+
+    List.of(
+            "#53",
+            "https://github.com/evildarkarchon/jbsa/issues/53#issuecomment-1",
+            "https://github.com/evildarkarchon/jbsa/pull/53",
+            "https://github.com/someone-else/jbsa/issues/53",
+            "https://github.com/evildarkarchon/jbsa/issues/0",
+            "docs/spec/README.md",
+            ".scratch/../docs/spec/README.md",
+            ".scratch/missing/issues/01-missing.md")
+        .forEach(
+            ticket ->
+                assertThrows(
+                    AssertionError.class,
+                    () -> assertTicketReference(root, ticket),
+                    () -> "Accepted invalid ticket reference " + ticket));
   }
 
   /** Verifies semantically valid YAML does not depend on the repository's preferred indentation. */
@@ -206,8 +239,21 @@ final class GradleBuildPolicyIT {
         """;
   }
 
-  /** Requires one registry ticket path to remain relative, contained by .scratch, and present. */
-  private static void assertLocalTicket(Path root, String ticket) {
+  /**
+   * Requires one registry ticket reference to take an accepted tracker form: a canonical GitHub
+   * issue URL, or a path to an existing record in the read-only historical tracker.
+   *
+   * <p>GitHub URLs are checked for shape only; this test must pass offline, so it cannot confirm
+   * that the issue exists. Bare {@code #N} numbers stay rejected because they are ambiguous between
+   * GitHub numbers and the feature-scoped numbers used by historical local tickets.
+   */
+  private static void assertTicketReference(Path root, String ticket) {
+    if (ticket.startsWith("https://")) {
+      assertTrue(
+          GITHUB_ISSUE_URL.matcher(ticket).matches(),
+          () -> "Ticket URL is not a canonical jbsa GitHub issue: " + ticket);
+      return;
+    }
     Path relative = Path.of(ticket);
     Path scratch = root.resolve(".scratch").toAbsolutePath().normalize();
     Path resolved = root.resolve(relative).toAbsolutePath().normalize();

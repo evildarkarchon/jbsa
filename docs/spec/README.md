@@ -90,24 +90,32 @@ exactly these required fields:
 - `id`: the permanent requirement identifier;
 - `owner`: `document` and stable `anchor` values locating the one normative
   owner;
-- `source_decisions`: one or more stable repository-relative local-ticket links to
-  the originating accepted decision or its explicit supersession; migrated historical
-  entries MAY retain their original external links as archival provenance;
+- `source_decisions`: one or more stable links to the originating accepted
+  decision or its explicit supersession, each either a tracker ticket reference or,
+  for migrated historical entries, an original external link retained as archival
+  provenance;
 - `lifecycle_state`: `active` or `retired`;
 - `verification_class`: one of `document-review`, `automated-test`,
   `build-verification`, `conformance-case`, `performance-case`,
   `release-qualification`, or `release-audit`;
-- `implementation_tickets`: one or more repository-relative paths to authoritative
-  local tracker records under `.scratch/` that are responsible for satisfying or
-  deliberately migrating the requirement; and
+- `implementation_tickets`: one or more tracker ticket references responsible for
+  satisfying or deliberately migrating the requirement; and
 - `test_evidence`: stable test selectors, case identifiers, or repository paths
   to evidence. An empty list means that no evidence is claimed yet.
 
-A retired entry additionally has a `retirement` mapping with a repository-relative local `ticket`
-path and `reason`. Registry consumers MUST reject duplicate identifiers, missing owners,
-owner anchors that do not match the identifier, unknown lifecycle or
-verification values, and normative-text fields such as `title`, `summary`, or
-`text`.
+A retired entry additionally has a `retirement` mapping with a tracker ticket
+reference as `ticket` and a `reason`.
+
+A tracker ticket reference is either the canonical GitHub issue URL
+`https://github.com/evildarkarchon/jbsa/issues/<number>`, which is the form for
+new ownership, or a repository-relative path to an existing record in the
+read-only historical tracker under `.scratch/`. Historical paths stay valid;
+they are not rewritten when their work resumes on GitHub.
+
+Registry consumers MUST reject duplicate identifiers, missing owners, owner
+anchors that do not match the identifier, unknown lifecycle or verification
+values, ticket references in neither accepted form, and normative-text fields
+such as `title`, `summary`, or `text`.
 
 _Decision sources: [accepted registry contents](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [machine-readable registry acceptance criterion](https://github.com/evildarkarchon/jbsa/issues/24)._
 
@@ -155,8 +163,8 @@ _Decision sources: [specification authority and gate-reset policy](https://githu
 
 Every normative change MUST:
 
-1. have an authoritative local ticket under `.scratch/` that records the accepted
-   decision and affected scope;
+1. have an authoritative GitHub issue that records the accepted decision and
+   affected scope;
 2. update the owning Markdown section, registry metadata, and specification-set
    version together;
 3. preserve existing identifiers unless the old obligation is retired;
