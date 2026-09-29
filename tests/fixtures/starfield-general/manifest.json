@@ -1,17 +1,24 @@
 {
   "schema_version": 1,
-  "generated_on": "2026-09-14",
+  "generated_on": "2026-09-29",
   "reference_snapshot_revision": "fd1e36020b2b5b6217e553dc0038983146a2e2dd",
+  "generator": {
+    "id": "jbsa-starfield-general-wire-v1",
+    "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/StarfieldArchiveFixtureGenerator.java",
+    "version": "1",
+    "spdx_license": "Apache-2.0",
+    "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.StarfieldArchiveFixtureGenerator --general-output <directory>"
+  },
   "fixtures": [
     {
       "id": "starfield-general-v2-zlib",
       "creator": "JBSA project contributors",
       "spdx_license": "CC0-1.0",
       "redistribution_class": "project-authored-redistributable",
-      "source": "independently authored JBSA-GNRL-001 through JBSA-GNRL-005 wire literal",
+      "source": "independently authored JBSA-GNRL-001 through JBSA-GNRL-005 wire recipe",
       "input_sha256": "ca358758f6d27e6cf45272937977a748fd88391db679ceda7dc7bf1f005ee879",
       "generation": {
-        "command": "[IO.File]::WriteAllBytes('starfield-general-v2-zlib.ba2',[Convert]::FromHexString((Get-Content -Raw 'starfield-general-v2-zlib.hex').Trim()))",
+        "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.StarfieldArchiveFixtureGenerator --general-output <directory>",
         "procedure": "Write one canonical version-2 General BA2 record and RFC 1950 stored block for payload byte 07, then append the a/b.txt name table.",
         "options": {
           "archive_family": "sf-gnrl-v2",

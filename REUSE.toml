@@ -32,6 +32,7 @@ path = [
   "jbsa*/**",
   "settings-gradle.lockfile",
   "settings.gradle.kts",
+  "tests/api-stability/**",
   "tests/assurance/**",
   "tests/fixtures/local/.gitkeep",
   "tests/fixtures/local/README.md"
@@ -41,7 +42,7 @@ SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
 SPDX-License-Identifier = "Apache-2.0"
 
 [[annotations]]
-path = ["tests/fixtures/synthetic/**", "tests/fixtures/tes3/**", "tests/fixtures/tes4/**", "tests/fixtures/fo4-general/**", "tests/fixtures/bsa067/**", "tests/fixtures/bsa068/**", "tests/fixtures/bsa069/**", "tests/fixtures/starfield-dds/**", "tests/fixtures/starfield-general/**", "docs/reviews/issue38-cv1/oracle/**", "docs/reviews/issue39-cv1/fixtures/**", "docs/reviews/issue39-cv1/oracle/**"]
+path = ["tests/fixtures/synthetic/**", "tests/fixtures/tes3/**", "tests/fixtures/tes4/**", "tests/fixtures/fo4-general/**", "tests/fixtures/fo4-dds-v1/**", "tests/fixtures/bsa067/**", "tests/fixtures/bsa068/**", "tests/fixtures/bsa069/**", "tests/fixtures/starfield-dds/**", "tests/fixtures/starfield-general/**", "docs/reviews/issue38-cv1/oracle/**", "docs/reviews/issue39-cv1/fixtures/**", "docs/reviews/issue39-cv1/oracle/**"]
 precedence = "override"
 SPDX-FileCopyrightText = "Copyright 2026 evildarkarchon"
 SPDX-License-Identifier = "CC0-1.0"

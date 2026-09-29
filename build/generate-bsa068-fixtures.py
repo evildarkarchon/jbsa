@@ -40,7 +40,7 @@ def generate(destination):
                 "spdx_license": "CC0-1.0", "creator": "JBSA project contributors",
                 "redistribution_class": "project-authored-redistributable",
                 "source": "docs/spec/formats/versioned-bsa.md; synthetic shared-family game-selector vectors",
-                "generators": [{"path": "build/" + name, "sha256": hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()}
+                "generators": [{"path": "build/" + name}
                                for name in ("generate-bsa068-fixtures.py", "generate-bsa-fixtures.py")],
                 "payloads": [{"name": "meshes/a.nif", "size": 1024, "sha256": hashlib.sha256(b"A" * 1024).hexdigest()},
                              {"name": "meshes/b.nif", "size": 4, "sha256": hashlib.sha256(bytes.fromhex("000102ff")).hexdigest()}],

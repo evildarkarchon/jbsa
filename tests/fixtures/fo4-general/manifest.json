@@ -6,11 +6,10 @@
   "redistribution_class": "project-authored-redistributable",
   "source": "docs/spec/formats/general-ba2.md; independently authored wire vectors",
   "generator": {
-    "path": "build/generate-ba2-fixtures.py",
-    "version": "1",
+    "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/Fo4GeneralBa2FixtureGenerator.java",
+    "version": "2",
     "spdx_license": "Apache-2.0",
-    "sha256": "3f5629bd495848daa1a4a26a16da066c82952be0e0f060f08a97966efad285c9",
-    "command": "python build/generate-ba2-fixtures.py --output <directory>"
+    "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.Fo4GeneralBa2FixtureGenerator --output <directory>"
   },
   "fixtures": [
     {

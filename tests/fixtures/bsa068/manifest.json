@@ -7,12 +7,9 @@
   "source": "docs/spec/formats/versioned-bsa.md; synthetic shared-family game-selector vectors",
   "generators": [
     {
-      "path": "build/generate-bsa068-fixtures.py",
-      "sha256": "1bef4c7a7ee2661ebe4acc0e78afddcd0e9392d1c131edf06ba9ab6809b57907"
-    },
-    {
-      "path": "build/generate-bsa-fixtures.py",
-      "sha256": "c4eef63b2785385a006ee171bc8f89c91b8bf83692e14b309ba0885237ff4461"
+      "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/Bsa068FixtureGenerator.java",
+      "version": "2",
+      "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.Bsa068FixtureGenerator --output <directory>"
     }
   ],
   "payloads": [

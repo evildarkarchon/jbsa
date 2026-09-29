@@ -35,6 +35,7 @@ tests/fixtures/tes3/*.json text eol=lf
 tests/fixtures/tes4/*.hex text eol=lf
 tests/fixtures/tes4/*.json text eol=lf
 tests/fixtures/fo4-general/** text eol=lf
+tests/fixtures/fo4-dds-v1/** text eol=lf
 tests/fixtures/bsa067/** text eol=lf
 docs/reviews/issue38-cv1/**/*.hex text eol=lf
 docs/reviews/issue38-cv1/**/*.json text eol=lf

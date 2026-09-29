@@ -65,8 +65,6 @@ def archive(mode, embedded):
 def generate(destination):
     """Write deterministic SE/AE vectors and content-addressed project provenance."""
     destination.mkdir(parents=True, exist_ok=True)
-    generator_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-    scanner_path = Path(__file__).with_name("validate-bsa-wire.py")
     manifest = {
         "schema_version": 1,
         "corpus_id": "jbsa-bsa-069-wire-vectors-v1",
@@ -75,11 +73,10 @@ def generate(destination):
         "redistribution_class": "project-authored-redistributable",
         "source": "docs/spec/formats/versioned-bsa.md; independently authored SSE/AE vectors",
         "generators": [
-            {"path": "build/generate-bsa069-fixtures.py", "sha256": generator_hash},
+            {"path": "build/generate-bsa069-fixtures.py"},
         ],
         "validators": [
-            {"path": "build/validate-bsa-wire.py",
-             "sha256": hashlib.sha256(scanner_path.read_bytes()).hexdigest()},
+            {"path": "build/validate-bsa-wire.py"},
         ],
         "payloads": [
             {"name": "meshes/a.nif", "size": 1024,

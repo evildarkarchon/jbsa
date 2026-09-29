@@ -3,6 +3,8 @@ package io.github.evildarkarchon.jbsa.verification;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.fixtures.Fo4GeneralBa2FixtureGenerator;
+import java.io.IOException;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,15 +49,10 @@ final class Ba2ConformanceIT {
 
   /** Reproduces all committed vectors and provenance without invoking the product writer. */
   @Test
+  @Tag("archive-fixtures")
   void independentlyGeneratedCorpusMatchesCommittedInventory() throws Exception {
     Path generated = directory.resolve("generated");
-    run(
-        List.of(
-            "python",
-            root().resolve("build/generate-ba2-fixtures.py").toString(),
-            "--output",
-            generated.toString()),
-        directory.resolve("generation.log"));
+    Fo4GeneralBa2FixtureGenerator.materialize(generated);
     Path committed = root().resolve("tests/fixtures/fo4-general");
     try (var fresh = Files.list(generated);
         var recorded = Files.list(committed)) {
@@ -72,6 +69,7 @@ final class Ba2ConformanceIT {
         assertEquals(-1L, Files.mismatch(generated.resolve(name), committed.resolve(name)), name);
       }
     }
+    assertThrows(IOException.class, () -> Fo4GeneralBa2FixtureGenerator.materialize(generated));
   }
 
   /**

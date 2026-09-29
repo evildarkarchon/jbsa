@@ -6,11 +6,10 @@
   "redistribution_class": "project-authored-redistributable",
   "source": "docs/spec/formats/versioned-bsa.md; independently authored wire vectors",
   "generator": {
-    "path": "build/generate-bsa-fixtures.py",
-    "version": "1",
+    "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/Tes4FixtureGenerator.java",
+    "version": "2",
     "spdx_license": "Apache-2.0",
-    "sha256": "c4eef63b2785385a006ee171bc8f89c91b8bf83692e14b309ba0885237ff4461",
-    "command": "python build/generate-bsa-fixtures.py --output <directory>"
+    "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.Tes4FixtureGenerator --output <directory>"
   },
   "fixtures": [
     {

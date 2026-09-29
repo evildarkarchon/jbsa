@@ -6,12 +6,14 @@ internal object JbsaConformanceIdentity {
     const val CAPTURE_TASK = "captureAutomatedConformance"
     const val AUTOMATED_TASK = "automatedConformance"
     const val AUTOMATED_ASSURANCE_TASK = "automatedAssurance"
+    const val API_STABILITY_TASK = "apiStabilityTest"
     const val EXIT_CODE_FILE = "conformance-exit-code.txt"
     const val EVIDENCE_DIRECTORY = "conformance"
     val TAGGED_TESTS =
         linkedMapOf(
             "architectureTest" to "architecture",
             "buildPolicyTest" to "build-policy",
+            "archiveFixtureTest" to "archive-fixtures",
             "conformanceHarnessTest" to "conformance-harness",
             "assurancePlanTest" to "assurance-plan",
             "tes3ConformanceTest" to "tes3",

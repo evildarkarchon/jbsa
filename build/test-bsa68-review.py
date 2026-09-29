@@ -47,6 +47,18 @@ class Bsa68ReviewTests(unittest.TestCase):
             self.assertEqual("bsa-068", actual["archive_family"])
             self.assertEqual(0x83, actual["archive_flags"])
 
+    def test_generator_records_common_recipe_identity_without_tool_hashes(self):
+        """Identify the common generator by its declared version, not mutable tool bytes."""
+        with tempfile.TemporaryDirectory(dir=ROOT / "target") as directory:
+            generated = subprocess.run(["python", str(ROOT / "build/generate-bsa68-cv1-fixtures.py"),
+                "--output", directory], capture_output=True, text=True)
+            self.assertEqual(0, generated.returncode, generated.stderr)
+            catalog = json.loads((Path(directory) / "generator.json").read_text())
+            self.assertEqual({"id": "jbsa-bsa067-cv1-fixture-generator", "version": "1"},
+                             catalog["common_generator"])
+            self.assertEqual({"schema_version", "generator_id", "generator_version", "algorithm",
+                              "recipes", "common_generator"}, set(catalog))
+
     def test_embedded_prefix_is_metadata_not_payload(self):
         """Embedded wire bytes are retained separately and excluded from decoded byte counts."""
         raw = bytes.fromhex((ROOT / "tests/fixtures/bsa068/fallout3-stored-embedded.hex").read_text())

@@ -110,6 +110,15 @@ class ConformancePluginFunctionalTest {
             .forEach { task -> assertTrue(result.task(":jbsa-conformance-tests:$task") != null, task) }
     }
 
+    /** The full verification gate must include the complete generated archive inventory. */
+    @Test
+    fun rootVerificationSchedulesArchiveFixtureTests() {
+        write("jbsa/build.gradle.kts", "tasks.register(\"cyclonedxDirectBom\")")
+        val result = run(":verify", "--dry-run")
+
+        assertTrue(result.output.contains(":jbsa-conformance-tests:archiveFixtureTest SKIPPED"))
+    }
+
     /** Runs the compact assurance shadow gate from the plan and available Archive Family checks. */
     @Test
     fun `automated assurance aggregates the compact plan and available family tests`() {

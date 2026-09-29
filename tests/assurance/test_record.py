@@ -20,13 +20,32 @@ COMMAND = ROOT / "build" / "assurance" / "record.py"
 class AssuranceRecordTests(unittest.TestCase):
     """Verify one successful gate produces a complete session-scoped capsule."""
 
-    def test_oracle_identity_rejects_modified_record_or_probe_script(self) -> None:
-        """Invalidate the capsule when a pinned observation or its generator changes."""
+    def test_candidate_digest_uses_built_jars_instead_of_source(self) -> None:
+        """Identify the executed library and CLI bytes while ignoring source edits."""
         with tempfile.TemporaryDirectory() as temporary:
             repository = Path(temporary)
-            script = repository / "build/issue50-oracle-probes.py"
-            script.parent.mkdir()
-            script.write_text("# frozen probe\n", encoding="utf-8")
+            library = repository / "jbsa.jar"
+            cli = repository / "jbsa-cli.jar"
+            source = repository / "Archive.java"
+            library.write_bytes(b"library-v1")
+            cli.write_bytes(b"cli-v1")
+            source.write_text("class Archive {}\n", encoding="utf-8")
+            with patch.object(sys, "path", [str(COMMAND.parent), *sys.path]):
+                record_tool = importlib.import_module("record")
+
+            first = record_tool.candidate_digest(library, cli)
+            source.write_text("class Archive { /* documentation */ }\n", encoding="utf-8")
+            self.assertEqual(first, record_tool.candidate_digest(library, cli))
+            cli.write_bytes(b"cli-v2")
+            self.assertNotEqual(first, record_tool.candidate_digest(library, cli))
+            cli.write_bytes(b"cli-v1")
+            library.write_bytes(b"library-v2")
+            self.assertNotEqual(first, record_tool.candidate_digest(library, cli))
+
+    def test_oracle_identity_binds_record_without_probe_script_hash(self) -> None:
+        """Bind the retained observation bytes without pinning its Python producer."""
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary)
             record_path = (
                 repository
                 / "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"
@@ -34,7 +53,6 @@ class AssuranceRecordTests(unittest.TestCase):
             record_path.parent.mkdir(parents=True)
             observation = {
                 "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2",
-                "probe_script_sha256": hashlib.sha256(b"# frozen probe\n").hexdigest(),
                 "probes": [{"id": "first", "exit_status": 0}],
             }
             observation["record_sha256"] = hashlib.sha256(
@@ -44,20 +62,15 @@ class AssuranceRecordTests(unittest.TestCase):
             with patch.object(sys, "path", [str(COMMAND.parent), *sys.path]):
                 record_tool = importlib.import_module("record")
 
-            self.assertIn(
-                observation["record_sha256"], record_tool.oracle_identity(repository)
-            )
-            script.write_text("# changed probe\n", encoding="utf-8")
-            with self.assertRaises(record_tool.capsule_tool.CapsuleError):
-                record_tool.oracle_identity(repository)
-            script.write_text("# frozen probe\n", encoding="utf-8")
+            identity = record_tool.oracle_identity(repository)
+            self.assertIn(observation["record_sha256"], identity)
             observation["probes"][0]["exit_status"] = 1
             record_path.write_text(json.dumps(observation), encoding="utf-8")
             with self.assertRaises(record_tool.capsule_tool.CapsuleError):
                 record_tool.oracle_identity(repository)
 
-    def test_deviation_review_rejects_partial_approval_and_changed_code(self) -> None:
-        """Require every in-scope row and revalidation after affected implementation changes."""
+    def test_deviation_review_approval_survives_implementation_edits(self) -> None:
+        """Require complete approval while allowing subsequent source and resource edits."""
         with tempfile.TemporaryDirectory() as temporary:
             repository = Path(temporary)
             observation_source = (
@@ -85,10 +98,7 @@ class AssuranceRecordTests(unittest.TestCase):
             review["state"] = "pending"
             review["approved_deviations"] = []
             review["approval_reference"] = None
-            review["implementation_sha256"] = record_tool.digest_files(
-                repository,
-                [source.parent, repository / "jbsa-cli/src/main/java", codec.parent, profile],
-            )
+            review.pop("implementation_sha256", None)
             review_path = repository / "tests/assurance/deviation-review.json"
             review_path.parent.mkdir(parents=True)
             review_path.write_text(json.dumps(review), encoding="utf-8")
@@ -126,10 +136,10 @@ class AssuranceRecordTests(unittest.TestCase):
             review["approved_deviations"] = review["required_deviations"].copy()
             review_path.write_text(json.dumps(review), encoding="utf-8")
             source.write_text("class Archive { int changed; }\n", encoding="utf-8")
-            self.assertEqual("stale", record_tool.deviation_review_status(repository))
+            self.assertEqual("approved", record_tool.deviation_review_status(repository))
             source.write_text("class Archive {}\n", encoding="utf-8")
             codec.write_text('{"profile":"changed"}\n', encoding="utf-8")
-            self.assertEqual("stale", record_tool.deviation_review_status(repository))
+            self.assertEqual("approved", record_tool.deviation_review_status(repository))
 
     def test_specification_digest_orders_mixed_case_paths_portably(self) -> None:
         """Use one path order for identical specification bytes on every platform."""
@@ -148,8 +158,8 @@ class AssuranceRecordTests(unittest.TestCase):
             digest,
         )
 
-    def test_specification_identity_changes_with_normative_content(self) -> None:
-        """Bind the exact normative files even when the declared version is unchanged."""
+    def test_specification_identity_uses_declared_version(self) -> None:
+        """Identify the normative contract by its reviewed version, without hashing text."""
         with tempfile.TemporaryDirectory() as temporary:
             repository = Path(temporary)
             specification = repository / "docs/spec"
@@ -167,16 +177,66 @@ class AssuranceRecordTests(unittest.TestCase):
                 record_tool = importlib.import_module("record")
             with (
                 patch.object(record_tool, "candidate_digest", return_value="candidate"),
-                patch.object(record_tool, "candidate_commit", return_value="a" * 40),
                 patch.object(record_tool, "command_identity", return_value="java"),
                 patch.object(record_tool, "oracle_identity", return_value="pinned-oracle"),
             ):
-                first = record_tool.session_identity(repository, repository / "plan.json", "java")
+                first = record_tool.session_identity(
+                    repository, "assurance-v2", "java", repository / "library.jar", repository / "cli.jar"
+                )
                 behavior.write_text("Changed obligation\n", encoding="utf-8")
-                second = record_tool.session_identity(repository, repository / "plan.json", "java")
+                second = record_tool.session_identity(
+                    repository, "assurance-v2", "java", repository / "library.jar", repository / "cli.jar"
+                )
+                (specification / "requirements.yaml").write_text(
+                    "specification:\n  version: 0.18.0\n", encoding="utf-8"
+                )
+                third = record_tool.session_identity(
+                    repository, "assurance-v2", "java", repository / "library.jar", repository / "cli.jar"
+                )
 
-        self.assertRegex(first["specification"], r"^0\.17\.0@sha256:[0-9a-f]{64}$")
-        self.assertNotEqual(first["specification"], second["specification"])
+        self.assertEqual("0.17.0", first["specification"])
+        self.assertEqual(first["specification"], second["specification"])
+        self.assertEqual("0.18.0", third["specification"])
+
+    def test_session_identity_does_not_hash_verifier_source(self) -> None:
+        """Keep verification procedure identities independent of Python edits."""
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary)
+            (repository / "tests/fixtures").mkdir(parents=True)
+            specification = repository / "docs/spec"
+            specification.mkdir(parents=True)
+            (specification / "requirements.yaml").write_text(
+                "specification:\n  version: 0.17.0\n", encoding="utf-8"
+            )
+            assurance = repository / "build/assurance"
+            assurance.mkdir(parents=True)
+            generator = assurance / "plan.py"
+            generator.write_text("# first\n", encoding="utf-8")
+            validator = repository / "build/validate-fixture.py"
+            validator.write_text("# first\n", encoding="utf-8")
+            wrapper = repository / "gradle/wrapper/gradle-wrapper.properties"
+            wrapper.parent.mkdir(parents=True)
+            wrapper.write_text("distributionUrl=first\n", encoding="utf-8")
+            with patch.object(sys, "path", [str(COMMAND.parent), *sys.path]):
+                record_tool = importlib.import_module("record")
+            with (
+                patch.object(record_tool, "candidate_digest", return_value="candidate"),
+                patch.object(record_tool, "command_identity", return_value="java"),
+                patch.object(record_tool, "oracle_identity", return_value="pinned-oracle"),
+            ):
+                first = record_tool.session_identity(
+                    repository, "assurance-v2", "java", repository / "library.jar", repository / "cli.jar"
+                )
+                generator.write_text("# second\n", encoding="utf-8")
+                validator.write_text("# second\n", encoding="utf-8")
+                wrapper.write_text("distributionUrl=second\n", encoding="utf-8")
+                second = record_tool.session_identity(
+                    repository, "assurance-v2", "java", repository / "library.jar", repository / "cli.jar"
+                )
+
+        self.assertEqual(first["generator"], second["generator"])
+        self.assertEqual(first["validator"], second["validator"])
+        self.assertEqual(first["toolchain"], second["toolchain"])
 
     def test_records_every_full_tier_result_once(self) -> None:
         """Create a PASS capsule after selectors and deviation approval both pass."""
@@ -205,6 +265,10 @@ class AssuranceRecordTests(unittest.TestCase):
                 encoding="utf-8",
             )
             output = Path(temporary) / "capsule.json"
+            library = Path(temporary) / "jbsa.jar"
+            cli = Path(temporary) / "jbsa-cli.jar"
+            library.write_bytes(b"library")
+            cli.write_bytes(b"cli")
             result = subprocess.run(
                 [
                     sys.executable,
@@ -219,6 +283,10 @@ class AssuranceRecordTests(unittest.TestCase):
                     "hosted",
                     "--reports",
                     str(reports),
+                    "--library-jar",
+                    str(library),
+                    "--cli-jar",
+                    str(cli),
                     "--output",
                     str(output),
                 ],
@@ -241,12 +309,12 @@ class AssuranceRecordTests(unittest.TestCase):
         )
         self.assertTrue(all(result["outcome"] == "PASS" for result in capsule["results"]))
         self.assertRegex(capsule["session_identity"]["candidate"], r"^sha256:[0-9a-f]{64}$")
-        self.assertRegex(capsule["session_identity"]["candidate_commit"], r"^[0-9a-f]{40}$")
+        self.assertNotIn("candidate_commit", capsule["session_identity"])
         self.assertRegex(
             capsule["session_identity"]["oracle"],
             r"^pinned-sha256:[0-9a-f]{64}@observation-sha256:[0-9a-f]{64}$",
         )
-        self.assertRegex(capsule["session_identity"]["validator"], r"^sha256:[0-9a-f]{64}$")
+        self.assertEqual("assurance-v2-junit-v1", capsule["session_identity"]["validator"])
         profile_result = next(
             result
             for result in capsule["results"]

@@ -41,7 +41,7 @@ Implement and qualify the Windows-first Java 25 Bethesda archive library and thi
 
 1. **Contract Baseline** after the normative specification and compileable public types exist.
 2. **Interface Candidate** after representative TES3, versioned BSA, General BA2, and DDS BA2 slices pass their automated gates.
-3. **Interface Freeze** after all Archive Families, bounded scheduling, the complete CLI, and Automated Conformance exercise the public interface.
+3. **Automated Conformance** after all Archive Families, bounded scheduling, the complete CLI, and current public consumers are exercised. The former Interface Freeze gate is retired.
 4. **Release Candidate** after performance, packaging, compliance, provenance, and distribution verification; JBSA 1.0 follows manual Release Qualification.
 
 ## Scope boundaries

@@ -56,3 +56,11 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+### 2026-09-29 — Interface Freeze retirement
+
+The original objective's “frozen interface” wording is superseded by
+[the source-hashing retirement decision](../../remove-source-hashing/issues/01-retire-interface-freeze.md).
+Use the current tested public interface and exact packaged artifact identities
+for this documentation gate. The closed #51 link remains as historical context;
+#52 remains the open prerequisite.

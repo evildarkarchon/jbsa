@@ -7,14 +7,14 @@
   "source": "docs/spec/formats/versioned-bsa.md; independently authored SSE/AE vectors",
   "generators": [
     {
-      "path": "build/generate-bsa069-fixtures.py",
-      "sha256": "34a2adb726a5b6febe419b75c29607507c2051c4c611e1357729fafc652db1f8"
+      "path": "jbsa-test-support/src/main/java/io/github/evildarkarchon/jbsa/fixtures/Bsa069FixtureGenerator.java",
+      "version": "2",
+      "command": "java -cp jbsa-test-support/target/classes/java/main io.github.evildarkarchon.jbsa.fixtures.Bsa069FixtureGenerator --output <directory>"
     }
   ],
   "validators": [
     {
-      "path": "build/validate-bsa-wire.py",
-      "sha256": "40ac1d2cfe16480a06c95d46ba38973aa527467684ce8bea1b715ac44f75eed7"
+      "path": "build/validate-bsa-wire.py"
     }
   ],
   "payloads": [

@@ -73,7 +73,6 @@ def generate(destination):
                 "source": "docs/spec/formats/general-ba2.md; independently authored wire vectors",
                 "generator": {"path": "build/generate-ba2-fixtures.py", "version": "1",
                               "spdx_license": "Apache-2.0",
-                              "sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                               "command": "python build/generate-ba2-fixtures.py --output <directory>"},
                 "fixtures": []}
     for name, (content, disposition) in cases.items():

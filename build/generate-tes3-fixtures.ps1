@@ -55,7 +55,6 @@ $manifest = [ordered]@{
         path = 'build/generate-tes3-fixtures.ps1'
         version = '1'
         spdx_license = 'Apache-2.0'
-        sha256 = (Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash.ToLowerInvariant()
         command = 'pwsh -NoProfile -File build/generate-tes3-fixtures.ps1 -OutputDirectory <empty-directory>'
     }
     fixtures = @($records.ToArray())

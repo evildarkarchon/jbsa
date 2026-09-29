@@ -4,6 +4,8 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 
 | GitHub source | Local ticket | State | Triage status |
 | --- | --- | --- | --- |
+| local | [Retire Interface Freeze and source hashing](remove-source-hashing/spec.md) | closed | none |
+| local | [Remove source hashing and retire Interface Freeze](remove-source-hashing/issues/01-retire-interface-freeze.md) | closed | none |
 | local | [Migrate the Maven build to Gradle with Kotlin DSL](migrate-maven-to-gradle/spec.md) | open | ready-for-agent |
 | local | [Gradle 01: Capture the Maven parity baseline](migrate-maven-to-gradle/issues/01-capture-maven-parity-baseline.md) | closed | none |
 | local | [Gradle 02: Establish the verified Gradle build foundation](migrate-maven-to-gradle/issues/02-establish-verified-gradle-foundation.md) | closed | none |

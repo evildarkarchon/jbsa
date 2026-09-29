@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.verification;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.fixtures.Bsa069FixtureGenerator;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,17 +49,12 @@ final class Bsa069ConformanceIT {
     }
   }
 
-  /** Reproduces every committed SE/AE vector and validates the independent scanner itself. */
+  /** Reproduces every committed SE/AE vector and its source-free provenance. */
   @Test
+  @Tag("archive-fixtures")
   void independentlyGeneratedCorpusMatchesCommittedInventory() throws Exception {
     Path generated = directory.resolve("generated");
-    run(
-        List.of(
-            "python",
-            root().resolve("build/generate-bsa069-fixtures.py").toString(),
-            "--output",
-            generated.toString()),
-        directory.resolve("generator.log"));
+    Bsa069FixtureGenerator.materialize(generated);
     Path committed = root().resolve("tests/fixtures/bsa069");
     try (var fresh = Files.list(generated);
         var recorded = Files.list(committed)) {
@@ -74,6 +70,11 @@ final class Bsa069ConformanceIT {
       for (String name : expected)
         assertEquals(-1L, Files.mismatch(generated.resolve(name), committed.resolve(name)), name);
     }
+  }
+
+  /** Checks the independent Python wire scanner through its own malformed-vector tests. */
+  @Test
+  void independentScannerPassesItsFaultTests() throws Exception {
     run(
         List.of("python", root().resolve("build/test-bsa069-validator.py").toString()),
         directory.resolve("scanner-tests.log"));

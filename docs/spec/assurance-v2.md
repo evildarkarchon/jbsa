@@ -56,13 +56,16 @@ digests. Candidate, specification-set, profile, provider, toolchain, JVM,
 platform, machine, and run identities **MUST NOT** change that expectation.
 Changing asserted behavior **MUST** change its identity.
 
-Each run **MUST** bind the exact specification, plan, generator, candidate,
-profile, provider, fixture or corpus, validator or oracle, toolchain, JVM,
-platform, and protocol identities separately in its Evidence Capsule. Binary
-Conformance is an optional case-scoped claim and **MUST** bind every identity
-needed for repeatability.
+Each run **MUST** bind the reviewed specification version, exact plan and
+tested library and CLI binary artifact identities, generator and validator
+procedure versions, applicable profile, provider, fixture or corpus, Oracle,
+toolchain, JVM, platform, and protocol identities separately in its Evidence
+Capsule. Active assurance **MUST NOT** hash source code, scripts, or Git source
+trees, or require a stored source digest before a changed candidate can run.
+Binary Conformance is an optional case-scoped claim and **MUST** bind every
+artifact and output identity needed for repeatability.
 
-_Decision source: [Assurance v2 approval](../../.scratch/jbsa-1-0/issues/61-implement-assurance-v2.md)._
+_Decision sources: [Assurance v2 approval](../../.scratch/jbsa-1-0/issues/61-implement-assurance-v2.md), [retire source hashing](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md)._
 
 ## JBSA-ASR-005
 
