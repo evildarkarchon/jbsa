@@ -1,0 +1,1626 @@
+module io.github.evildarkarchon.jbsa
+exports io.github.evildarkarchon.jbsa
+
+Compiled from "ArchiveAssessment.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveAssessment extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.ArchiveAssessment(io.github.evildarkarchon.jbsa.ArchiveDisposition, io.github.evildarkarchon.jbsa.ValidationExtent, java.util.List<io.github.evildarkarchon.jbsa.Diagnostic>);
+    descriptor: (Lio/github/evildarkarchon/jbsa/ArchiveDisposition;Lio/github/evildarkarchon/jbsa/ValidationExtent;Ljava/util/List;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.ArchiveDisposition disposition();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveDisposition;
+
+  public io.github.evildarkarchon.jbsa.ValidationExtent extent();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ValidationExtent;
+
+  public java.util.List<io.github.evildarkarchon.jbsa.Diagnostic> diagnostics();
+    descriptor: ()Ljava/util/List;
+}
+Compiled from "ArchiveCancelledException.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveCancelledException extends io.github.evildarkarchon.jbsa.ArchiveException {
+  public io.github.evildarkarchon.jbsa.ArchiveCancelledException(java.lang.String, io.github.evildarkarchon.jbsa.Failure, java.util.List<io.github.evildarkarchon.jbsa.Diagnostic>, java.util.List<io.github.evildarkarchon.jbsa.Artifact>, java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveAssessment>, java.util.List<io.github.evildarkarchon.jbsa.Failure>);
+    descriptor: (Ljava/lang/String;Lio/github/evildarkarchon/jbsa/Failure;Ljava/util/List;Ljava/util/List;Ljava/util/Optional;Ljava/util/List;)V
+}
+Compiled from "ArchiveDetection.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveDetection extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.ArchiveDetection(io.github.evildarkarchon.jbsa.DetectionStatus, io.github.evildarkarchon.jbsa.WireName, java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveFamily>, java.util.Optional<io.github.evildarkarchon.jbsa.WireVersion>, java.util.Optional<io.github.evildarkarchon.jbsa.Ba2Subtype>, java.util.OptionalLong);
+    descriptor: (Lio/github/evildarkarchon/jbsa/DetectionStatus;Lio/github/evildarkarchon/jbsa/WireName;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/OptionalLong;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.DetectionStatus status();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/DetectionStatus;
+
+  public io.github.evildarkarchon.jbsa.WireName observedPrefix();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/WireName;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveFamily> family();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.WireVersion> wireVersion();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.Ba2Subtype> ba2Subtype();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.OptionalLong compressionMethod();
+    descriptor: ()Ljava/util/OptionalLong;
+}
+Compiled from "ArchiveDisposition.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveDisposition extends java.lang.Enum<io.github.evildarkarchon.jbsa.ArchiveDisposition> {
+  public static final io.github.evildarkarchon.jbsa.ArchiveDisposition CONFORMING;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveDisposition;
+  public static final io.github.evildarkarchon.jbsa.ArchiveDisposition TOLERATED_NONCANONICAL;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveDisposition;
+  public static final io.github.evildarkarchon.jbsa.ArchiveDisposition REJECTED;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveDisposition;
+  public static io.github.evildarkarchon.jbsa.ArchiveDisposition[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/ArchiveDisposition;
+
+  public static io.github.evildarkarchon.jbsa.ArchiveDisposition valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/ArchiveDisposition;
+}
+Compiled from "ArchiveEncoding.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveEncoding extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.ArchiveEncoding(java.util.Optional<io.github.evildarkarchon.jbsa.WireVersion>, java.util.Optional<io.github.evildarkarchon.jbsa.Ba2Subtype>, java.util.OptionalLong);
+    descriptor: (Ljava/util/Optional;Ljava/util/Optional;Ljava/util/OptionalLong;)V
+
+  public static io.github.evildarkarchon.jbsa.ArchiveEncoding tes3();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveEncoding;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.WireVersion> wireVersion();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.Ba2Subtype> ba2Subtype();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.OptionalLong compressionMethod();
+    descriptor: ()Ljava/util/OptionalLong;
+}
+Compiled from "ArchiveEntry.java"
+public interface io.github.evildarkarchon.jbsa.ArchiveEntry {
+  public abstract io.github.evildarkarchon.jbsa.EntryMetadata metadata();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/EntryMetadata;
+
+  public abstract io.github.evildarkarchon.jbsa.EntryContent openContent() throws java.io.IOException;
+    descriptor: ()Lio/github/evildarkarchon/jbsa/EntryContent;
+}
+Compiled from "ArchiveException.java"
+public class io.github.evildarkarchon.jbsa.ArchiveException extends java.io.IOException {
+  public io.github.evildarkarchon.jbsa.ArchiveException(java.lang.String, io.github.evildarkarchon.jbsa.Failure, java.util.List<io.github.evildarkarchon.jbsa.Diagnostic>, java.util.List<io.github.evildarkarchon.jbsa.Artifact>, java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveAssessment>, java.util.List<io.github.evildarkarchon.jbsa.Failure>);
+    descriptor: (Ljava/lang/String;Lio/github/evildarkarchon/jbsa/Failure;Ljava/util/List;Ljava/util/List;Ljava/util/Optional;Ljava/util/List;)V
+
+  public final io.github.evildarkarchon.jbsa.FailureKind kind();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/FailureKind;
+
+  public final io.github.evildarkarchon.jbsa.Failure primaryFailure();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/Failure;
+
+  public final java.util.List<io.github.evildarkarchon.jbsa.Diagnostic> diagnostics();
+    descriptor: ()Ljava/util/List;
+
+  public final java.util.List<io.github.evildarkarchon.jbsa.Artifact> artifacts();
+    descriptor: ()Ljava/util/List;
+
+  public final java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveAssessment> assessment();
+    descriptor: ()Ljava/util/Optional;
+
+  public final java.util.List<io.github.evildarkarchon.jbsa.Failure> secondaryFailures();
+    descriptor: ()Ljava/util/List;
+}
+Compiled from "ArchiveFamily.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveFamily extends java.lang.Enum<io.github.evildarkarchon.jbsa.ArchiveFamily> {
+  public static final io.github.evildarkarchon.jbsa.ArchiveFamily TES3_BSA;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+  public static final io.github.evildarkarchon.jbsa.ArchiveFamily TES4_BSA;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+  public static final io.github.evildarkarchon.jbsa.ArchiveFamily FO3_FNV_SKYRIM_LE_BSA;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+  public static final io.github.evildarkarchon.jbsa.ArchiveFamily SSE_BSA;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+  public static final io.github.evildarkarchon.jbsa.ArchiveFamily FO4_GENERAL_BA2;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+  public static final io.github.evildarkarchon.jbsa.ArchiveFamily FO4_DDS_BA2;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+  public static final io.github.evildarkarchon.jbsa.ArchiveFamily STARFIELD_GENERAL_BA2;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+  public static final io.github.evildarkarchon.jbsa.ArchiveFamily STARFIELD_DDS_BA2;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+  public static io.github.evildarkarchon.jbsa.ArchiveFamily[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+
+  public static io.github.evildarkarchon.jbsa.ArchiveFamily valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+}
+Compiled from "ArchiveInspection.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveInspection extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.ArchiveInspection(io.github.evildarkarchon.jbsa.ArchiveDetection, io.github.evildarkarchon.jbsa.ArchiveMetadata, io.github.evildarkarchon.jbsa.ArchiveAssessment);
+    descriptor: (Lio/github/evildarkarchon/jbsa/ArchiveDetection;Lio/github/evildarkarchon/jbsa/ArchiveMetadata;Lio/github/evildarkarchon/jbsa/ArchiveAssessment;)V
+
+  public io.github.evildarkarchon.jbsa.ArchiveInspection(io.github.evildarkarchon.jbsa.ArchiveDetection, io.github.evildarkarchon.jbsa.ArchiveMetadata, io.github.evildarkarchon.jbsa.ArchiveAssessment, java.util.List<io.github.evildarkarchon.jbsa.EntryMetadata>);
+    descriptor: (Lio/github/evildarkarchon/jbsa/ArchiveDetection;Lio/github/evildarkarchon/jbsa/ArchiveMetadata;Lio/github/evildarkarchon/jbsa/ArchiveAssessment;Ljava/util/List;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.ArchiveDetection detection();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveDetection;
+
+  public io.github.evildarkarchon.jbsa.ArchiveMetadata metadata();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveMetadata;
+
+  public io.github.evildarkarchon.jbsa.ArchiveAssessment assessment();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveAssessment;
+
+  public java.util.List<io.github.evildarkarchon.jbsa.EntryMetadata> entries();
+    descriptor: ()Ljava/util/List;
+}
+Compiled from "ArchiveMetadata.java"
+public interface io.github.evildarkarchon.jbsa.ArchiveMetadata {
+  public abstract io.github.evildarkarchon.jbsa.ArchiveFamily family();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+
+  public abstract io.github.evildarkarchon.jbsa.ArchiveEncoding encoding();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveEncoding;
+
+  public abstract long entryCount();
+    descriptor: ()J
+}
+Compiled from "ArchiveMetadata.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveMetadata$DdsBa2 extends java.lang.Record implements io.github.evildarkarchon.jbsa.ArchiveMetadata {
+  public io.github.evildarkarchon.jbsa.ArchiveMetadata$DdsBa2(io.github.evildarkarchon.jbsa.ArchiveFamily, io.github.evildarkarchon.jbsa.ArchiveEncoding, long, long, java.util.OptionalLong);
+    descriptor: (Lio/github/evildarkarchon/jbsa/ArchiveFamily;Lio/github/evildarkarchon/jbsa/ArchiveEncoding;JJLjava/util/OptionalLong;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.ArchiveFamily family();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+
+  public io.github.evildarkarchon.jbsa.ArchiveEncoding encoding();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveEncoding;
+
+  public long entryCount();
+    descriptor: ()J
+
+  public long fileNameTableOffset();
+    descriptor: ()J
+
+  public java.util.OptionalLong unknownValueAt24();
+    descriptor: ()Ljava/util/OptionalLong;
+}
+Compiled from "ArchiveMetadata.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveMetadata$GeneralBa2 extends java.lang.Record implements io.github.evildarkarchon.jbsa.ArchiveMetadata {
+  public io.github.evildarkarchon.jbsa.ArchiveMetadata$GeneralBa2(io.github.evildarkarchon.jbsa.ArchiveFamily, io.github.evildarkarchon.jbsa.ArchiveEncoding, long, long, java.util.OptionalLong);
+    descriptor: (Lio/github/evildarkarchon/jbsa/ArchiveFamily;Lio/github/evildarkarchon/jbsa/ArchiveEncoding;JJLjava/util/OptionalLong;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.ArchiveFamily family();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+
+  public io.github.evildarkarchon.jbsa.ArchiveEncoding encoding();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveEncoding;
+
+  public long entryCount();
+    descriptor: ()J
+
+  public long fileNameTableOffset();
+    descriptor: ()J
+
+  public java.util.OptionalLong unknownValueAt24();
+    descriptor: ()Ljava/util/OptionalLong;
+}
+Compiled from "ArchiveMetadata.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveMetadata$Tes3 extends java.lang.Record implements io.github.evildarkarchon.jbsa.ArchiveMetadata {
+  public io.github.evildarkarchon.jbsa.ArchiveMetadata$Tes3(long, long, long);
+    descriptor: (JJJ)V
+
+  public io.github.evildarkarchon.jbsa.ArchiveFamily family();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+
+  public io.github.evildarkarchon.jbsa.ArchiveEncoding encoding();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveEncoding;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long entryCount();
+    descriptor: ()J
+
+  public long hashOffset();
+    descriptor: ()J
+
+  public long dataBaseOffset();
+    descriptor: ()J
+}
+Compiled from "ArchiveMetadata.java"
+public final class io.github.evildarkarchon.jbsa.ArchiveMetadata$VersionedBsa extends java.lang.Record implements io.github.evildarkarchon.jbsa.ArchiveMetadata {
+  public io.github.evildarkarchon.jbsa.ArchiveMetadata$VersionedBsa(io.github.evildarkarchon.jbsa.ArchiveFamily, io.github.evildarkarchon.jbsa.ArchiveEncoding, long, long, long, long, long, long, long);
+    descriptor: (Lio/github/evildarkarchon/jbsa/ArchiveFamily;Lio/github/evildarkarchon/jbsa/ArchiveEncoding;JJJJJJJ)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.ArchiveFamily family();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+
+  public io.github.evildarkarchon.jbsa.ArchiveEncoding encoding();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveEncoding;
+
+  public long entryCount();
+    descriptor: ()J
+
+  public long folderRecordsOffset();
+    descriptor: ()J
+
+  public long archiveFlags();
+    descriptor: ()J
+
+  public long folderCount();
+    descriptor: ()J
+
+  public long folderNamesLength();
+    descriptor: ()J
+
+  public long fileNamesLength();
+    descriptor: ()J
+
+  public long fileFlags();
+    descriptor: ()J
+}
+Compiled from "Artifact.java"
+public final class io.github.evildarkarchon.jbsa.Artifact extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.Artifact(java.nio.file.Path, long, io.github.evildarkarchon.jbsa.ArtifactState);
+    descriptor: (Ljava/nio/file/Path;JLio/github/evildarkarchon/jbsa/ArtifactState;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.nio.file.Path path();
+    descriptor: ()Ljava/nio/file/Path;
+
+  public long ordinal();
+    descriptor: ()J
+
+  public io.github.evildarkarchon.jbsa.ArtifactState state();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArtifactState;
+}
+Compiled from "ArtifactState.java"
+public final class io.github.evildarkarchon.jbsa.ArtifactState extends java.lang.Enum<io.github.evildarkarchon.jbsa.ArtifactState> {
+  public static final io.github.evildarkarchon.jbsa.ArtifactState PUBLISHED;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArtifactState;
+  public static final io.github.evildarkarchon.jbsa.ArtifactState UNCHANGED;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArtifactState;
+  public static final io.github.evildarkarchon.jbsa.ArtifactState RESTORED;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArtifactState;
+  public static final io.github.evildarkarchon.jbsa.ArtifactState MISSING;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArtifactState;
+  public static final io.github.evildarkarchon.jbsa.ArtifactState RESIDUAL_STAGING;
+    descriptor: Lio/github/evildarkarchon/jbsa/ArtifactState;
+  public static io.github.evildarkarchon.jbsa.ArtifactState[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/ArtifactState;
+
+  public static io.github.evildarkarchon.jbsa.ArtifactState valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/ArtifactState;
+}
+Compiled from "Ba2Subtype.java"
+public final class io.github.evildarkarchon.jbsa.Ba2Subtype extends java.lang.Record {
+  public static final io.github.evildarkarchon.jbsa.Ba2Subtype GNRL;
+    descriptor: Lio/github/evildarkarchon/jbsa/Ba2Subtype;
+  public static final io.github.evildarkarchon.jbsa.Ba2Subtype DX10;
+    descriptor: Lio/github/evildarkarchon/jbsa/Ba2Subtype;
+  public io.github.evildarkarchon.jbsa.Ba2Subtype(java.lang.String);
+    descriptor: (Ljava/lang/String;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.lang.String value();
+    descriptor: ()Ljava/lang/String;
+}
+Compiled from "BethesdaArchives.java"
+public final class io.github.evildarkarchon.jbsa.BethesdaArchives {
+  public static io.github.evildarkarchon.jbsa.BethesdaArchives standard();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/BethesdaArchives;
+
+  public io.github.evildarkarchon.jbsa.ArchiveDetection detect(java.nio.file.Path) throws io.github.evildarkarchon.jbsa.ArchiveException;
+    descriptor: (Ljava/nio/file/Path;)Lio/github/evildarkarchon/jbsa/ArchiveDetection;
+
+  public io.github.evildarkarchon.jbsa.ArchiveInspection inspect(java.nio.file.Path) throws io.github.evildarkarchon.jbsa.ArchiveException;
+    descriptor: (Ljava/nio/file/Path;)Lio/github/evildarkarchon/jbsa/ArchiveInspection;
+
+  public io.github.evildarkarchon.jbsa.ArchiveInspection inspect(java.nio.file.Path, io.github.evildarkarchon.jbsa.OpenOptions) throws io.github.evildarkarchon.jbsa.ArchiveException;
+    descriptor: (Ljava/nio/file/Path;Lio/github/evildarkarchon/jbsa/OpenOptions;)Lio/github/evildarkarchon/jbsa/ArchiveInspection;
+
+  public io.github.evildarkarchon.jbsa.OpenArchive open(java.nio.file.Path, io.github.evildarkarchon.jbsa.OpenOptions) throws io.github.evildarkarchon.jbsa.ArchiveException;
+    descriptor: (Ljava/nio/file/Path;Lio/github/evildarkarchon/jbsa/OpenOptions;)Lio/github/evildarkarchon/jbsa/OpenArchive;
+
+  public io.github.evildarkarchon.jbsa.OperationReport extract(io.github.evildarkarchon.jbsa.ExtractRequest, io.github.evildarkarchon.jbsa.OperationControl) throws io.github.evildarkarchon.jbsa.ArchiveException;
+    descriptor: (Lio/github/evildarkarchon/jbsa/ExtractRequest;Lio/github/evildarkarchon/jbsa/OperationControl;)Lio/github/evildarkarchon/jbsa/OperationReport;
+
+  public io.github.evildarkarchon.jbsa.OperationReport pack(io.github.evildarkarchon.jbsa.PackRequest, io.github.evildarkarchon.jbsa.OperationControl) throws io.github.evildarkarchon.jbsa.ArchiveException;
+    descriptor: (Lio/github/evildarkarchon/jbsa/PackRequest;Lio/github/evildarkarchon/jbsa/OperationControl;)Lio/github/evildarkarchon/jbsa/OperationReport;
+}
+Compiled from "CompatibilityProfile.java"
+public final class io.github.evildarkarchon.jbsa.CompatibilityProfile extends java.lang.Enum<io.github.evildarkarchon.jbsa.CompatibilityProfile> {
+  public static final io.github.evildarkarchon.jbsa.CompatibilityProfile BSARCH_1_0_V1;
+    descriptor: Lio/github/evildarkarchon/jbsa/CompatibilityProfile;
+  public static io.github.evildarkarchon.jbsa.CompatibilityProfile[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/CompatibilityProfile;
+
+  public static io.github.evildarkarchon.jbsa.CompatibilityProfile valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/CompatibilityProfile;
+
+  public java.lang.String identifier();
+    descriptor: ()Ljava/lang/String;
+
+  public long revision();
+    descriptor: ()J
+
+  public java.lang.String contentDigest();
+    descriptor: ()Ljava/lang/String;
+
+  public java.util.List<java.lang.String> deviations();
+    descriptor: ()Ljava/util/List;
+}
+Compiled from "DdsTarget.java"
+public final class io.github.evildarkarchon.jbsa.DdsTarget extends java.lang.Enum<io.github.evildarkarchon.jbsa.DdsTarget> {
+  public static final io.github.evildarkarchon.jbsa.DdsTarget PC;
+    descriptor: Lio/github/evildarkarchon/jbsa/DdsTarget;
+  public static final io.github.evildarkarchon.jbsa.DdsTarget XBOX;
+    descriptor: Lio/github/evildarkarchon/jbsa/DdsTarget;
+  public static io.github.evildarkarchon.jbsa.DdsTarget[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/DdsTarget;
+
+  public static io.github.evildarkarchon.jbsa.DdsTarget valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/DdsTarget;
+}
+Compiled from "DetectionStatus.java"
+public final class io.github.evildarkarchon.jbsa.DetectionStatus extends java.lang.Enum<io.github.evildarkarchon.jbsa.DetectionStatus> {
+  public static final io.github.evildarkarchon.jbsa.DetectionStatus UNRECOGNIZED;
+    descriptor: Lio/github/evildarkarchon/jbsa/DetectionStatus;
+  public static final io.github.evildarkarchon.jbsa.DetectionStatus INDETERMINATE;
+    descriptor: Lio/github/evildarkarchon/jbsa/DetectionStatus;
+  public static final io.github.evildarkarchon.jbsa.DetectionStatus SUPPORTED_FAMILY;
+    descriptor: Lio/github/evildarkarchon/jbsa/DetectionStatus;
+  public static final io.github.evildarkarchon.jbsa.DetectionStatus UNSUPPORTED_VARIANT;
+    descriptor: Lio/github/evildarkarchon/jbsa/DetectionStatus;
+  public static io.github.evildarkarchon.jbsa.DetectionStatus[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/DetectionStatus;
+
+  public static io.github.evildarkarchon.jbsa.DetectionStatus valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/DetectionStatus;
+}
+Compiled from "Diagnostic.java"
+public final class io.github.evildarkarchon.jbsa.Diagnostic extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.Diagnostic(java.lang.String, io.github.evildarkarchon.jbsa.DiagnosticSeverity, io.github.evildarkarchon.jbsa.Operation, io.github.evildarkarchon.jbsa.OperationPhase, io.github.evildarkarchon.jbsa.DiagnosticLocation, java.util.SortedMap<java.lang.String, java.lang.String>, java.util.Optional<java.lang.String>);
+    descriptor: (Ljava/lang/String;Lio/github/evildarkarchon/jbsa/DiagnosticSeverity;Lio/github/evildarkarchon/jbsa/Operation;Lio/github/evildarkarchon/jbsa/OperationPhase;Lio/github/evildarkarchon/jbsa/DiagnosticLocation;Ljava/util/SortedMap;Ljava/util/Optional;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.lang.String identifier();
+    descriptor: ()Ljava/lang/String;
+
+  public io.github.evildarkarchon.jbsa.DiagnosticSeverity severity();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/DiagnosticSeverity;
+
+  public io.github.evildarkarchon.jbsa.Operation operation();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/Operation;
+
+  public io.github.evildarkarchon.jbsa.OperationPhase phase();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/OperationPhase;
+
+  public io.github.evildarkarchon.jbsa.DiagnosticLocation location();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/DiagnosticLocation;
+
+  public java.util.SortedMap<java.lang.String, java.lang.String> values();
+    descriptor: ()Ljava/util/SortedMap;
+
+  public java.util.Optional<java.lang.String> explanation();
+    descriptor: ()Ljava/util/Optional;
+}
+Compiled from "DiagnosticLocation.java"
+public final class io.github.evildarkarchon.jbsa.DiagnosticLocation extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.DiagnosticLocation(java.util.Optional<java.nio.file.Path>, java.util.OptionalLong, java.util.Optional<java.lang.String>, java.util.Optional<java.lang.String>, java.util.Optional<io.github.evildarkarchon.jbsa.DiagnosticLocation$ByteSpan>, java.util.Optional<java.nio.file.Path>);
+    descriptor: (Ljava/util/Optional;Ljava/util/OptionalLong;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)V
+
+  public static io.github.evildarkarchon.jbsa.DiagnosticLocation operation();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/DiagnosticLocation;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.util.Optional<java.nio.file.Path> archive();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.OptionalLong entryOrdinal();
+    descriptor: ()Ljava/util/OptionalLong;
+
+  public java.util.Optional<java.lang.String> entryName();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Optional<java.lang.String> field();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.DiagnosticLocation$ByteSpan> byteSpan();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Optional<java.nio.file.Path> artifact();
+    descriptor: ()Ljava/util/Optional;
+}
+Compiled from "DiagnosticLocation.java"
+public final class io.github.evildarkarchon.jbsa.DiagnosticLocation$ByteSpan extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.DiagnosticLocation$ByteSpan(long, long);
+    descriptor: (JJ)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long offset();
+    descriptor: ()J
+
+  public long length();
+    descriptor: ()J
+}
+Compiled from "DiagnosticPolicy.java"
+public final class io.github.evildarkarchon.jbsa.DiagnosticPolicy extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.DiagnosticPolicy(java.util.Set<java.lang.String>);
+    descriptor: (Ljava/util/Set;)V
+
+  public static io.github.evildarkarchon.jbsa.DiagnosticPolicy standard();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/DiagnosticPolicy;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.util.Set<java.lang.String> rejectedWarningIdentifiers();
+    descriptor: ()Ljava/util/Set;
+}
+Compiled from "DiagnosticSeverity.java"
+public final class io.github.evildarkarchon.jbsa.DiagnosticSeverity extends java.lang.Enum<io.github.evildarkarchon.jbsa.DiagnosticSeverity> {
+  public static final io.github.evildarkarchon.jbsa.DiagnosticSeverity WARNING;
+    descriptor: Lio/github/evildarkarchon/jbsa/DiagnosticSeverity;
+  public static final io.github.evildarkarchon.jbsa.DiagnosticSeverity ERROR;
+    descriptor: Lio/github/evildarkarchon/jbsa/DiagnosticSeverity;
+  public static io.github.evildarkarchon.jbsa.DiagnosticSeverity[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/DiagnosticSeverity;
+
+  public static io.github.evildarkarchon.jbsa.DiagnosticSeverity valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/DiagnosticSeverity;
+}
+Compiled from "EntryContent.java"
+public interface io.github.evildarkarchon.jbsa.EntryContent extends java.nio.channels.ReadableByteChannel {
+  public abstract java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveAssessment> assessment();
+    descriptor: ()Ljava/util/Optional;
+
+  public abstract int read(java.nio.ByteBuffer) throws java.io.IOException;
+    descriptor: (Ljava/nio/ByteBuffer;)I
+
+  public abstract void close() throws java.io.IOException;
+    descriptor: ()V
+}
+Compiled from "EntryMetadata.java"
+public final class io.github.evildarkarchon.jbsa.EntryMetadata extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.EntryMetadata(io.github.evildarkarchon.jbsa.ArchiveFamily, io.github.evildarkarchon.jbsa.ArchiveEncoding, long, java.lang.String, java.util.Optional<io.github.evildarkarchon.jbsa.NormalizedNameIdentity>, java.util.Map<java.lang.String, io.github.evildarkarchon.jbsa.WireName>, long, long, io.github.evildarkarchon.jbsa.EntryMetadata$Facts);
+    descriptor: (Lio/github/evildarkarchon/jbsa/ArchiveFamily;Lio/github/evildarkarchon/jbsa/ArchiveEncoding;JLjava/lang/String;Ljava/util/Optional;Ljava/util/Map;JJLio/github/evildarkarchon/jbsa/EntryMetadata$Facts;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.ArchiveFamily family();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+
+  public io.github.evildarkarchon.jbsa.ArchiveEncoding encoding();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveEncoding;
+
+  public long ordinal();
+    descriptor: ()J
+
+  public java.lang.String displayName();
+    descriptor: ()Ljava/lang/String;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.NormalizedNameIdentity> normalizedNameIdentity();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Map<java.lang.String, io.github.evildarkarchon.jbsa.WireName> wireNames();
+    descriptor: ()Ljava/util/Map;
+
+  public long decodedSize();
+    descriptor: ()J
+
+  public long storedSize();
+    descriptor: ()J
+
+  public io.github.evildarkarchon.jbsa.EntryMetadata$Facts facts();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/EntryMetadata$Facts;
+}
+Compiled from "EntryMetadata.java"
+public final class io.github.evildarkarchon.jbsa.EntryMetadata$Ba2Identity extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.EntryMetadata$Ba2Identity(long, io.github.evildarkarchon.jbsa.WireName, long, long, long, long);
+    descriptor: (JLio/github/evildarkarchon/jbsa/WireName;JJJJ)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long baseNameHash();
+    descriptor: ()J
+
+  public io.github.evildarkarchon.jbsa.WireName extension();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/WireName;
+
+  public long directoryHash();
+    descriptor: ()J
+
+  public long modIndex();
+    descriptor: ()J
+
+  public long chunkCount();
+    descriptor: ()J
+
+  public long chunkHeaderSize();
+    descriptor: ()J
+}
+Compiled from "EntryMetadata.java"
+public final class io.github.evildarkarchon.jbsa.EntryMetadata$DdsBa2 extends java.lang.Record implements io.github.evildarkarchon.jbsa.EntryMetadata$Facts {
+  public io.github.evildarkarchon.jbsa.EntryMetadata$DdsBa2(io.github.evildarkarchon.jbsa.EntryMetadata$Ba2Identity, long, long, long, long, long, long, java.util.List<io.github.evildarkarchon.jbsa.EntryMetadata$DdsChunk>);
+    descriptor: (Lio/github/evildarkarchon/jbsa/EntryMetadata$Ba2Identity;JJJJJJLjava/util/List;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.EntryMetadata$Ba2Identity identity();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/EntryMetadata$Ba2Identity;
+
+  public long height();
+    descriptor: ()J
+
+  public long width();
+    descriptor: ()J
+
+  public long mipCount();
+    descriptor: ()J
+
+  public long dxgiFormat();
+    descriptor: ()J
+
+  public long flags();
+    descriptor: ()J
+
+  public long tileMode();
+    descriptor: ()J
+
+  public java.util.List<io.github.evildarkarchon.jbsa.EntryMetadata$DdsChunk> chunks();
+    descriptor: ()Ljava/util/List;
+}
+Compiled from "EntryMetadata.java"
+public final class io.github.evildarkarchon.jbsa.EntryMetadata$DdsChunk extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.EntryMetadata$DdsChunk(long, long, long, long, long, long);
+    descriptor: (JJJJJJ)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long payloadOffset();
+    descriptor: ()J
+
+  public long packedSize();
+    descriptor: ()J
+
+  public long unpackedSize();
+    descriptor: ()J
+
+  public long startMip();
+    descriptor: ()J
+
+  public long endMip();
+    descriptor: ()J
+
+  public long sentinel();
+    descriptor: ()J
+}
+Compiled from "EntryMetadata.java"
+public interface io.github.evildarkarchon.jbsa.EntryMetadata$Facts {
+}
+Compiled from "EntryMetadata.java"
+public final class io.github.evildarkarchon.jbsa.EntryMetadata$GeneralBa2 extends java.lang.Record implements io.github.evildarkarchon.jbsa.EntryMetadata$Facts {
+  public io.github.evildarkarchon.jbsa.EntryMetadata$GeneralBa2(io.github.evildarkarchon.jbsa.EntryMetadata$Ba2Identity, long, long, long, long);
+    descriptor: (Lio/github/evildarkarchon/jbsa/EntryMetadata$Ba2Identity;JJJJ)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.EntryMetadata$Ba2Identity identity();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/EntryMetadata$Ba2Identity;
+
+  public long payloadOffset();
+    descriptor: ()J
+
+  public long packedSize();
+    descriptor: ()J
+
+  public long unpackedSize();
+    descriptor: ()J
+
+  public long sentinel();
+    descriptor: ()J
+}
+Compiled from "EntryMetadata.java"
+public final class io.github.evildarkarchon.jbsa.EntryMetadata$Tes3 extends java.lang.Record implements io.github.evildarkarchon.jbsa.EntryMetadata$Facts {
+  public io.github.evildarkarchon.jbsa.EntryMetadata$Tes3(long, long, long, long);
+    descriptor: (JJJJ)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long nameHash();
+    descriptor: ()J
+
+  public long nameOffset();
+    descriptor: ()J
+
+  public long relativeDataOffset();
+    descriptor: ()J
+
+  public long dataOffset();
+    descriptor: ()J
+}
+Compiled from "EntryMetadata.java"
+public final class io.github.evildarkarchon.jbsa.EntryMetadata$VersionedBsa extends java.lang.Record implements io.github.evildarkarchon.jbsa.EntryMetadata$Facts {
+  public io.github.evildarkarchon.jbsa.EntryMetadata$VersionedBsa(long, long, long, long, long, long, long, long, long, boolean);
+    descriptor: (JJJJJJJJJZ)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long folderHash();
+    descriptor: ()J
+
+  public long nameHash();
+    descriptor: ()J
+
+  public long folderOrdinal();
+    descriptor: ()J
+
+  public long folderFileCount();
+    descriptor: ()J
+
+  public long folderOffset();
+    descriptor: ()J
+
+  public long folderPaddingBeforeOffset();
+    descriptor: ()J
+
+  public long folderPaddingAfterOffset();
+    descriptor: ()J
+
+  public long sizeAndCompressionToggle();
+    descriptor: ()J
+
+  public long dataOffset();
+    descriptor: ()J
+
+  public boolean compressed();
+    descriptor: ()Z
+}
+Compiled from "EntrySelection.java"
+public interface io.github.evildarkarchon.jbsa.EntrySelection {
+  public static final io.github.evildarkarchon.jbsa.EntrySelection ALL;
+    descriptor: Lio/github/evildarkarchon/jbsa/EntrySelection;
+}
+Compiled from "EntrySelection.java"
+public final class io.github.evildarkarchon.jbsa.EntrySelection$All extends java.lang.Record implements io.github.evildarkarchon.jbsa.EntrySelection {
+  public io.github.evildarkarchon.jbsa.EntrySelection$All();
+    descriptor: ()V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+}
+Compiled from "EntrySelection.java"
+public final class io.github.evildarkarchon.jbsa.EntrySelection$Ordinals extends java.lang.Record implements io.github.evildarkarchon.jbsa.EntrySelection {
+  public io.github.evildarkarchon.jbsa.EntrySelection$Ordinals(java.util.List<java.lang.Long>);
+    descriptor: (Ljava/util/List;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.util.List<java.lang.Long> ordinals();
+    descriptor: ()Ljava/util/List;
+}
+Compiled from "ExtractRequest.java"
+public final class io.github.evildarkarchon.jbsa.ExtractRequest extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.ExtractRequest(java.nio.file.Path, java.nio.file.Path, io.github.evildarkarchon.jbsa.EntrySelection, io.github.evildarkarchon.jbsa.TargetPolicy, io.github.evildarkarchon.jbsa.DiagnosticPolicy, io.github.evildarkarchon.jbsa.WorkerSelection, io.github.evildarkarchon.jbsa.OpenOptions);
+    descriptor: (Ljava/nio/file/Path;Ljava/nio/file/Path;Lio/github/evildarkarchon/jbsa/EntrySelection;Lio/github/evildarkarchon/jbsa/TargetPolicy;Lio/github/evildarkarchon/jbsa/DiagnosticPolicy;Lio/github/evildarkarchon/jbsa/WorkerSelection;Lio/github/evildarkarchon/jbsa/OpenOptions;)V
+
+  public static io.github.evildarkarchon.jbsa.ExtractRequest standard(java.nio.file.Path, java.nio.file.Path);
+    descriptor: (Ljava/nio/file/Path;Ljava/nio/file/Path;)Lio/github/evildarkarchon/jbsa/ExtractRequest;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.CompatibilityProfile> compatibilityProfile();
+    descriptor: ()Ljava/util/Optional;
+
+  public io.github.evildarkarchon.jbsa.ResourceLimits resourceLimits();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ResourceLimits;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.nio.file.Path source();
+    descriptor: ()Ljava/nio/file/Path;
+
+  public java.nio.file.Path destination();
+    descriptor: ()Ljava/nio/file/Path;
+
+  public io.github.evildarkarchon.jbsa.EntrySelection entries();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/EntrySelection;
+
+  public io.github.evildarkarchon.jbsa.TargetPolicy targetPolicy();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/TargetPolicy;
+
+  public io.github.evildarkarchon.jbsa.DiagnosticPolicy diagnosticPolicy();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/DiagnosticPolicy;
+
+  public io.github.evildarkarchon.jbsa.WorkerSelection workerSelection();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/WorkerSelection;
+
+  public io.github.evildarkarchon.jbsa.OpenOptions openOptions();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/OpenOptions;
+}
+Compiled from "Failure.java"
+public final class io.github.evildarkarchon.jbsa.Failure extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.Failure(io.github.evildarkarchon.jbsa.FailureKind, io.github.evildarkarchon.jbsa.OperationPhase, java.util.OptionalLong, java.util.Optional<java.lang.String>, java.util.Optional<io.github.evildarkarchon.jbsa.DiagnosticLocation>, java.util.Optional<java.lang.Throwable>);
+    descriptor: (Lio/github/evildarkarchon/jbsa/FailureKind;Lio/github/evildarkarchon/jbsa/OperationPhase;Ljava/util/OptionalLong;Ljava/util/Optional;Ljava/util/Optional;Ljava/util/Optional;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.FailureKind kind();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/FailureKind;
+
+  public io.github.evildarkarchon.jbsa.OperationPhase phase();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/OperationPhase;
+
+  public java.util.OptionalLong ordinal();
+    descriptor: ()Ljava/util/OptionalLong;
+
+  public java.util.Optional<java.lang.String> diagnosticIdentifier();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.DiagnosticLocation> location();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.Optional<java.lang.Throwable> cause();
+    descriptor: ()Ljava/util/Optional;
+}
+Compiled from "FailureKind.java"
+public final class io.github.evildarkarchon.jbsa.FailureKind extends java.lang.Enum<io.github.evildarkarchon.jbsa.FailureKind> {
+  public static final io.github.evildarkarchon.jbsa.FailureKind FORMAT;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static final io.github.evildarkarchon.jbsa.FailureKind UNSUPPORTED;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static final io.github.evildarkarchon.jbsa.FailureKind CAPABILITY;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static final io.github.evildarkarchon.jbsa.FailureKind POLICY;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static final io.github.evildarkarchon.jbsa.FailureKind SOURCE;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static final io.github.evildarkarchon.jbsa.FailureKind DESTINATION;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static final io.github.evildarkarchon.jbsa.FailureKind OBSERVER;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static final io.github.evildarkarchon.jbsa.FailureKind INTERNAL;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static final io.github.evildarkarchon.jbsa.FailureKind CANCELLED;
+    descriptor: Lio/github/evildarkarchon/jbsa/FailureKind;
+  public static io.github.evildarkarchon.jbsa.FailureKind[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/FailureKind;
+
+  public static io.github.evildarkarchon.jbsa.FailureKind valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/FailureKind;
+}
+Compiled from "FlagSelection.java"
+public interface io.github.evildarkarchon.jbsa.FlagSelection {
+  public static final io.github.evildarkarchon.jbsa.FlagSelection AUTOMATIC;
+    descriptor: Lio/github/evildarkarchon/jbsa/FlagSelection;
+}
+Compiled from "FlagSelection.java"
+public final class io.github.evildarkarchon.jbsa.FlagSelection$Automatic extends java.lang.Record implements io.github.evildarkarchon.jbsa.FlagSelection {
+  public io.github.evildarkarchon.jbsa.FlagSelection$Automatic();
+    descriptor: ()V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+}
+Compiled from "FlagSelection.java"
+public final class io.github.evildarkarchon.jbsa.FlagSelection$Explicit extends java.lang.Record implements io.github.evildarkarchon.jbsa.FlagSelection {
+  public io.github.evildarkarchon.jbsa.FlagSelection$Explicit(long);
+    descriptor: (J)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long value();
+    descriptor: ()J
+}
+Compiled from "NormalizedNameIdentity.java"
+public final class io.github.evildarkarchon.jbsa.NormalizedNameIdentity extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.NormalizedNameIdentity(java.lang.String);
+    descriptor: (Ljava/lang/String;)V
+
+  public static java.util.Optional<io.github.evildarkarchon.jbsa.NormalizedNameIdentity> from(java.lang.String, java.nio.charset.Charset);
+    descriptor: (Ljava/lang/String;Ljava/nio/charset/Charset;)Ljava/util/Optional;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.lang.String value();
+    descriptor: ()Ljava/lang/String;
+}
+Compiled from "OpenArchive.java"
+public interface io.github.evildarkarchon.jbsa.OpenArchive extends java.lang.AutoCloseable {
+  public abstract io.github.evildarkarchon.jbsa.ArchiveInspection inspection();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveInspection;
+
+  public abstract long entryCount();
+    descriptor: ()J
+
+  public abstract io.github.evildarkarchon.jbsa.ArchiveEntry entry(long);
+    descriptor: (J)Lio/github/evildarkarchon/jbsa/ArchiveEntry;
+
+  public abstract void close() throws java.io.IOException;
+    descriptor: ()V
+}
+Compiled from "OpenOptions.java"
+public final class io.github.evildarkarchon.jbsa.OpenOptions extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.OpenOptions(java.util.Optional<io.github.evildarkarchon.jbsa.CompatibilityProfile>, io.github.evildarkarchon.jbsa.ResourceLimits, java.util.Optional<io.github.evildarkarchon.jbsa.DdsTarget>);
+    descriptor: (Ljava/util/Optional;Lio/github/evildarkarchon/jbsa/ResourceLimits;Ljava/util/Optional;)V
+
+  public static io.github.evildarkarchon.jbsa.OpenOptions standard();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/OpenOptions;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.CompatibilityProfile> compatibilityProfile();
+    descriptor: ()Ljava/util/Optional;
+
+  public io.github.evildarkarchon.jbsa.ResourceLimits resourceLimits();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ResourceLimits;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.DdsTarget> ddsTarget();
+    descriptor: ()Ljava/util/Optional;
+}
+Compiled from "Operation.java"
+public final class io.github.evildarkarchon.jbsa.Operation extends java.lang.Enum<io.github.evildarkarchon.jbsa.Operation> {
+  public static final io.github.evildarkarchon.jbsa.Operation DETECT;
+    descriptor: Lio/github/evildarkarchon/jbsa/Operation;
+  public static final io.github.evildarkarchon.jbsa.Operation INSPECT;
+    descriptor: Lio/github/evildarkarchon/jbsa/Operation;
+  public static final io.github.evildarkarchon.jbsa.Operation OPEN;
+    descriptor: Lio/github/evildarkarchon/jbsa/Operation;
+  public static final io.github.evildarkarchon.jbsa.Operation READ_CONTENT;
+    descriptor: Lio/github/evildarkarchon/jbsa/Operation;
+  public static final io.github.evildarkarchon.jbsa.Operation EXTRACT;
+    descriptor: Lio/github/evildarkarchon/jbsa/Operation;
+  public static final io.github.evildarkarchon.jbsa.Operation PACK;
+    descriptor: Lio/github/evildarkarchon/jbsa/Operation;
+  public static io.github.evildarkarchon.jbsa.Operation[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/Operation;
+
+  public static io.github.evildarkarchon.jbsa.Operation valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/Operation;
+}
+Compiled from "OperationControl.java"
+public final class io.github.evildarkarchon.jbsa.OperationControl extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.OperationControl(java.util.function.Consumer<io.github.evildarkarchon.jbsa.ProgressSnapshot>, java.util.function.BooleanSupplier);
+    descriptor: (Ljava/util/function/Consumer;Ljava/util/function/BooleanSupplier;)V
+
+  public static io.github.evildarkarchon.jbsa.OperationControl standard();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/OperationControl;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.util.function.Consumer<io.github.evildarkarchon.jbsa.ProgressSnapshot> observer();
+    descriptor: ()Ljava/util/function/Consumer;
+
+  public java.util.function.BooleanSupplier cancellationRequested();
+    descriptor: ()Ljava/util/function/BooleanSupplier;
+}
+Compiled from "OperationPhase.java"
+public final class io.github.evildarkarchon.jbsa.OperationPhase extends java.lang.Enum<io.github.evildarkarchon.jbsa.OperationPhase> {
+  public static final io.github.evildarkarchon.jbsa.OperationPhase PREFLIGHT;
+    descriptor: Lio/github/evildarkarchon/jbsa/OperationPhase;
+  public static final io.github.evildarkarchon.jbsa.OperationPhase PROCESSING;
+    descriptor: Lio/github/evildarkarchon/jbsa/OperationPhase;
+  public static final io.github.evildarkarchon.jbsa.OperationPhase PUBLISHING;
+    descriptor: Lio/github/evildarkarchon/jbsa/OperationPhase;
+  public static final io.github.evildarkarchon.jbsa.OperationPhase CLEANUP;
+    descriptor: Lio/github/evildarkarchon/jbsa/OperationPhase;
+  public static io.github.evildarkarchon.jbsa.OperationPhase[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/OperationPhase;
+
+  public static io.github.evildarkarchon.jbsa.OperationPhase valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/OperationPhase;
+}
+Compiled from "OperationReport.java"
+public final class io.github.evildarkarchon.jbsa.OperationReport extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.OperationReport(io.github.evildarkarchon.jbsa.Operation, java.util.List<io.github.evildarkarchon.jbsa.Artifact>, java.util.List<io.github.evildarkarchon.jbsa.Diagnostic>, java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveAssessment>);
+    descriptor: (Lio/github/evildarkarchon/jbsa/Operation;Ljava/util/List;Ljava/util/List;Ljava/util/Optional;)V
+
+  public io.github.evildarkarchon.jbsa.OperationReport(io.github.evildarkarchon.jbsa.Operation, java.util.List<io.github.evildarkarchon.jbsa.Artifact>, java.util.List<io.github.evildarkarchon.jbsa.Diagnostic>, java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveAssessment>, java.util.List<io.github.evildarkarchon.jbsa.OperationReport$ArchivePart>);
+    descriptor: (Lio/github/evildarkarchon/jbsa/Operation;Ljava/util/List;Ljava/util/List;Ljava/util/Optional;Ljava/util/List;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.Operation operation();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/Operation;
+
+  public java.util.List<io.github.evildarkarchon.jbsa.Artifact> artifacts();
+    descriptor: ()Ljava/util/List;
+
+  public java.util.List<io.github.evildarkarchon.jbsa.Diagnostic> diagnostics();
+    descriptor: ()Ljava/util/List;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.ArchiveAssessment> assessment();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.List<io.github.evildarkarchon.jbsa.OperationReport$ArchivePart> archiveParts();
+    descriptor: ()Ljava/util/List;
+}
+Compiled from "OperationReport.java"
+public final class io.github.evildarkarchon.jbsa.OperationReport$ArchivePart extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.OperationReport$ArchivePart(java.nio.file.Path, long, long);
+    descriptor: (Ljava/nio/file/Path;JJ)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.nio.file.Path path();
+    descriptor: ()Ljava/nio/file/Path;
+
+  public long byteSize();
+    descriptor: ()J
+
+  public long entryCount();
+    descriptor: ()J
+}
+Compiled from "PackOptions.java"
+public final class io.github.evildarkarchon.jbsa.PackOptions extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.PackOptions(java.util.List<java.lang.String>, io.github.evildarkarchon.jbsa.PackOptions$Compression, boolean, io.github.evildarkarchon.jbsa.PackOptions$Splitting, io.github.evildarkarchon.jbsa.FlagSelection, io.github.evildarkarchon.jbsa.FlagSelection, java.util.Map<io.github.evildarkarchon.jbsa.NormalizedNameIdentity, io.github.evildarkarchon.jbsa.PackOptions$Compression>);
+    descriptor: (Ljava/util/List;Lio/github/evildarkarchon/jbsa/PackOptions$Compression;ZLio/github/evildarkarchon/jbsa/PackOptions$Splitting;Lio/github/evildarkarchon/jbsa/FlagSelection;Lio/github/evildarkarchon/jbsa/FlagSelection;Ljava/util/Map;)V
+
+  public io.github.evildarkarchon.jbsa.PackOptions(java.util.List<java.lang.String>, io.github.evildarkarchon.jbsa.PackOptions$Compression, boolean, io.github.evildarkarchon.jbsa.PackOptions$Splitting, io.github.evildarkarchon.jbsa.FlagSelection, io.github.evildarkarchon.jbsa.FlagSelection);
+    descriptor: (Ljava/util/List;Lio/github/evildarkarchon/jbsa/PackOptions$Compression;ZLio/github/evildarkarchon/jbsa/PackOptions$Splitting;Lio/github/evildarkarchon/jbsa/FlagSelection;Lio/github/evildarkarchon/jbsa/FlagSelection;)V
+
+  public static io.github.evildarkarchon.jbsa.PackOptions standard();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/PackOptions;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.util.List<java.lang.String> inclusionMasks();
+    descriptor: ()Ljava/util/List;
+
+  public io.github.evildarkarchon.jbsa.PackOptions$Compression compression();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/PackOptions$Compression;
+
+  public boolean sharing();
+    descriptor: ()Z
+
+  public io.github.evildarkarchon.jbsa.PackOptions$Splitting splitting();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/PackOptions$Splitting;
+
+  public io.github.evildarkarchon.jbsa.FlagSelection archiveFlags();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/FlagSelection;
+
+  public io.github.evildarkarchon.jbsa.FlagSelection fileFlags();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/FlagSelection;
+
+  public java.util.Map<io.github.evildarkarchon.jbsa.NormalizedNameIdentity, io.github.evildarkarchon.jbsa.PackOptions$Compression> entryCompression();
+    descriptor: ()Ljava/util/Map;
+}
+Compiled from "PackOptions.java"
+public final class io.github.evildarkarchon.jbsa.PackOptions$Compression extends java.lang.Enum<io.github.evildarkarchon.jbsa.PackOptions$Compression> {
+  public static final io.github.evildarkarchon.jbsa.PackOptions$Compression FAMILY_DEFAULT;
+    descriptor: Lio/github/evildarkarchon/jbsa/PackOptions$Compression;
+  public static final io.github.evildarkarchon.jbsa.PackOptions$Compression STORED;
+    descriptor: Lio/github/evildarkarchon/jbsa/PackOptions$Compression;
+  public static final io.github.evildarkarchon.jbsa.PackOptions$Compression ZLIB;
+    descriptor: Lio/github/evildarkarchon/jbsa/PackOptions$Compression;
+  public static final io.github.evildarkarchon.jbsa.PackOptions$Compression LZ4_RAW;
+    descriptor: Lio/github/evildarkarchon/jbsa/PackOptions$Compression;
+  public static final io.github.evildarkarchon.jbsa.PackOptions$Compression LZ4_FRAME;
+    descriptor: Lio/github/evildarkarchon/jbsa/PackOptions$Compression;
+  public static io.github.evildarkarchon.jbsa.PackOptions$Compression[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/PackOptions$Compression;
+
+  public static io.github.evildarkarchon.jbsa.PackOptions$Compression valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/PackOptions$Compression;
+}
+Compiled from "PackOptions.java"
+public interface io.github.evildarkarchon.jbsa.PackOptions$Splitting {
+}
+Compiled from "PackOptions.java"
+public final class io.github.evildarkarchon.jbsa.PackOptions$Splitting$FamilyDefault extends java.lang.Record implements io.github.evildarkarchon.jbsa.PackOptions$Splitting {
+  public io.github.evildarkarchon.jbsa.PackOptions$Splitting$FamilyDefault();
+    descriptor: ()V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+}
+Compiled from "PackOptions.java"
+public final class io.github.evildarkarchon.jbsa.PackOptions$Splitting$LegacyPerEntry extends java.lang.Record implements io.github.evildarkarchon.jbsa.PackOptions$Splitting {
+  public io.github.evildarkarchon.jbsa.PackOptions$Splitting$LegacyPerEntry();
+    descriptor: ()V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+}
+Compiled from "PackOptions.java"
+public final class io.github.evildarkarchon.jbsa.PackOptions$Splitting$UpToBytes extends java.lang.Record implements io.github.evildarkarchon.jbsa.PackOptions$Splitting {
+  public io.github.evildarkarchon.jbsa.PackOptions$Splitting$UpToBytes(long);
+    descriptor: (J)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long targetBytes();
+    descriptor: ()J
+}
+Compiled from "PackRequest.java"
+public final class io.github.evildarkarchon.jbsa.PackRequest extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.PackRequest(java.nio.file.Path, io.github.evildarkarchon.jbsa.ArchiveFamily, io.github.evildarkarchon.jbsa.ArchiveEncoding, java.util.Optional<io.github.evildarkarchon.jbsa.CompatibilityProfile>, java.util.List<io.github.evildarkarchon.jbsa.PackSource>, io.github.evildarkarchon.jbsa.TargetPolicy, io.github.evildarkarchon.jbsa.DiagnosticPolicy, io.github.evildarkarchon.jbsa.ResourceLimits, io.github.evildarkarchon.jbsa.WorkerSelection, io.github.evildarkarchon.jbsa.PackOptions, java.util.Optional<io.github.evildarkarchon.jbsa.DdsTarget>);
+    descriptor: (Ljava/nio/file/Path;Lio/github/evildarkarchon/jbsa/ArchiveFamily;Lio/github/evildarkarchon/jbsa/ArchiveEncoding;Ljava/util/Optional;Ljava/util/List;Lio/github/evildarkarchon/jbsa/TargetPolicy;Lio/github/evildarkarchon/jbsa/DiagnosticPolicy;Lio/github/evildarkarchon/jbsa/ResourceLimits;Lio/github/evildarkarchon/jbsa/WorkerSelection;Lio/github/evildarkarchon/jbsa/PackOptions;Ljava/util/Optional;)V
+
+  public static io.github.evildarkarchon.jbsa.PackRequest standard(java.nio.file.Path, io.github.evildarkarchon.jbsa.ArchiveFamily, io.github.evildarkarchon.jbsa.ArchiveEncoding, java.util.List<io.github.evildarkarchon.jbsa.PackSource>, java.util.Optional<io.github.evildarkarchon.jbsa.DdsTarget>);
+    descriptor: (Ljava/nio/file/Path;Lio/github/evildarkarchon/jbsa/ArchiveFamily;Lio/github/evildarkarchon/jbsa/ArchiveEncoding;Ljava/util/List;Ljava/util/Optional;)Lio/github/evildarkarchon/jbsa/PackRequest;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.nio.file.Path destination();
+    descriptor: ()Ljava/nio/file/Path;
+
+  public io.github.evildarkarchon.jbsa.ArchiveFamily family();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveFamily;
+
+  public io.github.evildarkarchon.jbsa.ArchiveEncoding encoding();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ArchiveEncoding;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.CompatibilityProfile> compatibilityProfile();
+    descriptor: ()Ljava/util/Optional;
+
+  public java.util.List<io.github.evildarkarchon.jbsa.PackSource> sources();
+    descriptor: ()Ljava/util/List;
+
+  public io.github.evildarkarchon.jbsa.TargetPolicy targetPolicy();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/TargetPolicy;
+
+  public io.github.evildarkarchon.jbsa.DiagnosticPolicy diagnosticPolicy();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/DiagnosticPolicy;
+
+  public io.github.evildarkarchon.jbsa.ResourceLimits resourceLimits();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ResourceLimits;
+
+  public io.github.evildarkarchon.jbsa.WorkerSelection workerSelection();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/WorkerSelection;
+
+  public io.github.evildarkarchon.jbsa.PackOptions options();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/PackOptions;
+
+  public java.util.Optional<io.github.evildarkarchon.jbsa.DdsTarget> ddsTarget();
+    descriptor: ()Ljava/util/Optional;
+}
+Compiled from "PackSource.java"
+public interface io.github.evildarkarchon.jbsa.PackSource {
+}
+Compiled from "PackSource.java"
+public interface io.github.evildarkarchon.jbsa.PackSource$ContentFactory {
+  public abstract java.nio.channels.ReadableByteChannel open() throws java.io.IOException;
+    descriptor: ()Ljava/nio/channels/ReadableByteChannel;
+}
+Compiled from "PackSource.java"
+public final class io.github.evildarkarchon.jbsa.PackSource$DetectedPath extends java.lang.Record implements io.github.evildarkarchon.jbsa.PackSource {
+  public io.github.evildarkarchon.jbsa.PackSource$DetectedPath(java.nio.file.Path);
+    descriptor: (Ljava/nio/file/Path;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.nio.file.Path path();
+    descriptor: ()Ljava/nio/file/Path;
+}
+Compiled from "PackSource.java"
+public final class io.github.evildarkarchon.jbsa.PackSource$GeneratedEntry extends java.lang.Record implements io.github.evildarkarchon.jbsa.PackSource {
+  public io.github.evildarkarchon.jbsa.PackSource$GeneratedEntry(java.lang.String, long, io.github.evildarkarchon.jbsa.PackSource$ContentFactory);
+    descriptor: (Ljava/lang/String;JLio/github/evildarkarchon/jbsa/PackSource$ContentFactory;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.lang.String name();
+    descriptor: ()Ljava/lang/String;
+
+  public long length();
+    descriptor: ()J
+
+  public io.github.evildarkarchon.jbsa.PackSource$ContentFactory contentFactory();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/PackSource$ContentFactory;
+}
+Compiled from "PackSource.java"
+public final class io.github.evildarkarchon.jbsa.PackSource$NamedFile extends java.lang.Record implements io.github.evildarkarchon.jbsa.PackSource {
+  public io.github.evildarkarchon.jbsa.PackSource$NamedFile(java.lang.String, java.nio.file.Path);
+    descriptor: (Ljava/lang/String;Ljava/nio/file/Path;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.lang.String name();
+    descriptor: ()Ljava/lang/String;
+
+  public java.nio.file.Path path();
+    descriptor: ()Ljava/nio/file/Path;
+}
+Compiled from "ProgressMetric.java"
+public final class io.github.evildarkarchon.jbsa.ProgressMetric extends java.lang.Enum<io.github.evildarkarchon.jbsa.ProgressMetric> {
+  public static final io.github.evildarkarchon.jbsa.ProgressMetric ENTRIES;
+    descriptor: Lio/github/evildarkarchon/jbsa/ProgressMetric;
+  public static final io.github.evildarkarchon.jbsa.ProgressMetric BYTES;
+    descriptor: Lio/github/evildarkarchon/jbsa/ProgressMetric;
+  public static final io.github.evildarkarchon.jbsa.ProgressMetric ARTIFACTS;
+    descriptor: Lio/github/evildarkarchon/jbsa/ProgressMetric;
+  public static io.github.evildarkarchon.jbsa.ProgressMetric[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/ProgressMetric;
+
+  public static io.github.evildarkarchon.jbsa.ProgressMetric valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/ProgressMetric;
+}
+Compiled from "ProgressSnapshot.java"
+public final class io.github.evildarkarchon.jbsa.ProgressSnapshot extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.ProgressSnapshot(io.github.evildarkarchon.jbsa.Operation, io.github.evildarkarchon.jbsa.OperationPhase, io.github.evildarkarchon.jbsa.ProgressMetric, long, java.util.OptionalLong);
+    descriptor: (Lio/github/evildarkarchon/jbsa/Operation;Lio/github/evildarkarchon/jbsa/OperationPhase;Lio/github/evildarkarchon/jbsa/ProgressMetric;JLjava/util/OptionalLong;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public io.github.evildarkarchon.jbsa.Operation operation();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/Operation;
+
+  public io.github.evildarkarchon.jbsa.OperationPhase phase();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/OperationPhase;
+
+  public io.github.evildarkarchon.jbsa.ProgressMetric metric();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ProgressMetric;
+
+  public long completed();
+    descriptor: ()J
+
+  public java.util.OptionalLong total();
+    descriptor: ()Ljava/util/OptionalLong;
+}
+Compiled from "ResourceLimits.java"
+public final class io.github.evildarkarchon.jbsa.ResourceLimits extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.ResourceLimits(long, long, long, long, long, long, long);
+    descriptor: (JJJJJJJ)V
+
+  public static io.github.evildarkarchon.jbsa.ResourceLimits standard();
+    descriptor: ()Lio/github/evildarkarchon/jbsa/ResourceLimits;
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long maxEntries();
+    descriptor: ()J
+
+  public long maxMetadataBytes();
+    descriptor: ()J
+
+  public long maxDecodedBytes();
+    descriptor: ()J
+
+  public long maxScratchBytes();
+    descriptor: ()J
+
+  public long maxOutputs();
+    descriptor: ()J
+
+  public long maxDiagnostics();
+    descriptor: ()J
+
+  public long maxSecondaryFailures();
+    descriptor: ()J
+}
+Compiled from "TargetPolicy.java"
+public final class io.github.evildarkarchon.jbsa.TargetPolicy extends java.lang.Enum<io.github.evildarkarchon.jbsa.TargetPolicy> {
+  public static final io.github.evildarkarchon.jbsa.TargetPolicy FAIL;
+    descriptor: Lio/github/evildarkarchon/jbsa/TargetPolicy;
+  public static final io.github.evildarkarchon.jbsa.TargetPolicy REPLACE;
+    descriptor: Lio/github/evildarkarchon/jbsa/TargetPolicy;
+  public static io.github.evildarkarchon.jbsa.TargetPolicy[] values();
+    descriptor: ()[Lio/github/evildarkarchon/jbsa/TargetPolicy;
+
+  public static io.github.evildarkarchon.jbsa.TargetPolicy valueOf(java.lang.String);
+    descriptor: (Ljava/lang/String;)Lio/github/evildarkarchon/jbsa/TargetPolicy;
+}
+Compiled from "ValidationExtent.java"
+public interface io.github.evildarkarchon.jbsa.ValidationExtent {
+}
+Compiled from "ValidationExtent.java"
+public final class io.github.evildarkarchon.jbsa.ValidationExtent$Payloads extends java.lang.Record implements io.github.evildarkarchon.jbsa.ValidationExtent {
+  public io.github.evildarkarchon.jbsa.ValidationExtent$Payloads(java.util.Set<java.lang.Long>);
+    descriptor: (Ljava/util/Set;)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public java.util.Set<java.lang.Long> entryOrdinals();
+    descriptor: ()Ljava/util/Set;
+}
+Compiled from "ValidationExtent.java"
+public final class io.github.evildarkarchon.jbsa.ValidationExtent$Recognition extends java.lang.Record implements io.github.evildarkarchon.jbsa.ValidationExtent {
+  public io.github.evildarkarchon.jbsa.ValidationExtent$Recognition();
+    descriptor: ()V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+}
+Compiled from "ValidationExtent.java"
+public final class io.github.evildarkarchon.jbsa.ValidationExtent$Structure extends java.lang.Record implements io.github.evildarkarchon.jbsa.ValidationExtent {
+  public io.github.evildarkarchon.jbsa.ValidationExtent$Structure();
+    descriptor: ()V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+}
+Compiled from "WireName.java"
+public final class io.github.evildarkarchon.jbsa.WireName {
+  public io.github.evildarkarchon.jbsa.WireName(byte[]);
+    descriptor: ([B)V
+
+  public byte[] bytes();
+    descriptor: ()[B
+
+  public long length();
+    descriptor: ()J
+
+  public boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public int hashCode();
+    descriptor: ()I
+
+  public java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+}
+Compiled from "WireVersion.java"
+public final class io.github.evildarkarchon.jbsa.WireVersion extends java.lang.Record {
+  public io.github.evildarkarchon.jbsa.WireVersion(long);
+    descriptor: (J)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long value();
+    descriptor: ()J
+}
+Compiled from "WorkerSelection.java"
+public interface io.github.evildarkarchon.jbsa.WorkerSelection {
+  public static final io.github.evildarkarchon.jbsa.WorkerSelection AUTOMATIC;
+    descriptor: Lio/github/evildarkarchon/jbsa/WorkerSelection;
+}
+Compiled from "WorkerSelection.java"
+public final class io.github.evildarkarchon.jbsa.WorkerSelection$Automatic extends java.lang.Record implements io.github.evildarkarchon.jbsa.WorkerSelection {
+  public io.github.evildarkarchon.jbsa.WorkerSelection$Automatic();
+    descriptor: ()V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+}
+Compiled from "WorkerSelection.java"
+public final class io.github.evildarkarchon.jbsa.WorkerSelection$UpTo extends java.lang.Record implements io.github.evildarkarchon.jbsa.WorkerSelection {
+  public io.github.evildarkarchon.jbsa.WorkerSelection$UpTo(long);
+    descriptor: (J)V
+
+  public final java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+
+  public final int hashCode();
+    descriptor: ()I
+
+  public final boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+
+  public long workers();
+    descriptor: ()J
+}

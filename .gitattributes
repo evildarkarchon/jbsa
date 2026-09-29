@@ -47,6 +47,8 @@ docs/reviews/issue41-interface/**/*.hex text eol=lf
 docs/reviews/issue41-interface/**/*.ba2 -text
 docs/reviews/issue41-interface/**/*.bin -text
 docs/development/interface-candidate-api.txt text eol=lf
+docs/development/interface-freeze-source-api.txt text eol=lf
+docs/development/interface-freeze-binary-api.txt text eol=lf
 docs/development/evidence/issue41-*.json text eol=lf
 build/*interface*.py text eol=lf
 build/*bsa*.py text eol=lf
