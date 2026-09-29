@@ -459,7 +459,7 @@ class PackCharacterizationTest {
 
   /** Records a stabilized (zlib) BSA pack's progress, interleaved with its source reads. */
   @Test
-  void bsaStabilizationRunsInPreflightProgressPhase() throws Exception {
+  void bsaStabilizationRunsInProcessingProgressPhase() throws Exception {
     List<String> events = Collections.synchronizedList(new ArrayList<>());
     var request =
         sequential(
@@ -471,8 +471,8 @@ class PackCharacterizationTest {
                 logged("x/a.txt", 3, events),
                 logged("x/b.txt", 2, events)));
     BethesdaArchives.standard().pack(request, recording(events));
-    // Q10 (#71): BSA stabilization will run in PROCESSING, moving both opens after its entry.
-    assertEquals(stabilizedProgress(List.of("open x/a.txt", "open x/b.txt")), events);
+    // Q10 (#71): BSA stabilization runs in PROCESSING, so both opens follow that phase's entry.
+    assertEquals(processingStabilizedProgress(List.of("open x/a.txt", "open x/b.txt")), events);
   }
 
   /** Records a stabilized BA2 pack's progress, interleaved with its source reads. */
@@ -493,11 +493,9 @@ class PackCharacterizationTest {
     assertEquals(stabilizedProgress(List.of("open x/a.txt", "open x/b.txt")), events);
   }
 
-  /**
-   * A stored BSA pack with sharing enabled reads its sources before detecting a target conflict.
-   */
+  /** A stored BSA pack with sharing enabled detects a target conflict before any source read. */
   @Test
-  void bsaStoredSharingSkipsTargetPreflight() throws Exception {
+  void bsaStoredSharingPreflightsTargets() throws Exception {
     Path target = Files.write(temporary.resolve("taken.bsa"), new byte[] {7});
     var failure =
         assertThrows(
@@ -522,8 +520,8 @@ class PackCharacterizationTest {
     assertEquals(
         Optional.of("extraction.target-exists"), failure.primaryFailure().diagnosticIdentifier());
     assertEquals(OperationPhase.PREFLIGHT, failure.primaryFailure().phase());
-    // D9: preflight will run with sharing enabled, failing before any source factory opens (0).
-    assertEquals(1, opens.get());
+    // D9: preflight runs with sharing enabled, failing before any source factory opens.
+    assertEquals(0, opens.get());
     assertArrayEquals(new byte[] {7}, Files.readAllBytes(target));
   }
 
@@ -669,8 +667,9 @@ class PackCharacterizationTest {
 
   /**
    * The Progress Snapshots and source opens of one sequential two-entry stabilized pack (sources of
-   * 3 and 2 bytes). Stabilization itself emits no snapshot, so its phase shows only through where
-   * the "open" events land: between PREFLIGHT's last advance and its completion.
+   * 3 and 2 bytes) that still stabilizes during PREFLIGHT. Stabilization itself emits no snapshot,
+   * so its phase shows only through where the "open" events land: between PREFLIGHT's last advance
+   * and its completion.
    */
   private static List<String> stabilizedProgress(List<String> stabilization) {
     var events =
@@ -682,6 +681,38 @@ class PackCharacterizationTest {
             "PREFLIGHT ENTRIES 2/2",
             "PROCESSING ENTRIES 0",
             "PROCESSING BYTES 0",
+            "PROCESSING BYTES 3",
+            "PROCESSING ENTRIES 1",
+            "PROCESSING BYTES 5",
+            "PROCESSING ENTRIES 2",
+            "PROCESSING ENTRIES 2/2",
+            "PROCESSING BYTES 5/5",
+            "PUBLISHING ARTIFACTS 0",
+            "PUBLISHING ARTIFACTS 1",
+            "PUBLISHING ARTIFACTS 1/1",
+            "CLEANUP ARTIFACTS 0",
+            "CLEANUP ARTIFACTS 1/1"));
+    return events;
+  }
+
+  /**
+   * The Progress Snapshots and source opens of one sequential two-entry pack whose stabilization
+   * runs in PROCESSING (sources of 3 and 2 bytes). Entering the phase reports both of its metrics
+   * at zero before stabilization reads any source; publication then continues in that phase.
+   */
+  private static List<String> processingStabilizedProgress(List<String> stabilization) {
+    var events =
+        new ArrayList<>(
+            List.of(
+                "PREFLIGHT ENTRIES 0",
+                "PREFLIGHT ENTRIES 1",
+                "PREFLIGHT ENTRIES 2",
+                "PREFLIGHT ENTRIES 2/2",
+                "PROCESSING ENTRIES 0",
+                "PROCESSING BYTES 0"));
+    events.addAll(stabilization);
+    events.addAll(
+        List.of(
             "PROCESSING BYTES 3",
             "PROCESSING ENTRIES 1",
             "PROCESSING BYTES 5",

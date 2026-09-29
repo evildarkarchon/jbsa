@@ -104,6 +104,25 @@ public final class PublicationTransaction {
   }
 
   /**
+   * Publishes an archive set whose operation already entered PROCESSING to stabilize its payloads
+   * before the part plan existed (Q10). Progress continues in that phase instead of entering it
+   * again; target checks keep their PREFLIGHT failure location because they still precede staging.
+   */
+  public static OperationReport stabilizedArchives(
+      Path destination,
+      List<Writer> writers,
+      TargetPolicy policy,
+      ResourceLimits limits,
+      OperationSession operation,
+      ResourceBudget budget)
+      throws ArchiveException {
+    var session =
+        new Session(destination, policy, limits, operation, new FileActions(), false, budget);
+    session.processingEntered = true;
+    return session.run(List.copyOf(writers), List.of());
+  }
+
+  /**
    * Publishes validated selected names as one new root or ordered per-file existing-tree commits.
    */
   public static List<Artifact> extract(
@@ -415,6 +434,9 @@ public final class PublicationTransaction {
     private OperationPhase phase = OperationPhase.PREFLIGHT;
     private long ordinal;
 
+    /** Whether the caller already moved the operation's progress into PROCESSING (Q10). */
+    private boolean processingEntered;
+
     /** Validates programmer-owned arguments before observing cancellation or touching the disk. */
     Session(
         Path destination,
@@ -463,7 +485,9 @@ public final class PublicationTransaction {
     /** Settles cleanup before returning evidence, preserving the first accepted failure. */
     OperationReport run(List<Writer> writers, List<String> names) throws ArchiveException {
       try {
-        operationSession.ensurePreflight();
+        if (processingEntered)
+          operationSession.checkpoint(OperationPhase.PROCESSING, OptionalLong.empty());
+        else operationSession.ensurePreflight();
         if (writers.size() > limits.maxOutputs())
           throw context()
               .limit("maxOutputs", limits.maxOutputs(), Integer.toString(writers.size()));
@@ -485,8 +509,10 @@ public final class PublicationTransaction {
             stagedRoot = Files.createDirectory(staging.resolve("tree"));
             own(stagedRoot, 0);
           }
-          operationSession.completePhase();
-          operationSession.processing(existingTree);
+          if (!processingEntered) {
+            operationSession.completePhase();
+            operationSession.processing(existingTree);
+          }
           phase = OperationPhase.PROCESSING;
           if (parallel == null) {
             for (Part part : parts) {
@@ -536,8 +562,10 @@ public final class PublicationTransaction {
           }
         }
         if (parts.isEmpty() && !(extraction && !existingTree)) {
-          operationSession.completePhase();
-          operationSession.processing(existingTree);
+          if (!processingEntered) {
+            operationSession.completePhase();
+            operationSession.processing(existingTree);
+          }
           phase = OperationPhase.PROCESSING;
           operationSession.completePhase();
           if (!existingTree) {

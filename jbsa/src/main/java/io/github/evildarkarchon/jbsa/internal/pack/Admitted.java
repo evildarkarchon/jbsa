@@ -44,8 +44,23 @@ public interface Admitted<K> {
   List<Planned<K>> plan(List<PackSources.Entry> sources, IoContext context) throws ArchiveException;
 
   /**
+   * Rejects one stabilized record whose exact stored size the wire cannot encode. The pipeline
+   * calls this once per entry, in output order, immediately after the record is stabilized and
+   * before the next entry is read, so the failure keeps that entry's PROCESSING ordinal. Streaming
+   * families never stabilize and keep the default, which accepts every record.
+   *
+   * @param entry the entry with its exact {@link Planned#storedSize()}
+   * @param processing the entry's PROCESSING location for structured failures
+   * @throws ArchiveException when the stored record cannot be encoded
+   */
+  default void checkStored(Planned<K> entry, IoContext processing) throws ArchiveException {
+    // Most families have no stored-size rule beyond the per-part layout checks.
+  }
+
+  /**
    * Computes one part's payload start and encoded metadata extent, rejecting unrepresentable wire
-   * fields. Payload offsets are checked against their unshared worst case.
+   * fields. Payload offsets are checked against their unshared worst case: each entry's {@link
+   * Planned#storedSize()}, which is exact for a stabilized part and predicted for a streamed one.
    *
    * @param part one non-empty part, in output order
    * @throws ArchiveException when a field of this part cannot be encoded
@@ -124,14 +139,39 @@ public interface Admitted<K> {
    * @param key the family's wire key
    * @param codec the payload encoding
    * @param frame bytes the stored record carries before the encoded payload; empty when unframed
+   * @param storedSize the stored record's size including its frame, or {@link #UNKNOWN_SIZE} until
+   *     an encoded payload has been stabilized
    */
-  record Planned<K>(PackSources.Entry source, K key, Codec codec, byte[] frame) {
+  record Planned<K>(PackSources.Entry source, K key, Codec codec, byte[] frame, long storedSize) {
+    /** The stored size of an encoded record before stabilization has measured it. */
+    public static final long UNKNOWN_SIZE = -1;
+
     /** Requires every member; the frame array is owned by this record. */
     public Planned {
       Objects.requireNonNull(source, "source");
       Objects.requireNonNull(key, "key");
       Objects.requireNonNull(codec, "codec");
       Objects.requireNonNull(frame, "frame");
+      if (storedSize < UNKNOWN_SIZE) throw new IllegalArgumentException("Negative stored size");
+    }
+
+    /**
+     * Predicts the stored size from the codec: a stored record is exactly its frame plus the
+     * declared source size, while an encoded one stays {@link #UNKNOWN_SIZE} until stabilized.
+     */
+    public Planned(PackSources.Entry source, K key, Codec codec, byte[] frame) {
+      this(
+          source,
+          key,
+          codec,
+          frame,
+          codec == Codec.STORED ? Math.addExact(frame.length, source.size()) : UNKNOWN_SIZE);
+    }
+
+    /** Returns this entry with the exact stored size stabilization measured. */
+    public Planned<K> stabilized(long measured) {
+      if (measured < 0) throw new IllegalArgumentException("Negative stored size");
+      return new Planned<>(source, key, codec, frame, measured);
     }
   }
 

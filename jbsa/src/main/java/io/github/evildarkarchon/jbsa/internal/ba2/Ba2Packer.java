@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.ba2;
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.*;
+import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import io.github.evildarkarchon.jbsa.internal.pack.TransformStage;
 import java.io.IOException;
 import java.nio.*;
@@ -160,17 +161,8 @@ public final class Ba2Packer {
               ordinal -> {
                 Item item = items.get(ordinal);
                 if (dds || rawLz4 || !item.compressed) return null;
-                return new TransformStage.Encoding(
-                    zlibBound(item.source.size()),
-                    JdkZlib.ENCODE_HEAP_BYTES,
-                    JdkZlib.ENCODE_NATIVE_BYTES,
-                    (input, decodedSize, encoded, checkpoint, processing) ->
-                        JdkZlib.encode(
-                            input,
-                            decodedSize,
-                            (offset, bytes) -> encoded.write(offset, bytes),
-                            checkpoint::check,
-                            processing));
+                // Raw bytes stay staged: BA2 shares on them before it stores the encoded owner.
+                return TransformStage.encoding(Codec.ZLIB, item.source.size(), true, budget);
               });
       if (sources.parallel()) stable.reserveSpillHandle();
       boolean workerZlib = sources.parallel() && !dds && !rawLz4;
@@ -604,11 +596,6 @@ public final class Ba2Packer {
       output.write(payload + 2, ByteBuffer.wrap(item.name));
       payload += 2L + item.name.length;
     }
-  }
-
-  /** Reserves zlib's conservative stream bound before admitting a transformed worker result. */
-  private static long zlibBound(long size) {
-    return Math.addExact(Math.addExact(size, (size >> 12) + (size >> 14) + (size >> 25)), 13);
   }
 
   /** Reads a declared source exactly, detecting excess bytes and stalled generated channels. */
