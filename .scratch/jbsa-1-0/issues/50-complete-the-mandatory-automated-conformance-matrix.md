@@ -1,6 +1,6 @@
 # Complete the mandatory Automated Conformance matrix
 
-Status: needs-triage
+Status: ready-for-agent
 State: open
 GitHub issue: #50
 Source: https://github.com/evildarkarchon/jbsa/issues/50
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:21Z
 Source updated: 2026-09-03T06:54:21Z
 Closed: none
 Migrated: 2026-09-10
-Labels: needs-triage
+Labels: ready-for-agent
 Assignees: none
 Blocked by: [#49](../issues/49-complete-the-cross-family-bsarch-compatible-cli.md), [#31](../issues/31-build-the-pinned-oracle-and-conformance-case-harness.md), [#48](../issues/48-introduce-bounded-deterministic-parallel-archive-operations.md), [#47](../issues/47-implement-fallout-4-ba2-v7-and-v8-decoding.md), [#61](../issues/61-implement-assurance-v2.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-25
-Triage rationale: #31, #47, #48, and #61 are closed. #49 remains open, so this ticket stays blocked. The current gate is compact generated conformance, not completion of every historical committed CV1 row.
+Triage reviewed: 2026-09-28
+Triage rationale: #31, #47, #48, #49, and #61 are closed. The ticket is unblocked and remains agent-owned. The current gate is compact generated conformance, not completion of every historical committed CV1 row.
 
 ## Original issue body
 

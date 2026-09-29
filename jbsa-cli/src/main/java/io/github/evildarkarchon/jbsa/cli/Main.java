@@ -6,7 +6,6 @@ import io.github.evildarkarchon.jbsa.ArchiveFamily;
 import io.github.evildarkarchon.jbsa.ArchiveInspection;
 import io.github.evildarkarchon.jbsa.ArchiveMetadata;
 import io.github.evildarkarchon.jbsa.Artifact;
-import io.github.evildarkarchon.jbsa.ArtifactState;
 import io.github.evildarkarchon.jbsa.BethesdaArchives;
 import io.github.evildarkarchon.jbsa.CompatibilityProfile;
 import io.github.evildarkarchon.jbsa.DdsTarget;
@@ -25,7 +24,9 @@ import io.github.evildarkarchon.jbsa.OperationReport;
 import io.github.evildarkarchon.jbsa.PackOptions;
 import io.github.evildarkarchon.jbsa.PackRequest;
 import io.github.evildarkarchon.jbsa.PackSource;
+import io.github.evildarkarchon.jbsa.ProgressSnapshot;
 import io.github.evildarkarchon.jbsa.ResourceLimits;
+import io.github.evildarkarchon.jbsa.ValidationExtent;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -36,7 +37,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
+import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Launches the thin JBSA command-line consumer. */
@@ -56,7 +57,12 @@ public final class Main {
       Invocation invocation = Invocation.parse(arguments);
       status = execute(invocation, output, error);
     } catch (IllegalArgumentException invalid) {
-      error.println("Error: [invocation] " + invalid.getMessage());
+      PrintStream diagnostics =
+          arguments.length > 0
+                  && arguments[0].equalsIgnoreCase("--compatibility-profile=bsarch-1.0/v1")
+              ? output
+              : error;
+      diagnostics.println("Error: [invocation] " + invalid.getMessage());
       status = 2;
     }
     System.exit(status);
@@ -96,44 +102,49 @@ public final class Main {
             return 1;
           }
           OperationReport report;
-          try (MutationControl mutation = new MutationControl()) {
-            report =
-                invocation.operation().equals("pack")
-                    ? archives.pack(
-                        new PackRequest(
-                            invocation.archive(),
-                            invocation.family(),
-                            packEncoding(invocation),
-                            invocation.profile(),
-                            packSources(invocation, archives, options),
-                            invocation.targetPolicy(),
-                            DiagnosticPolicy.standard(),
-                            ResourceLimits.standard(),
-                            invocation.workers(),
-                            invocation.packOptions(),
-                            (invocation.family() == ArchiveFamily.FO4_DDS_BA2
-                                    || invocation.family() == ArchiveFamily.STARFIELD_DDS_BA2)
-                                ? Optional.of(io.github.evildarkarchon.jbsa.DdsTarget.PC)
-                                : Optional.empty()),
-                        mutation.control())
-                    : archives.extract(
-                        new ExtractRequest(
-                            invocation.archive(),
-                            invocation.destination(),
-                            EntrySelection.ALL,
-                            invocation.targetPolicy(),
-                            DiagnosticPolicy.standard(),
-                            invocation.workers(),
-                            options),
-                        mutation.control());
-          }
+          MutationControl mutation = new MutationControl(error, invocation.noProgress());
+          report =
+              invocation.operation().equals("pack")
+                  ? archives.pack(
+                      new PackRequest(
+                          invocation.archive(),
+                          invocation.family(),
+                          packEncoding(invocation),
+                          invocation.profile(),
+                          packSources(invocation, archives, options),
+                          invocation.targetPolicy(),
+                          DiagnosticPolicy.standard(),
+                          ResourceLimits.standard(),
+                          invocation.workers(),
+                          invocation.packOptions(),
+                          (invocation.family() == ArchiveFamily.FO4_DDS_BA2
+                                  || invocation.family() == ArchiveFamily.STARFIELD_DDS_BA2)
+                              ? Optional.of(io.github.evildarkarchon.jbsa.DdsTarget.PC)
+                              : Optional.empty()),
+                      mutation.control())
+                  : archives.extract(
+                      new ExtractRequest(
+                          invocation.archive(),
+                          invocation.destination(),
+                          EntrySelection.ALL,
+                          invocation.targetPolicy(),
+                          DiagnosticPolicy.standard(),
+                          invocation.workers(),
+                          options),
+                      mutation.control());
           if (invocation.operation().equals("unpack")) {
             output.println("Destination: " + invocation.destination().toAbsolutePath().normalize());
-            output.println(
-                "Published entries: "
-                    + report.artifacts().stream()
-                        .filter(artifact -> artifact.state() == ArtifactState.PUBLISHED)
-                        .count());
+            // This CLI extracts ALL entries. On success each validated payload was published,
+            // while artifact reports also include created directories.
+            long publishedEntries =
+                report.assessment().stream()
+                    .mapToLong(
+                        assessment ->
+                            assessment.extent() instanceof ValidationExtent.Payloads payloads
+                                ? payloads.entryOrdinals().size()
+                                : 0)
+                    .sum();
+            output.println("Published entries: " + publishedEntries);
           } else {
             if (invocation.family() == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
                 || invocation.family() == ArchiveFamily.SSE_BSA) {
@@ -182,6 +193,12 @@ public final class Main {
       // records.
       if (invocation.operation().equals("inspect") && invocation.profile().isPresent()) return 0;
       return failure.kind() == FailureKind.CANCELLED ? 130 : 1;
+    } catch (WindowsConsole.ConsoleCapabilityException unavailable) {
+      diagnostics.println(
+          "Error: [capability] operation="
+              + invocation.operation()
+              + " console.ctrl-c=unavailable");
+      return 1;
     }
   }
 
@@ -297,6 +314,11 @@ public final class Main {
       PrintStream output) {
     output.println("Archive: " + invocation.archive());
     output.println("Family: " + inspection.metadata().family());
+    inspection
+        .metadata()
+        .encoding()
+        .compressionMethod()
+        .ifPresent(method -> output.println("Compression method: " + method));
     output.println("Entries: " + inspection.metadata().entryCount());
     long compressed =
         inspection.entries().stream()
@@ -324,11 +346,13 @@ public final class Main {
       output.println("Subtype: DX10");
       output.println("Target: " + reconstructionTarget(invocation.archive(), options));
       output.println("Filename table offset: " + metadata.fileNameTableOffset());
+      renderUnknownHeaderValue(metadata.unknownValueAt24(), output);
     }
     if (inspection.metadata() instanceof ArchiveMetadata.GeneralBa2 metadata) {
       output.println("Version: " + metadata.encoding().wireVersion().orElseThrow().value());
       output.println("Subtype: " + metadata.encoding().ba2Subtype().orElseThrow().value());
       output.println("Filename table offset: " + metadata.fileNameTableOffset());
+      renderUnknownHeaderValue(metadata.unknownValueAt24(), output);
     }
     if (inspection.metadata() instanceof ArchiveMetadata.Tes3 metadata) {
       output.println("Hash offset: " + metadata.hashOffset());
@@ -362,6 +386,7 @@ public final class Main {
           output.println("  Chunk header size: " + facts.identity().chunkHeaderSize());
           output.println("  Dimensions: " + facts.width() + "x" + facts.height());
           output.println("  DXGI format: " + facts.dxgiFormat());
+          output.println("  DDS flags: " + facts.flags());
           output.println("  Cubemap: " + ((facts.flags() & 1) != 0));
           output.println("  Tile mode: " + facts.tileMode());
           output.println("  Mip count: " + facts.mipCount());
@@ -389,6 +414,7 @@ public final class Main {
           output.println("  Data offset: " + facts.payloadOffset());
           output.println("  Packed size: " + facts.packedSize());
           output.println("  Decoded size: " + facts.unpackedSize());
+          output.println("  Compressed: " + (facts.packedSize() != 0));
           output.println("  Sentinel: " + Long.toHexString(facts.sentinel()));
         }
         if (invocation.dump() && entry.facts() instanceof EntryMetadata.Tes3 facts) {
@@ -406,6 +432,7 @@ public final class Main {
         if (invocation.dump() && entry.facts() instanceof EntryMetadata.VersionedBsa facts) {
           output.println("  Ordinal: " + entry.ordinal());
           output.println("  Folder ordinal: " + facts.folderOrdinal());
+          output.println("  Folder file count: " + facts.folderFileCount());
           output.println(
               "  Folder hash: "
                   + Long.toUnsignedString(facts.folderHash(), 16)
@@ -424,6 +451,12 @@ public final class Main {
         }
       }
     }
+  }
+
+  /** Prints the retained unsigned BA2 extension field only for wire versions that contain it. */
+  private static void renderUnknownHeaderValue(OptionalLong value, PrintStream output) {
+    value.ifPresent(
+        header -> output.println("Unknown value at 24: " + Long.toUnsignedString(header)));
   }
 
   /**
@@ -495,60 +528,56 @@ public final class Main {
     output.println("Mutations: --replace --no-progress; administration: --help --version");
   }
 
-  /**
-   * Keeps JVM shutdown cooperative until publication and cleanup settle; launcher signals are
-   * separate.
-   */
-  private static final class MutationControl implements AutoCloseable {
+  /** Keeps Ctrl+C cooperative through publication, rollback, and cleanup. */
+  private static final class MutationControl {
     private final AtomicBoolean cancelled = new AtomicBoolean();
-    private final CountDownLatch settled = new CountDownLatch(1);
-    private final Thread shutdown;
     private final OperationControl control;
 
     /** Registers operation-scoped cancellation without interrupting library workers. */
-    MutationControl() {
-      shutdown =
-          new Thread(
-              () -> {
-                cancelled.set(true);
-                boolean interrupted = false;
-                while (settled.getCount() != 0) {
-                  try {
-                    settled.await();
-                  } catch (InterruptedException exception) {
-                    interrupted = true;
-                  }
-                }
-                if (interrupted) {
-                  Thread.currentThread().interrupt();
-                }
-              },
-              "jbsa-cancellation");
-      Runtime.getRuntime().addShutdownHook(shutdown);
-      // Shutdown hooks preserve cleanup, but packaged Ctrl+C exit-status handling belongs to the
-      // launcher.
-      control =
-          new OperationControl(
-              snapshot -> {
-                // Rendering is optional. A packaged renderer must establish stderr console
-                // attachment independently; System.console() alone does not prove it.
-              },
-              cancelled::get);
+    MutationControl(PrintStream error, boolean noProgress) {
+      var progress = new ProgressOutput(error, !noProgress && WindowsConsole.stderrAttached());
+      WindowsConsole.registerCancellation(cancelled);
+      control = new OperationControl(progress::render, cancelled::get);
     }
 
     OperationControl control() {
       return control;
     }
+  }
 
-    /** Releases an in-flight shutdown hook before the caller can invoke System.exit. */
-    @Override
-    public void close() {
-      settled.countDown();
-      try {
-        Runtime.getRuntime().removeShutdownHook(shutdown);
-      } catch (IllegalStateException exception) {
-        // Shutdown has already started; the released hook now observes the settled operation.
-      }
+  /** Presents only semantic progress snapshots while stderr is an interactive console. */
+  private static final class ProgressOutput {
+    private final PrintStream error;
+    private final boolean enabled;
+    private ProgressSnapshot last;
+    private long lastRenderNanos;
+
+    private ProgressOutput(PrintStream error, boolean enabled) {
+      this.error = error;
+      this.enabled = enabled;
+    }
+
+    /** Coalesces repaint frequency while retaining each displayed snapshot's phase and metric. */
+    private synchronized void render(ProgressSnapshot snapshot) {
+      if (!enabled) return;
+      long now = System.nanoTime();
+      if (last != null
+          && last.phase() == snapshot.phase()
+          && last.metric() == snapshot.metric()
+          && snapshot.total().isEmpty()
+          && now - lastRenderNanos < 100_000_000L) return;
+      error.println(
+          "Progress: operation="
+              + snapshot.operation()
+              + " phase="
+              + snapshot.phase()
+              + " metric="
+              + snapshot.metric()
+              + " completed="
+              + snapshot.completed()
+              + (snapshot.total().isPresent() ? " total=" + snapshot.total().getAsLong() : ""));
+      last = snapshot;
+      lastRenderNanos = now;
     }
   }
 }

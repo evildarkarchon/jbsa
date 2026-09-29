@@ -15,8 +15,8 @@ Blocked by: [#52](../issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #52, #51, #49.
+Triage reviewed: 2026-09-28
+Triage rationale: #49 and #29 are closed. Reassess readiness after the remaining open prerequisites #51 and #52 close; the packaged Ctrl+C exit status must be qualified on `jbsa.exe`.
 
 ## Original issue body
 
