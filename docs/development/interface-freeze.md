@@ -130,7 +130,7 @@ were corrected; no production declaration or executable statement changed.
 Because the deviation review hashes all production source bytes, its
 `implementation_sha256` was revalidated from
 `sha256:6aab1e3f35aaacddfc32fa302f34784c2e7da63639670ed76f5ac24ad0638925`
-to `sha256:0fee241f2ed65612042c2ed33fce0683920ee4356fe37e1bcec56ea4c2153e23`.
+to `sha256:baabb9046693ef3e2010bb6f6ff3b42b983a956ad550e713d227c003f95e4791`.
 The prior maintainer approval still identifies the same 12 dispositions; this
 comment-only rebind is checked by the deviation-review validation test and must
 also pass the fresh full Assurance selection.

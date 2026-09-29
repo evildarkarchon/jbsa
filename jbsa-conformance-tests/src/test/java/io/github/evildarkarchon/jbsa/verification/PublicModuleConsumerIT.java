@@ -20,7 +20,8 @@ final class PublicModuleConsumerIT {
 
   /**
    * Runs embedded generated-input/owned-read and CLI-like detached-query/extraction flows across
-   * every supported Archive Family with one and four workers while the CLI implementation is absent.
+   * every supported Archive Family with one and four workers while the CLI implementation is
+   * absent.
    */
   @Test
   void publicExportsSupportBothConsumerStyles() throws Exception {

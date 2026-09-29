@@ -47,12 +47,16 @@ final class PublicApiFreezeIT {
     String header = "module " + MODULE + "\nexports " + String.join(", ", exports) + "\n\n";
     for (String kind : List.of("source", "binary")) {
       String actual = header + javap(libraryJar, visibleTypes, kind.equals("binary"), root, kind);
-      Path observed = root.resolve("jbsa-conformance-tests/target/public-api-freeze/" + kind + ".txt");
+      Path observed =
+          root.resolve("jbsa-conformance-tests/target/public-api-freeze/" + kind + ".txt");
       Files.createDirectories(observed.getParent());
       Files.writeString(observed, actual);
       Path baseline = root.resolve("docs/development/interface-freeze-" + kind + "-api.txt");
       assertTrue(Files.isRegularFile(baseline), "Missing reviewed API baseline: " + baseline);
-      assertEquals(Files.readString(baseline), actual, "Public " + kind + " API changed; inspect " + observed);
+      assertEquals(
+          Files.readString(baseline),
+          actual,
+          "Public " + kind + " API changed; inspect " + observed);
     }
   }
 
@@ -121,10 +125,14 @@ final class PublicApiFreezeIT {
     command.add("-classpath");
     command.add(libraryJar.toString());
     command.addAll(types);
-    Path output = root.resolve("jbsa-conformance-tests/target/public-api-freeze/javap-" + kind + ".txt");
+    Path output =
+        root.resolve("jbsa-conformance-tests/target/public-api-freeze/javap-" + kind + ".txt");
     Files.createDirectories(output.getParent());
     Process process =
-        new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(output.toFile()).start();
+        new ProcessBuilder(command)
+            .redirectErrorStream(true)
+            .redirectOutput(output.toFile())
+            .start();
     try {
       assertTrue(process.waitFor(60, TimeUnit.SECONDS), "javap did not finish");
       String result = Files.readString(output).replace("\r\n", "\n");
