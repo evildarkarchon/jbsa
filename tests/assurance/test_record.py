@@ -1,6 +1,7 @@
 """Tests for a successful Assurance v2 session recorder and its bound identities."""
 
 import importlib
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -17,6 +18,42 @@ COMMAND = ROOT / "build" / "assurance" / "record.py"
 
 class AssuranceRecordTests(unittest.TestCase):
     """Verify one successful gate produces a complete session-scoped capsule."""
+
+    def test_oracle_identity_rejects_modified_record_or_probe_script(self) -> None:
+        """Invalidate the capsule when a pinned observation or its generator changes."""
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary)
+            script = repository / "build/issue50-oracle-probes.py"
+            script.parent.mkdir()
+            script.write_text("# frozen probe\n", encoding="utf-8")
+            record_path = (
+                repository
+                / "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"
+            )
+            record_path.parent.mkdir(parents=True)
+            observation = {
+                "oracle_sha256": "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2",
+                "probe_script_sha256": hashlib.sha256(b"# frozen probe\n").hexdigest(),
+                "probes": [{"id": "first", "exit_status": 0}],
+            }
+            observation["record_sha256"] = hashlib.sha256(
+                json.dumps(observation, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            ).hexdigest()
+            record_path.write_text(json.dumps(observation), encoding="utf-8")
+            with patch.object(sys, "path", [str(COMMAND.parent), *sys.path]):
+                record_tool = importlib.import_module("record")
+
+            self.assertIn(
+                observation["record_sha256"], record_tool.oracle_identity(repository)
+            )
+            script.write_text("# changed probe\n", encoding="utf-8")
+            with self.assertRaises(record_tool.capsule_tool.CapsuleError):
+                record_tool.oracle_identity(repository)
+            script.write_text("# frozen probe\n", encoding="utf-8")
+            observation["probes"][0]["exit_status"] = 1
+            record_path.write_text(json.dumps(observation), encoding="utf-8")
+            with self.assertRaises(record_tool.capsule_tool.CapsuleError):
+                record_tool.oracle_identity(repository)
 
     def test_specification_digest_orders_mixed_case_paths_portably(self) -> None:
         """Use one path order for identical specification bytes on every platform."""
@@ -55,6 +92,7 @@ class AssuranceRecordTests(unittest.TestCase):
             with (
                 patch.object(record_tool, "candidate_digest", return_value="candidate"),
                 patch.object(record_tool, "command_identity", return_value="java"),
+                patch.object(record_tool, "oracle_identity", return_value="pinned-oracle"),
             ):
                 first = record_tool.session_identity(repository, repository / "plan.json", "java")
                 behavior.write_text("Changed obligation\n", encoding="utf-8")
@@ -126,6 +164,20 @@ class AssuranceRecordTests(unittest.TestCase):
         )
         self.assertTrue(all(result["outcome"] == "PASS" for result in capsule["results"]))
         self.assertRegex(capsule["session_identity"]["candidate"], r"^sha256:[0-9a-f]{64}$")
+        self.assertRegex(
+            capsule["session_identity"]["oracle"],
+            r"^pinned-sha256:[0-9a-f]{64}@observation-sha256:[0-9a-f]{64}$",
+        )
+        self.assertRegex(capsule["session_identity"]["validator"], r"^sha256:[0-9a-f]{64}$")
+        profile_result = next(
+            result
+            for result in capsule["results"]
+            if result["id"] == "shared-core:bsarch-v1-cli"
+        )
+        self.assertIn(
+            "docs/development/evidence/issue50-automated-conformance/oracle-observations.json",
+            profile_result["evidence"],
+        )
 
 
 if __name__ == "__main__":

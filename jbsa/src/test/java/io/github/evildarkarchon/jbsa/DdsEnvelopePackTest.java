@@ -26,7 +26,7 @@ class DdsEnvelopePackTest {
   @TempDir Path temporary;
 
   /** All writable numeric formats retain exact metadata and opaque bytes across packing. */
-  @ParameterizedTest
+  @ParameterizedTest(name = "roundTripsWritableFormat[{index}] format={0}")
   @CsvSource({
     "71,8,128",
     "72,8,148",

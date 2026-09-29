@@ -326,8 +326,10 @@ class JbsaConformancePlugin : Plugin<Project> {
                 }
             val taskNames =
                 families
-                    .map { family ->
+                    .mapNotNull { family ->
                         when {
+                            // Shared-core selectors belong to the library and CLI suites already required above.
+                            family == "shared-core" -> null
                             family == "tes3" -> "tes3ConformanceTest"
                             family.startsWith("bsa-") -> "bsaConformanceTest"
                             "gnrl" in family -> "ba2ConformanceTest"

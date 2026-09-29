@@ -75,9 +75,12 @@ class AssurancePlanTests(unittest.TestCase):
                 "bsa-067",
                 "bsa-068",
                 "bsa-069",
+                "fo4-dx10-v1",
                 "fo4-dx10-v7",
                 "fo4-dx10-v8",
+                "fo4-gnrl-v1",
                 "fo4-gnrl-v8",
+                "shared-core",
                 "sf-dx10-v2",
                 "sf-dx10-v3-m3",
                 "sf-gnrl-v2",
@@ -153,14 +156,61 @@ class AssurancePlanTests(unittest.TestCase):
             self.assertEqual(first_path.read_bytes(), second_path.read_bytes())
             self.assertEqual(
                 {
-                    "capability_count": 12,
+                    "capability_count": 15,
                     "performance_lane_count": 30,
-                    "scenario_count": 44,
+                    "scenario_count": 57,
                     "status": "valid",
                     "version": "assurance-v2",
                 },
                 json.loads(first_path.read_text(encoding="utf-8")),
             )
+
+    def test_full_hosted_gate_includes_cross_family_and_fallout4_v1_obligations(self) -> None:
+        """Keep profile, execution, and both writable Fallout 4 BA2 layouts in the full gate."""
+        with tempfile.TemporaryDirectory() as temporary:
+            output_path = Path(temporary) / "full.json"
+            result = self.run_command("select", output_path, PLAN, "--tier", "full")
+
+            self.assertEqual(0, result.returncode, result.stderr)
+            selection = json.loads(output_path.read_text(encoding="utf-8"))
+
+        scenarios = {
+            scenario["assurance_scenario_id"]: scenario
+            for scenario in selection["assurance_scenarios"]
+        }
+        for identifier in (
+            "fo4-gnrl-v1:decode-entries",
+            "fo4-gnrl-v1:zlib-round-trip",
+            "fo4-gnrl-v1:unsupported-codec-decode",
+            "fo4-gnrl-v1:unsupported-codec-encode",
+            "fo4-dx10-v1:decode-entries",
+            "fo4-dx10-v1:zlib-round-trip",
+            "fo4-dx10-v1:unsupported-codec-decode",
+            "fo4-dx10-v1:unsupported-codec-encode",
+            "fo4-dx10-v1:fallout4-v1-dds-pc-target",
+            "shared-core:safe-default-cli",
+            "shared-core:bsarch-v1-cli",
+            "shared-core:profile-library-deviations",
+            "shared-core:parallel-equivalence",
+            "shared-core:cancellation-and-rollback",
+            "shared-core:progress-presentation",
+            "shared-core:warning-and-error-policy",
+        ):
+            self.assertIn(identifier, scenarios)
+
+        self.assertIn(
+            "io.github.evildarkarchon.jbsa.cli.MainTest#workerSelectionPreservesCrossFamilyObservationsAndBytes",
+            scenarios["shared-core:parallel-equivalence"]["test_selectors"],
+        )
+        self.assertIn(
+            "JBSA-COMPAT-005",
+            scenarios["shared-core:bsarch-v1-cli"]["requirement_ids"],
+        )
+        self.assertIn(
+            "JBSA-COMPAT-006",
+            scenarios["shared-core:profile-library-deviations"]["requirement_ids"],
+        )
+        self.assertTrue(all(scenario["test_selectors"] for scenario in scenarios.values()))
 
     def test_semantic_expectation_identity_ignores_run_identity(self) -> None:
         """Keep behavioral identity stable when candidate and toolchain identity change."""
@@ -251,8 +301,9 @@ class AssurancePlanTests(unittest.TestCase):
 
         self.assertEqual("affected", affected_selection["selected_tier"])
         self.assertTrue(affected_selection["assurance_scenarios"])
-        self.assertTrue(
-            all(scenario["capability_id"] == "tes3" for scenario in affected_selection["assurance_scenarios"])
+        self.assertEqual(
+            {"tes3", "shared-core"},
+            {scenario["capability_id"] for scenario in affected_selection["assurance_scenarios"]},
         )
         self.assertEqual("full", unknown_selection["selected_tier"])
         self.assertEqual("unknown-impact", unknown_selection["selection_reason"])
@@ -301,6 +352,49 @@ class AssurancePlanTests(unittest.TestCase):
                 ]
             }
         self.assertIn("fo4-v78-dds-decode-checkpoint", lane_ids)
+
+    def test_affected_ba2_and_fixture_changes_retain_version_one_coverage(self) -> None:
+        """Select both v1 BA2 layouts for shared codec changes and General fixtures."""
+        with tempfile.TemporaryDirectory() as temporary:
+            ba2_path = Path(temporary) / "ba2.json"
+            fixture_path = Path(temporary) / "fixture.json"
+            ba2 = self.run_command(
+                "select",
+                ba2_path,
+                PLAN,
+                "--tier",
+                "affected",
+                "--changed",
+                "jbsa/src/main/java/io/github/evildarkarchon/jbsa/internal/ba2/Ba2Reader.java",
+            )
+            fixture = self.run_command(
+                "select",
+                fixture_path,
+                PLAN,
+                "--tier",
+                "affected",
+                "--changed",
+                "tests/fixtures/fo4-general/manifest.json",
+            )
+            self.assertEqual(0, ba2.returncode, ba2.stderr)
+            self.assertEqual(0, fixture.returncode, fixture.stderr)
+            ba2_selection = json.loads(ba2_path.read_text(encoding="utf-8"))
+            fixture_selection = json.loads(fixture_path.read_text(encoding="utf-8"))
+
+        ba2_capabilities = {
+            scenario["capability_id"] for scenario in ba2_selection["assurance_scenarios"]
+        }
+        self.assertIn("fo4-gnrl-v1", ba2_capabilities)
+        self.assertIn("fo4-dx10-v1", ba2_capabilities)
+        self.assertIn("shared-core", ba2_capabilities)
+        self.assertEqual("affected", fixture_selection["selected_tier"])
+        self.assertEqual(
+            {"fo4-gnrl-v1", "shared-core"},
+            {
+                scenario["capability_id"]
+                for scenario in fixture_selection["assurance_scenarios"]
+            },
+        )
 
     def test_select_shared_core_and_empty_impact_as_full(self) -> None:
         """Fail closed for shared public code and absent change information."""

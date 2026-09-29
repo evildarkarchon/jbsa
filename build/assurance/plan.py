@@ -434,6 +434,14 @@ def select(
             selection_reason = "unknown-impact"
             selected_capabilities = None
 
+    if selected_capabilities is not None and selected_capabilities:
+        # Family-specific changes can alter shared CLI, worker, and publication observations.
+        selected_capabilities.update(
+            capability["id"]
+            for capability in plan["capabilities"]
+            if capability["family"] == "shared-core" and capability["status"] == "qualified"
+        )
+
     scenarios = [
         scenario for scenario in expanded["assurance_scenarios"] if environment in scenario["environments"]
     ]

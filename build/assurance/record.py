@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+import json
 from pathlib import Path
 import platform
 import re
@@ -104,6 +105,32 @@ def specification_identity(repository: Path) -> str:
     return f"{match.group(1)}@{digest_files(repository, normative)}"
 
 
+def oracle_identity(repository: Path) -> str:
+    """Bind the pinned local Oracle and a verified committed observation record."""
+    path = repository / "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"
+    script = repository / "build/issue50-oracle-probes.py"
+    try:
+        observation = json.loads(path.read_text(encoding="utf-8"))
+        claimed = observation.pop("record_sha256")
+        oracle = observation["oracle_sha256"]
+        script_digest = observation["probe_script_sha256"]
+        canonical = json.dumps(
+            observation, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        actual = hashlib.sha256(canonical).hexdigest()
+        script_bytes = script.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8")
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError) as error:
+        raise capsule_tool.CapsuleError(f"cannot bind pinned Oracle observation: {error}") from error
+    if (
+        not isinstance(claimed, str)
+        or claimed != actual
+        or oracle != "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+        or script_digest != hashlib.sha256(script_bytes).hexdigest()
+    ):
+        raise capsule_tool.CapsuleError("pinned Oracle observation or probe script changed")
+    return f"pinned-sha256:{oracle}@observation-sha256:{claimed}"
+
+
 def session_identity(repository: Path, plan_path: Path, java_executable: str) -> dict[str, str]:
     """Bind common candidate, runtime, profile, corpus, and protocol identities once."""
     metadata = repository / "jbsa/src/main/resources/META-INF"
@@ -135,6 +162,16 @@ def session_identity(repository: Path, plan_path: Path, java_executable: str) ->
         "generator": digest_files(
             repository,
             [*sorted((repository / "build/assurance").glob("*.py")), plan_path],
+        ),
+        "oracle": oracle_identity(repository),
+        "validator": digest_files(
+            repository,
+            [
+                *sorted((repository / "build").glob("validate-*.py")),
+                *sorted((repository / "build").glob("validate-*.ps1")),
+                *sorted((repository / "build").glob("test-*-validator.py")),
+                *sorted((repository / "build").glob("run-*-validator.ps1")),
+            ],
         ),
     }
 
@@ -216,10 +253,23 @@ def results_from_reports(
         ]
         outcomes = {outcome for outcome, _ in selector_results}
         outcome = "INVALID" if "INVALID" in outcomes else "FAIL" if "FAIL" in outcomes else "PASS"
+        # Passing JUnit methods do not replace the independent wire or Oracle references.
+        retained_references = item.get("evidence_refs", [])
+        missing_references = [
+            reference
+            for reference in retained_references
+            if not (repository / reference).is_file()
+        ]
+        if missing_references:
+            outcome = "INVALID"
         results.append(
             {
                 "evidence": sorted(
-                    {reference for _, evidence in selector_results for reference in evidence}
+                    {
+                        *(reference for _, evidence in selector_results for reference in evidence),
+                        *retained_references,
+                        *("missing-evidence:" + reference for reference in missing_references),
+                    }
                 ),
                 "id": item[identity_key],
                 "outcome": outcome,

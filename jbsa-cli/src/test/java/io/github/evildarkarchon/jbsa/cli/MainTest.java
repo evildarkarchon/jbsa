@@ -2,6 +2,8 @@ package io.github.evildarkarchon.jbsa.cli;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
@@ -623,13 +625,144 @@ class MainTest {
     assertEquals("", result.error());
   }
 
-  /** Profiled archive information reports operational errors on stdout with a zero exit status. */
+  /** Repeated codec switches use the first profile value and remain invalid in safe mode. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileRepeatedCodecUsesTheFirstValue() throws Exception {
+    Path source = Files.createDirectories(temporary.resolve("repeated-codec-source/meshes"));
+    Files.writeString(source.resolve("entry.nif"), "compressible".repeat(500));
+    String profile = "--compatibility-profile=bsarch-1.0/v1";
+    Path expected = temporary.resolve("first-codec-expected.bsa");
+    Path repeated = temporary.resolve("first-codec-repeated.bsa");
+    Path reversed = temporary.resolve("first-codec-reversed.bsa");
+    Path safe = temporary.resolve("first-codec-safe.bsa");
+    assertEquals(
+        0,
+        run(profile, "pack", source.getParent().toString(), expected.toString(), "-tes4", "-z:zlib")
+            .status());
+    assertEquals(
+        0,
+        run(
+                profile,
+                "pack",
+                source.getParent().toString(),
+                repeated.toString(),
+                "-tes4",
+                "-z:zlib",
+                "-z:lz4f")
+            .status());
+    assertArrayEquals(Files.readAllBytes(expected), Files.readAllBytes(repeated));
+    assertTrue(
+        run(
+                    profile,
+                    "pack",
+                    source.getParent().toString(),
+                    reversed.toString(),
+                    "-tes4",
+                    "-z:lz4f",
+                    "-z:zlib")
+                .status()
+            != 0);
+    assertFalse(Files.exists(reversed));
+    assertEquals(
+        2,
+        run("pack", source.getParent().toString(), safe.toString(), "-tes4", "-z:zlib", "-z:lz4f")
+            .status());
+    assertFalse(Files.exists(safe));
+  }
+
+  /** Profile boolean values other than no enable sharing, while safe parsing rejects them. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void profileBooleanShareHasObservableFirstValueSemantics() throws Exception {
+    Path source = Files.createDirectory(temporary.resolve("share-source"));
+    Files.writeString(source.resolve("first.txt"), "identical-payload".repeat(100));
+    Files.writeString(source.resolve("second.txt"), "identical-payload".repeat(100));
+    String profile = "--compatibility-profile=bsarch-1.0/v1";
+    Path enabled = temporary.resolve("sharing-enabled.bsa");
+    Path permissive = temporary.resolve("sharing-permissive.bsa");
+    Path disabled = temporary.resolve("sharing-disabled.bsa");
+    Path safe = temporary.resolve("sharing-safe.bsa");
+    assertEquals(
+        0,
+        run(profile, "pack", source.toString(), enabled.toString(), "-tes3", "-share:yes")
+            .status());
+    assertEquals(
+        0,
+        run(profile, "pack", source.toString(), permissive.toString(), "-tes3", "-share:other")
+            .status());
+    assertEquals(
+        0,
+        run(profile, "pack", source.toString(), disabled.toString(), "-tes3", "-share:no")
+            .status());
+    assertArrayEquals(Files.readAllBytes(enabled), Files.readAllBytes(permissive));
+    assertFalse(java.util.Arrays.equals(Files.readAllBytes(enabled), Files.readAllBytes(disabled)));
+    assertEquals(
+        2, run("pack", source.toString(), safe.toString(), "-tes3", "-share:other").status());
+    assertFalse(Files.exists(safe));
+  }
+
+  /** Legacy split parsing caps large values and treats an absent value as the family default. */
+  @Test
+  void profileSplitParsingRetainsTheQualifiedBoundaries() {
+    String[] base = {"--compatibility-profile=bsarch-1.0/v1", "pack", "source", "archive", "-tes3"};
+    assertEquals(
+        new io.github.evildarkarchon.jbsa.PackOptions.Splitting.UpToBytes(8L << 30),
+        Invocation.parse(append(base, "-split:100")).packOptions().splitting());
+    assertEquals(
+        new io.github.evildarkarchon.jbsa.PackOptions.Splitting.UpToBytes(0),
+        Invocation.parse(append(base, "-split:word")).packOptions().splitting());
+    assertEquals(
+        new io.github.evildarkarchon.jbsa.PackOptions.Splitting.FamilyDefault(),
+        Invocation.parse(append(base, "-split")).packOptions().splitting());
+    assertEquals(
+        new io.github.evildarkarchon.jbsa.PackOptions.Splitting.LegacyPerEntry(),
+        Invocation.parse(append(base, "-split:-1")).packOptions().splitting());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> Invocation.parse(new String[] {"pack", "source", "archive", "-tes3", "-split:100"}));
+  }
+
+  /** Explicit zero flags stay literal in safe parsing and become automatic only in the profile. */
+  @Test
+  void profileZeroFlagsDoNotChangeSafeExplicitZero() {
+    String[] safe = {"pack", "source", "archive", "-tes4", "-af:0", "-ff:0"};
+    String[] profile = {
+      "--compatibility-profile=bsarch-1.0/v1",
+      "pack",
+      "source",
+      "archive",
+      "-tes4",
+      "-af:0",
+      "-ff:0"
+    };
+    assertEquals(
+        new io.github.evildarkarchon.jbsa.FlagSelection.Explicit(0),
+        Invocation.parse(safe).packOptions().archiveFlags());
+    assertEquals(
+        new io.github.evildarkarchon.jbsa.FlagSelection.Explicit(0),
+        Invocation.parse(safe).packOptions().fileFlags());
+    assertEquals(
+        io.github.evildarkarchon.jbsa.FlagSelection.AUTOMATIC,
+        Invocation.parse(profile).packOptions().archiveFlags());
+    assertEquals(
+        io.github.evildarkarchon.jbsa.FlagSelection.AUTOMATIC,
+        Invocation.parse(profile).packOptions().fileFlags());
+  }
+
+  /** Only an existing malformed archive earns the profile's information-error zero status. */
   @Test
   void profileArchiveInformationFailureExitsZero() throws Exception {
     Path missing = temporary.resolve("missing.bsa");
     Result safe = run(missing.toString());
     assertEquals(1, safe.status());
-    Result profiled = run("--compatibility-profile=bsarch-1.0/v1", missing.toString());
+    Result missingProfiled = run("--compatibility-profile=bsarch-1.0/v1", missing.toString());
+    assertEquals(1, missingProfiled.status());
+    assertTrue(missingProfiled.output().contains("Error: ["), missingProfiled.output());
+    assertEquals("", missingProfiled.error());
+
+    Path malformed = Files.write(temporary.resolve("malformed.bsa"), new byte[] {1, 2, 3, 4});
+    Result profiled = run("--compatibility-profile=bsarch-1.0/v1", malformed.toString());
     assertEquals(0, profiled.status());
     assertTrue(profiled.output().contains("Error: ["), profiled.output());
     assertEquals("", profiled.error());
@@ -929,6 +1062,26 @@ class MainTest {
     }
   }
 
+  /** Redirected stderr and --no-progress suppress presentation without changing archive output. */
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  void redirectedProgressDoesNotChangePackResults() throws Exception {
+    Path source = Files.createDirectory(temporary.resolve("progress-source"));
+    Files.writeString(source.resolve("entry.txt"), "payload".repeat(100));
+    Path ordinary = temporary.resolve("progress-ordinary.bsa");
+    Path suppressed = temporary.resolve("progress-suppressed.bsa");
+    Result first = run("pack", source.toString(), ordinary.toString(), "-tes3");
+    Result second = run("pack", source.toString(), suppressed.toString(), "-tes3", "--no-progress");
+    assertEquals(0, first.status(), first.output() + first.error());
+    assertEquals(0, second.status(), second.output() + second.error());
+    assertFalse(first.error().contains("Progress:"));
+    assertFalse(second.error().contains("Progress:"));
+    assertArrayEquals(Files.readAllBytes(ordinary), Files.readAllBytes(suppressed));
+    assertEquals(
+        normalizedArchiveObservation(first.output(), ordinary),
+        normalizedArchiveObservation(second.output(), suppressed));
+  }
+
   /** Archive and directory sources retain operand order when a basename filter selects entries. */
   @Test
   @EnabledOnOs(OS.WINDOWS)
@@ -1000,6 +1153,9 @@ class MainTest {
     byte[] predecessor = Files.readAllBytes(archive);
 
     Files.writeString(entry, "second");
+    Result safe = run("pack", source.toString(), archive.toString(), "-tes3");
+    assertEquals(1, safe.status(), safe.error());
+    assertArrayEquals(predecessor, Files.readAllBytes(archive));
     Result second = run(profile, "pack", source.toString(), archive.toString(), "-tes3");
     assertEquals(0, second.status(), second.output() + second.error());
     assertTrue(!java.util.Arrays.equals(predecessor, Files.readAllBytes(archive)));
@@ -1048,6 +1204,13 @@ class MainTest {
             "-split:-1");
     assertEquals(0, omittedFlags.status(), omittedFlags.output() + omittedFlags.error());
     assertArrayEquals(Files.readAllBytes(automatic), Files.readAllBytes(archive));
+  }
+
+  /** Appends one switch without changing the reusable command operands. */
+  private static String[] append(String[] arguments, String option) {
+    String[] result = java.util.Arrays.copyOf(arguments, arguments.length + 1);
+    result[arguments.length] = option;
+    return result;
   }
 
   /** Returns the semantic CLI records after replacing only the archive path operand. */

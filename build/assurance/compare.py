@@ -11,6 +11,14 @@ from typing import Any
 import plan as plan_tool
 
 
+# Scope retirement is limited to these reviewed products, not future Xbox cases.
+FALLOUT4_V1_DEFERRED_XBOX_CASES = {
+    "CV1-fo4-dx10-v1.encode.dds-target-mismatch-xbox.zlib.xbox-v1",
+    "CV1-fo4-dx10-v1.encode.dds-target-xbox.zlib.xbox-v1",
+    "CV1-fo4-dx10-v1.scenario.dds-reconstruction-selection.zlib.pc-v1",
+}
+
+
 class ComparisonError(ValueError):
     """Report a malformed input that prevents a trustworthy comparison."""
 
@@ -79,6 +87,69 @@ def validate_plan(plan: dict[str, Any]) -> dict[str, Any]:
         raise ComparisonError(f"compact plan is invalid: {error}") from error
 
 
+def fallout4_v1_archetype(case: dict[str, Any]) -> str | None:
+    """Classify reviewed Fallout 4 v1 products by their exact behavioral surface."""
+    identity = case["identity"]
+    family = identity["archive_family"]
+    operation = identity["operation"]
+    fixture = identity["fixture"].lower()
+    codec = identity["codec"]
+    expected = case["metadata"]["expected_behavior"]
+    dds = family == "fo4-dx10-v1"
+    base = "fo4-dds-base-" if dds else "fo4-general-base-"
+    malformed = "fo4-dds-malformed-" if dds else "fo4-general-malformed-"
+
+    if operation == "decode":
+        if expected == "accept" and fixture.startswith(base):
+            return "decode-entries"
+        if expected == "reject" and fixture.startswith(base) and codec in {
+            "lz4-frame", "raw-deflate", "raw-lz4"
+        }:
+            return "unsupported-codec-decode"
+        if expected == "assert-specified-outcome":
+            if fixture.startswith(malformed):
+                return "fallout4-v1-malformed-and-resource"
+            if dds and fixture.startswith(base) and codec in {"stored", "mixed"}:
+                return "fallout4-v1-interactions"
+    elif operation == "encode":
+        if expected == "accept":
+            if fixture.startswith(base) and codec == "zlib":
+                return "zlib-round-trip"
+            if not dds and fixture.startswith(base) and codec in {"stored", "mixed"}:
+                return "fallout4-v1-interactions"
+            if dds and "dds-target-pc-" in fixture and codec == "zlib":
+                return "zlib-round-trip"
+        elif expected == "reject" and fixture.startswith(base):
+            if codec in {"lz4-frame", "raw-deflate", "raw-lz4"} or (
+                dds and codec in {"stored", "mixed"}
+            ):
+                return "unsupported-codec-encode"
+        elif (
+            dds
+            and expected == "assert-specified-outcome"
+            and "dds-target-mismatch-pc-" in fixture
+            and codec == "zlib"
+        ):
+            return "fallout4-v1-dds-pc-target"
+    elif (
+        operation == "extract"
+        and expected == "assert-specified-outcome"
+        and fixture.startswith(malformed)
+        and "unsafe-name-extraction" in fixture
+    ):
+        return "fallout4-v1-unsafe-extraction"
+    elif operation == "scenario":
+        if dds and expected == "accept" and "dds-cli-selector-" in fixture:
+            return "fallout4-v1-cli"
+        if dds and expected == "accept" and "fo4-dds-dds-" in fixture:
+            return "fallout4-v1-interactions"
+        if not dds and expected == "assert-specified-outcome" and (
+            "gnrl-name-tables-" in fixture or "input-zero-length-" in fixture
+        ):
+            return "fallout4-v1-interactions"
+    return None
+
+
 def archetype_for(case: dict[str, Any], available_scenarios: set[str]) -> str | None:
     """Map a legacy behavior to one applicable compact scenario when justified."""
     identity = case["identity"]
@@ -94,6 +165,11 @@ def archetype_for(case: dict[str, Any], available_scenarios: set[str]) -> str | 
         "fo4-dx10-v7",
         "fo4-dx10-v8",
     }
+
+    if family in {"fo4-gnrl-v1", "fo4-dx10-v1"}:
+        scenario_id = fallout4_v1_archetype(case)
+        assurance_scenario_id = f"{family}:{scenario_id}" if scenario_id is not None else None
+        return assurance_scenario_id if assurance_scenario_id in available_scenarios else None
 
     scenario_id = None
     if operation == "decode" and expected == "accept":
@@ -200,6 +276,16 @@ def retired_case(case: dict[str, Any]) -> dict[str, str] | None:
             "case_id": identity["case_id"],
             "family": identity["archive_family"],
             "reason": "versioned BSA has no archive-level trailing-byte requirement",
+        }
+    if (
+        identity["archive_family"] == "fo4-dx10-v1"
+        and identity["case_id"] in FALLOUT4_V1_DEFERRED_XBOX_CASES
+        and case["metadata"]["expected_behavior"] == "assert-specified-outcome"
+    ):
+        return {
+            "case_id": identity["case_id"],
+            "family": identity["archive_family"],
+            "reason": "JBSA-SCOPE-009 defers Xbox DDS encode, target mismatch, and reconstruction selection beyond 1.0",
         }
     return None
 

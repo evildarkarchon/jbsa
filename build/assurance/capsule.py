@@ -20,6 +20,8 @@ SESSION_FIELDS = (
     "platform",
     "provider",
     "generator",
+    "oracle",
+    "validator",
 )
 OUTCOMES = {"PASS", "FAIL", "INVALID"}
 
