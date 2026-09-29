@@ -355,6 +355,62 @@ class Tes3PackTest {
         "€", BethesdaArchives.standard().inspect(source).entries().getFirst().displayName());
   }
 
+  /** Profile decode follows the actual host ACP and never silently uses Windows-1252. */
+  @Test
+  void activeAnsiProfileDecodesWithTheHostCodePage() throws Throwable {
+    assertTrue(Tes3PackTest.class.getModule().isNativeAccessEnabled());
+    int codePage;
+    try (var arena = java.lang.foreign.Arena.ofConfined()) {
+      var kernel = java.lang.foreign.SymbolLookup.libraryLookup("kernel32", arena);
+      var getAcp =
+          java.lang.foreign.Linker.nativeLinker()
+              .downcallHandle(
+                  kernel.find("GetACP").orElseThrow(),
+                  java.lang.foreign.FunctionDescriptor.of(java.lang.foreign.ValueLayout.JAVA_INT));
+      codePage = (int) getAcp.invokeExact();
+    }
+    String charsetName =
+        switch (codePage) {
+          case 65001 -> "UTF-8";
+          case 932 -> "windows-31j";
+          case 936 -> "GBK";
+          case 949 -> "x-windows-949";
+          case 950 -> "x-windows-950";
+          case 874 -> "x-windows-874";
+          default -> "windows-" + Integer.toUnsignedString(codePage);
+        };
+    var charset = java.nio.charset.Charset.forName(charsetName);
+    Path source = temporary.resolve("host-acp.bsa");
+    Files.write(
+        source,
+        HexFormat.of()
+            .parseHex("000100000e0000000100000000000000000000000000000080000000000000000000"));
+    var inspection =
+        BethesdaArchives.standard()
+            .inspect(
+                source,
+                new OpenOptions(
+                    Optional.of(CompatibilityProfile.BSARCH_1_0_V1),
+                    ResourceLimits.standard(),
+                    Optional.empty()));
+    try {
+      String expected =
+          charset
+              .newDecoder()
+              .decode(java.nio.ByteBuffer.wrap(new byte[] {(byte) 0x80}))
+              .toString();
+      assertEquals(expected, inspection.entries().getFirst().displayName());
+    } catch (java.nio.charset.CharacterCodingException invalidUnderAcp) {
+      // Invalid ACP bytes stay inspectable with a synthetic name and a retained warning.
+      assertTrue(inspection.entries().getFirst().displayName().startsWith("__jbsa_wire__"));
+      assertTrue(
+          inspection.assessment().diagnostics().stream()
+              .anyMatch(
+                  diagnostic ->
+                      diagnostic.identifier().equals("archive-name.undecodable-wire-bytes")));
+    }
+  }
+
   /**
    * An isolated embedded consumer cannot silently substitute defaults for unavailable active ANSI.
    */

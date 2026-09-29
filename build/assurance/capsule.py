@@ -10,6 +10,7 @@ from typing import Any
 
 SESSION_FIELDS = (
     "candidate",
+    "candidate_commit",
     "runtime",
     "jvm",
     "profile",
@@ -20,6 +21,8 @@ SESSION_FIELDS = (
     "platform",
     "provider",
     "generator",
+    "oracle",
+    "validator",
 )
 OUTCOMES = {"PASS", "FAIL", "INVALID"}
 

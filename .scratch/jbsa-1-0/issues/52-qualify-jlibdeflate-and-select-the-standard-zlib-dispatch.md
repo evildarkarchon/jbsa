@@ -1,6 +1,6 @@
 # Qualify jlibdeflate and select the standard zlib dispatch
 
-Status: needs-triage
+Status: ready-for-agent
 State: open
 GitHub issue: #52
 Source: https://github.com/evildarkarchon/jbsa/issues/52
@@ -9,14 +9,14 @@ Created: 2026-09-03T06:54:26Z
 Source updated: 2026-09-03T06:54:26Z
 Closed: none
 Migrated: 2026-09-10
-Labels: needs-triage
+Labels: ready-for-agent
 Assignees: none
 Blocked by: [#50](../issues/50-complete-the-mandatory-automated-conformance-matrix.md), [#32](../issues/32-build-the-performance-v1-harness-and-benchmark-corpus.md)
 Parent: [#23](../map.md)
 
 Intended owner: agent
-Triage reviewed: 2026-09-10
-Triage rationale: Reassess readiness after open prerequisites close: #50.
+Triage reviewed: 2026-09-28
+Triage rationale: #32 and #50 are closed. The accepted Assurance v2 gate replaces the original expanded CV1/PV1 rerun wording; the remaining codec qualification and dispatch decision are specified and agent-owned.
 
 ## Original issue body
 
@@ -55,3 +55,11 @@ Agent-driven when unblocked and labelled ready-for-agent.
 ## Comments
 
 No comments at migration time.
+
+### Assurance v2 readiness — 2026-09-28
+
+The original CV1/PV1 rerun wording is historical after #61. A promoted provider
+must rerun the impacted generated Assurance Scenarios and curated Performance
+Lanes under the new immutable codec profile, with shared-core or unknown impact
+selecting the full conformance tier. The codec behavior, safety, performance,
+compliance, and decision requirements remain in force.

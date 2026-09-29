@@ -189,9 +189,12 @@ public final class Main {
                 + " path="
                 + artifact.path());
       }
-      // The qualified archive-information quirk changes only the process status, not failure
-      // records.
-      if (invocation.operation().equals("inspect") && invocation.profile().isPresent()) return 0;
+      // The pinned oracle exits zero for an existing malformed archive's information error;
+      // a missing or unreadable source remains an operational failure in either profile.
+      if (invocation.operation().equals("inspect")
+          && invocation.profile().isPresent()
+          && (failure.kind() == FailureKind.FORMAT || failure.kind() == FailureKind.UNSUPPORTED))
+        return 0;
       return failure.kind() == FailureKind.CANCELLED ? 130 : 1;
     } catch (WindowsConsole.ConsoleCapabilityException unavailable) {
       diagnostics.println(

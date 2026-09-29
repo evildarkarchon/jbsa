@@ -59,6 +59,27 @@
       "risk_tags": ["general-ba2", "extra-header", "method-field", "raw-lz4", "native-codec"]
     },
     {
+      "id": "shared-core",
+      "family": "shared-core",
+      "behavioral_variant": "cross-family-cli-publication-and-workers-v1",
+      "status": "qualified",
+      "risk_tags": ["cli", "profile", "parallel", "publication"]
+    },
+    {
+      "id": "fo4-gnrl-v1",
+      "family": "fo4-gnrl-v1",
+      "behavioral_variant": "fallout4-general-v1-stored-zlib-v1",
+      "status": "qualified",
+      "risk_tags": ["general-ba2", "fallout4-v1", "zlib"]
+    },
+    {
+      "id": "fo4-dx10-v1",
+      "family": "fo4-dx10-v1",
+      "behavioral_variant": "fallout4-dds-v1-zlib-v1",
+      "status": "qualified",
+      "risk_tags": ["dds-ba2", "fallout4-v1", "reconstruction", "zlib"]
+    },
+    {
       "id": "fo4-gnrl-v7",
       "family": "fo4-gnrl-v7",
       "behavioral_variant": "fallout4-general-v7-synthetic-decode-v1",
@@ -104,8 +125,26 @@
     {"id": "JBSA-BSA-013"},
     {"id": "JBSA-BSA-014"},
     {"id": "JBSA-BSA-015"},
+    {"id": "JBSA-COMPAT-001"},
+    {"id": "JBSA-COMPAT-003"},
+    {"id": "JBSA-COMPAT-004"},
+    {"id": "JBSA-COMPAT-005"},
+    {"id": "JBSA-COMPAT-006"},
+    {"id": "JBSA-COMPAT-007"},
+    {"id": "JBSA-CLI-001"},
+    {"id": "JBSA-CLI-002"},
+    {"id": "JBSA-CLI-003"},
     {"id": "JBSA-CLI-004"},
     {"id": "JBSA-CLI-005"},
+    {"id": "JBSA-CLI-006"},
+    {"id": "JBSA-CLI-007"},
+    {"id": "JBSA-CLI-008"},
+    {"id": "JBSA-CLI-009"},
+    {"id": "JBSA-CLI-010"},
+    {"id": "JBSA-CLI-011"},
+    {"id": "JBSA-CLI-012"},
+    {"id": "JBSA-CLI-013"},
+    {"id": "JBSA-CLI-014"},
     {"id": "JBSA-CODEC-002"},
     {"id": "JBSA-CODEC-003"},
     {"id": "JBSA-CODEC-008"},
@@ -147,6 +186,7 @@
     {"id": "JBSA-GNRL-012"},
     {"id": "JBSA-GNRL-013"},
     {"id": "JBSA-LIB-010"},
+    {"id": "JBSA-REL-005"},
     {"id": "JBSA-SCHED-006"},
     {"id": "JBSA-SCHED-010"},
     {"id": "JBSA-TES3-001"},
@@ -156,13 +196,15 @@
     {
       "id": "decode-entries",
       "expected": "Recognized archives expose the specified ordered names, metadata, diagnostics, and decoded bytes.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "fo4-gnrl-v1", "fo4-dx10-v1", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-001", "JBSA-ASR-002", "JBSA-ASR-003", "JBSA-ASR-006", "JBSA-ASR-007", "JBSA-ASR-008"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-001"],
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
         "bsa-069": ["JBSA-BSA-001"],
+        "fo4-gnrl-v1": ["JBSA-GNRL-001", "JBSA-GNRL-002", "JBSA-GNRL-004", "JBSA-GNRL-005", "JBSA-GNRL-008"],
+        "fo4-dx10-v1": ["JBSA-DX10-001", "JBSA-DX10-002", "JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DDS-011"],
         "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-002", "JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DX10-005", "JBSA-DDS-011"],
         "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-002", "JBSA-DX10-003", "JBSA-DX10-004", "JBSA-DX10-005", "JBSA-DDS-011"],
         "sf-gnrl-v2": ["JBSA-GNRL-001", "JBSA-GNRL-002", "JBSA-GNRL-004", "JBSA-GNRL-005", "JBSA-GNRL-006", "JBSA-GNRL-008", "JBSA-GNRL-009"],
@@ -173,12 +215,16 @@
         "bsa-067": ["io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#readsAndExtractsIndependentWireVectors"],
         "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#readsAndExtractsIndependentGameVectors"],
         "bsa-069": ["io.github.evildarkarchon.jbsa.verification.Bsa069ConformanceIT#readsAndExtractsIndependentGameVectors"],
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#readsAndExtractsIndependentWireVectors"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.verification.Fallout4V1DdsBa2ConformanceIT#readsAndExtractsIndependentVersionOneWireVector"],
         "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
         "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#readsAndExtractsProjectAuthoredVersions"]
       },
       "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2ConformanceIT.java", "tests/fixtures/fo4-general/manifest.json"],
+        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java", "tests/fixtures/synthetic/artifacts/archives/fo4-dx10-v7-zlib.hex"],
         "bsa-069": [
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Bsa069ConformanceIT.java",
           "tests/fixtures/bsa069/manifest.json"
@@ -299,12 +345,14 @@
     {
       "id": "unsupported-codec-decode",
       "expected": "Unsupported compressed payload encodings fail with a stable unsupported or format outcome before unsafe consumption.",
-      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["bsa-067", "bsa-068", "bsa-069", "fo4-gnrl-v1", "fo4-dx10-v1", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-003"],
       "capability_requirements": {
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
         "bsa-069": ["JBSA-BSA-001", "JBSA-BSA-010"],
+        "fo4-gnrl-v1": ["JBSA-GNRL-002", "JBSA-GNRL-005"],
+        "fo4-dx10-v1": ["JBSA-DX10-001", "JBSA-DX10-004"],
         "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-004"],
         "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-004"],
         "sf-gnrl-v2": ["JBSA-GNRL-002", "JBSA-GNRL-005"],
@@ -317,12 +365,16 @@
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsMalformedLz4FramesAtContentEof",
           "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#rejectsCorruptionTruncationTrailingFramesAndWrongOutputSize"
         ],
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#rejectsIndependentMalformedPayloads"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.verification.Fallout4V1DdsBa2ConformanceIT#rejectsForeignVersionOneDecodeFraming"],
         "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits"],
         "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2ReaderTest#appliesQualifiedVersionThreeZlibFallbackWithoutChangingRecognition"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#rejectsUnsupportedMethodAndInvalidRawLz4"]
       },
       "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2ConformanceIT.java", "tests/fixtures/fo4-general/manifest.json"],
+        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java"],
         "bsa-069": [
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4FrameTest.java",
@@ -341,13 +393,15 @@
     {
       "id": "unsupported-codec-encode",
       "expected": "Unsupported encode codecs are rejected before opening sources or publishing destination artifacts.",
-      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
+      "applies_to": {"families": ["tes3", "bsa-067", "bsa-068", "bsa-069", "fo4-gnrl-v1", "fo4-dx10-v1", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3"]},
       "requirements": ["JBSA-ASR-004"],
       "capability_requirements": {
         "tes3": ["JBSA-TES3-001"],
         "bsa-067": ["JBSA-BSA-001"],
         "bsa-068": ["JBSA-BSA-001"],
         "bsa-069": ["JBSA-BSA-001", "JBSA-CLI-005"],
+        "fo4-gnrl-v1": ["JBSA-GNRL-002", "JBSA-GNRL-011"],
+        "fo4-dx10-v1": ["JBSA-DX10-001", "JBSA-DX10-006", "JBSA-CLI-005"],
         "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-006", "JBSA-CLI-005"],
         "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-006", "JBSA-CLI-005"],
         "sf-gnrl-v2": ["JBSA-GNRL-002", "JBSA-GNRL-011"],
@@ -361,12 +415,16 @@
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsForeignCodecsBeforeSourceEffects",
           "io.github.evildarkarchon.jbsa.cli.MainTest#rejectsInvalidSseCodecCombinations"
         ],
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#rejectsForeignVersionOneEncodeCodecsBeforeSourceEffects", "io.github.evildarkarchon.jbsa.cli.MainTest#rejectsInvalidGeneralBa2Invocations"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.verification.Fallout4V1DdsBa2ConformanceIT#rejectsForeignVersionOneEncodeCodecsBeforeSourceEffects", "io.github.evildarkarchon.jbsa.DdsBa2PackTest#rejectsStoredInEveryProfileBeforeOpeningSource"],
         "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.DdsBa2PackTest#rejectsStoredInEveryProfileBeforeOpeningSource"],
         "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.DdsBa2PackTest#rejectsStoredInEveryProfileBeforeOpeningSource"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsInvalidStarfieldCodecCombinationsBeforePayloads"],
         "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.Ba2PackTest#rejectsInvalidStarfieldCodecCombinationsBeforePayloads"]
       },
       "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2ConformanceIT.java", "jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java"],
+        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java"],
         "bsa-069": [
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
           "jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java"
@@ -475,16 +533,22 @@
       "capability_requirements": {
         "bsa-067": ["JBSA-BSA-009"],
         "bsa-068": ["JBSA-BSA-009"],
+        "fo4-gnrl-v1": ["JBSA-GNRL-003", "JBSA-GNRL-005"],
+        "fo4-dx10-v1": ["JBSA-DX10-001", "JBSA-DX10-004", "JBSA-DX10-006", "JBSA-DDS-013"],
         "sf-dx10-v2": ["JBSA-DX10-001", "JBSA-DX10-004", "JBSA-DX10-006", "JBSA-DDS-013"],
         "sf-gnrl-v2": ["JBSA-GNRL-003", "JBSA-GNRL-005"]
       },
       "test_selectors": {
         "bsa-067": ["io.github.evildarkarchon.jbsa.verification.BsaConformanceIT#independentlyValidatesPackedArchives"],
         "bsa-068": ["io.github.evildarkarchon.jbsa.verification.Bsa068ConformanceIT#independentlyValidatesStoredZlibMixedAndEmbeddedOutput"],
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#independentlyValidatesPackedArchives"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.verification.Fallout4V1DdsBa2ConformanceIT#independentlyValidatesVersionOneEncodedOutput"],
         "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#writesCodecSelectedHeadersAndRoundTrips"],
         "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.verification.StarfieldGeneralBa2ConformanceIT#independentlyValidatesStarfieldWireVersions"]
       },
       "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2ConformanceIT.java", "tests/fixtures/fo4-general/manifest.json"],
+        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java", "build/validate-dds-wire.py"],
         "sf-dx10-v2": [
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java",
           "tests/fixtures/starfield-dds/manifest.json",
@@ -970,6 +1034,223 @@
       }
     },
     {
+      "id": "safe-default-cli",
+      "expected": "Without an explicit profile the CLI rejects malformed selectors and switches before source effects, reports failures on stderr, and requires explicit replacement while preserving pack, inspect, dump, and unpack results.",
+      "applies_to": {"families": ["shared-core"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-COMPAT-001", "JBSA-CLI-001", "JBSA-CLI-002", "JBSA-CLI-003", "JBSA-CLI-004", "JBSA-CLI-005", "JBSA-CLI-006", "JBSA-CLI-007", "JBSA-CLI-008", "JBSA-CLI-009", "JBSA-CLI-010", "JBSA-CLI-011", "JBSA-CLI-014", "JBSA-REL-005"],
+      "test_selectors": {
+        "shared-core": [
+          "io.github.evildarkarchon.jbsa.cli.MainTest#invalidTes3InvocationsFailBeforeSourceAccess",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#packAndDetachedListDumpPreserveNamesAndProduceAnArchive",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#unpackPublishesPayloadAndRequiresExplicitReplacement",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#versionReportsArtifactAndProfileAndOperationalFailuresUseStderr",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#archiveSourceOverlayAndBasenameFilterReachTheLibrary"
+        ]
+      },
+      "evidence_refs": {
+        "shared-core": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/spec/bsarch-cli.md"]
+      }
+    },
+    {
+      "id": "bsarch-v1-cli",
+      "expected": "Only explicit bsarch-1.0/v1 selection activates the complete immutable CLI deviation bundle, including parsing, family priority, source omission, stdout placement, information status, and replacement, without bypassing source safety.",
+      "applies_to": {"families": ["shared-core"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-COMPAT-003", "JBSA-COMPAT-004", "JBSA-COMPAT-005", "JBSA-COMPAT-007", "JBSA-CLI-002", "JBSA-CLI-003", "JBSA-CLI-004", "JBSA-CLI-006", "JBSA-CLI-007", "JBSA-CLI-008", "JBSA-CLI-011", "JBSA-CLI-014", "JBSA-REL-005"],
+      "test_selectors": {
+        "shared-core": [
+          "io.github.evildarkarchon.jbsa.verification.PublicRequestContractIT#compatibilityProfileRetainsItsPublishedDigestAndCompleteOrderedBundle",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileUsesFirstValueAndPermissiveBooleanWhileRetainingTheSourceBoundary",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileRepeatedCodecUsesTheFirstValue",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileBooleanShareHasObservableFirstValueSemantics",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileSplitParsingRetainsTheQualifiedBoundaries",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileZeroFlagsDoNotChangeSafeExplicitZero",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileChoosesTes3BeforeTes4RegardlessOfSwitchOrder",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileSelectsVersion104BetweenTes4AndFallout4",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileSelectsSseBetweenVersion104AndFallout4",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileIgnoresUnknownLongTailSwitch",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileZeroFlagsAndNegativeSplitPublishOnePartPerEntry",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileOmitsUnusablePackSources",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profilePlacesInvalidInvocationOnStandardOutput",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profilePlacesArchiveWarningsOnStandardOutput",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileArchiveInformationFailureExitsZero",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileImplicitlyReplacesPackAndUnpackTargets"
+        ]
+      },
+      "evidence_refs": {
+        "shared-core": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "docs/spec/compatibility-profiles.md", "docs/development/evidence/issue50-automated-conformance/README.md", "docs/development/evidence/issue50-automated-conformance/oracle-observations.json", "tests/assurance/deviation-review.json"]
+      }
+    },
+    {
+      "id": "profile-library-deviations",
+      "expected": "The immutable profile uses the actual Windows ANSI code page or fails closed without native access, confines Starfield v3 zlib fallback to profiled bounded decode, and never enables prohibited stored DDS encoding; deferred Xbox inference makes no first-release claim.",
+      "applies_to": {"families": ["shared-core"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-COMPAT-003", "JBSA-COMPAT-004", "JBSA-COMPAT-006", "JBSA-COMPAT-007", "JBSA-REL-005"],
+      "test_selectors": {
+        "shared-core": [
+          "io.github.evildarkarchon.jbsa.verification.PublicRequestContractIT#compatibilityProfileRetainsItsPublishedDigestAndCompleteOrderedBundle",
+          "io.github.evildarkarchon.jbsa.Tes3PackTest#defaultNameEncodingRetainsUnqualifiedNonAsciiWireNames",
+          "io.github.evildarkarchon.jbsa.Tes3PackTest#activeAnsiProfileDecodesWithTheHostCodePage",
+          "io.github.evildarkarchon.jbsa.Tes3PackTest#activeAnsiProfileFailsClosedWithoutNativeAccess",
+          "io.github.evildarkarchon.jbsa.Ba2ReaderTest#appliesQualifiedVersionThreeZlibFallbackWithoutChangingRecognition",
+          "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#confinesStarfieldV3ZlibFallbackToCompatibilityProfile",
+          "io.github.evildarkarchon.jbsa.DdsBa2PackTest#rejectsStoredInEveryProfileBeforeOpeningSource"
+        ]
+      },
+      "evidence_refs": {
+        "shared-core": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Tes3PackTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "docs/development/evidence/issue50-automated-conformance/README.md", "docs/development/evidence/issue50-automated-conformance/oracle-observations.json", "tests/assurance/deviation-review.json"]
+      }
+    },
+    {
+      "id": "parallel-equivalence",
+      "expected": "One and multiple workers preserve archive bytes, ordered CLI and library observations, diagnostics, progress, split and sharing choices, and extracted content across the eight writable families.",
+      "applies_to": {"families": ["shared-core"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-CLI-006", "JBSA-SCHED-006", "JBSA-SCHED-010", "JBSA-REL-005"],
+      "test_selectors": {
+        "shared-core": [
+          "io.github.evildarkarchon.jbsa.cli.MainTest#workerSelectionPreservesCrossFamilyObservationsAndBytes",
+          "io.github.evildarkarchon.jbsa.ParallelPackTest#keepsSharingAndSplitChoicesIndependentOfWorkerCount",
+          "io.github.evildarkarchon.jbsa.ParallelPackTest#parallelCompressedBsaMatchesSingleWorker",
+          "io.github.evildarkarchon.jbsa.ParallelExtractTest#parallelWorkersPreserveSequentialExtraction"
+        ]
+      },
+      "evidence_refs": {
+        "shared-core": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelPackTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelExtractTest.java"]
+      }
+    },
+    {
+      "id": "cancellation-and-rollback",
+      "expected": "The Ctrl+C callback requests idempotent cooperative cancellation; cancellation and worker or publication failure settle admitted work, bound resources and failure ordering, restore predecessors when required, and leave no unpublished destination effects.",
+      "applies_to": {"families": ["shared-core"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-COMPAT-007", "JBSA-CLI-013", "JBSA-SCHED-006", "JBSA-SCHED-010", "JBSA-REL-005"],
+      "test_selectors": {
+        "shared-core": [
+          "io.github.evildarkarchon.jbsa.cli.WindowsConsoleTest#onlyCtrlCRequestsIdempotentCooperativeCancellation",
+          "io.github.evildarkarchon.jbsa.ParallelPackTest#appliesBackpressureToOutOfOrderSourceCompletion",
+          "io.github.evildarkarchon.jbsa.ParallelPackTest#selectsFailureInLogicalOrderAndSettlesWorkers",
+          "io.github.evildarkarchon.jbsa.ParallelPackTest#cancelsParallelLz4EncodingBeforePublication",
+          "io.github.evildarkarchon.jbsa.ParallelExtractTest#cancellationDuringWorkerReadSettlesBeforeReturn",
+          "io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest#restoresEveryPredecessorWhenSplitPublicationFails"
+        ]
+      },
+      "evidence_refs": {
+        "shared-core": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/WindowsConsoleTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelPackTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelExtractTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PublicationTransactionTest.java"]
+      }
+    },
+    {
+      "id": "progress-presentation",
+      "expected": "Semantic progress remains ordered while redirected stderr and --no-progress suppress only presentation, preserving successful CLI records and archive bytes.",
+      "applies_to": {"families": ["shared-core"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-CLI-012", "JBSA-REL-005"],
+      "test_selectors": {
+        "shared-core": ["io.github.evildarkarchon.jbsa.cli.MainTest#redirectedProgressDoesNotChangePackResults", "io.github.evildarkarchon.jbsa.ParallelExtractTest#parallelWorkersPreserveSequentialExtraction"]
+      },
+      "evidence_refs": {
+        "shared-core": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelExtractTest.java"]
+      }
+    },
+    {
+      "id": "warning-and-error-policy",
+      "expected": "CLI warnings and failures retain stable identifiers, prescribed streams and exit statuses while operation failures preserve primary ordering and exact residual artifacts.",
+      "applies_to": {"families": ["shared-core"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-CLI-010", "JBSA-CLI-011", "JBSA-CLI-014", "JBSA-REL-005"],
+      "test_selectors": {
+        "shared-core": [
+          "io.github.evildarkarchon.jbsa.cli.MainTest#versionReportsArtifactAndProfileAndOperationalFailuresUseStderr",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profilePlacesInvalidInvocationOnStandardOutput",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profilePlacesArchiveWarningsOnStandardOutput",
+          "io.github.evildarkarchon.jbsa.cli.MainTest#profileArchiveInformationFailureExitsZero",
+          "io.github.evildarkarchon.jbsa.ParallelPackTest#selectsFailureInLogicalOrderAndSettlesWorkers",
+          "io.github.evildarkarchon.jbsa.internal.io.PublicationTransactionTest#reportsExactBackupResidualWhenRestorationFailsWithoutDeletingPredecessor"
+        ]
+      },
+      "evidence_refs": {
+        "shared-core": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PublicationTransactionTest.java"]
+      }
+    },
+    {
+      "id": "fallout4-v1-malformed-and-resource",
+      "expected": "Fallout 4 v1 General and DDS readers distinguish tolerated metadata warnings from malformed records, corrupt payloads, and resource-limit failures before destination effects.",
+      "applies_to": {"families": ["fo4-gnrl-v1", "fo4-dx10-v1"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-GNRL-010", "JBSA-DX10-007"],
+      "test_selectors": {
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#rejectsIndependentMalformedPayloads", "io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#distinguishesToleratedConstantsAndRejectedRecordShapes", "io.github.evildarkarchon.jbsa.Ba2ReaderTest#enforcesMetadataAndEntryLimits"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.verification.Fallout4V1DdsBa2ConformanceIT#rejectsMalformedVersionOneWireVectors", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#enforcesEntryMetadataAndReconstructedContentLimits"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2ConformanceIT.java", "tests/fixtures/fo4-general/manifest.json"],
+        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java"]
+      }
+    },
+    {
+      "id": "fallout4-v1-unsafe-extraction",
+      "expected": "Unsafe General and DDS entry names are inspectable but cannot escape the extraction root or alter the destination before preflight rejects them.",
+      "applies_to": {"families": ["fo4-gnrl-v1", "fo4-dx10-v1"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-COMPAT-007", "JBSA-GNRL-011", "JBSA-DX10-007"],
+      "test_selectors": {
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.Ba2ReaderTest#refusesUnsafeNamesBeforeDestinationEffects"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#refusesUnsafeNamesBeforeExtractionEffects"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java"],
+        "fo4-dx10-v1": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java"]
+      }
+    },
+    {
+      "id": "fallout4-v1-interactions",
+      "expected": "General v1 stored, zlib, mixed, zero-length, name-table and split records and DDS v1 stored or mixed chunks, PC mip boundaries, formats, cubemaps, sharing, and reconstruction retain content and deterministic output across worker counts.",
+      "applies_to": {"families": ["fo4-gnrl-v1", "fo4-dx10-v1"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004", "JBSA-SCHED-006", "JBSA-SCHED-010"],
+      "test_selectors": {
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#independentlyValidatesPackedArchives", "io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#keepsVersionOneWireAndSemanticsAcrossWorkerCounts", "io.github.evildarkarchon.jbsa.Ba2ReaderTest#opensZeroLengthStoredEntry", "io.github.evildarkarchon.jbsa.Ba2PackTest#overlaysArchiveSourcesThenSplitsWholeEntries"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.verification.Fallout4V1DdsBa2ConformanceIT#independentlyValidatesVersionOneEncodedOutput", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#reconstructsStoredTexture", "io.github.evildarkarchon.jbsa.DdsBa2ReaderTest#acceptsExactSharingAndRejectsPartialOverlap", "io.github.evildarkarchon.jbsa.DdsBa2PackTest#partitionsAndSharesChunksWithoutChangingMipRanges", "io.github.evildarkarchon.jbsa.DdsBa2PackTest#compressesSmallOddTextureAndReconstructsCanonicalHeader", "io.github.evildarkarchon.jbsa.DdsEnvelopePackTest#roundTripsWritableFormat", "io.github.evildarkarchon.jbsa.DdsEnvelopePackTest#roundTripsCompleteLegacyCubemap", "io.github.evildarkarchon.jbsa.cli.MainTest#workerSelectionPreservesCrossFamilyObservationsAndBytes"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2ConformanceIT.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2ReaderTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Ba2PackTest.java"],
+        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2ReaderTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsBa2PackTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsEnvelopePackTest.java"]
+      }
+    },
+    {
+      "id": "fallout4-v1-cli",
+      "expected": "Fallout 4 General and DDS v1 selectors, implicit DDS zlib compression, information, pack, and unpack are carried through the thin CLI using public requests and reports.",
+      "applies_to": {"families": ["fo4-gnrl-v1", "fo4-dx10-v1"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-CLI-004", "JBSA-CLI-005", "JBSA-REL-005"],
+      "test_selectors": {
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.cli.MainTest#packsAndUnpacksFallout4GeneralZlib"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.cli.MainTest#packsDdsWithMandatoryDefaultCompression"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java"],
+        "fo4-dx10-v1": ["jbsa-cli/src/test/java/io/github/evildarkarchon/jbsa/cli/MainTest.java"]
+      }
+    },
+    {
+      "id": "fallout4-v1-dds-pc-target",
+      "expected": "Fallout 4 DDS v1 PC encoding rejects an Xbox input envelope before destination publication; deferred Xbox encoding is not counted as supported.",
+      "applies_to": {"families": ["fo4-dx10-v1"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-DDS-002", "JBSA-DX10-006"],
+      "test_selectors": {
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.DdsEnvelopePackTest#rejectsBothTargetMismatchesBeforePublication"]
+      },
+      "evidence_refs": {
+        "fo4-dx10-v1": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/DdsEnvelopePackTest.java", "docs/spec/scope.md"]
+      }
+    },
+    {
+      "id": "fallout4-v1-oracle-differential",
+      "expected": "The digest-pinned local Oracle and JBSA cross-decode Fallout 4 General and DDS v1 in both directions with independently validated candidate wire and exact source content; Oracle-only zero padding is classified explicitly.",
+      "environments": ["local", "release"],
+      "applies_to": {"families": ["fo4-gnrl-v1", "fo4-dx10-v1"]},
+      "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
+      "test_selectors": {
+        "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#pinnedLocalOracleCrossDecodesBothDirections"],
+        "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.verification.Fallout4V1DdsBa2ConformanceIT#pinnedLocalOracleCrossDecodesVersionOneBothDirections"]
+      },
+      "evidence_refs": {
+        "fo4-gnrl-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Ba2ConformanceIT.java", "docs/reference/bsarch-oracle.md"],
+        "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java", "docs/reference/bsarch-oracle.md"]
+      }
+    },
+    {
       "id": "fallout4-v78-decode",
       "expected": "Fallout 4 v7/v8 General and DDS archives retain their exact wire version, v1-shaped records, ordered names and hashes, zlib framing, and decoded bytes; v7 General remains synthetic-only.",
       "applies_to": {"families": ["fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]},
@@ -1220,7 +1501,11 @@
     },
     {
       "paths": ["jbsa/src/main/java/**/ba2/**", "jbsa/src/test/java/**/Ba2*.java", "jbsa/src/test/java/**/Dds*.java"],
-      "capabilities": ["sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3", "fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]
+      "capabilities": ["fo4-gnrl-v1", "fo4-dx10-v1", "sf-dx10-v2", "sf-dx10-v3-m3", "sf-gnrl-v2", "sf-gnrl-v3-m3", "fo4-gnrl-v7", "fo4-gnrl-v8", "fo4-dx10-v7", "fo4-dx10-v8"]
+    },
+    {
+      "paths": ["tests/fixtures/fo4-general/**", "build/generate-ba2-fixtures.py", "build/validate-ba2-wire.py"],
+      "capabilities": ["fo4-gnrl-v1"]
     },
     {
       "paths": ["tests/fixtures/starfield-dds/**", "tests/fixtures/starfield-general/**", "tests/fixtures/synthetic/artifacts/archives/sf-gnrl-*.ba2"],

@@ -2,6 +2,7 @@
 
 import argparse
 import hashlib
+import json
 from pathlib import Path
 import platform
 import re
@@ -69,6 +70,21 @@ def candidate_digest(repository: Path) -> str:
     return "sha256:" + digest.hexdigest()
 
 
+def candidate_commit(repository: Path) -> str:
+    """Return the exact checked-out Git commit tested by this session."""
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repository,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    commit = result.stdout.strip()
+    if result.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        raise capsule_tool.CapsuleError("cannot identify tested Git commit")
+    return commit
+
+
 def command_identity(command: list[str], repository: Path) -> str:
     """Return one normalized first-line identity for a required runtime command."""
     result = subprocess.run(
@@ -104,6 +120,90 @@ def specification_identity(repository: Path) -> str:
     return f"{match.group(1)}@{digest_files(repository, normative)}"
 
 
+def oracle_identity(repository: Path) -> str:
+    """Bind the pinned local Oracle and a verified committed observation record."""
+    path = repository / "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"
+    script = repository / "build/issue50-oracle-probes.py"
+    try:
+        observation = json.loads(path.read_text(encoding="utf-8"))
+        claimed = observation.pop("record_sha256")
+        oracle = observation["oracle_sha256"]
+        script_digest = observation["probe_script_sha256"]
+        canonical = json.dumps(
+            observation, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        actual = hashlib.sha256(canonical).hexdigest()
+        script_bytes = script.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8")
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError) as error:
+        raise capsule_tool.CapsuleError(f"cannot bind pinned Oracle observation: {error}") from error
+    if (
+        not isinstance(claimed, str)
+        or claimed != actual
+        or oracle != "4c34fe4173a2bd04ba52d5a6357348256ee424573785085fdafaab524cf7b0c2"
+        or script_digest != hashlib.sha256(script_bytes).hexdigest()
+    ):
+        raise capsule_tool.CapsuleError("pinned Oracle observation or probe script changed")
+    return f"pinned-sha256:{oracle}@observation-sha256:{claimed}"
+
+
+def deviation_review_status(repository: Path) -> str:
+    """Require explicit approval of every applicable deviation for current evidence and code."""
+    review_path = repository / "tests/assurance/deviation-review.json"
+    observation_path = (
+        repository
+        / "docs/development/evidence/issue50-automated-conformance/oracle-observations.json"
+    )
+    profile_path = repository / "docs/spec/compatibility-profiles.md"
+    try:
+        review = json.loads(review_path.read_text(encoding="utf-8"))
+        observation = json.loads(observation_path.read_text(encoding="utf-8"))
+        profile_text = profile_path.read_text(encoding="utf-8")
+        # JBSA-SCOPE-009 defers Xbox inference; the other 12 immutable profile rows gate 1.0.
+        expected = set(re.findall(r"BSARCH-1[.]0-V1-[A-Z0-9-]+", profile_text)) - {
+            "BSARCH-1.0-V1-DDS-XBOX-NAME"
+        }
+        observed = {probe["deviation_id"] for probe in observation["probes"]}
+        listed = review["required_deviations"]
+        approved = review["approved_deviations"]
+    except (OSError, UnicodeError, json.JSONDecodeError, KeyError, TypeError) as error:
+        return "unavailable"
+    if (
+        review.get("version") != 1
+        or review.get("profile") != "bsarch-1.0/v1"
+        or review.get("profile_payload_sha256")
+        != "9577d821c40982e7f988d311d5ba7cf55b0f098af2c3f5fd5c5a531360dde1c4"
+        or len(expected) != 12
+        or listed != sorted(expected)
+        or observed != expected
+    ):
+        return "incomplete"
+    # Codec/profile resources can change fallback behavior without a Java source edit.
+    current_implementation = digest_files(
+        repository,
+        [
+            repository / "jbsa/src/main/java",
+            repository / "jbsa-cli/src/main/java",
+            repository / "jbsa/src/main/resources/META-INF",
+            profile_path,
+        ],
+    )
+    if (
+        review.get("oracle_observation_sha256") != observation.get("record_sha256")
+        or review.get("implementation_sha256") != current_implementation
+    ):
+        return "stale"
+    if review.get("state") == "pending":
+        return "pending"
+    if (
+        review.get("state") != "approved"
+        or approved != sorted(expected)
+        or not isinstance(review.get("approval_reference"), str)
+        or not review["approval_reference"].strip()
+    ):
+        return "incomplete"
+    return "approved"
+
+
 def session_identity(repository: Path, plan_path: Path, java_executable: str) -> dict[str, str]:
     """Bind common candidate, runtime, profile, corpus, and protocol identities once."""
     metadata = repository / "jbsa/src/main/resources/META-INF"
@@ -114,6 +214,8 @@ def session_identity(repository: Path, plan_path: Path, java_executable: str) ->
     java_identity = command_identity([java_executable, "-version"], repository)
     return {
         "candidate": candidate_digest(repository),
+        # A PR checkout may test a merge commit rather than the branch's head commit.
+        "candidate_commit": candidate_commit(repository),
         "runtime": java_identity,
         "jvm": java_identity,
         "profile": digest_files(repository, list(metadata.glob("*profile*.json"))),
@@ -135,6 +237,16 @@ def session_identity(repository: Path, plan_path: Path, java_executable: str) ->
         "generator": digest_files(
             repository,
             [*sorted((repository / "build/assurance").glob("*.py")), plan_path],
+        ),
+        "oracle": oracle_identity(repository),
+        "validator": digest_files(
+            repository,
+            [
+                *sorted((repository / "build").glob("validate-*.py")),
+                *sorted((repository / "build").glob("validate-*.ps1")),
+                *sorted((repository / "build").glob("test-*-validator.py")),
+                *sorted((repository / "build").glob("run-*-validator.ps1")),
+            ],
         ),
     }
 
@@ -196,6 +308,7 @@ def results_from_reports(
 ) -> dict[str, list[dict[str, Any]]]:
     """Require every selector in every selected scenario to have real passing evidence."""
     testcases = load_testcases(report_roots)
+    review_status = deviation_review_status(repository)
     results = []
     for item, identity_key in (
         *((scenario, "assurance_scenario_id") for scenario in selection["assurance_scenarios"]),
@@ -216,10 +329,32 @@ def results_from_reports(
         ]
         outcomes = {outcome for outcome, _ in selector_results}
         outcome = "INVALID" if "INVALID" in outcomes else "FAIL" if "FAIL" in outcomes else "PASS"
+        # Passing JUnit methods do not replace the independent wire or Oracle references.
+        retained_references = item.get("evidence_refs", [])
+        missing_references = [
+            reference
+            for reference in retained_references
+            if not (repository / reference).is_file()
+        ]
+        if missing_references:
+            outcome = "INVALID"
+        review_evidence = []
+        if item.get("assurance_scenario_id") in {
+            "shared-core:bsarch-v1-cli",
+            "shared-core:profile-library-deviations",
+        }:
+            review_evidence.append("deviation-review:" + review_status)
+            if review_status != "approved":
+                outcome = "INVALID"
         results.append(
             {
                 "evidence": sorted(
-                    {reference for _, evidence in selector_results for reference in evidence}
+                    {
+                        *(reference for _, evidence in selector_results for reference in evidence),
+                        *retained_references,
+                        *review_evidence,
+                        *("missing-evidence:" + reference for reference in missing_references),
+                    }
                 ),
                 "id": item[identity_key],
                 "outcome": outcome,

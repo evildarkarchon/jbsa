@@ -67,14 +67,17 @@ class AssuranceComparisonTests(unittest.TestCase):
                 "bsa-067",
                 "bsa-068",
                 "bsa-069",
+                "fo4-dx10-v1",
                 "fo4-dx10-v7",
                 "fo4-dx10-v8",
+                "fo4-gnrl-v1",
                 "fo4-gnrl-v7",
                 "fo4-gnrl-v8",
                 "sf-dx10-v2",
                 "sf-dx10-v3-m3",
                 "sf-gnrl-v2",
                 "sf-gnrl-v3-m3",
+                "shared-core",
                 "tes3",
             ],
             report["scope_families"],
@@ -84,14 +87,17 @@ class AssuranceComparisonTests(unittest.TestCase):
                 "bsa-067": 32,
                 "bsa-068": 52,
                 "bsa-069": 32,
+                "fo4-dx10-v1": 47,
                 "fo4-dx10-v7": 31,
                 "fo4-dx10-v8": 31,
+                "fo4-gnrl-v1": 33,
                 "fo4-gnrl-v7": 31,
                 "fo4-gnrl-v8": 31,
                 "sf-dx10-v2": 31,
                 "sf-dx10-v3-m3": 31,
                 "sf-gnrl-v2": 31,
                 "sf-gnrl-v3-m3": 33,
+                "shared-core": 0,
                 "tes3": 39,
             },
             report["legacy_case_counts"],
@@ -190,6 +196,71 @@ class AssuranceComparisonTests(unittest.TestCase):
             self.assertEqual(0, family["retired_legacy_case_count"])
             self.assertEqual(0, family["unmapped_legacy_case_count"])
 
+    def test_fallout4_v1_maps_distinct_behaviors_and_retires_only_deferred_xbox(self) -> None:
+        """Keep each v1 CV1 behavior bound to an applicable, evidence-backed archetype."""
+        with tempfile.TemporaryDirectory() as temporary:
+            output_path = Path(temporary) / "comparison.json"
+            result = self.run_command(LEGACY, PLAN, output_path)
+            self.assertEqual(0, result.returncode, result.stderr)
+            report = json.loads(output_path.read_text(encoding="utf-8"))
+
+        mapped = {
+            case_id: archetype["assurance_scenario_id"]
+            for archetype in report["mapped_scenario_archetypes"]
+            for case_id in archetype["legacy_case_ids"]
+        }
+        catalog = json.loads(LEGACY.read_text(encoding="utf-8"))
+        cases = catalog["cases"]
+        examples = (
+            ("fo4-gnrl-v1", "decode", "base-fo4-gnrl-v1-raw-lz4", "unsupported-codec-decode"),
+            ("fo4-gnrl-v1", "decode", "malformed-partial-overlap", "fallout4-v1-malformed-and-resource"),
+            ("fo4-gnrl-v1", "encode", "base-fo4-gnrl-v1-mixed", "fallout4-v1-interactions"),
+            ("fo4-gnrl-v1", "extract", "unsafe-name-extraction", "fallout4-v1-unsafe-extraction"),
+            ("fo4-dx10-v1", "decode", "base-fo4-dx10-v1-stored", "fallout4-v1-interactions"),
+            ("fo4-dx10-v1", "encode", "base-fo4-dx10-v1-stored", "unsupported-codec-encode"),
+            ("fo4-dx10-v1", "encode", "dds-target-mismatch-pc", "fallout4-v1-dds-pc-target"),
+            ("fo4-dx10-v1", "scenario", "dds-bc8-boundaries", "fallout4-v1-interactions"),
+            ("fo4-dx10-v1", "scenario", "dds-cli-selector", "fallout4-v1-cli"),
+        )
+        for family, operation, fixture_fragment, scenario in examples:
+            with self.subTest(family=family, operation=operation, fixture=fixture_fragment):
+                matching = [
+                    case["identity"]["case_id"]
+                    for case in cases
+                    if case["identity"]["archive_family"] == family
+                    and case["identity"]["operation"] == operation
+                    and fixture_fragment in case["identity"]["fixture"]
+                ]
+                self.assertEqual(1, len(matching))
+                self.assertEqual(f"{family}:{scenario}", mapped.get(matching[0]))
+
+        retired = [
+            case for case in report["retired_legacy_cases"] if case["family"] == "fo4-dx10-v1"
+        ]
+        self.assertEqual(3, len(retired))
+        self.assertEqual(
+            {
+                "dds-target-xbox",
+                "dds-target-mismatch-xbox",
+                "dds-reconstruction-selection",
+            },
+            {
+                case["identity"]["fixture"]
+                for case in cases
+                if case["identity"]["case_id"] in {item["case_id"] for item in retired}
+            },
+        )
+        self.assertTrue(all("JBSA-SCOPE-009" in item["reason"] for item in retired))
+        for family, legacy_count, mapped_count, retired_count in (
+            ("fo4-gnrl-v1", 33, 33, 0),
+            ("fo4-dx10-v1", 47, 44, 3),
+        ):
+            family_report = next(item for item in report["families"] if item["family"] == family)
+            self.assertEqual(legacy_count, family_report["legacy_case_count"])
+            self.assertEqual(mapped_count, family_report["mapped_legacy_case_count"])
+            self.assertEqual(retired_count, family_report["retired_legacy_case_count"])
+            self.assertEqual(0, family_report["unmapped_legacy_case_count"])
+
     def test_classifies_supported_archetypes_and_excludes_out_of_scope_cases(self) -> None:
         """Map justified legacy behavior signatures without importing other families."""
         cases = [
@@ -209,7 +280,9 @@ class AssuranceComparisonTests(unittest.TestCase):
             self.legacy_case(
                 "bsa069-lz4", "bsa-069", "encode", "base", "lz4-frame", "accept"
             ),
-            self.legacy_case("out-of-scope", "fo4-gnrl-v1", "decode", "base", "zlib", "accept"),
+            self.legacy_case(
+                "out-of-scope", "future-family", "decode", "base", "zlib", "accept"
+            ),
         ]
         catalog = {"schema_version": 1, "contract": "conformance-v1", "cases": cases}
 
@@ -252,6 +325,48 @@ class AssuranceComparisonTests(unittest.TestCase):
         )
         self.assertFalse(report["unmapped_legacy_cases"])
         self.assertFalse(any("out-of-scope" in str(item) for item in report.values()))
+
+    def test_unknown_v1_behavior_stays_unmapped_and_pc_mismatch_is_not_retired(self) -> None:
+        """Fail closed on new v1 behavior while preserving required PC target rejection."""
+        catalog = {
+            "schema_version": 1,
+            "contract": "conformance-v1",
+            "cases": [
+                self.legacy_case(
+                    "unknown-v1",
+                    "fo4-gnrl-v1",
+                    "scenario",
+                    "unknown-v1-behavior",
+                    "stored",
+                    "assert-specified-outcome",
+                ),
+                self.legacy_case(
+                    "pc-mismatch",
+                    "fo4-dx10-v1",
+                    "encode",
+                    "fo4-dds-dds-target-mismatch-pc-v1-interface-v1-runtime-v1-profile-v1",
+                    "zlib",
+                    "assert-specified-outcome",
+                ),
+            ],
+        }
+        with tempfile.TemporaryDirectory() as temporary:
+            legacy_path = Path(temporary) / "legacy.json"
+            plan_path = Path(temporary) / "plan.json"
+            output_path = Path(temporary) / "comparison.json"
+            legacy_path.write_text(json.dumps(catalog), encoding="utf-8")
+            plan = json.loads(PLAN.read_text(encoding="utf-8"))
+            plan["legacy_conformance_digest"] = (
+                "sha256:" + hashlib.sha256(legacy_path.read_bytes()).hexdigest()
+            )
+            plan_path.write_text(json.dumps(plan), encoding="utf-8")
+
+            result = self.run_command(legacy_path, plan_path, output_path)
+            self.assertEqual(0, result.returncode, result.stderr)
+            report = json.loads(output_path.read_text(encoding="utf-8"))
+
+        self.assertIn("unknown-v1", {item["case_id"] for item in report["unmapped_legacy_cases"]})
+        self.assertNotIn("pc-mismatch", {item["case_id"] for item in report["retired_legacy_cases"]})
 
     def test_rejects_a_legacy_catalog_outside_the_reviewed_digest(self) -> None:
         """Prevent future Conformance Cases from silently inheriting consolidation rules."""

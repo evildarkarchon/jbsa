@@ -38,6 +38,7 @@ class EvidenceCapsuleTests(unittest.TestCase):
         }
         session = {
             "candidate": "sha256:" + "3" * 64,
+            "candidate_commit": "b" * 40,
             "runtime": "windows-x64",
             "jvm": "temurin-25.0.4.1+1",
             "profile": "sha256:" + "4" * 64,
@@ -48,6 +49,8 @@ class EvidenceCapsuleTests(unittest.TestCase):
             "platform": "windows-2025",
             "provider": "jdk-zlib+lwjgl-lz4",
             "generator": "sha256:" + "7" * 64,
+            "oracle": "pinned-sha256:" + "8" * 64 + "@observation-sha256:" + "9" * 64,
+            "validator": "sha256:" + "a" * 64,
         }
         selection_path = directory / "selection.json"
         session_path = directory / "session.json"

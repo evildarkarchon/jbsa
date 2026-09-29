@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -186,6 +187,85 @@ final class Ba2ConformanceIT {
     }
   }
 
+  /** Stored, zlib, and mixed v1 outputs retain the same wire bytes across worker counts. */
+  @Test
+  void keepsVersionOneWireAndSemanticsAcrossWorkerCounts() throws Exception {
+    Path source = sources();
+    for (String mode : List.of("stored", "zlib", "mixed")) {
+      PackOptions.Compression compression =
+          mode.equals("stored") ? PackOptions.Compression.STORED : PackOptions.Compression.ZLIB;
+      Map<NormalizedNameIdentity, PackOptions.Compression> overrides =
+          mode.equals("mixed")
+              ? Map.of(new NormalizedNameIdentity("meshes\\b.nif"), PackOptions.Compression.STORED)
+              : Map.of();
+      Path single = directory.resolve(mode + "-single.ba2");
+      Path parallel = directory.resolve(mode + "-parallel.ba2");
+      pack(source, single, compression, overrides, 1);
+      pack(source, parallel, compression, overrides, 4);
+      validate(single);
+      validate(parallel);
+      assertEquals(-1L, Files.mismatch(single, parallel), mode);
+      assertArchive(single);
+      assertArchive(parallel);
+    }
+  }
+
+  /** Foreign v1 General compression choices fail before generated source or destination effects. */
+  @Test
+  void rejectsForeignVersionOneEncodeCodecsBeforeSourceEffects() throws Exception {
+    for (PackOptions.Compression compression :
+        List.of(PackOptions.Compression.LZ4_FRAME, PackOptions.Compression.LZ4_RAW)) {
+      AtomicInteger opens = new AtomicInteger();
+      Path destination = directory.resolve("unsupported-" + compression + ".ba2");
+      PackRequest defaults =
+          PackRequest.standard(
+              destination,
+              ArchiveFamily.FO4_GENERAL_BA2,
+              new ArchiveEncoding(
+                  Optional.of(new WireVersion(1)),
+                  Optional.of(Ba2Subtype.GNRL),
+                  OptionalLong.empty()),
+              List.of(
+                  new PackSource.GeneratedEntry(
+                      "Data/Entry.bin",
+                      1,
+                      () -> {
+                        opens.incrementAndGet();
+                        return Channels.newChannel(
+                            new java.io.ByteArrayInputStream(new byte[] {1}));
+                      })),
+              Optional.empty());
+      PackOptions selected =
+          new PackOptions(
+              List.of(),
+              compression,
+              false,
+              new PackOptions.Splitting.UpToBytes(0),
+              FlagSelection.AUTOMATIC,
+              FlagSelection.AUTOMATIC);
+      PackRequest invalid =
+          new PackRequest(
+              defaults.destination(),
+              defaults.family(),
+              defaults.encoding(),
+              defaults.compatibilityProfile(),
+              defaults.sources(),
+              defaults.targetPolicy(),
+              defaults.diagnosticPolicy(),
+              defaults.resourceLimits(),
+              defaults.workerSelection(),
+              selected,
+              defaults.ddsTarget());
+      ArchiveException failure =
+          assertThrows(
+              ArchiveException.class,
+              () -> BethesdaArchives.standard().pack(invalid, OperationControl.standard()));
+      assertEquals(FailureKind.UNSUPPORTED, failure.kind());
+      assertEquals(0, opens.get());
+      assertFalse(Files.exists(destination));
+    }
+  }
+
   /** Runs both differential directions for stored and zlib against the pinned local executable. */
   @Test
   @EnabledIfSystemProperty(named = "jbsa.ba2.local", matches = "true")
@@ -232,6 +312,17 @@ final class Ba2ConformanceIT {
       PackOptions.Compression compression,
       Map<NormalizedNameIdentity, PackOptions.Compression> overrides)
       throws Exception {
+    pack(sources, output, compression, overrides, 1);
+  }
+
+  /** Selects a public worker count while keeping the same explicit codec and entry choices. */
+  private void pack(
+      Path sources,
+      Path output,
+      PackOptions.Compression compression,
+      Map<NormalizedNameIdentity, PackOptions.Compression> overrides,
+      int workers)
+      throws Exception {
     PackRequest defaults =
         PackRequest.standard(
             output,
@@ -253,7 +344,7 @@ final class Ba2ConformanceIT {
                 defaults.targetPolicy(),
                 defaults.diagnosticPolicy(),
                 defaults.resourceLimits(),
-                new WorkerSelection.UpTo(1),
+                new WorkerSelection.UpTo(workers),
                 new PackOptions(
                     List.of(),
                     compression,
