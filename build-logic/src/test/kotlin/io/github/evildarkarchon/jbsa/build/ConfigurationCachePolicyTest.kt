@@ -24,10 +24,7 @@ class ConfigurationCachePolicyTest {
                 ConfigurationCachePolicy.validate(
                     listOf(
                         "verify",
-                        "verifyCompliance",
                         "generateResolvedProductionDependencies",
-                        ":jbsa-dist:stageReleaseInputs",
-                        ":jbsa-dist:verifyStagedReleaseInputs",
                         ":jbsa-conformance-tests:captureAutomatedConformance",
                         ":jbsa-conformance-tests:automatedConformance",
                         ":jbsa-benchmarks:smokeTestBenchmarkLauncher",
@@ -40,9 +37,8 @@ class ConfigurationCachePolicyTest {
             "Configuration cache is not supported for evidence, staging, or external-process tasks: " +
                 ":jbsa-benchmarks:smokeTestBenchmarkLauncher, :jbsa-cli:smokeTestThinCli, " +
                 ":jbsa-conformance-tests:automatedConformance, " +
-                ":jbsa-conformance-tests:captureAutomatedConformance, :jbsa-dist:stageReleaseInputs, " +
-                ":jbsa-dist:verifyStagedReleaseInputs, generateResolvedProductionDependencies, verify, " +
-                "verifyCompliance. Run them without --configuration-cache.",
+                ":jbsa-conformance-tests:captureAutomatedConformance, " +
+                "generateResolvedProductionDependencies, verify. Run them without --configuration-cache.",
             exception.message,
         )
     }

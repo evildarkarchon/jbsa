@@ -203,12 +203,9 @@ any lz4-java frame stream. JBSA **MUST NOT** call a `native*`, `unsafe*`, or
 `fastest*` factory, because those can load lz4-java's bundled JNI libraries
 outside the native-access policy in [JBSA-CODEC-011](#jbsa-codec-011).
 
-Under [JBSA-LIC-007](compliance.md#jbsa-lic-007), lz4-java is an explicitly
-authorized provider artifact: its JAR **MAY** carry its bundled native
-libraries into the library dependency set and every CLI image. JBSA never loads
-them, so they do not admit a native dependency. Each bundled native file
-**MUST** still be recorded and audited as a redistributed native payload under
-[JBSA-LIC-008](compliance.md#jbsa-lic-008).
+lz4-java is an explicitly authorized provider artifact: its JAR **MAY** carry
+its bundled native libraries into the library dependency set and every CLI
+image. JBSA never loads them, so they do not admit a native dependency.
 
 Archive Family codec permission and wire framing remain owned by
 [JBSA-BSA-001](formats/versioned-bsa.md#jbsa-bsa-001),
@@ -218,7 +215,7 @@ Archive Family codec permission and wire framing remain owned by
 [JBSA-GNRL-005](formats/general-ba2.md#jbsa-gnrl-005), and
 [JBSA-DX10-004](formats/dds-ba2.md#jbsa-dx10-004).
 
-_Source decisions: [accepted zlib and LZ4 implementations](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971); portable lz4-java provider and its inert bundled native libraries by maintainer decision in specification `0.19.0`, [CVE-2025-12183 fix](https://openwall.com/lists/oss-security/2025/12/01/5), [CVE-2025-66566 fix](https://github.com/yawkat/lz4-java/security/advisories/GHSA-cmp6-m4wj-q63q)._
+_Source decisions: [accepted zlib and LZ4 implementations](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971); portable lz4-java provider and its inert bundled native libraries by maintainer decision in specification `0.19.0`; licensing references dropped with the retirement of JBSA-LIC-007 and JBSA-LIC-008 in specification `0.19.0`, [CVE-2025-12183 fix](https://openwall.com/lists/oss-security/2025/12/01/5), [CVE-2025-66566 fix](https://github.com/yawkat/lz4-java/security/advisories/GHSA-cmp6-m4wj-q63q)._
 
 ## JBSA-CODEC-015
 

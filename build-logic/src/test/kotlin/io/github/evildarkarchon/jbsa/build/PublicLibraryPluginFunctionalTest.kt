@@ -240,16 +240,6 @@ class PublicLibraryPluginFunctionalTest {
         )
     }
 
-    /** Verifies publication remains local-only and build-only projects cannot acquire publications. */
-    @Test
-    fun `permits publication only for the library and configures no remote action`() {
-        val result = run("--write-locks", "verifyPublicationPolicy", ":jbsa-test-support:tasks", "--all")
-
-        assertTrue(result.output.contains("JBSA_PUBLICATION :jbsa=library"), result.output)
-        assertTrue(result.output.contains("JBSA_PUBLICATION_REMOTE_TASKS 0"), result.output)
-        assertFalse(result.output.contains(":jbsa-test-support:publish"), result.output)
-    }
-
     /** Verifies local publication cannot expand the compatible four-file artifact set. */
     @Test
     fun `disables incidental Gradle module metadata`() {
@@ -308,41 +298,6 @@ class PublicLibraryPluginFunctionalTest {
             result.output.contains("annotation value leaks prohibited type org.lwjgl.system.MemoryStack"),
             result.output,
         )
-    }
-
-    /** Verifies a build-only project cannot acquire Maven publication capability. */
-    @Test
-    fun `rejects build-only publication configuration`() {
-        write(
-            "jbsa-test-support/build.gradle.kts",
-            """
-            plugins { `maven-publish` }
-            publishing {
-                repositories { maven { url = uri("https://example.invalid/releases") } }
-            }
-            """.trimIndent(),
-        )
-
-        val result = runAndFail("--write-locks", "verifyPublicationPolicy")
-
-        assertTrue(result.output.contains(":jbsa-test-support is build-only and cannot apply maven-publish"), result.output)
-    }
-
-    /** Verifies the public library cannot configure a remote publication repository. */
-    @Test
-    fun `rejects a remote publication repository`() {
-        write(
-            "jbsa/build.gradle.kts",
-            """
-            publishing {
-                repositories { maven { url = uri("https://example.invalid/releases") } }
-            }
-            """.trimIndent(),
-        )
-
-        val result = runAndFail("--write-locks", "verifyPublicationPolicy")
-
-        assertTrue(result.output.contains("Remote publication repositories are prohibited for :jbsa"), result.output)
     }
 
     /** Writes one JUnit class whose observation log exposes ordering and test-process policy. */

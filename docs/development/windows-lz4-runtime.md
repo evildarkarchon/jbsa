@@ -45,11 +45,8 @@ not claim that final application-image qualification has already passed.
 `compliance/dependency-inventory.json` pins the LWJGL 3.4.3 core and LZ4 binding
 JARs and both `natives-windows` classifiers. The native inventory additionally
 pins each uncompressed DLL and records upstream LZ4 1.10.0 provenance. Native
-JARs remain separate from the thin library JAR. `stage-release-inputs.ps1`
-consumes Gradle-resolved dependencies under `jbsa-dist/target/runtime-dependencies`,
-checks each inventory approval and SHA-256 before replacing staging, and records
-the exact coordinates and hashes in the release-input manifest. The existing
-compliance verifier recursively audits those JARs and their native contents.
+JARs remain separate from the thin library JAR. Gradle stages the resolved
+runtime JARs under `jbsa-dist/target/runtime-dependencies`.
 
 The upstream license texts are retained verbatim in
 `compliance/licenses/LWJGL-3.4.3.txt` and `compliance/licenses/LZ4-1.10.0.txt` and
@@ -100,8 +97,6 @@ preflight also checks `Module.isNativeAccessEnabled()` rather than relying on
 that default. See [Java 25 native access](https://docs.oracle.com/en/java/javase/25/core/restricted-methods.html)
 and the [pinned LWJGL loader](https://github.com/LWJGL/lwjgl3/blob/30fac9b95f99cda97312232be25ba55297bf9951/modules/lwjgl/lz4/src/generated/java/org/lwjgl/util/lz4/LibLZ4.java).
 
-`build/test-release-staging.ps1` verifies runtime byte accounting, deterministic
-restaging, stale removal, missing inputs, and fail-before-replacement for a
-tampered runtime. Codec and native-access subprocess qualification additionally
-exercise actual LZ4 operations; merely displaying CLI help does not initialize
+Codec and native-access subprocess qualification exercise actual LZ4
+operations; merely displaying CLI help does not initialize
 the lazy codec and therefore is not codec-loading evidence.

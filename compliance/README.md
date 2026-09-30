@@ -61,39 +61,15 @@ For native entries, open the JAR as a ZIP and hash the uncompressed entry stream
 checksum from mutable prose or infer a payload’s license from Maven metadata alone; compare the
 published bytes, release source, embedded notices, and upstream component provenance.
 
-## Release-input manifests
-
-Every non-empty release-input directory passed to `build/verify-compliance.ps1` needs a JSON
-manifest with `schemaVersion: 1` and an `entries` array. Each entry contains `path`, lowercase
-`sha256`, `kind`, and `source`. Paths are relative, non-traversing, and unique. Kinds are restricted
-to project artifacts, inventoried dependencies/native containers or payloads, and named evidence
-classes (license, notice, release notes, SBOM, provenance, checksum, or documentation). Dependency
-and native sources must reconcile to their approved inventory identity; evidence sources must name
-an existing repository file with exactly the same bytes.
-
-The verifier requires an exact two-way match: every file is manifested, every manifest entry
-exists, and every digest matches. It recursively opens JAR/ZIP inputs through a bounded depth and
-size, rejects unsafe or duplicate entry names, and applies the proprietary/native checks to nested
-bytes before general manifest accounting. The generated SBOM is reconciled in both directions so
-an uninventoried transitive runtime component fails even when every direct dependency is approved.
-The final `jbsa-dist` verification stages current multi-project outputs and compliance evidence, then
-requires `jbsa-dist/target/release-inputs` and `jbsa-dist/target/release-inputs.json` explicitly.
-Missing assembly inputs fail rather than skipping this audit. Standalone callers supply both
-paths explicitly for any staging location; the root repository audit does not consume stale
-staging from an earlier build.
-
 ## Gradle compliance model
 
 The Gradle build writes two internal, schema-version-1 contracts below `target/compliance`:
 `build-layout.json` names contained generated outputs, while
 `resolved-production-dependencies.json` records each production configuration's requested and
 resolved coordinates, selected variant, classifier, artifact filename, and exact SHA-256. Their
-arrays and object keys are serialized deterministically. These contracts are audit inputs only and
-are deliberately absent from the release-input staging list.
+arrays and object keys are serialized deterministically.
 
-`gradlew verifyCompliance` reconciles those contracts with the generated parent-free consumer POM,
-the production lockfiles, both strict dependency-verification metadata files, and this maintained
-licensing inventory. Gradle resolution proves which bytes were selected; it never grants licensing
-or redistribution approval. The task also creates the deterministic CycloneDX 1.6 release SBOM and
-the existing notice outputs. The SBOM has no serial number, retains `jbsa-parent` as the logical
-root, and excludes tests, build-only projects, and build plugins.
+Gradle resolution proves which bytes were selected; it never grants licensing or redistribution
+approval, and no build task reconciles the resolved graph with this inventory. `generateProductionSbom`
+creates the deterministic CycloneDX 1.6 release SBOM. The SBOM has no serial number, retains
+`jbsa-parent` as the logical root, and excludes tests, build-only projects, and build plugins.

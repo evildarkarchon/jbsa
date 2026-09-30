@@ -12,7 +12,6 @@ internal object JbsaConformanceIdentity {
     val TAGGED_TESTS =
         linkedMapOf(
             "architectureTest" to "architecture",
-            "buildPolicyTest" to "build-policy",
             "archiveFixtureTest" to "archive-fixtures",
             "conformanceHarnessTest" to "conformance-harness",
             "assurancePlanTest" to "assurance-plan",

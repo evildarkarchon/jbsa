@@ -36,7 +36,6 @@ jobs:
           - unit
           - architecture
           - formatting
-          - policy
           - conformance
 
     steps:

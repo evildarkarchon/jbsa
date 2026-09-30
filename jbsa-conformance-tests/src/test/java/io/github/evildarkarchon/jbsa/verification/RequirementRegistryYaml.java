@@ -108,7 +108,7 @@ final class RequirementRegistryYaml {
       if (requirement.lifecycleState().equals("retired")) {
         requireRegistry(
             requirement.retirement() != null, "Missing retirement for " + requirement.id());
-        // A retirement ticket is optional; when present it is shape-checked by GradleBuildPolicyIT.
+        // A retirement ticket is optional; only the retirement reason is required.
         requireText(requirement.retirement().reason(), "retirement reason for " + requirement.id());
       } else {
         requireRegistry(

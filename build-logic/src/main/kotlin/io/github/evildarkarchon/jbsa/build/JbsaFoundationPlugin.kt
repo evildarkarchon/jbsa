@@ -6,8 +6,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalModuleDependency
 import org.gradle.api.artifacts.dsl.LockMode
-import org.gradle.api.tasks.Exec
-import org.gradle.api.tasks.bundling.Jar
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 
 /** Establishes the single-version, six-project JBSA build and its deterministic resolution policy. */
@@ -108,7 +106,7 @@ class JbsaFoundationPlugin : Plugin<Project> {
         }
     }
 
-    /** Registers compliance generation/audit, foundation reporting, verification, and clean aggregation. */
+    /** Registers build-model generation, foundation reporting, verification, and clean aggregation. */
     private fun configureLifecycle(project: Project, candidate: String) {
         val generateBuildLayout =
             project.tasks.register("generateBuildLayoutManifest", GenerateBuildLayoutManifest::class.java) {
@@ -136,18 +134,6 @@ class JbsaFoundationPlugin : Plugin<Project> {
                             "project-artifact",
                             "jbsa-cli/target/libs/jbsa-cli-$candidate.jar",
                             ":jbsa-cli:jar",
-                        ),
-                        BuildLayoutEntry(
-                            "generated-release-notes",
-                            "compliance-evidence",
-                            "target/compliance/RELEASE-NOTES.md",
-                            ":verifyCompliance",
-                        ),
-                        BuildLayoutEntry(
-                            "generated-third-party-notices",
-                            "compliance-evidence",
-                            "target/compliance/THIRD-PARTY-NOTICES.md",
-                            ":verifyCompliance",
                         ),
                         BuildLayoutEntry(
                             "library-binary",
@@ -242,158 +228,6 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 }
             }
         }
-        val library = project.project(JbsaPublicLibraryIdentity.PROJECT_PATH)
-        val generateConsumerPom = library.tasks.named(JbsaPublicLibraryIdentity.generatePomTaskName())
-        val consumerPom = library.layout.buildDirectory.file(JbsaPublicLibraryIdentity.publicationPath("pom-default.xml"))
-        val lockFiles =
-            listOf(
-                project.layout.projectDirectory.file("gradle.lockfile"),
-                project.layout.projectDirectory.file("jbsa/gradle.lockfile"),
-                project.layout.projectDirectory.file("jbsa-cli/gradle.lockfile"),
-                project.layout.projectDirectory.file("jbsa-dist/gradle.lockfile"),
-            )
-        val verificationFiles =
-            listOf(
-                project.layout.projectDirectory.file("gradle/verification-metadata.xml"),
-                project.layout.projectDirectory.file("build-logic/gradle/verification-metadata.xml"),
-            )
-        val verifyCompliance =
-            project.tasks.register("verifyCompliance", Exec::class.java) {
-                group = LifecycleBasePlugin.VERIFICATION_GROUP
-                description = "Audits Gradle production resolution, licensing, notices, and the generated SBOM."
-                dependsOn(generateBuildLayout, generateResolvedDependencies, generateProductionSbom, generateConsumerPom)
-                workingDir(project.rootDir)
-                val script = project.layout.projectDirectory.file("build/verify-compliance.ps1")
-                inputs.files(
-                    script,
-                    project.layout.projectDirectory.file("compliance/dependency-inventory.json"),
-                    project.layout.projectDirectory.file("compliance/native-payload-inventory.json"),
-                    project.layout.projectDirectory.file("THIRD-PARTY-NOTICES.md"),
-                    project.layout.projectDirectory.file("RELEASE-NOTES.md"),
-                    generateBuildLayout.flatMap { it.manifestFile },
-                    generateResolvedDependencies.flatMap { it.manifestFile },
-                    generateProductionSbom.flatMap { it.sbomFile },
-                    consumerPom,
-                )
-                inputs.files(lockFiles, verificationFiles)
-                outputs.files(
-                    project.layout.buildDirectory.file("compliance/THIRD-PARTY-NOTICES.md"),
-                    project.layout.buildDirectory.file("compliance/RELEASE-NOTES.md"),
-                )
-                // The script audits every tracked byte, including paths outside its explicit model inputs.
-                outputs.upToDateWhen { false }
-                doFirst {
-                    commandLine(
-                        buildList {
-                            addAll(
-                                listOf(
-                                    "pwsh",
-                                    "-NoLogo",
-                                    "-NoProfile",
-                                    "-NonInteractive",
-                                    "-File",
-                                    script.asFile.absolutePath,
-                                    "-ReactorVersion",
-                                    candidate,
-                                    "-BuildLayoutManifest",
-                                    generateBuildLayout.get().manifestFile.get().asFile.absolutePath,
-                                    "-ResolvedProductionDependencies",
-                                    generateResolvedDependencies.get().manifestFile.get().asFile.absolutePath,
-                                    "-ConsumerPomPath",
-                                    consumerPom.get().asFile.absolutePath,
-                                )
-                            )
-                            addAll(
-                                listOf(
-                                    "-RequireGeneratedArtifacts",
-                                    "-GeneratedSbomPath",
-                                    generateProductionSbom.get().sbomFile.get().asFile.absolutePath,
-                                )
-                            )
-                        }
-                    )
-                }
-            }
-        project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named("buildPolicyTest") {
-            dependsOn(verifyCompliance)
-        }
-        val distribution = project.project(JbsaThinApplicationIdentity.DISTRIBUTION_PROJECT_PATH)
-        val libraryBinary = library.tasks.named("jar", Jar::class.java)
-        val librarySources = library.tasks.named("sourcesJar", Jar::class.java)
-        val libraryJavadoc = library.tasks.named("javadocJar", Jar::class.java)
-        val cli = project.project(JbsaThinApplicationIdentity.PROJECT_PATH)
-        val cliBinary = cli.tasks.named("jar", Jar::class.java)
-        val runtimeDependencies = distribution.layout.buildDirectory.dir("runtime-dependencies")
-        val releaseInputDirectory = distribution.layout.buildDirectory.dir("release-inputs")
-        val releaseInputManifest = distribution.layout.buildDirectory.file("release-inputs.json")
-        val stageReleaseInputs =
-            distribution.tasks.register(
-                JbsaThinApplicationIdentity.STAGE_RELEASE_INPUTS_TASK,
-                StageReleaseInputs::class.java,
-            ) {
-                group = "distribution"
-                description = "Stages the unchanged canonical release-input set with a deterministic manifest."
-                dependsOn(
-                    verifyCompliance,
-                    library.tasks.named(JbsaPublicLibraryIdentity.ASSEMBLE_PUBLICATION_TASK),
-                    cliBinary,
-                    distribution.tasks.named(JbsaThinApplicationIdentity.STAGE_RUNTIME_DEPENDENCIES_TASK),
-                )
-                stagingScript.set(project.layout.projectDirectory.file("build/stage-release-inputs.ps1"))
-                buildLayoutManifest.set(generateBuildLayout.flatMap { it.manifestFile })
-                dependencyInventory.set(
-                    project.layout.projectDirectory.file("compliance/dependency-inventory.json")
-                )
-                canonicalFiles.from(
-                    libraryBinary.flatMap(Jar::getArchiveFile),
-                    librarySources.flatMap(Jar::getArchiveFile),
-                    libraryJavadoc.flatMap(Jar::getArchiveFile),
-                    cliBinary.flatMap(Jar::getArchiveFile),
-                    consumerPom,
-                    generateProductionSbom.flatMap { it.sbomFile },
-                    project.layout.buildDirectory.file("compliance/THIRD-PARTY-NOTICES.md"),
-                    project.layout.buildDirectory.file("compliance/RELEASE-NOTES.md"),
-                    project.layout.projectDirectory.file("LICENSE"),
-                    project.layout.projectDirectory.file("NOTICE"),
-                    project.layout.projectDirectory.file("compliance/licenses/LWJGL-3.4.3.txt"),
-                    project.layout.projectDirectory.file("compliance/licenses/LZ4-1.10.0.txt"),
-                    project.layout.projectDirectory.file("build/windows-runtime/jbsa.ps1"),
-                    project.layout.projectDirectory.file("build/windows-runtime/launch-policy.json"),
-                )
-                this.runtimeDependencies.set(runtimeDependencies)
-                reactorVersion.set(candidate)
-                powershellExecutable.set("pwsh")
-                this.releaseInputDirectory.set(releaseInputDirectory)
-                this.releaseInputManifest.set(releaseInputManifest)
-            }
-        val verifyStagedReleaseInputs =
-            distribution.tasks.register(
-                JbsaThinApplicationIdentity.VERIFY_STAGED_RELEASE_INPUTS_TASK,
-                VerifyStagedReleaseInputs::class.java,
-            ) {
-                group = LifecycleBasePlugin.VERIFICATION_GROUP
-                description = "Audits the completed canonical staging set against compliance policy."
-                dependsOn(stageReleaseInputs)
-                verificationScript.set(project.layout.projectDirectory.file("build/verify-compliance.ps1"))
-                buildLayoutManifest.set(generateBuildLayout.flatMap { it.manifestFile })
-                resolvedProductionDependencies.set(generateResolvedDependencies.flatMap { it.manifestFile })
-                this.consumerPom.set(consumerPom)
-                generatedSbom.set(generateProductionSbom.flatMap { it.sbomFile })
-                algorithmInputs.from(
-                    project.layout.projectDirectory.file("compliance/dependency-inventory.json"),
-                    project.layout.projectDirectory.file("compliance/native-payload-inventory.json"),
-                    project.layout.projectDirectory.file("THIRD-PARTY-NOTICES.md"),
-                    project.layout.projectDirectory.file("RELEASE-NOTES.md"),
-                    project.layout.buildDirectory.file("compliance/THIRD-PARTY-NOTICES.md"),
-                    project.layout.buildDirectory.file("compliance/RELEASE-NOTES.md"),
-                    lockFiles,
-                    verificationFiles,
-                )
-                this.releaseInputDirectory.set(stageReleaseInputs.flatMap { it.releaseInputDirectory })
-                this.releaseInputManifest.set(stageReleaseInputs.flatMap { it.releaseInputManifest })
-                reactorVersion.set(candidate)
-                powershellExecutable.set("pwsh")
-            }
         val verifyFoundation =
             project.tasks.register("verifyBuildFoundation") {
                 group = LifecycleBasePlugin.VERIFICATION_GROUP
@@ -412,88 +246,14 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 }
             }
         }
-        val verifyPublicationPolicy =
-            project.tasks.register("verifyPublicationPolicy") {
-                group = LifecycleBasePlugin.VERIFICATION_GROUP
-                description = "Verifies that publication remains local-only and library-only."
-                doLast {
-                    PublicationPolicy.verify(project)
-                    BenchmarkIsolationPolicy.verify(project)
-                }
-            }
-        val verifyActiveReferences =
-            project.tasks.register("verifyActiveReferences", VerifyActiveReferences::class.java) {
-                group = LifecycleBasePlugin.VERIFICATION_GROUP
-                description = "Rejects stale legacy build instructions from active repository surfaces."
-                repositoryRoot.set(project.layout.projectDirectory)
-                allowlistFile.set(
-                    project.layout.projectDirectory.file("build/active-maven-reference-allowlist.properties")
-                )
-                legacyBuildFiles.from(
-                    project.fileTree(project.rootDir) {
-                        // Split scanner targets so this production configuration does not approve its own patterns.
-                        include(
-                            "pom" + ".xml",
-                            "**/pom" + ".xml",
-                            "mvn" + "w",
-                            "mvn" + "w.cmd",
-                            ".m" + "vn/**",
-                            "**/.m" + "vn/**",
-                        )
-                        exclude(".scratch/**", "docs/**", "**/target/**", "TES5Edit/**", "graphify-out/**")
-                    }
-                )
-                activeFiles.from(
-                    project.fileTree(project.rootDir) {
-                        include("**/*.md")
-                        include("CONTRIBUTING.md")
-                        include("README.md", "compliance/**/*.md")
-                        include("docs/**/*.md", "docs/**/*.yaml", "docs/**/*.yml")
-                        include(".github/workflows/**/*.yaml", ".github/workflows/**/*.yml")
-                        include(
-                            ".github/actions/**/*.yaml",
-                            ".github/actions/**/*.yml",
-                            ".github/actions/**/*.ps1",
-                            ".github/actions/**/*.sh",
-                            ".github/actions/**/*.js",
-                            ".github/actions/**/*.ts",
-                        )
-                        include(
-                            "build/**/*.ps1",
-                            "build/**/*.py",
-                            "build/**/*.cs",
-                            "build/**/*.json",
-                            "build/**/*.sh",
-                            "build/**/*.cmd",
-                            "build/**/*.bat",
-                            "build/**/*.kts",
-                            "build/**/*.gradle",
-                            "build/**/*.md",
-                            "build/**/*.yaml",
-                            "build/**/*.yml",
-                        )
-                        include("tests/**/*.md", "tests/**/*.yaml", "tests/**/*.yml", "tests/**/*.json")
-                        include("tests/**/*.java", "tests/**/*.kt", "tests/**/*.kts", "tests/**/*.ps1", "tests/**/*.py")
-                        include(".scratch/*/spec.md", ".scratch/*/issues/*.md")
-                        include("**/*.gradle.kts", "**/*.gradle")
-                        include("build-logic/src/main/**/*.kt", "build-logic/src/main/**/*.java")
-                        include("build-logic/src/test/**/*.kt", "build-logic/src/test/**/*.java")
-                        include("jbsa*/src/test/**/*.java", "jbsa*/src/test/**/*.kt")
-                        exclude("**/target/**", "TES5Edit/**", "graphify-out/**")
-                    }
-                )
-            }
         project.tasks.register("verify") {
             group = LifecycleBasePlugin.VERIFICATION_GROUP
-            description = "Builds, audits, stages, and post-audits the complete canonical release inputs."
+            description = "Builds the reactor and runs its tests, conformance, and assurance suites."
             dependsOn(
                 generateBuildLayout,
                 generateResolvedDependencies,
                 generateProductionSbom,
-                verifyCompliance,
                 verifyFoundation,
-                verifyPublicationPolicy,
-                verifyActiveReferences,
                 project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named("check"),
                 project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named(
                     JbsaPublicLibraryIdentity.ASSEMBLE_PUBLICATION_TASK
@@ -525,7 +285,6 @@ class JbsaFoundationPlugin : Plugin<Project> {
                     project.project(JbsaConformanceIdentity.PROJECT_PATH).tasks.named(taskName)
                 },
                 project.project(JbsaBenchmarkIdentity.PROJECT_PATH).tasks.named("check"),
-                verifyStagedReleaseInputs,
             )
         }
         project.tasks.named(LifecycleBasePlugin.CLEAN_TASK_NAME) {

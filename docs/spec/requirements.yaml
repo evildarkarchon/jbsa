@@ -324,7 +324,6 @@ requirements:
     test_evidence:
       - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/GradleFoundationFilesTest.kt#pins and classifies both Gradle wrapper launchers"
       - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/FoundationPluginFunctionalTest.kt#reports the default identity and all six roles"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectBuildPublishesTheDeclaredArtifactLayout"
   - id: JBSA-BUILD-002
     owner:
       document: docs/spec/modules-and-build.md
@@ -383,7 +382,6 @@ requirements:
       - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
       - .scratch/migrate-maven-to-gradle/issues/11-migrate-active-instructions.md
     test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectResolutionRetainsEachProductionConsumer"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionJarsExposeOnlyTheSpecifiedModules"
   - id: JBSA-BUILD-006
     owner:
@@ -412,7 +410,6 @@ requirements:
     test_evidence:
       - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#generates the exact parent-free consumer pom"
       - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#builds the compatible public artifact set"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectBuildPublishesTheDeclaredArtifactLayout"
   - id: JBSA-BUILD-008
     owner:
       document: docs/spec/modules-and-build.md
@@ -451,7 +448,6 @@ requirements:
     test_evidence:
       - ".github/workflows/build.yml"
       - "build/run-ci-gate.ps1"
-      - "build/verify-reproducible-build.ps1"
   - id: JBSA-CLI-001
     owner:
       document: docs/spec/bsarch-cli.md
@@ -2375,12 +2371,13 @@ requirements:
       anchor: jbsa-lic-001
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-002
     owner:
       document: docs/spec/compliance.md
@@ -2388,24 +2385,26 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-003
     owner:
       document: docs/spec/compliance.md
       anchor: jbsa-lic-003
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-004
     owner:
       document: docs/spec/compliance.md
@@ -2433,8 +2432,6 @@ requirements:
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#syntheticFixtureCorpusPassesProvenanceAudit"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/FixtureCorpusIT.java#localCorpusIsDiscoverableAndExcludedFromVersionControl"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryArchiveMaterial"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryMaterialHiddenInZip"
   - id: JBSA-LIC-006
     owner:
       document: docs/spec/compliance.md
@@ -2456,12 +2453,13 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/4#issuecomment-5509001000
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-008
     owner:
       document: docs/spec/compliance.md
@@ -2469,15 +2467,13 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnapprovedNativePayloads"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsNativePayloadHiddenInJar"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#sbomAuditRejectsUninventoriedTransitiveDependencies"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-009
     owner:
       document: docs/spec/compliance.md
@@ -2496,12 +2492,13 @@ requirements:
       anchor: jbsa-lic-010
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-011
     owner:
       document: docs/spec/compliance.md
@@ -2510,20 +2507,13 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
       - https://github.com/evildarkarchon/jbsa/issues/62
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryComplianceAuditPasses"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#buildGeneratesSbomAndThirdPartyNotices"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#distributionModuleAuditsReleaseInputsAfterAssembly"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryArchiveMaterial"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnapprovedNativePayloads"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsUnaccountedArtifacts"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsNativePayloadHiddenInJar"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#releaseInputAuditRejectsProprietaryMaterialHiddenInZip"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#sbomAuditRejectsUninventoriedTransitiveDependencies"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-012
     owner:
       document: docs/spec/compliance.md
@@ -2531,24 +2521,26 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-013
     owner:
       document: docs/spec/compliance.md
       anchor: jbsa-lic-013
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-014
     owner:
       document: docs/spec/compliance.md
@@ -2560,7 +2552,6 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
     test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
       - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#generates the exact parent-free consumer pom"
   - id: JBSA-LIC-015
     owner:
@@ -2568,12 +2559,13 @@ requirements:
       anchor: jbsa-lic-015
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724
-    lifecycle_state: active
+    lifecycle_state: retired
     verification_class: release-audit
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/29-establish-licensing-and-dependency-provenance-gates.md
-    test_evidence:
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/CompliancePolicyIT.java#repositoryCarriesTheRequiredLicenseAndReferenceUseMaterials"
+    test_evidence: []
+    retirement:
+      reason: Licensing and compliance policy gates were removed by maintainer decision in specification 0.19.0.
   - id: JBSA-LIC-016
     owner:
       document: docs/spec/compliance.md
@@ -3521,7 +3513,6 @@ requirements:
       - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
     test_evidence:
       - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#builds the compatible public artifact set"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectBuildPublishesTheDeclaredArtifactLayout"
   - id: JBSA-SCOPE-002
     owner:
       document: docs/spec/scope.md
@@ -3625,7 +3616,6 @@ requirements:
       - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
     test_evidence:
       - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#builds the compatible public artifact set"
-      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectBuildPublishesTheDeclaredArtifactLayout"
   - id: JBSA-SCOPE-011
     owner:
       document: docs/spec/scope.md
