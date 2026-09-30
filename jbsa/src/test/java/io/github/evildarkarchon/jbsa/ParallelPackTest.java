@@ -20,7 +20,6 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public worker-selection behavior for deterministic archive packing. */
-@EnabledOnOs(OS.WINDOWS)
 class ParallelPackTest {
   @TempDir Path temporary;
 
@@ -323,6 +322,8 @@ class ParallelPackTest {
 
   /** Parallel zlib and LZ4 frame transforms preserve BSA bytes and decoded content. */
   @Test
+  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
+  @EnabledOnOs(OS.WINDOWS)
   void parallelCompressedBsaMatchesSingleWorker() throws Exception {
     byte[] first =
         "versioned bsa source".repeat(4000).getBytes(java.nio.charset.StandardCharsets.US_ASCII);
@@ -569,6 +570,8 @@ class ParallelPackTest {
 
   /** Cancellation during a parallel LZ4 frame encode stops at bounded worker checkpoints. */
   @Test
+  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
+  @EnabledOnOs(OS.WINDOWS)
   void cancelsParallelLz4EncodingBeforePublication() throws Exception {
     CountDownLatch firstRead = new CountDownLatch(1);
     AtomicBoolean cancelled = new AtomicBoolean();
@@ -696,6 +699,8 @@ class ParallelPackTest {
    * coordinator may sample the request after the worker leaves the native call.
    */
   @Test
+  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
+  @EnabledOnOs(OS.WINDOWS)
   void cancellationRequestedDuringNativeLz4CallDiscardsResult() throws Exception {
     byte[] payload = new byte[8 * 1024 * 1024];
     new java.util.Random(48).nextBytes(payload);

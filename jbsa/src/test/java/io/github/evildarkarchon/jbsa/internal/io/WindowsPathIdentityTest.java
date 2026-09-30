@@ -11,6 +11,7 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Exercises Windows extraction containment against real operating-system handles. */
+// Exercises the kernel32 identity provider directly.
 @EnabledOnOs(OS.WINDOWS)
 final class WindowsPathIdentityTest {
   @TempDir Path directory;

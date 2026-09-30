@@ -75,6 +75,42 @@ class Ba2AdapterTest {
   }
 
   /**
+   * Admission only declares raw LZ4 for the pipeline to admit, so it succeeds on any host; a zlib
+   * or stored archive declares no native codec.
+   */
+  @Test
+  void declaresRawLz4WithoutAdmittingIt() throws Exception {
+    assertEquals(
+        Set.of(Codec.LZ4_RAW),
+        admit(
+                ArchiveFamily.STARFIELD_GENERAL_BA2,
+                encoding(3, false, true),
+                PackOptions.Compression.LZ4_RAW)
+            .requiredCodecs());
+    assertEquals(
+        Set.of(Codec.LZ4_RAW),
+        admit(
+                ArchiveFamily.STARFIELD_DDS_BA2,
+                encoding(3, true, true),
+                PackOptions.Compression.FAMILY_DEFAULT)
+            .requiredCodecs());
+    assertEquals(
+        Set.of(),
+        admit(
+                ArchiveFamily.FO4_GENERAL_BA2,
+                encoding(1, false, false),
+                PackOptions.Compression.ZLIB)
+            .requiredCodecs());
+    assertEquals(
+        Set.of(),
+        admit(
+                ArchiveFamily.STARFIELD_GENERAL_BA2,
+                encoding(2, false, false),
+                PackOptions.Compression.STORED)
+            .requiredCodecs());
+  }
+
+  /**
    * Entries keep Logical Plan Order with per-entry codecs, and the family declares its split cost,
    * set-wide raw sharing, disabled default splitting, and the DDS per-entry reserve.
    */

@@ -661,7 +661,7 @@ public final class PublicationTransaction {
       }
       // Readback needs a closed write handle under Windows sharing rules, but must precede commit.
       part.writer.validate(part.staged);
-      part.stagedIdentity = WindowsPathIdentity.inspect(part.staged);
+      part.stagedIdentity = PathIdentity.inspect(part.staged);
       return size;
     }
 
@@ -768,7 +768,7 @@ public final class PublicationTransaction {
         }
         // Readback and identity inspection happen after the write handle closes on Windows.
         part.writer.validate(part.staged);
-        StagedResult result = new StagedResult(size, WindowsPathIdentity.inspect(part.staged));
+        StagedResult result = new StagedResult(size, PathIdentity.inspect(part.staged));
         handleAndValidationClosed = true;
         return result;
       } catch (ArchiveException failure) {
@@ -847,7 +847,7 @@ public final class PublicationTransaction {
     private void publish(Part part) throws IOException {
       recheck(part, false);
       if (part.predecessor) {
-        part.backupIdentity = WindowsPathIdentity.inspect(part.target);
+        part.backupIdentity = PathIdentity.inspect(part.target);
         part.backup = staging.resolve("backup-" + part.ordinal);
         ResourceBudget.Lease backupCredit = budget.reserve(0, 0, 0, Files.size(part.target));
         credits.add(backupCredit);
@@ -887,7 +887,7 @@ public final class PublicationTransaction {
         try {
           recheck(part, true);
           if (part.state == ArtifactState.PUBLISHED) {
-            var current = WindowsPathIdentity.inspect(part.target);
+            var current = PathIdentity.inspect(part.target);
             if (!Objects.equals(current, part.stagedIdentity)) {
               part.state = current == null ? ArtifactState.MISSING : ArtifactState.UNCHANGED;
               throw context()
@@ -897,7 +897,7 @@ public final class PublicationTransaction {
             part.state = ArtifactState.MISSING;
           }
           if (part.backedUp) {
-            if (!Objects.equals(part.backupIdentity, WindowsPathIdentity.inspect(part.backup))) {
+            if (!Objects.equals(part.backupIdentity, PathIdentity.inspect(part.backup))) {
               throw context().failure(FailureKind.DESTINATION, "destination.changed-backup", null);
             }
             files.move(part.backup, part.target);
@@ -969,7 +969,7 @@ public final class PublicationTransaction {
         if (removedDirectories.stream().anyMatch(part.target::startsWith)) continue;
         try {
           if (stagedRoot == null) recheck(part, true);
-          var current = WindowsPathIdentity.inspect(part.target);
+          var current = PathIdentity.inspect(part.target);
           if (current == null) part.state = ArtifactState.MISSING;
           else if (part.state == ArtifactState.MISSING
               || (part.state == ArtifactState.PUBLISHED && !current.equals(part.stagedIdentity))
@@ -1102,8 +1102,7 @@ public final class PublicationTransaction {
   }
 
   /** Immutable worker evidence; its staged-file credits belong to the containing Outcome. */
-  private record StagedResult(long size, WindowsPathIdentity.Snapshot identity)
-      implements AutoCloseable {
+  private record StagedResult(long size, PathIdentity.Snapshot identity) implements AutoCloseable {
     /** The coordinator owns the staged path and the Outcome owns every live resource credit. */
     @Override
     public void close() {
@@ -1119,8 +1118,8 @@ public final class PublicationTransaction {
     final boolean predecessor;
     Path staged;
     Path backup;
-    WindowsPathIdentity.Snapshot stagedIdentity;
-    WindowsPathIdentity.Snapshot backupIdentity;
+    PathIdentity.Snapshot stagedIdentity;
+    PathIdentity.Snapshot backupIdentity;
     boolean backedUp;
     ResourceBudget.Lease scratch;
     OrderedWorkerRunner.Outcome<StagedResult> parallelOutcome;

@@ -15,6 +15,10 @@ import java.util.Set;
 
 /**
  * One owned positional file handle with Windows deny-write/delete sharing for its entire lifetime.
+ *
+ * <p>Off Windows the default provider has no mandatory sharing modes, so the handle is a plain
+ * read. Pack sources still revalidate identity, size, and time around consumption, which detects
+ * but cannot prevent a concurrent writer; that weaker lifetime is the documented off-baseline one.
  */
 public final class ArchiveInput implements AutoCloseable {
   private final FileChannel channel;
@@ -52,21 +56,21 @@ public final class ArchiveInput implements AutoCloseable {
   }
 
   /**
-   * Applies extended sharing only on the baseline provider, where their semantics are qualified.
+   * Applies extended sharing only on the Windows baseline, where its semantics are qualified. Any
+   * other host opens plainly by design rather than after a sharing failure, and a non-default
+   * provider is refused everywhere because its handle semantics are unknown.
    */
   private static ArchiveInput open(Path path, Operation operation, boolean noFollow)
       throws ArchiveException {
     IoContext context = IoContext.of(path, operation);
-    if (path.getFileSystem() != FileSystems.getDefault()
-        || !System.getProperty("os.name", "").startsWith("Windows")) {
+    if (path.getFileSystem() != FileSystems.getDefault()) {
       throw context.failure(FailureKind.CAPABILITY, "io.input-sharing-unavailable", null);
     }
-    Set<OpenOption> options =
-        new HashSet<>(
-            Set.of(
-                StandardOpenOption.READ,
-                ExtendedOpenOption.NOSHARE_WRITE,
-                ExtendedOpenOption.NOSHARE_DELETE));
+    Set<OpenOption> options = new HashSet<>(Set.of(StandardOpenOption.READ));
+    if (System.getProperty("os.name", "").startsWith("Windows")) {
+      options.add(ExtendedOpenOption.NOSHARE_WRITE);
+      options.add(ExtendedOpenOption.NOSHARE_DELETE);
+    }
     if (noFollow) options.add(LinkOption.NOFOLLOW_LINKS);
     try {
       return new ArchiveInput(FileChannel.open(path, options), context);

@@ -100,7 +100,7 @@ public final class PackSources {
       } else if (source instanceof PackSource.DetectedPath detected) {
         Path path = detected.path().toAbsolutePath().normalize();
         rejectOutput(path, request.destination(), context);
-        WindowsPathIdentity.Snapshot shape = shape(path, context);
+        PathIdentity.Snapshot shape = shape(path, context);
         if (shape == null || shape.indirection())
           throw context.failure(FailureKind.SOURCE, "source.not-regular", null);
         if (shape.directory()) {
@@ -318,10 +318,9 @@ public final class PackSources {
   }
 
   /** Obtains no-follow Windows classification, treating absent native support as a capability. */
-  private static WindowsPathIdentity.Snapshot shape(Path path, IoContext context)
-      throws IOException {
+  private static PathIdentity.Snapshot shape(Path path, IoContext context) throws IOException {
     try {
-      return WindowsPathIdentity.inspect(path);
+      return PathIdentity.inspect(path);
     } catch (UnsupportedOperationException failure) {
       throw context.failure(FailureKind.CAPABILITY, "source.identity-unavailable", failure);
     } catch (IOException | SecurityException failure) {

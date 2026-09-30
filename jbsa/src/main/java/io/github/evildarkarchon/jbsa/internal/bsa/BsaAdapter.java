@@ -1,7 +1,6 @@
 package io.github.evildarkarchon.jbsa.internal.bsa;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
@@ -76,9 +75,6 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
     for (var choice : options.entryCompression().values())
       if (choice != PackOptions.Compression.STORED && choice != familyCodec)
         throw context.failure(FailureKind.UNSUPPORTED, "bsa.unsupported-entry-codec", null);
-    if (version == 0x69
-        && (defaultCompressed || options.entryCompression().containsValue(familyCodec)))
-      BsaLz4Frame.preflight("encode", context);
     return new Plan(version, embedded, familyCodec, options);
   }
 
@@ -144,6 +140,19 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
     @Override
     public Sharing sharing() {
       return new Sharing(Sharing.Scope.PER_PART, Sharing.Basis.STORED);
+    }
+
+    /**
+     * 0x69's LZ4 frame needs its native provider only when the request can select it, globally or
+     * by an entry override; 0x67 and 0x68 compress with JDK zlib.
+     */
+    @Override
+    public Set<Codec> requiredCodecs() {
+      return version == 0x69
+              && (options.compression() == familyCodec
+                  || options.entryCompression().containsValue(familyCodec))
+          ? Set.of(Codec.BSA_LZ4_FRAME)
+          : Set.of();
     }
 
     /**

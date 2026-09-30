@@ -19,6 +19,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * Qualifies sharing denials against the Windows filesystem, including the public detection path.
  */
+// Deny-write/delete sharing exists only on Windows.
 @EnabledOnOs(OS.WINDOWS)
 final class InputSharingTest {
   @TempDir Path directory;

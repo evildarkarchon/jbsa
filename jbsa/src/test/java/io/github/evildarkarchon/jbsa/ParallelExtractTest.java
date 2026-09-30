@@ -18,12 +18,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public extraction equivalence across sequential and operation-owned platform workers. */
-@EnabledOnOs(OS.WINDOWS)
 final class ParallelExtractTest {
   @TempDir Path directory;
 
@@ -227,7 +224,8 @@ final class ParallelExtractTest {
     Path destination = directory.resolve("forty-output");
     BethesdaArchives.standard()
         .extract(request(archive, destination, 8), OperationControl.standard());
-    try (var files = Files.list(destination.resolve("Data"))) {
+    // TES3 stores canonical lowercase names, so the extracted spelling is lowercase on every host.
+    try (var files = Files.list(destination.resolve("data"))) {
       assertEquals(40, files.count());
     }
   }
@@ -341,7 +339,7 @@ final class ParallelExtractTest {
     assertFalse(caller.isAlive());
     assertNull(failure.get());
     assertTrue(laterSnapshots.get() > 0);
-    assertTrue(Files.exists(destination.resolve("Data/A.bin")));
+    assertTrue(Files.exists(destination.resolve("data/a.bin")));
   }
 
   /** Detects a named platform worker inside its private stage or payload transfer. */

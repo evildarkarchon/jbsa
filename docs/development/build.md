@@ -119,7 +119,18 @@ These inputs prepare later Windows image packaging and do not constitute Release
 The portable Java compile and test tasks run on Windows and Linux. Windows filesystem identity,
 native-access subprocesses, LZ4 native loading, NTFS publication semantics, application staging,
 performance qualification, and Release Qualification remain Windows x64 boundaries. A Linux pass
-does not qualify those behaviors. The Gradle tasks grant native access only to their owned test
+does not qualify those behaviors.
+
+Off Windows, reading, packing, extraction, and publication run through portable providers rather
+than failing closed: `PathIdentity` takes no-follow NIO attributes and the provider file key (plus
+birth time for regular files, because POSIX reuses inodes), its destination pin detects root
+replacement instead of denying it, and `ArchiveInput` opens without the Windows-only
+`NOSHARE_WRITE`/`NOSHARE_DELETE` options. This is the unqualified mode `JBSA-SCOPE-001` permits;
+the Windows baseline behavior is unchanged. Tests that exercise an explicit Windows boundary (native
+LZ4, the active ANSI code page behind the compatibility profile, sharing denial, the deny-delete
+pin, junctions, 8.3 short names, drive roots, or the kernel32 identity provider itself) carry
+`@EnabledOnOs(OS.WINDOWS)` with a one-line comment naming that boundary. Every other test must pass
+on both hosts. The Gradle tasks grant native access only to their owned test
 processes; library embedders and staged-CLI launchers must retain the grants documented in the
 [public interface guide](contract-baseline.md) and [Windows LZ4 guide](windows-lz4-runtime.md).
 

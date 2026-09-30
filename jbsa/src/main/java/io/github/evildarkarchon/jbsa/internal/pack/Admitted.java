@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.ToLongFunction;
 
 /**
@@ -34,6 +35,15 @@ public interface Admitted<K> {
 
   /** Returns the family's intrinsic Content Sharing scope and comparison basis. */
   Sharing sharing();
+
+  /**
+   * Returns every codec this request can select whose runtime capability must be admitted. The
+   * pipeline checks each one immediately after {@link FamilyAdapter#admit}, before source planning,
+   * so the adapter itself never loads a native provider and stays pure on every platform.
+   */
+  default Set<Codec> requiredCodecs() {
+    return Set.of();
+  }
 
   /**
    * Applies post-plan per-entry rules and returns every source in the family's output order.

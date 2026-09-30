@@ -18,6 +18,7 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 /** Exercises frame dispatch, corruption rejection, cancellation and resource return. */
+// Native LZ4 is qualified and loaded only on the Windows x64 baseline.
 @EnabledOnOs(OS.WINDOWS)
 final class Lz4FrameTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("frame.bin"), Operation.OPEN);

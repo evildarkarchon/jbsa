@@ -11,6 +11,7 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 /** Fresh JVMs isolate process-lifetime native loading and Java 25 host policy. */
+// Native LZ4 is qualified and loaded only on the Windows x64 baseline.
 @EnabledOnOs(OS.WINDOWS)
 final class Lz4LaunchTest {
   /**

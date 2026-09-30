@@ -14,7 +14,6 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public General BA2 contracts using independently specified wire records. */
-@EnabledOnOs(OS.WINDOWS)
 final class Ba2ReaderTest {
   @TempDir Path directory;
 
@@ -135,6 +134,8 @@ final class Ba2ReaderTest {
 
   /** Starfield version 3 method 3 decodes one complete raw-LZ4 block without frame bytes. */
   @Test
+  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
+  @EnabledOnOs(OS.WINDOWS)
   void decodesStarfieldVersionThreeRawLz4() throws Exception {
     String versionThree =
         "42544458 03000000 474e524c 01000000 5900000000000000 0100000000000000 03000000 "
@@ -156,6 +157,8 @@ final class Ba2ReaderTest {
 
   /** A profile may decode a non-method-3 v3 archive without rewriting its detection status. */
   @Test
+  // The active ANSI code page is read from Windows (GetACP).
+  @EnabledOnOs(OS.WINDOWS)
   void appliesQualifiedVersionThreeZlibFallbackWithoutChangingRecognition() throws Exception {
     String fallback =
         "42544458 03000000 474e524c 01000000 5400000000000000 0100000000000000 02000000 "
@@ -191,6 +194,8 @@ final class Ba2ReaderTest {
 
   /** Raw-LZ4 rejects trailing block bytes and oversize output before changing caller buffers. */
   @Test
+  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
+  @EnabledOnOs(OS.WINDOWS)
   void rejectsInvalidAndOversizeStarfieldRawBlocksWithoutOutputEffects() throws Exception {
     String trailing =
         "42544458 03000000 474e524c 01000000 5a00000000000000 0100000000000000 03000000 "

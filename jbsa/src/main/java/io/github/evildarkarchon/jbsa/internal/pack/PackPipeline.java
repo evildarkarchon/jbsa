@@ -52,6 +52,9 @@ public final class PackPipeline {
       run.workers = WorkerLimits.snapshot(request.workerSelection());
       Admitted<K> admitted = adapter.admit(request, context);
       validate(admitted);
+      // Capability admission is the last step of admit's rung: it runs before source planning, as
+      // the family packers' own checks did, but here rather than in the pure adapter.
+      for (Codec codec : admitted.requiredCodecs()) Codecs.preflight(codec, context);
       List<PackSources.Entry> sources =
           PackSources.plan(request, operation, budget, admitted.nameCharset());
       List<Planned<K>> planned = admitted.plan(sources, context);

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Qualifies existing drive-root extraction using a temporary user-scoped DOS drive mapping. */
+// Publishes at a Windows drive root.
 @EnabledOnOs(OS.WINDOWS)
 class PublicationDriveRootTest {
   @TempDir Path directory;

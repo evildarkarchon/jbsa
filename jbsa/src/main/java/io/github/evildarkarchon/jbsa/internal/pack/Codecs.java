@@ -1,11 +1,13 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
+import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.internal.io.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.io.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.io.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -51,6 +53,23 @@ final class Codecs {
       // every call, so the map charges nothing up front; a precharge would count them twice.
       case LZ4_RAW -> new Cost(lz4RawBound(decodedSize), 0, 0);
     };
+  }
+
+  /**
+   * Admits one codec's runtime capability before any source is planned. Stored and zlib need only
+   * the JDK; both LZ4 profiles load the release-pinned native provider, which is a Windows x64
+   * boundary, so their check fails as {@code CAPABILITY codec.unavailable} anywhere else.
+   *
+   * @throws ArchiveException when the codec's provider cannot be admitted
+   */
+  static void preflight(Codec codec, IoContext context) throws ArchiveException {
+    switch (codec) {
+      case STORED, ZLIB -> {
+        // JDK-only encoders have no provider to admit.
+      }
+      case BSA_LZ4_FRAME -> BsaLz4Frame.preflight("encode", context);
+      case LZ4_RAW -> Lz4Runtime.preflight("raw-lz4", "encode", context);
+    }
   }
 
   /**

@@ -22,17 +22,19 @@ import java.util.Set;
  *
  * <p>The coordinator owns this object and serializes directory creation and publication. Detached
  * descendant identities detect unexpected mutation; the root handle denies deletion until close.
- * This is the non-hostile destination-tree contract, not protection against a privileged racer.
+ * This is the non-hostile destination-tree contract, not protection against a privileged racer. Off
+ * Windows the {@link PathIdentity} pin holds no handle, so root replacement is detected by the same
+ * revalidation rather than denied.
  */
 public final class ExtractionPaths implements AutoCloseable {
   private final Path root;
   private final boolean existingRoot;
   private final List<Path> targets;
   private final Set<Path> targetSet;
-  private final Map<Path, WindowsPathIdentity.Snapshot> expected = new HashMap<>();
+  private final Map<Path, PathIdentity.Snapshot> expected = new HashMap<>();
   private final Map<Path, List<Path>> directoryAliases = new HashMap<>();
   private final Path pinnedPath;
-  private final WindowsPathIdentity.Pin pin;
+  private final PathIdentity.Pin pin;
   private final IoContext context;
   private final SnapshotReader snapshotReader;
   private boolean closed;
@@ -43,7 +45,7 @@ public final class ExtractionPaths implements AutoCloseable {
       boolean existingRoot,
       List<Path> targets,
       Path pinnedPath,
-      WindowsPathIdentity.Pin pin,
+      PathIdentity.Pin pin,
       IoContext context,
       SnapshotReader snapshotReader) {
     this.root = root;
@@ -66,7 +68,7 @@ public final class ExtractionPaths implements AutoCloseable {
   public static ExtractionPaths preflight(
       Path root, List<String> names, TargetPolicy policy, IoContext context)
       throws ArchiveException {
-    return preflight(root, names, policy, context, WindowsPathIdentity.Pin::close);
+    return preflight(root, names, policy, context, PathIdentity.Pin::close);
   }
 
   /**
@@ -75,7 +77,7 @@ public final class ExtractionPaths implements AutoCloseable {
   static ExtractionPaths preflight(
       Path root, List<String> names, TargetPolicy policy, IoContext context, PinCloser cleanupPin)
       throws ArchiveException {
-    return preflight(root, names, policy, context, cleanupPin, WindowsPathIdentity::inspect);
+    return preflight(root, names, policy, context, cleanupPin, PathIdentity::inspect);
   }
 
   /**
@@ -100,10 +102,14 @@ public final class ExtractionPaths implements AutoCloseable {
     // complete selection before any name reaches a filesystem provider.
     Path absolute = root.toAbsolutePath().normalize();
     List<Path> targets = new ArrayList<>(names.size());
-    Set<Path> uniqueTargets = new HashSet<>();
+    // Case collisions are rejected on every host, so they are keyed explicitly rather than by
+    // Path equality, which is case-insensitive only on Windows.
+    Set<String> uniqueTargets = new HashSet<>();
     for (String name : names) {
       Path target = absolute.resolve(name.replace('\\', '/')).normalize();
-      if (!target.startsWith(absolute) || target.equals(absolute) || !uniqueTargets.add(target)) {
+      if (!target.startsWith(absolute)
+          || target.equals(absolute)
+          || !uniqueTargets.add(caseKey(absolute.relativize(target)))) {
         throw context.failure(FailureKind.POLICY, "extraction.name-collision", null);
       }
       targets.add(target);
@@ -112,21 +118,21 @@ public final class ExtractionPaths implements AutoCloseable {
       for (Path parent = target.getParent();
           !parent.equals(absolute);
           parent = parent.getParent()) {
-        if (uniqueTargets.contains(parent)) {
+        if (uniqueTargets.contains(caseKey(absolute.relativize(parent)))) {
           throw context.failure(FailureKind.POLICY, "extraction.name-collision", null);
         }
       }
     }
 
-    WindowsPathIdentity.Pin pin = null;
+    PathIdentity.Pin pin = null;
     try {
-      WindowsPathIdentity.Snapshot rootState = snapshotReader.read(absolute);
+      PathIdentity.Snapshot rootState = snapshotReader.read(absolute);
       boolean exists = rootState != null;
       Path pinnedPath = exists ? absolute : absolute.getParent();
       if (pinnedPath == null) {
         throw context.failure(FailureKind.DESTINATION, "extraction.parent-unavailable", null);
       }
-      pin = WindowsPathIdentity.pin(pinnedPath);
+      pin = PathIdentity.pin(pinnedPath);
       if (pin.snapshot().indirection() || !pin.snapshot().directory()) {
         throw context.failure(FailureKind.POLICY, "extraction.unsafe-directory", null);
       }
@@ -145,7 +151,7 @@ public final class ExtractionPaths implements AutoCloseable {
       Set<Object> targetIdentities = new HashSet<>();
       for (Path target : targets) {
         plan.inspectTarget(target, policy);
-        WindowsPathIdentity.Snapshot state = plan.expected.get(target);
+        PathIdentity.Snapshot state = plan.expected.get(target);
         // Different path spellings, including short-name aliases, may still name one file.
         if (state != null && !targetIdentities.add(state.identity())) {
           throw context.failure(FailureKind.POLICY, "extraction.name-collision", null);
@@ -199,20 +205,18 @@ public final class ExtractionPaths implements AutoCloseable {
     }
   }
 
-  /**
-   * The sole failed-preflight cleanup boundary; production closes the owned native pin directly.
-   */
+  /** The sole failed-preflight cleanup boundary; production closes the owned pin directly. */
   @FunctionalInterface
   interface PinCloser {
     /** Releases the supplied pin, or reports its cleanup failure. */
-    void close(WindowsPathIdentity.Pin pin) throws IOException;
+    void close(PathIdentity.Pin pin) throws IOException;
   }
 
-  /** A no-handle classification seam; real Windows observations remain the production default. */
+  /** A no-handle classification seam; real host observations remain the production default. */
   @FunctionalInterface
   interface SnapshotReader {
     /** Returns the named entry's identity and no-follow type, or null for an absent entry. */
-    WindowsPathIdentity.Snapshot read(Path path) throws IOException;
+    PathIdentity.Snapshot read(Path path) throws IOException;
   }
 
   /** Returns the absolute destination root, preserving caller and archive display spelling. */
@@ -273,7 +277,7 @@ public final class ExtractionPaths implements AutoCloseable {
     for (Path parent : descendants(path.getParent())) {
       verify(parent);
     }
-    WindowsPathIdentity.Snapshot state = inspect(path);
+    PathIdentity.Snapshot state = inspect(path);
     if (state == null || !state.directory() || state.indirection()) {
       throw context.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
     }
@@ -285,23 +289,27 @@ public final class ExtractionPaths implements AutoCloseable {
   }
 
   /**
-   * Compares future targets by existing-directory identity and Windows-relative suffix before any
-   * publication. This catches short-directory aliases even when the leaves do not exist yet.
+   * Compares future targets by existing-directory identity and case-insensitive relative suffix
+   * before any publication. This catches short-directory aliases even when the leaves do not exist
+   * yet, and case collisions through them on every host.
    */
   private void checkPhysicalPaths() throws ArchiveException {
-    Map<Object, Set<Path>> byParent = new HashMap<>();
+    Map<Object, Set<String>> keysByParent = new HashMap<>();
+    Map<Object, List<Path>> suffixesByParent = new HashMap<>();
     for (Path target : targets) {
-      PhysicalPath physical = physicalPath(target);
-      Set<Path> suffixes =
-          byParent.computeIfAbsent(physical.parentIdentity(), unused -> new HashSet<>());
-      if (!suffixes.add(physical.suffix())) {
+      Path anchor = anchor(target);
+      Object identity = expected.get(anchor).identity();
+      Path suffix = anchor.relativize(target);
+      if (!keysByParent.computeIfAbsent(identity, unused -> new HashSet<>()).add(caseKey(suffix))) {
         throw context.failure(FailureKind.POLICY, "extraction.name-collision", null);
       }
+      suffixesByParent.computeIfAbsent(identity, unused -> new ArrayList<>()).add(suffix);
     }
-    for (Set<Path> suffixes : byParent.values()) {
-      for (Path suffix : suffixes) {
+    for (var entry : suffixesByParent.entrySet()) {
+      Set<String> keys = keysByParent.get(entry.getKey());
+      for (Path suffix : entry.getValue()) {
         for (Path parent = suffix.getParent(); parent != null; parent = parent.getParent()) {
-          if (suffixes.contains(parent)) {
+          if (keys.contains(caseKey(parent))) {
             throw context.failure(FailureKind.POLICY, "extraction.name-collision", null);
           }
         }
@@ -321,14 +329,35 @@ public final class ExtractionPaths implements AutoCloseable {
   }
 
   /**
-   * Anchors a planned path at its nearest existing parent; Path equality supplies Windows casing.
+   * Anchors a planned path at its nearest existing parent. Path equality keeps the host's own
+   * casing here: these are physical aliases, and on a case-sensitive host two case spellings of a
+   * missing directory really are two directories.
    */
   private PhysicalPath physicalPath(Path path) {
+    Path anchor = anchor(path);
+    return new PhysicalPath(expected.get(anchor).identity(), anchor.relativize(path));
+  }
+
+  /** Returns the nearest parent of a planned path that existed during preflight. */
+  private Path anchor(Path path) {
     Path parent = path.getParent();
     while (expected.get(parent) == null) {
       parent = parent.getParent();
     }
-    return new PhysicalPath(expected.get(parent).identity(), parent.relativize(path));
+    return parent;
+  }
+
+  /**
+   * Returns the Windows case-insensitive comparison key of a relative path: every UTF-16 unit
+   * upper-cased on its own, exactly as the Windows NIO provider compares and hashes paths. Using it
+   * on every host keeps collision rejection identical whatever the host filesystem's own casing.
+   */
+  private static String caseKey(Path relative) {
+    String spelling = relative.toString();
+    var key = new StringBuilder(spelling.length());
+    for (int index = 0; index < spelling.length(); index++)
+      key.append(Character.toUpperCase(spelling.charAt(index)));
+    return key.toString();
   }
 
   /**
@@ -388,7 +417,7 @@ public final class ExtractionPaths implements AutoCloseable {
   private void inspectTarget(Path target, TargetPolicy policy) throws ArchiveException {
     boolean absentParent = !existingRoot;
     for (Path parent : descendants(target.getParent())) {
-      WindowsPathIdentity.Snapshot state;
+      PathIdentity.Snapshot state;
       if (expected.containsKey(parent)) {
         state = expected.get(parent);
       } else {
@@ -400,7 +429,7 @@ public final class ExtractionPaths implements AutoCloseable {
       }
       absentParent = state == null;
     }
-    WindowsPathIdentity.Snapshot state = absentParent ? null : inspect(target);
+    PathIdentity.Snapshot state = absentParent ? null : inspect(target);
     if (state != null && (state.indirection() || !state.regular())) {
       throw context.failure(FailureKind.POLICY, "extraction.unsafe-target", null);
     }
@@ -429,7 +458,7 @@ public final class ExtractionPaths implements AutoCloseable {
   }
 
   /** Converts provider errors into semantic containment failures without copying their messages. */
-  private WindowsPathIdentity.Snapshot inspect(Path path) throws ArchiveException {
+  private PathIdentity.Snapshot inspect(Path path) throws ArchiveException {
     try {
       return snapshotReader.read(path);
     } catch (UnsupportedOperationException failure) {

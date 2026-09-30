@@ -5,7 +5,6 @@ import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.io.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
 import io.github.evildarkarchon.jbsa.internal.pack.Codec;
@@ -113,7 +112,6 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
         && (global == PackOptions.Compression.STORED
             || options.entryCompression().containsValue(PackOptions.Compression.STORED)))
       throw context.failure(FailureKind.UNSUPPORTED, "dx10.stored-encode", null);
-    if (rawLz4) Lz4Runtime.preflight("raw-lz4", "encode", context);
     return new Plan(dds, rawLz4, version, charset, options, request.ddsTarget().orElse(null));
   }
 
@@ -170,6 +168,12 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
     @Override
     public Sharing sharing() {
       return new Sharing(Sharing.Scope.ARCHIVE_SET, Sharing.Basis.RAW);
+    }
+
+    /** Raw LZ4 is the one BA2 codec with a native provider to admit; zlib is JDK-only. */
+    @Override
+    public Set<Codec> requiredCodecs() {
+      return rawLz4 ? Set.of(Codec.LZ4_RAW) : Set.of();
     }
 
     /** DDS adds bounded partition and header state beyond the shared source-entry allowance. */

@@ -28,7 +28,6 @@ import org.junit.jupiter.params.provider.EnumSource;
  * <p>Admission order is pinned with "ladders": each rung repairs only the rule that fired on the
  * previous rung, so every step proves one rule's precedence over all of the rules still broken.
  */
-@EnabledOnOs(OS.WINDOWS)
 class PackCharacterizationTest {
   private static final ArchiveEncoding BSA_67 = selector(0x67, null, false);
   private static final ArchiveEncoding FO4_GNRL = selector(1, Ba2Subtype.GNRL, false);
@@ -370,6 +369,8 @@ class PackCharacterizationTest {
    * normalized identities one BA2 wire name. Hosts on any other ANSI code page skip this pin.
    */
   @Test
+  // The active ANSI code page is read from Windows (GetACP).
+  @EnabledOnOs(OS.WINDOWS)
   void ba2RejectsDuplicateWireNamesUnderActiveAnsi() throws Throwable {
     org.junit.jupiter.api.Assumptions.assumeTrue(
         PackCharacterizationTest.class.getModule().isNativeAccessEnabled());

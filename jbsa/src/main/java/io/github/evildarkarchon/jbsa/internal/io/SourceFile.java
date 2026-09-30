@@ -54,17 +54,16 @@ public final class SourceFile {
         Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
     if (path.getFileSystem() != java.nio.file.FileSystems.getDefault()
         || !System.getProperty("os.name").startsWith("Windows")) return attributes;
-    WindowsPathIdentity.Snapshot before = WindowsPathIdentity.inspect(path);
+    PathIdentity.Snapshot before = PathIdentity.inspect(path);
     attributes = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-    WindowsPathIdentity.Snapshot after = WindowsPathIdentity.inspect(path);
+    PathIdentity.Snapshot after = PathIdentity.inspect(path);
     if (before == null || !before.equals(after))
       throw IoContext.of(path, Operation.PACK).failure(FailureKind.SOURCE, "source.changed", null);
     return new NativeAttributes(attributes, before);
   }
 
   /** Keeps native identity and reparse classification with the corresponding NIO timestamps. */
-  private record NativeAttributes(
-      BasicFileAttributes attributes, WindowsPathIdentity.Snapshot nativeInfo)
+  private record NativeAttributes(BasicFileAttributes attributes, PathIdentity.Snapshot nativeInfo)
       implements BasicFileAttributes {
     @Override
     public FileTime lastModifiedTime() {

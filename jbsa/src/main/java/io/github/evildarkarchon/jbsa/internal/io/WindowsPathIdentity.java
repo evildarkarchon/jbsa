@@ -37,7 +37,7 @@ public final class WindowsPathIdentity {
    * @throws IOException if Windows cannot open or inspect the entry
    * @throws UnsupportedOperationException if native access or stable identity is unavailable
    */
-  public static Snapshot inspect(Path path) throws IOException {
+  public static PathIdentity.Snapshot inspect(Path path) throws IOException {
     Pin pin = open(path, SHARE_ALL);
     if (pin == null) {
       return null;
@@ -63,29 +63,25 @@ public final class WindowsPathIdentity {
     return pin;
   }
 
-  /** A detached entry identity and its no-follow type; no operating-system handle is retained. */
-  public record Snapshot(
-      Object identity, boolean directory, boolean regular, boolean indirection) {}
-
   /** Full Windows identity: the volume serial plus all 128 file-ID bits, including on ReFS. */
   private record Identity(long volume, long low, long high) {}
 
   /** An owned deny-delete handle. Closing is idempotent and synchronized with other close calls. */
-  public static final class Pin implements AutoCloseable {
+  public static final class Pin implements PathIdentity.Pin {
     private final NativeApi api;
     private final MemorySegment handle;
-    private final Snapshot snapshot;
+    private final PathIdentity.Snapshot snapshot;
     private boolean closed;
 
     /** Takes sole ownership of an open handle after its attributes have been captured. */
-    private Pin(NativeApi api, MemorySegment handle, Snapshot snapshot) {
+    private Pin(NativeApi api, MemorySegment handle, PathIdentity.Snapshot snapshot) {
       this.api = api;
       this.handle = handle;
       this.snapshot = snapshot;
     }
 
     /** Returns the detached no-follow attributes captured from this handle when it was opened. */
-    public Snapshot snapshot() {
+    public PathIdentity.Snapshot snapshot() {
       return snapshot;
     }
 
@@ -227,7 +223,7 @@ public final class WindowsPathIdentity {
     }
 
     /** Reads both attribute flags and the complete file identity from a single open handle. */
-    private Snapshot snapshot(MemorySegment handle, Arena arena, MemorySegment state)
+    private PathIdentity.Snapshot snapshot(MemorySegment handle, Arena arena, MemorySegment state)
         throws IOException {
       // BY_HANDLE_FILE_INFORMATION is thirteen DWORDs; FILE_ID_INFO is a 64-bit serial plus 128 ID
       // bits.
@@ -255,7 +251,7 @@ public final class WindowsPathIdentity {
       int flags = attributes.get(JAVA_INT, 0);
       boolean directory = (flags & DIRECTORY_ATTRIBUTE) != 0;
       boolean indirection = (flags & REPARSE_ATTRIBUTE) != 0;
-      return new Snapshot(
+      return new PathIdentity.Snapshot(
           new Identity(
               fileId.get(JAVA_LONG, 0), fileId.get(JAVA_LONG, 8), fileId.get(JAVA_LONG, 16)),
           directory,

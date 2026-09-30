@@ -13,12 +13,13 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** DDS packing behavior through the public archive API and independently specified wire fields. */
-@EnabledOnOs(OS.WINDOWS)
 class DdsBa2PackTest {
   @TempDir Path temporary;
 
   /** Starfield DDS defaults to raw LZ4 while explicit zlib selects the v2 wire envelope. */
   @Test
+  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
+  @EnabledOnOs(OS.WINDOWS)
   void selectsStarfieldCodecEnvelopeAndRoundTrips() throws Exception {
     byte[] source = bc1(5, 7, 1, 32);
     for (PackOptions.Compression compression :
@@ -95,6 +96,8 @@ class DdsBa2PackTest {
 
   /** A raw-LZ4 mip chunk above the qualified dispatch limit fails before publication. */
   @Test
+  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
+  @EnabledOnOs(OS.WINDOWS)
   void rejectsOversizeStarfieldRawChunkBeforePublication() throws Exception {
     int payloadSize = 2048 * 1025 * 8;
     byte[] source = bc1(8192, 4097, 1, payloadSize);
@@ -247,6 +250,8 @@ class DdsBa2PackTest {
 
   /** Stored compression is never enabled by the immutable compatibility profile. */
   @Test
+  // The active ANSI code page is read from Windows (GetACP).
+  @EnabledOnOs(OS.WINDOWS)
   void rejectsStoredInEveryProfileBeforeOpeningSource() throws Exception {
     for (var profile :
         List.of(

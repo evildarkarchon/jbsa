@@ -7,12 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Independently specified 0x69 records exercise the public reader and 24-byte folder layout. */
-@EnabledOnOs(OS.WINDOWS)
 final class Bsa69ReaderTest {
   @TempDir Path directory;
 

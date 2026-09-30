@@ -17,8 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
@@ -110,6 +108,31 @@ class BsaAdapterTest {
     var entry = admitted.plan(List.of(entry("x\\c.txt", 7)), CONTEXT).getFirst();
     assertEquals(Codec.BSA_LZ4_FRAME, entry.codec());
     assertArrayEquals(u32(7), entry.frame());
+  }
+
+  /**
+   * Admission only declares the native codec the pipeline must admit, so it succeeds on any host:
+   * 0x69 requires the LZ4 frame when selected globally or by an override, and never otherwise.
+   */
+  @Test
+  void declaresTheLz4FrameWithoutAdmittingIt() throws Exception {
+    assertEquals(
+        Set.of(Codec.BSA_LZ4_FRAME),
+        admitted(0x69, options(PackOptions.Compression.LZ4_FRAME, Map.of())).requiredCodecs());
+    assertEquals(
+        Set.of(Codec.BSA_LZ4_FRAME),
+        admitted(
+                0x69,
+                options(
+                    PackOptions.Compression.STORED,
+                    Map.of(
+                        new NormalizedNameIdentity("x\\c.txt"), PackOptions.Compression.LZ4_FRAME)))
+            .requiredCodecs());
+    assertEquals(
+        Set.of(),
+        admitted(0x69, options(PackOptions.Compression.STORED, Map.of())).requiredCodecs());
+    assertEquals(
+        Set.of(), admitted(0x68, options(PackOptions.Compression.ZLIB, Map.of())).requiredCodecs());
   }
 
   /** The split cost charges stored records; sharing compares complete stored records per part. */
@@ -269,7 +292,6 @@ class BsaAdapterTest {
    * copy: the discriminator separates them, while two identical stored records still share.
    */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void storedAndCompressedRecordsWithIdenticalBytesDoNotAlias() throws Exception {
     byte[] decoded = new byte[1000];
     Arrays.fill(decoded, (byte) 'z');
