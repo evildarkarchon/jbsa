@@ -23,8 +23,6 @@ class MainTest {
 
   /** The SSE selector exposes version 105 and family-default LZ4-frame round trips. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksSseLz4Frame() throws Exception {
     for (String codec : List.of("-z", "-z:lz4f")) {
       Path source = Files.createTempDirectory(temporary, "sse-source");
@@ -322,8 +320,6 @@ class MainTest {
 
   /** Starfield General CLI codec selection controls v2 versus v3/method-3 wire output. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksStarfieldGeneralVariants() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("sf-input/Data"));
     String payload = "starfield".repeat(200);
@@ -371,8 +367,6 @@ class MainTest {
 
   /** Starfield DDS CLI defaults to raw LZ4 and retains the explicit v2 zlib alternative. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksStarfieldDdsVariants() throws Exception {
     Path textures = Files.createDirectories(temporary.resolve("sf-dds-input/Textures"));
     var source = java.nio.ByteBuffer.allocate(160).order(java.nio.ByteOrder.LITTLE_ENDIAN);
@@ -998,8 +992,6 @@ class MainTest {
    * compression rather than an empty or rejected pack request.
    */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void workerSelectionPreservesCrossFamilyObservationsAndBytes() throws Exception {
     List<WorkerCase> cases =
         List.of(

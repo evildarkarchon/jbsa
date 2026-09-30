@@ -55,6 +55,7 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
                             requires org.junit.jupiter.params;
                             requires org.lwjgl;
                             requires org.lwjgl.lz4;
+                            requires org.lz4.java;
                         }
                         """.trimIndent() + System.lineSeparator(),
                         Charsets.UTF_8,
@@ -99,8 +100,12 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
         val lwjglLz4Version = catalog.dependencyVersion("org.lwjgl", "lwjgl-lz4")
         val junitVersion = catalog.dependencyVersion("org.junit.jupiter", "junit-jupiter")
         val jlibdeflateVersion = catalog.dependencyVersion("com.fulcrumgenomics", "jlibdeflate")
+        val lz4JavaVersion = catalog.dependencyVersion("at.yawk.lz4", "lz4-java")
         project.dependencies.add("api", "org.lwjgl:lwjgl:$lwjglVersion")
         project.dependencies.add("api", "org.lwjgl:lwjgl-lz4:$lwjglLz4Version")
+        // JBSA-CODEC-014: the portable pure-Java LZ4 provider selected whenever native LZ4 cannot load.
+        // It is declared like LWJGL so the consumer POM carries it at compile scope.
+        project.dependencies.add("api", "at.yawk.lz4:lz4-java:$lz4JavaVersion")
         project.dependencies.add("runtimeOnly", "org.lwjgl:lwjgl:$lwjglVersion:natives-windows")
         project.dependencies.add("runtimeOnly", "org.lwjgl:lwjgl-lz4:$lwjglLz4Version:natives-windows")
         project.dependencies.add(

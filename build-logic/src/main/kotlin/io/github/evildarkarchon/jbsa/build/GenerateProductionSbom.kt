@@ -60,8 +60,8 @@ abstract class GenerateProductionSbom : DefaultTask() {
         val rootRef = purl(group, BuildIdentity.ROOT_NAME, version, "pom", null)
         val libraryRef = purl(group, "jbsa", version, "jar", null)
         val cliRef = purl(group, "jbsa-cli", version, "jar", null)
-        val lwjglRefs = external.map { it.getValue("bom-ref") as String }
-        val coreRef = lwjglRefs.singleOrNull { ref -> ref.contains("/lwjgl@") && !ref.contains("classifier=") }
+        val externalRefs = external.map { it.getValue("bom-ref") as String }
+        val coreRef = externalRefs.singleOrNull { ref -> ref.contains("/lwjgl@") && !ref.contains("classifier=") }
             ?: throw GradleException("The production graph must contain one unclassified LWJGL core artifact.")
 
         val projectComponents =
@@ -73,7 +73,7 @@ abstract class GenerateProductionSbom : DefaultTask() {
             buildList {
                 add(relationship(rootRef, listOf(cliRef, libraryRef)))
                 add(relationship(cliRef, listOf(libraryRef)))
-                add(relationship(libraryRef, lwjglRefs))
+                add(relationship(libraryRef, externalRefs))
                 external.forEach { component ->
                     val ref = component.getValue("bom-ref") as String
                     val children = if (component.getValue("name") == "lwjgl-lz4") listOf(coreRef) else emptyList()
@@ -169,14 +169,13 @@ abstract class GenerateProductionSbom : DefaultTask() {
             }
         }
 
+        // Only the LWJGL LZ4 binding depends on another production artifact (its core); every other
+        // unclassified component, such as the portable lz4-java provider, is a leaf.
         val coreRef = expectedRefs.single { ref -> ref.contains("/lwjgl@") }
         val lz4Ref = expectedRefs.single { ref -> ref.contains("/lwjgl-lz4@") }
         val expectedRelationships =
-            mapOf(
-                rawRootRef to expectedRefs,
-                coreRef to emptySet(),
-                lz4Ref to setOf(coreRef),
-            )
+            expectedRefs.associateWith { ref -> if (ref == lz4Ref) setOf(coreRef) else emptySet() } +
+                (rawRootRef to expectedRefs)
         @Suppress("UNCHECKED_CAST")
         val rawRelationships = raw["dependencies"] as? List<Map<String, Any?>>
             ?: throw GradleException("The CycloneDX production graph has no relationships array.")

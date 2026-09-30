@@ -15,8 +15,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public worker-selection behavior for deterministic archive packing. */
@@ -322,8 +320,6 @@ class ParallelPackTest {
 
   /** Parallel zlib and LZ4 frame transforms preserve BSA bytes and decoded content. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void parallelCompressedBsaMatchesSingleWorker() throws Exception {
     byte[] first =
         "versioned bsa source".repeat(4000).getBytes(java.nio.charset.StandardCharsets.US_ASCII);
@@ -570,8 +566,6 @@ class ParallelPackTest {
 
   /** Cancellation during a parallel LZ4 frame encode stops at bounded worker checkpoints. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void cancelsParallelLz4EncodingBeforePublication() throws Exception {
     CountDownLatch firstRead = new CountDownLatch(1);
     AtomicBoolean cancelled = new AtomicBoolean();
@@ -695,12 +689,11 @@ class ParallelPackTest {
   }
 
   /**
-   * Requests cancellation after observing native LZ4 work and discards its uncommitted result. The
-   * coordinator may sample the request after the worker leaves the native call.
+   * Requests cancellation after observing a worker inside the pinned LZ4 provider's compressor and
+   * discards its uncommitted result. The coordinator may sample the request after the worker leaves
+   * the compressor call.
    */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void cancellationRequestedDuringNativeLz4CallDiscardsResult() throws Exception {
     byte[] payload = new byte[8 * 1024 * 1024];
     new java.util.Random(48).nextBytes(payload);
@@ -879,8 +872,11 @@ class ParallelPackTest {
       String stack = java.util.Arrays.toString(entry.getValue());
       if (stack.contains("Lz4Frame.encode")) observedStack.set(stack);
       for (StackTraceElement frame : entry.getValue())
-        if (frame.getClassName().startsWith("org.lwjgl.util.lz4.")
-            && frame.getMethodName().contains("compressUpdate")) return true;
+        // The native provider compresses in LWJGL's LZ4F binding, the portable one in lz4-java.
+        if ((frame.getClassName().startsWith("org.lwjgl.util.lz4.")
+                && frame.getMethodName().contains("compressUpdate"))
+            || (frame.getClassName().startsWith("net.jpountz.lz4.")
+                && frame.getMethodName().equals("compress"))) return true;
     }
     return false;
   }

@@ -71,15 +71,29 @@ The default launch grants native access to `io.github.evildarkarchon.jbsa`
 resolves `org.lwjgl.natives` and `org.lwjgl.lz4.natives`: the Java bindings do not
 require those resource-only modules. The classpath variant grants `ALL-UNNAMED`.
 Both use `--illegal-native-access=deny` and validate Windows x64, Java 25, and
-the four runtime JAR hashes before invoking the CLI. Arguments are passed as an
+the five runtime JAR hashes (the four LWJGL JARs and lz4-java) before invoking
+the CLI. Arguments are passed as an
 argument array. `launch-policy.json` records the exact runtime bytes.
 
 Embedding applications must provide the same runtime artifacts and native-access grants.
 JBSA must never modify host-process native policy. Providers initialize lazily
 when an applicable codec operation first needs LZ4, extract their bundled JAR
 resources, and retain native libraries for process lifetime. Public callers have
-no DLL path or provider selector. Missing grants or unavailable native support
-are capability failures; stored and applicable zlib operations remain usable.
+no DLL path or provider selector.
+
+Missing grants or unavailable native support no longer fail LZ4 operations
+(`JBSA-CODEC-015`). The first LZ4 preflight pins a provider for the process: the
+native adapter when it loads, otherwise the portable lz4-java provider, reached
+only through `LZ4Factory.safeInstance()` and `XXHashFactory.safeInstance()`
+(`JBSA-CODEC-014`). lz4-java needs no native-access grant and is deliberately not
+given one. Its bundled JNI libraries ship inside its JAR but are never loaded;
+they are inventoried as inert payloads. The portable provider writes the same
+wire formats under separate profile identities, `jbsa-lz4-portable-v1` and
+`jbsa-bsa-069-lz4-portable-v1`. A portable pass is portability evidence only,
+never qualification of `jbsa-lz4-v1` (`JBSA-SCOPE-011`, `JBSA-CODEC-013`).
+`CAPABILITY codec.unavailable` now means both providers are missing, or that the
+portable provider met a linked-block frame it cannot decode. Stored and
+applicable zlib operations remain usable either way.
 
 Java 25 ordinarily warns and continues without native grants, so the adapter
 preflight also checks `Module.isNativeAccessEnabled()` rather than relying on

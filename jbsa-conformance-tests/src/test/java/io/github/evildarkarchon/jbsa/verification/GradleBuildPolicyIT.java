@@ -73,11 +73,13 @@ final class GradleBuildPolicyIT {
           dependencies.contains("\"sourceProject\": \"" + project + "\""),
           () -> "Missing production resolution from " + project);
     }
-    assertEquals(12, count(dependencies, "\"artifact\": {"));
+    assertEquals(15, count(dependencies, "\"artifact\": {"));
     assertEquals(3, count(dependencies, "\"fileName\": \"lwjgl-3.4.3.jar\""));
     assertEquals(3, count(dependencies, "\"fileName\": \"lwjgl-lz4-3.4.3.jar\""));
     assertEquals(3, count(dependencies, "\"fileName\": \"lwjgl-3.4.3-natives-windows.jar\""));
     assertEquals(3, count(dependencies, "\"fileName\": \"lwjgl-lz4-3.4.3-natives-windows.jar\""));
+    // JBSA-CODEC-014: the portable LZ4 provider ships beside the native adapter.
+    assertEquals(3, count(dependencies, "\"fileName\": \"lz4-java-1.12.0.jar\""));
   }
 
   /**
@@ -97,8 +99,9 @@ final class GradleBuildPolicyIT {
   }
 
   /**
-   * Requires requirement ownership to use tracker ticket references (canonical GitHub issue URLs or
-   * existing historical local-ticket paths) rather than bare issue numbers.
+   * Requires every cited ticket to be a tracker ticket reference (a canonical GitHub issue URL or
+   * an existing historical local-ticket path) rather than a bare issue number. Tickets are optional
+   * in this single-maintainer project, so empty lists and ticketless retirements are accepted.
    *
    * @throws IOException if the registry or a referenced local ticket cannot be read
    */
@@ -113,15 +116,13 @@ final class GradleBuildPolicyIT {
     for (var requirement : registry.requirements()) {
       assertTrue(
           identifiers.add(requirement.id()), () -> "Duplicate requirement " + requirement.id());
-      assertTrue(
-          requirement.implementationTickets() != null
-              && !requirement.implementationTickets().isEmpty(),
-          () -> "Missing implementation ownership for " + requirement.id());
       requirement.implementationTickets().forEach(ticket -> assertTicketReference(root, ticket));
       if (requirement.lifecycleState().equals("retired")) {
         assertTrue(
             requirement.retirement() != null, () -> "Missing retirement for " + requirement.id());
-        assertTicketReference(root, requirement.retirement().ticket());
+        if (requirement.retirement().ticket() != null) {
+          assertTicketReference(root, requirement.retirement().ticket());
+        }
       }
     }
 

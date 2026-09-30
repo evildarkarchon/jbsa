@@ -76,7 +76,7 @@ abstract class VerifyPublicLibraryArtifact : DefaultTask() {
         )
         val requirements = descriptor.requires().associateBy { it.name() }
         requireArtifact(
-            requirements.keys == setOf("java.base", "jdk.unsupported", "org.lwjgl", "org.lwjgl.lz4"),
+            requirements.keys == setOf("java.base", "jdk.unsupported", "org.lwjgl", "org.lwjgl.lz4", "org.lz4.java"),
             "Library requirements changed: ${requirements.keys}.",
         )
         listOf("org.lwjgl", "org.lwjgl.lz4").forEach { dependency ->
@@ -85,6 +85,11 @@ abstract class VerifyPublicLibraryArtifact : DefaultTask() {
                 "Library requirement $dependency must remain static.",
             )
         }
+        // The portable LZ4 provider is the fallback that must always resolve, so it is never optional.
+        requireArtifact(
+            requirements.getValue("org.lz4.java").modifiers().isEmpty(),
+            "Library requirement org.lz4.java must be a plain, non-transitive requirement.",
+        )
     }
 
     /** Loads every public class in the exported package and checks each caller-visible type. */

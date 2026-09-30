@@ -32,6 +32,15 @@ final class PublicBinaryConsumerIT {
     assertNotNull(resource, "Missing reviewed binary consumer fixture");
     Path consumerJar = Path.of(resource.toURI());
     Path libraryJar = Path.of(System.getProperty("jbsa.library.jar"));
+    // The library requires the portable LZ4 provider, which its consumer POM declares at compile
+    // scope, so every module-path consumer carries it (JBSA-CODEC-014).
+    Path lz4Java =
+        Path.of(
+            net.jpountz.lz4.LZ4Factory.class
+                .getProtectionDomain()
+                .getCodeSource()
+                .getLocation()
+                .toURI());
     Path output = directory.resolve("consumer.log");
     Process process =
         new ProcessBuilder(
@@ -39,7 +48,7 @@ final class PublicBinaryConsumerIT {
                 // The modular library uses native Windows path identity during publication.
                 "--enable-native-access=io.github.evildarkarchon.jbsa",
                 "--module-path",
-                consumerJar + File.pathSeparator + libraryJar,
+                consumerJar + File.pathSeparator + libraryJar + File.pathSeparator + lz4Java,
                 "--module",
                 "consumer.api.stability/consumer.apistability.Main",
                 directory.toString())

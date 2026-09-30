@@ -231,13 +231,13 @@ public final class OwnedArchive implements OpenArchive {
                     case STORED -> 0;
                     case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
                     case LZ4_RAW -> 0;
-                    case LZ4_FRAME -> Lz4Frame.HEAP_BYTES;
+                    case LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
                   },
               switch (codec) {
                 case STORED -> 0;
                 case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
                 case LZ4_RAW -> 0;
-                case LZ4_FRAME -> Lz4Frame.DECODE_NATIVE_BYTES;
+                case LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
               },
               0,
               0)) {
@@ -453,13 +453,13 @@ public final class OwnedArchive implements OpenArchive {
                             case STORED -> 0;
                             case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
                             case LZ4_RAW -> rawLz4Heap(stored);
-                            case LZ4_FRAME -> Lz4Frame.HEAP_BYTES;
+                            case LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
                           },
                       switch (stored.codec()) {
                         case STORED -> 0;
                         case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
                         case LZ4_RAW -> 0;
-                        case LZ4_FRAME -> Lz4Frame.DECODE_NATIVE_BYTES;
+                        case LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
                       },
                       0,
                       0);

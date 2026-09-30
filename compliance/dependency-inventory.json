@@ -186,6 +186,36 @@
         ]
       },
       "blockedBy": []
+    },
+    {
+      "groupId": "at.yawk.lz4",
+      "artifactId": "lz4-java",
+      "version": "1.12.0",
+      "packaging": "jar",
+      "classifier": null,
+      "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26",
+      "use": "selected portable pure-Java provider for raw LZ4 HC and LZ4 frame (safeInstance only); its bundled JNI libraries are never loaded",
+      "containsNativeBytes": true,
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 license text (byte-identical to the JBSA LICENSE) and the bundled LZ4 BSD-2-Clause copyright and license text."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Maven Central 1.12.0 JAR built from the v1.12.0 source release; its JNI libraries bundle LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0. The release includes the CVE-2025-12183 and CVE-2025-66566 fixes."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes lz4-java as the portable LZ4 provider artifact and its bundled native libraries as inert redistributed payloads; JBSA reaches it only through LZ4Factory.safeInstance() and XXHashFactory.safeInstance().",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      },
+      "blockedBy": []
     }
   ]
 }

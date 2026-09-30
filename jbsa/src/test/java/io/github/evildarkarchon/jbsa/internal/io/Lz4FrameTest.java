@@ -17,11 +17,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
-/** Exercises frame dispatch, corruption rejection, cancellation and resource return. */
-// Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-@EnabledOnOs(OS.WINDOWS)
+/**
+ * Exercises frame dispatch, corruption rejection, cancellation and resource return through the
+ * process's pinned provider: native LWJGL on Windows x64, portable lz4-java elsewhere.
+ */
 final class Lz4FrameTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("frame.bin"), Operation.OPEN);
+
+  /** Covers either provider: the portable decoder's two 4 MiB blocks or native direct memory. */
+  private static final long HEAP_CEILING = 16L * 1024 * 1024;
+
+  private static final long NATIVE_CEILING = 12L * 1024 * 1024;
 
   @Test
   void decoderStateMayBeConsumedAndClosedByAnotherThread() throws Exception {
@@ -30,7 +36,11 @@ final class Lz4FrameTest {
     byte[] frame = encode(data);
     try (ResourceBudget budget = budget();
         ResourceBudget.Lease lease =
-            budget.reserve(Lz4Frame.HEAP_BYTES, Lz4Frame.DECODE_NATIVE_BYTES, 0, 0)) {
+            budget.reserve(
+                Lz4Frame.decodeHeapBytes(Lz4Runtime.selected()),
+                Lz4Frame.decodeNativeBytes(Lz4Runtime.selected()),
+                0,
+                0)) {
       var decoder = Lz4Frame.decoder(source(frame), frame.length, data.length, CONTEXT);
       var result =
           CompletableFuture.supplyAsync(
@@ -52,10 +62,12 @@ final class Lz4FrameTest {
   }
 
   @Test
+  // Builds its fixture with the native LWJGL LZ4F encoder, a Windows x64 boundary.
+  @EnabledOnOs(OS.WINDOWS)
   void streamsUpstreamFourMegabyteBlocksThroughSmallOutputWindows() throws Exception {
     byte[] data = new byte[5 * 1024 * 1024];
     new Random(44).nextBytes(data);
-    Lz4Runtime.preflight("lz4-frame", "decode", CONTEXT);
+    Lz4Runtime.nativePreflight("lz4-frame", "decode", CONTEXT);
     try (var arena = java.lang.foreign.Arena.ofConfined()) {
       var preferences =
           new org.lwjgl.util.lz4.LZ4FPreferences(
@@ -105,7 +117,7 @@ final class Lz4FrameTest {
                       },
                       budget,
                       CONTEXT)));
-      try (ResourceBudget.Lease returned = budget.reserve(4096, 12 * 1024 * 1024, 0, 0)) {
+      try (ResourceBudget.Lease returned = budget.reserve(HEAP_CEILING, NATIVE_CEILING, 0, 0)) {
         assertNotNull(returned);
       }
       ArchiveException failure =
@@ -203,7 +215,7 @@ final class Lz4FrameTest {
                       budget,
                       CONTEXT)));
       assertEquals(3, checkpoints.get());
-      try (ResourceBudget.Lease returned = budget.reserve(4096, 12 * 1024 * 1024, 0, 0)) {
+      try (ResourceBudget.Lease returned = budget.reserve(HEAP_CEILING, NATIVE_CEILING, 0, 0)) {
         assertNotNull(returned);
       }
     }
@@ -215,7 +227,7 @@ final class Lz4FrameTest {
   }
 
   private static ResourceBudget budget() {
-    return new ResourceBudget(ResourceLimits.standard(), CONTEXT, 4096, 12 * 1024 * 1024, 0);
+    return new ResourceBudget(ResourceLimits.standard(), CONTEXT, HEAP_CEILING, NATIVE_CEILING, 0);
   }
 
   /** Collects frame output while verifying that windows remain bounded. */

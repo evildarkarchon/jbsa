@@ -125,13 +125,26 @@ Off Windows, reading, packing, extraction, and publication run through portable 
 than failing closed: `PathIdentity` takes no-follow NIO attributes and the provider file key (plus
 birth time for regular files, because POSIX reuses inodes), its destination pin detects root
 replacement instead of denying it, and `ArchiveInput` opens without the Windows-only
-`NOSHARE_WRITE`/`NOSHARE_DELETE` options. This is the unqualified mode `JBSA-SCOPE-001` permits;
-the Windows baseline behavior is unchanged. Tests that exercise an explicit Windows boundary (native
-LZ4, the active ANSI code page behind the compatibility profile, sharing denial, the deny-delete
-pin, junctions, 8.3 short names, drive roots, or the kernel32 identity provider itself) carry
-`@EnabledOnOs(OS.WINDOWS)` with a one-line comment naming that boundary. Every other test must pass
-on both hosts. The Gradle tasks grant native access only to their owned test
-processes; library embedders and staged-CLI launchers must retain the grants documented in the
+`NOSHARE_WRITE`/`NOSHARE_DELETE` options. `JBSA-SCOPE-011` requires this portable mode:
+platform-specific code is allowed where it improves behavior on its OS, but every such path needs a
+portable fallback, chosen before the first side effect, that keeps the operation working
+everywhere else. The mode stays unqualified under `JBSA-SCOPE-010`, and the Windows baseline
+behavior is unchanged.
+
+LZ4 follows the same rule. `Lz4Runtime.preflight` pins one provider for the process before the
+first side effect (`JBSA-CODEC-015`): the native LWJGL adapter where it loads, otherwise
+lz4-java's pure-Java `safeInstance()` provider (`JBSA-CODEC-014`). It never switches afterwards,
+and invalid data is never retried through the other provider. The portable provider reserves heap
+instead of native memory and carries its own profile identities (`jbsa-lz4-portable-v1` and
+`jbsa-bsa-069-lz4-portable-v1`), so its evidence is never mistaken for the qualified native
+profile. It cannot decode linked-block LZ4 frames and reports them as `CAPABILITY
+codec.unavailable` with `capabilityCause=dependent-blocks`. The versioned-BSA profile always writes
+independent blocks. Tests that exercise an explicit Windows boundary (native LZ4 loading or its
+cross-provider comparison, the active ANSI code page behind the compatibility profile, sharing
+denial, the deny-delete pin, junctions, 8.3 short names, drive roots, or the kernel32 identity
+provider itself) carry `@EnabledOnOs(OS.WINDOWS)` with a one-line comment naming that boundary.
+Every other test must pass on both hosts. The Gradle tasks grant native access only to their owned
+test processes; library embedders and staged-CLI launchers must retain the grants documented in the
 [public interface guide](contract-baseline.md) and [Windows LZ4 guide](windows-lz4-runtime.md).
 
 CI, reproducibility, parity, and qualification run with `--no-daemon`. Keep remote build-result

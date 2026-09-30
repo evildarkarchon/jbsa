@@ -89,8 +89,10 @@ final class RequirementRegistryYaml {
       requireRegistry(
           requirement.id().toLowerCase(java.util.Locale.ROOT).equals(requirement.owner().anchor()),
           "Owner anchor does not match " + requirement.id());
+      // Tracker tickets are optional (docs/spec/README.md registry contract), so the reference
+      // lists must be present but may be empty.
       requireRegistry(
-          requirement.sourceDecisions() != null && !requirement.sourceDecisions().isEmpty(),
+          requirement.sourceDecisions() != null,
           "Missing source decisions for " + requirement.id());
       requireRegistry(
           LIFECYCLE_STATES.contains(requirement.lifecycleState()),
@@ -99,15 +101,14 @@ final class RequirementRegistryYaml {
           VERIFICATION_CLASSES.contains(requirement.verificationClass()),
           "Invalid verification class for " + requirement.id());
       requireRegistry(
-          requirement.implementationTickets() != null
-              && !requirement.implementationTickets().isEmpty(),
+          requirement.implementationTickets() != null,
           "Missing implementation tickets for " + requirement.id());
       requireRegistry(
           requirement.testEvidence() != null, "Missing test evidence for " + requirement.id());
       if (requirement.lifecycleState().equals("retired")) {
         requireRegistry(
             requirement.retirement() != null, "Missing retirement for " + requirement.id());
-        requireText(requirement.retirement().ticket(), "retirement ticket for " + requirement.id());
+        // A retirement ticket is optional; when present it is shape-checked by GradleBuildPolicyIT.
         requireText(requirement.retirement().reason(), "retirement reason for " + requirement.id());
       } else {
         requireRegistry(

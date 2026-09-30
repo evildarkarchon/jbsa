@@ -6,6 +6,8 @@ Pass `--repo evildarkarchon/jbsa` to every `gh issue` command, or give a full is
 
 ## Conventions
 
+- Tickets are optional. This is a single-maintainer project: code and specification changes may proceed without an issue, and the requirement registry accepts empty ticket lists (see `docs/spec/README.md`). The conventions below apply when a ticket is used.
+
 - A feature with more than one ticket gets a **parent issue** that holds the spec. Its implementation tickets are GitHub **sub-issues** of that parent, one ticket per issue. Never combine several tickets in one issue.
 - Title child tickets with a short feature prefix and a sequence number so their order is visible in lists, for example `Pack Pipeline 01: …`.
 - Triage state is a GitHub label (see `triage-labels.md` for the role strings). Lifecycle is the issue's open/closed state; close completed work with `--reason completed` and a comment recording the outcome.

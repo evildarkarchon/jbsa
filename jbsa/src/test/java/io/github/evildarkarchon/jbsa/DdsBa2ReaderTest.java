@@ -42,8 +42,6 @@ final class DdsBa2ReaderTest {
 
   /** Independent Starfield wire vectors select zlib or raw LZ4 and preserve exact chunk bytes. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void decodesIndependentStarfieldChunkProfiles() throws Exception {
     byte[] zlib = java.util.HexFormat.of().parseHex("7801010800f7ff070000000000000000400008");
     byte[] rawLz4 = java.util.HexFormat.of().parseHex("800700000000000000");

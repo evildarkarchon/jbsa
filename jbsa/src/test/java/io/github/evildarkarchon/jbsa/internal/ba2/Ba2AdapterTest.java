@@ -7,6 +7,7 @@ import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.io.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
 import io.github.evildarkarchon.jbsa.internal.pack.Codec;
@@ -337,8 +338,14 @@ class Ba2AdapterTest {
     assertEquals(
         new Admitted.Readback(
             "ba2.noncanonical-staged-output",
-            512L * 2 + 8L * 120 + 65536 + 4096 + 700,
-            Lz4Raw.DECODE_NATIVE_BYTES,
+            // Raw block buffers are native under LWJGL and heap under the portable provider.
+            512L * 2
+                + 8L * 120
+                + 65536
+                + 4096
+                + 700
+                + Lz4Raw.maxDecodeHeapBytes(Lz4Runtime.selected()),
+            Lz4Raw.maxDecodeNativeBytes(Lz4Runtime.selected()),
             1),
         raw.readback(rawPart, layout));
   }

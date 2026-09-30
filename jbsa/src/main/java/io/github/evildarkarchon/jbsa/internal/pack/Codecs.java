@@ -47,8 +47,14 @@ final class Codecs {
       case STORED -> new Cost(decodedSize, 0, 0);
       case ZLIB ->
           new Cost(zlibBound(decodedSize), JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES);
-      case BSA_LZ4_FRAME ->
-          new Cost(bsaLz4Bound(decodedSize), Lz4Frame.HEAP_BYTES, Lz4Frame.ENCODE_NATIVE_BYTES);
+      case BSA_LZ4_FRAME -> {
+        // Preflight has already pinned the provider, so this charges the encoder that will run.
+        Lz4Runtime.Provider provider = Lz4Runtime.selected();
+        yield new Cost(
+            bsaLz4Bound(decodedSize),
+            Lz4Frame.encodeHeapBytes(provider),
+            Lz4Frame.encodeNativeBytes(provider));
+      }
       // Lz4Raw admits its whole block, output bound, and HC state against the operation budget on
       // every call, so the map charges nothing up front; a precharge would count them twice.
       case LZ4_RAW -> new Cost(lz4RawBound(decodedSize), 0, 0);
@@ -57,10 +63,13 @@ final class Codecs {
 
   /**
    * Admits one codec's runtime capability before any source is planned. Stored and zlib need only
-   * the JDK; both LZ4 profiles load the release-pinned native provider, which is a Windows x64
-   * boundary, so their check fails as {@code CAPABILITY codec.unavailable} anywhere else.
+   * the JDK. Both LZ4 profiles pin their provider here, before any side effect: the native LWJGL
+   * adapter where it loads (the Windows x64 boundary), and the portable lz4-java provider
+   * everywhere else (JBSA-CODEC-015). The pin holds for the rest of the process, so an operation
+   * never switches providers mid-encode.
    *
-   * @throws ArchiveException when the codec's provider cannot be admitted
+   * @throws ArchiveException {@code CAPABILITY codec.unavailable} only when neither LZ4 provider
+   *     can be admitted
    */
   static void preflight(Codec codec, IoContext context) throws ArchiveException {
     switch (codec) {
@@ -74,9 +83,9 @@ final class Codecs {
 
   /**
    * Returns whether a transform-stage worker may run this encoder. Raw LZ4 stays on the
-   * coordinator, as BA2 always kept it: each call admits a whole block plus its multi-MiB native
-   * buffers against the operation budget itself, so concurrent workers would multiply that peak
-   * outside the stage's headroom rule.
+   * coordinator, as BA2 always kept it: each call admits a whole block plus its multi-MiB buffers
+   * (native under the LWJGL provider, heap under the portable one) against the operation budget
+   * itself, so concurrent workers would multiply that peak outside the stage's headroom rule.
    */
   static boolean workerEncodes(Codec codec) {
     return codec != Codec.LZ4_RAW;

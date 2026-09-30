@@ -7,19 +7,24 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 
-/** Exercises the internal raw-block qualification seam with independently authored wire bytes. */
+/**
+ * Exercises the internal raw-block qualification seam with independently authored wire bytes,
+ * through the process's pinned provider: native LWJGL on Windows x64, portable lz4-java elsewhere.
+ */
 final class Lz4RawTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("raw.ba2"), Operation.OPEN);
 
+  /**
+   * Covers one 16 MiB block under either provider: native buffers under LWJGL, or the same buffers
+   * plus the HC tables on the heap under lz4-java.
+   */
+  private static final long CEILING = 40_000_000;
+
   /** Borrowed callback faults retain operation identity and every admitted credit is returned. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void normalizesCallbackFaultsAndReturnsCreditOnCancellation() throws Exception {
-    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 4096, 40000000, 0)) {
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
       var failure =
           assertThrows(
               ArchiveException.class,
@@ -50,7 +55,7 @@ final class Lz4RawTest {
                       },
                       budget,
                       CONTEXT)));
-      try (var all = budget.reserve(4096, 40000000, 0, 0)) {
+      try (var all = budget.reserve(CEILING, CEILING, 0, 0)) {
         assertNotNull(all);
       }
     }
@@ -61,14 +66,13 @@ final class Lz4RawTest {
    * input.
    */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void encodesDeterministicallyAndReturnsCredits() throws Exception {
     for (int size : new int[] {0, 5, 65536, 1048576, 16777216}) {
       byte[] original = new byte[size];
       new java.util.Random(43).nextBytes(original);
       byte[] previous = null;
-      try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 4096, 40000000, 0)) {
+      try (var budget =
+          new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
         for (int repeat = 0; repeat < 2; repeat++) {
           var encoded = new java.io.ByteArrayOutputStream();
           Lz4Raw.encode(
@@ -102,12 +106,10 @@ final class Lz4RawTest {
 
   /** A literal-only block must decode without treating it as a frame or exposing provider types. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void decodesIndependentLiteralBlock() throws Exception {
     byte[] encoded = HexFormat.of().parseHex("5068656c6c6f");
     ByteBuffer output = ByteBuffer.allocate(5);
-    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 65536, 40000000, 0)) {
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
       Lz4Raw.decode(
           (offset, bytes) -> bytes.put(encoded, (int) offset, bytes.remaining()),
           encoded.length,
@@ -143,8 +145,6 @@ final class Lz4RawTest {
 
   /** Malformed matches and declared-size mismatch must never reach the destination. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void rejectsInvalidBlocksAndSizeMismatch() {
     for (byte[] encoded : new byte[][] {new byte[0], {0, 0, 0}, {16, 65}}) {
       try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT)) {

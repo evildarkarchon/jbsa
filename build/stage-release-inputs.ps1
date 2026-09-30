@@ -112,8 +112,9 @@ $inputs = @(
     @{ path = 'launch-policy.json'; source = 'build/windows-runtime/launch-policy.json'; kind = 'provenance' }
 )
 $inventory = Get-Content -Raw -LiteralPath (Join-Path $reactorRoot 'compliance/dependency-inventory.json') | ConvertFrom-Json
-foreach ($dependency in @($inventory.entries | Where-Object { $_.groupId -eq 'org.lwjgl' })) {
-    if (-not $dependency.redistribution.approved) { throw "Runtime dependency is not qualified: $($dependency.artifactId)" }
+# Every approved inventory entry is a runtime dependency of the CLI image (LWJGL and the portable
+# lz4-java provider); unapproved qualification candidates such as jlibdeflate never enter staging.
+foreach ($dependency in @($inventory.entries | Where-Object { $_.redistribution.approved })) {
     $classifierSuffix = if ($null -eq $dependency.classifier) { '' } else { "-$($dependency.classifier)" }
     $filename = "$($dependency.artifactId)-$($dependency.version)$classifierSuffix.jar"
     $source = "$($releaseSources.runtimeDependencies)/$filename"

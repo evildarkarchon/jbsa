@@ -288,7 +288,7 @@ final class JlibdeflateZlib {
 
   /**
    * Applies the candidate decode dispatch rule: in-envelope records use the whole-buffer provider,
-   * and larger records keep JDK streaming. JBSA-CODEC-009 permits JDK fallback only when candidate
+   * and larger records keep JDK streaming. JBSA-CODEC-015 selects JDK fallback only when candidate
    * preflight reports the provider unavailable; once the candidate starts, invalid data, size
    * mismatch, or a provider fault is final and is never retried through JDK zlib.
    */

@@ -2,6 +2,8 @@ package io.github.evildarkarchon.jbsa;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.github.evildarkarchon.jbsa.internal.io.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -14,8 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public SSE BSA packing observations with independent wire and round-trip expectations. */
@@ -82,8 +82,6 @@ final class Bsa69PackTest {
 
   /** LZ4-frame output uses the SSE profile and mixed entry toggles round-trip exactly. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndReadsLz4FrameAndMixedEntries() throws Exception {
     byte[] compressible = new byte[200_000];
     Arrays.fill(compressible, (byte) 'A');
@@ -164,8 +162,6 @@ final class Bsa69PackTest {
 
   /** Corrupt, trailing, and wrong-size frames fail lazily with the SSE profile identity. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void rejectsMalformedLz4FramesAtContentEof() throws Exception {
     Path source = directory.resolve("valid.bsa");
     var options =
@@ -285,8 +281,6 @@ final class Bsa69PackTest {
 
   /** LZ4 processing observes cooperative cancellation before publishing an archive. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void cancelsLz4BeforePublication() {
     Path target = directory.resolve("cancelled.bsa");
     var cancelled = new java.util.concurrent.atomic.AtomicBoolean();
@@ -325,7 +319,12 @@ final class Bsa69PackTest {
               ArchiveException.class, () -> Channels.newInputStream(content).readAllBytes());
       assertEquals(FailureKind.FORMAT, failure.kind());
       assertEquals(identifier, failure.primaryFailure().diagnosticIdentifier().orElseThrow());
-      assertEquals("jbsa-bsa-069-lz4-v1", failure.diagnostics().getFirst().values().get("profile"));
+      // The profile names the provider that decoded: native on Windows x64, portable elsewhere.
+      assertEquals(
+          Lz4Runtime.selected() == Lz4Runtime.Provider.NATIVE
+              ? BsaLz4Frame.PROFILE
+              : BsaLz4Frame.PORTABLE_PROFILE,
+          failure.diagnostics().getFirst().values().get("profile"));
     }
   }
 

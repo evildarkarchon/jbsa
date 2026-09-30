@@ -29,6 +29,13 @@ cannot satisfy the applicable contract. Approval is rejected until that evidence
 container artifact is itself redistribution-approved, and every containing artifact is an
 authorized Windows x64 CLI ZIP rather than the thin `jbsa` library.
 
+An entry may instead set `eligibility.inert: true` when its bytes ship inside an explicitly
+authorized provider artifact that JBSA never asks to load. lz4-java's bundled JNI libraries are the
+case `JBSA-CODEC-014` authorizes: JBSA reaches lz4-java only through its `safeInstance()` factories,
+and an architecture test rejects any reference to the `native*`, `unsafe*`, or `fastest*` entry
+points. An inert payload needs no pure-Java insufficiency evidence, cannot also claim it, and is
+otherwise recorded and audited exactly like any other native payload.
+
 No caller-supplied native library path is an inventory source. Release-input inspection hashes each
 native file and rejects it unless that exact digest has been approved. Renaming a DLL therefore
 does not bypass the gate, and changing any native byte requires a new inventory review.

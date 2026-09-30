@@ -646,7 +646,8 @@ class FoundationPluginFunctionalTest {
         assertTrue(dependencies.all { dependency ->
             @Suppress("UNCHECKED_CAST")
             val resolved = dependency.getValue("resolved") as Map<String, String>
-            resolved["groupId"] == "org.lwjgl" && resolved["artifactId"] in setOf("lwjgl", "lwjgl-lz4")
+            (resolved["groupId"] == "org.lwjgl" && resolved["artifactId"] in setOf("lwjgl", "lwjgl-lz4")) ||
+                (resolved["groupId"] == "at.yawk.lz4" && resolved["artifactId"] == "lz4-java")
         })
         assertEquals(
             mapOf(
@@ -658,6 +659,8 @@ class FoundationPluginFunctionalTest {
                     "fd81606cbfdd7084cdbf576f6260087a2ae68bcfb53ca1ccbec0707ae603f876",
                 "org.lwjgl:lwjgl-lz4:3.4.3:natives-windows" to
                     "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc",
+                "at.yawk.lz4:lz4-java:1.12.0:" to
+                    "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26",
             ),
             dependencies.associate { dependency ->
                 @Suppress("UNCHECKED_CAST")
@@ -720,7 +723,7 @@ class FoundationPluginFunctionalTest {
         @Suppress("UNCHECKED_CAST")
         val components = sbom.getValue("components") as List<Map<String, Any?>>
         assertEquals(
-            setOf("jbsa", "jbsa-cli", "lwjgl", "lwjgl-lz4"),
+            setOf("jbsa", "jbsa-cli", "lwjgl", "lwjgl-lz4", "lz4-java"),
             components.map { it.getValue("name") }.toSet(),
         )
         assertFalse(
@@ -974,6 +977,7 @@ class FoundationPluginFunctionalTest {
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
+            lz4-java = "1.12.0"
             snakeyaml = "2.5"
             spotless = "8.10.2"
             $conflictVersion
@@ -990,6 +994,7 @@ class FoundationPluginFunctionalTest {
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
             lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
             lwjgl-lz4 = { module = "org.lwjgl:lwjgl-lz4", version.ref = "lwjgl" }
+            lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4-java" }
             $conflictLibrary
 
             [plugins]

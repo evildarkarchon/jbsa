@@ -8,8 +8,6 @@ import java.nio.channels.Channels;
 import java.nio.file.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Canonical General BA2 output observed through the public packing boundary. */
@@ -18,8 +16,6 @@ class Ba2PackTest {
 
   /** Starfield emits v3/method-3 only for raw LZ4 and otherwise emits the v2 extra header. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void selectsStarfieldWireVersionFromCompressionAndRoundTrips() throws Exception {
     byte[] payload =
         "starfield-general".repeat(100).getBytes(java.nio.charset.StandardCharsets.US_ASCII);

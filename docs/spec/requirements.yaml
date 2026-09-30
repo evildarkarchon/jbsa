@@ -1,6 +1,6 @@
 schema_version: 2
 specification:
-  version: 0.18.0
+  version: 0.19.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -662,7 +662,9 @@ requirements:
       anchor: jbsa-codec-002
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      reason: Replaced by JBSA-CODEC-014, which adds a portable LZ4 provider beside the native adapter.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/38-implement-the-tes4-oblivion-bsa-vertical-slice.md
@@ -747,7 +749,9 @@ requirements:
       anchor: jbsa-codec-009
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      reason: Replaced by JBSA-CODEC-015, which requires a portable fallback for every native provider.
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/43-integrate-and-qualify-the-windows-x64-lz4-runtime.md
@@ -806,6 +810,41 @@ requirements:
       - docs/development/evidence/issue52-jlibdeflate/conformance.tsv
       - docs/development/evidence/issue52-jlibdeflate/malformed.tsv
       - docs/development/evidence/issue52-jlibdeflate/oracle.tsv
+  - id: JBSA-CODEC-014
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-014
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementation_tickets: []
+    test_evidence:
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionReachesLz4JavaOnlyThroughSafeFactories"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#lz4JavaScanRejectsFastestFactory"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PortableLz4Test.java#crossDecodesNativeAndPortableOutputBothWays"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PortableLz4Test.java#bsaFrameUsesTheVersionedBsaDescriptor"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PortableLz4Test.java#rawBlocksRoundTripDeterministicallyWithoutNativeMemory"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PortableLz4Test.java#rejectsMalformedFrames"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts"
+      - compliance/dependency-inventory.json
+      - compliance/native-payload-inventory.json
+      - docs/development/dependency-verification-review.md
+  - id: JBSA-CODEC-015
+    owner:
+      document: docs/spec/codecs.md
+      anchor: jbsa-codec-015
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971
+    lifecycle_state: active
+    verification_class: conformance-case
+    implementation_tickets: []
+    test_evidence:
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java#reportsUnavailableOnlyWithoutEitherProvider"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PortableLz4Test.java#reportsLinkedBlockFramesAsUnsupported"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PortableLz4Test.java#refusesUnadmittedHeapBeforeEffects"
+      - ".github/workflows/build.yml#linux-portability"
   - id: JBSA-COMPAT-001
     owner:
       document: docs/spec/compatibility-profiles.md
@@ -3474,7 +3513,9 @@ requirements:
       anchor: jbsa-scope-001
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
-    lifecycle_state: active
+    lifecycle_state: retired
+    retirement:
+      reason: Split into JBSA-SCOPE-010 (Java 25 target and qualified Windows platform) and JBSA-SCOPE-011 (production code must not be restricted to Windows).
     verification_class: release-qualification
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
@@ -3572,6 +3613,29 @@ requirements:
       - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md
     test_evidence:
       - .scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#post-10-xbox-dds-deferral
+  - id: JBSA-SCOPE-010
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-010
+    source_decisions:
+      - https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247
+    lifecycle_state: active
+    verification_class: release-qualification
+    implementation_tickets:
+      - .scratch/jbsa-1-0/issues/28-bootstrap-the-java-25-maven-and-jpms-reactor.md
+    test_evidence:
+      - "build-logic/src/test/kotlin/io/github/evildarkarchon/jbsa/build/PublicLibraryPluginFunctionalTest.kt#builds the compatible public artifact set"
+      - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/GradleBuildPolicyIT.java#realMultiProjectBuildPublishesTheDeclaredArtifactLayout"
+  - id: JBSA-SCOPE-011
+    owner:
+      document: docs/spec/scope.md
+      anchor: jbsa-scope-011
+    source_decisions: []
+    lifecycle_state: active
+    verification_class: automated-test
+    implementation_tickets: []
+    test_evidence:
+      - ".github/workflows/build.yml#linux-portability"
   - id: JBSA-TES3-001
     owner:
       document: docs/spec/formats/tes3-bsa.md

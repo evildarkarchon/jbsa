@@ -217,6 +217,7 @@ class BenchmarkPluginFunctionalTest {
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
+            lz4-java = "1.12.0"
             snakeyaml = "2.5"
             shadow = "9.6.1"
             spotless = "8.10.2"
@@ -232,6 +233,7 @@ class BenchmarkPluginFunctionalTest {
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
             lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
             lwjgl-lz4 = { module = "org.lwjgl:lwjgl-lz4", version.ref = "lwjgl" }
+            lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4-java" }
             shadow-gradle-plugin = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
 
             [plugins]

@@ -54,6 +54,7 @@ class PublicLibraryPluginFunctionalTest {
                 requires jdk.unsupported;
                 requires static org.lwjgl;
                 requires static org.lwjgl.lz4;
+                requires org.lz4.java;
                 exports io.github.evildarkarchon.jbsa;
             }
             """.trimIndent(),
@@ -116,7 +117,7 @@ class PublicLibraryPluginFunctionalTest {
         assertEquals("0.1.0-SNAPSHOT", descriptor.rawVersion().orElseThrow())
         assertEquals(setOf("io.github.evildarkarchon.jbsa"), descriptor.exports().map { it.source() }.toSet())
         assertEquals(
-            setOf("java.base", "jdk.unsupported", "org.lwjgl", "org.lwjgl.lz4"),
+            setOf("java.base", "jdk.unsupported", "org.lwjgl", "org.lwjgl.lz4", "org.lz4.java"),
             descriptor.requires().map { it.name() }.toSet(),
         )
         descriptor.requires().filter { it.name().startsWith("org.lwjgl") }.forEach { requirement ->
@@ -181,7 +182,7 @@ class PublicLibraryPluginFunctionalTest {
         assertEquals("", directText(scm, "tag"))
 
         val dependencies = root.getElementsByTagName("dependency")
-        assertEquals(4, dependencies.length)
+        assertEquals(5, dependencies.length)
         val actual =
             (0 until dependencies.length).map { index ->
                 val dependency = dependencies.item(index) as Element
@@ -199,6 +200,7 @@ class PublicLibraryPluginFunctionalTest {
                 listOf("org.lwjgl", "lwjgl-lz4", "3.4.3", "", "compile"),
                 listOf("org.lwjgl", "lwjgl", "3.4.3", "natives-windows", "runtime"),
                 listOf("org.lwjgl", "lwjgl-lz4", "3.4.3", "natives-windows", "runtime"),
+                listOf("at.yawk.lz4", "lz4-java", "1.12.0", "", "compile"),
             ),
             actual,
         )
@@ -424,6 +426,7 @@ class PublicLibraryPluginFunctionalTest {
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
+            lz4-java = "1.12.0"
             snakeyaml = "2.5"
 
             [libraries]
@@ -437,6 +440,7 @@ class PublicLibraryPluginFunctionalTest {
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
             lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
             lwjgl-lz4 = { module = "org.lwjgl:lwjgl-lz4", version.ref = "lwjgl" }
+            lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4-java" }
 
             [plugins]
             """.trimIndent(),

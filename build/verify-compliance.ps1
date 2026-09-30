@@ -492,6 +492,16 @@ function Get-ValidatedNativeHashLookup {
             throw "Native payload $($entry.name) must declare eligibility.pureJavaInsufficient as a boolean."
         }
         Assert-StringProperty $entry.eligibility 'evidence' "Native payload $($entry.name) eligibility"
+        # An inert payload ships inside an authorized provider artifact that JBSA never asks to load
+        # (JBSA-CODEC-014), so it needs no pure-Java insufficiency evidence to be redistributed.
+        $inertProperty = $entry.eligibility.PSObject.Properties['inert']
+        if ($null -ne $inertProperty -and $inertProperty.Value -isnot [bool]) {
+            throw "Native payload $($entry.name) eligibility.inert must be a boolean when present."
+        }
+        $isInert = $null -ne $inertProperty -and $inertProperty.Value
+        if ($isInert -and $entry.eligibility.pureJavaInsufficient) {
+            throw "Native payload $($entry.name) cannot be both inert and required over pure Java."
+        }
 
         foreach ($property in @('groupId', 'artifactId', 'version', 'sha256')) {
             Assert-StringProperty $entry.container $property "Native payload $($entry.name) container"
@@ -517,7 +527,7 @@ function Get-ValidatedNativeHashLookup {
             throw "Native payload $($entry.name) container is not marked as containing native bytes."
         }
         if ($entry.redistribution.approved) {
-            if (-not $entry.eligibility.pureJavaInsufficient) {
+            if (-not $entry.eligibility.pureJavaInsufficient -and -not $isInert) {
                 throw "Native payload $($entry.name) cannot be approved without pure-Java insufficiency evidence."
             }
             $containerDependency = $DependencyLookup[$containerKey]

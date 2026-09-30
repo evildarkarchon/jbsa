@@ -18,8 +18,6 @@ class DdsBa2PackTest {
 
   /** Starfield DDS defaults to raw LZ4 while explicit zlib selects the v2 wire envelope. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void selectsStarfieldCodecEnvelopeAndRoundTrips() throws Exception {
     byte[] source = bc1(5, 7, 1, 32);
     for (PackOptions.Compression compression :
@@ -96,8 +94,6 @@ class DdsBa2PackTest {
 
   /** A raw-LZ4 mip chunk above the qualified dispatch limit fails before publication. */
   @Test
-  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
-  @EnabledOnOs(OS.WINDOWS)
   void rejectsOversizeStarfieldRawChunkBeforePublication() throws Exception {
     int payloadSize = 2048 * 1025 * 8;
     byte[] source = bc1(8192, 4097, 1, payloadSize);

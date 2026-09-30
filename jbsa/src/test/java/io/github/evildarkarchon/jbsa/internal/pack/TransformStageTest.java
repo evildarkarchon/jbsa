@@ -6,6 +6,7 @@ import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.io.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.OperationSession;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
@@ -159,8 +160,9 @@ class TransformStageTest {
       assertTrue(zlib.retainsRaw());
       var lz4 = TransformStage.encoding(Codec.BSA_LZ4_FRAME, 65537, false, budget);
       assertEquals(65537 + 2 * 4 + 64, lz4.outputBound());
-      assertEquals(Lz4Frame.HEAP_BYTES, lz4.heapBytes());
-      assertEquals(Lz4Frame.ENCODE_NATIVE_BYTES, lz4.nativeBytes());
+      // The frame encoder's working set belongs to whichever provider preflight pinned.
+      assertEquals(Lz4Frame.encodeHeapBytes(Lz4Runtime.selected()), lz4.heapBytes());
+      assertEquals(Lz4Frame.encodeNativeBytes(Lz4Runtime.selected()), lz4.nativeBytes());
       assertFalse(lz4.retainsRaw());
     }
   }

@@ -2,7 +2,7 @@
 
 This specification owns assembly and verification of the Windows x64 release
 image. The product boundary, multi-project build, released library inputs, and
-public release channel remain owned by [JBSA-SCOPE-001](scope.md#jbsa-scope-001),
+public release channel remain owned by [JBSA-SCOPE-010](scope.md#jbsa-scope-010),
 [JBSA-BUILD-007](modules-and-build.md#jbsa-build-007),
 [JBSA-BUILD-008](modules-and-build.md#jbsa-build-008), and
 [JBSA-BUILD-009](modules-and-build.md#jbsa-build-009). CLI behavior remains
