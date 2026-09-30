@@ -10,7 +10,7 @@ in `docs/spec/requirements.yaml`. Cancellation at Publication Commit also follow
 | --- | --- |
 | `JBSA-IO-007` | `SpillBuffer` uses a fixed 64 KiB heap window and spills to an operation-owned file. It admits retained extent before writes, supports bounded positional replay and backpatching, and seals a representation for reuse. `SpillBufferTest` checks replay, exact limits, lifetime, and real Windows cleanup denial. |
 | `JBSA-IO-008` | `PublicationTransaction` accepts a finalized output plan, admits its count and internal storage before adjacent staging, applies the split sibling naming rule, stages all archive parts, and lends one positional file writer per part. `PublicationFailuresTest` checks names, output limits, staging limits, and long reservations above 4 GiB without materializing a large file. |
-| `JBSA-IO-009` | `ExtractionPaths` validates the complete selection before host path conversion, rejects traversal, ADS, reserved names, Windows case collisions, prefix collisions, equal native identities, and descendant reparse points. `WindowsPathIdentity` pins the root and supplies stable no-follow identities. `ExtractionPathsTest` and `WindowsPathIdentityTest` cover junctions, changed identities, pin lifetimes, and name eligibility. |
+| `JBSA-IO-009` | `ExtractionPaths` validates the complete selection before host path conversion, rejects traversal, ADS, reserved names, Windows case collisions, prefix collisions, equal native identities, and descendant reparse points. `PathIdentity` pins the root and supplies stable no-follow identities, through `WindowsPathIdentity` on Windows. `ExtractionPathsTest` and `WindowsPathIdentityTest` cover junctions, changed identities, pin lifetimes, and name eligibility. |
 | `JBSA-IO-010` | Explicit `FAIL` rejects existing targets in preflight; `REPLACE` moves each predecessor into staging before installation. The existing public request defaults remain `FAIL`. Publication tests verify unchanged predecessors and restoration. |
 | `JBSA-IO-011`, `JBSA-OPS-009` | Cancellation is sampled before effects, at bounded staged writes, and before each applicable commit. No cancellation is accepted inside an archive/split commit or current-file commit. Existing-tree cancellation retains completed siblings. |
 | `JBSA-IO-012` | A private same-volume probe checks atomic file or directory moves before processing. New extraction roots publish with one move; archive parts and existing-tree files publish individually in Logical Plan Order. A failed atomic capability is never replaced by a non-atomic fallback. |
@@ -80,6 +80,20 @@ Private staging means unique, unadvertised, operation-owned names under the
 non-hostile destination-tree contract. It is not a confidentiality or privileged
 namespace-race guarantee. No new ACL, non-Windows, crash recovery, or durability
 guarantee is made.
+
+Off Windows, `PathIdentity` selects a portable provider instead of the kernel32
+backend. It reads no-follow NIO attributes and the provider file key in one call.
+A regular file's identity also carries its birth time, because POSIX reuses a
+deleted file's inode at once, and rollback must not mistake a recreated file for
+its own output. A directory's identity is the bare file key: where birth time is
+unavailable, NIO reports the modification time in its place, and that changes
+every time JBSA adds an entry. A directory deleted and recreated on a reused
+inode therefore passes revalidation. That is a concurrent namespace race, which
+the non-hostile destination-tree contract above excludes. The portable root pin
+holds no handle: it records the observed identity, and the existing revalidation
+detects replacement rather than denying it. Case collisions are keyed explicitly with the Windows NIO comparison rule,
+so extraction rejects the same name sets on every host. None of this changes the
+Windows baseline or qualifies another platform.
 
 ## Verification
 

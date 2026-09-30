@@ -24,7 +24,6 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Exercises the real I/O lifetime with an explicitly simulated stable-identity provider. */
-@EnabledOnOs(OS.WINDOWS)
 final class SourceFileTest {
   @TempDir Path directory;
 
@@ -91,6 +90,8 @@ final class SourceFileTest {
 
   /** The consumed handle permits compatible readers but denies writers and namespace removal. */
   @Test
+  // Deny-write/delete sharing exists only on Windows.
+  @EnabledOnOs(OS.WINDOWS)
   void deniesMutationThroughoutConsumptionAndClosesAfterReaderFailure() throws Exception {
     Path source = directory.resolve("held.bin");
     Files.write(source, new byte[] {1});
@@ -239,6 +240,8 @@ final class SourceFileTest {
 
   /** The Windows provider's absent NIO key is supplemented by qualified native identity. */
   @Test
+  // Asserts the Windows NIO provider's missing file key.
+  @EnabledOnOs(OS.WINDOWS)
   void defaultWindowsProviderUsesNativeIdentity() throws Exception {
     Path source = directory.resolve("native-identity-required.bin");
     Files.write(source, new byte[] {1});

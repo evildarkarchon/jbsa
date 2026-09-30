@@ -104,6 +104,25 @@ public final class PublicationTransaction {
   }
 
   /**
+   * Publishes an archive set whose operation already entered PROCESSING to stabilize its payloads
+   * before the part plan existed (Q10). Progress continues in that phase instead of entering it
+   * again; target checks keep their PREFLIGHT failure location because they still precede staging.
+   */
+  public static OperationReport stabilizedArchives(
+      Path destination,
+      List<Writer> writers,
+      TargetPolicy policy,
+      ResourceLimits limits,
+      OperationSession operation,
+      ResourceBudget budget)
+      throws ArchiveException {
+    var session =
+        new Session(destination, policy, limits, operation, new FileActions(), false, budget);
+    session.processingEntered = true;
+    return session.run(List.copyOf(writers), List.of());
+  }
+
+  /**
    * Publishes validated selected names as one new root or ordered per-file existing-tree commits.
    */
   public static List<Artifact> extract(
@@ -415,6 +434,9 @@ public final class PublicationTransaction {
     private OperationPhase phase = OperationPhase.PREFLIGHT;
     private long ordinal;
 
+    /** Whether the caller already moved the operation's progress into PROCESSING (Q10). */
+    private boolean processingEntered;
+
     /** Validates programmer-owned arguments before observing cancellation or touching the disk. */
     Session(
         Path destination,
@@ -463,7 +485,9 @@ public final class PublicationTransaction {
     /** Settles cleanup before returning evidence, preserving the first accepted failure. */
     OperationReport run(List<Writer> writers, List<String> names) throws ArchiveException {
       try {
-        operationSession.ensurePreflight();
+        if (processingEntered)
+          operationSession.checkpoint(OperationPhase.PROCESSING, OptionalLong.empty());
+        else operationSession.ensurePreflight();
         if (writers.size() > limits.maxOutputs())
           throw context()
               .limit("maxOutputs", limits.maxOutputs(), Integer.toString(writers.size()));
@@ -485,8 +509,10 @@ public final class PublicationTransaction {
             stagedRoot = Files.createDirectory(staging.resolve("tree"));
             own(stagedRoot, 0);
           }
-          operationSession.completePhase();
-          operationSession.processing(existingTree);
+          if (!processingEntered) {
+            operationSession.completePhase();
+            operationSession.processing(existingTree);
+          }
           phase = OperationPhase.PROCESSING;
           if (parallel == null) {
             for (Part part : parts) {
@@ -536,8 +562,10 @@ public final class PublicationTransaction {
           }
         }
         if (parts.isEmpty() && !(extraction && !existingTree)) {
-          operationSession.completePhase();
-          operationSession.processing(existingTree);
+          if (!processingEntered) {
+            operationSession.completePhase();
+            operationSession.processing(existingTree);
+          }
           phase = OperationPhase.PROCESSING;
           operationSession.completePhase();
           if (!existingTree) {
@@ -633,7 +661,7 @@ public final class PublicationTransaction {
       }
       // Readback needs a closed write handle under Windows sharing rules, but must precede commit.
       part.writer.validate(part.staged);
-      part.stagedIdentity = WindowsPathIdentity.inspect(part.staged);
+      part.stagedIdentity = PathIdentity.inspect(part.staged);
       return size;
     }
 
@@ -740,7 +768,7 @@ public final class PublicationTransaction {
         }
         // Readback and identity inspection happen after the write handle closes on Windows.
         part.writer.validate(part.staged);
-        StagedResult result = new StagedResult(size, WindowsPathIdentity.inspect(part.staged));
+        StagedResult result = new StagedResult(size, PathIdentity.inspect(part.staged));
         handleAndValidationClosed = true;
         return result;
       } catch (ArchiveException failure) {
@@ -819,7 +847,7 @@ public final class PublicationTransaction {
     private void publish(Part part) throws IOException {
       recheck(part, false);
       if (part.predecessor) {
-        part.backupIdentity = WindowsPathIdentity.inspect(part.target);
+        part.backupIdentity = PathIdentity.inspect(part.target);
         part.backup = staging.resolve("backup-" + part.ordinal);
         ResourceBudget.Lease backupCredit = budget.reserve(0, 0, 0, Files.size(part.target));
         credits.add(backupCredit);
@@ -859,7 +887,7 @@ public final class PublicationTransaction {
         try {
           recheck(part, true);
           if (part.state == ArtifactState.PUBLISHED) {
-            var current = WindowsPathIdentity.inspect(part.target);
+            var current = PathIdentity.inspect(part.target);
             if (!Objects.equals(current, part.stagedIdentity)) {
               part.state = current == null ? ArtifactState.MISSING : ArtifactState.UNCHANGED;
               throw context()
@@ -869,7 +897,7 @@ public final class PublicationTransaction {
             part.state = ArtifactState.MISSING;
           }
           if (part.backedUp) {
-            if (!Objects.equals(part.backupIdentity, WindowsPathIdentity.inspect(part.backup))) {
+            if (!Objects.equals(part.backupIdentity, PathIdentity.inspect(part.backup))) {
               throw context().failure(FailureKind.DESTINATION, "destination.changed-backup", null);
             }
             files.move(part.backup, part.target);
@@ -941,7 +969,7 @@ public final class PublicationTransaction {
         if (removedDirectories.stream().anyMatch(part.target::startsWith)) continue;
         try {
           if (stagedRoot == null) recheck(part, true);
-          var current = WindowsPathIdentity.inspect(part.target);
+          var current = PathIdentity.inspect(part.target);
           if (current == null) part.state = ArtifactState.MISSING;
           else if (part.state == ArtifactState.MISSING
               || (part.state == ArtifactState.PUBLISHED && !current.equals(part.stagedIdentity))
@@ -1074,8 +1102,7 @@ public final class PublicationTransaction {
   }
 
   /** Immutable worker evidence; its staged-file credits belong to the containing Outcome. */
-  private record StagedResult(long size, WindowsPathIdentity.Snapshot identity)
-      implements AutoCloseable {
+  private record StagedResult(long size, PathIdentity.Snapshot identity) implements AutoCloseable {
     /** The coordinator owns the staged path and the Outcome owns every live resource credit. */
     @Override
     public void close() {
@@ -1091,8 +1118,8 @@ public final class PublicationTransaction {
     final boolean predecessor;
     Path staged;
     Path backup;
-    WindowsPathIdentity.Snapshot stagedIdentity;
-    WindowsPathIdentity.Snapshot backupIdentity;
+    PathIdentity.Snapshot stagedIdentity;
+    PathIdentity.Snapshot backupIdentity;
     boolean backedUp;
     ResourceBudget.Lease scratch;
     OrderedWorkerRunner.Outcome<StagedResult> parallelOutcome;

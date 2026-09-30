@@ -16,8 +16,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** Exercises extraction preflight and identity rechecks on the qualified Windows filesystem. */
-@EnabledOnOs(OS.WINDOWS)
+/** Exercises extraction preflight and identity rechecks on the host filesystem. */
 final class ExtractionPathsTest {
   @TempDir Path directory;
 
@@ -139,7 +138,7 @@ final class ExtractionPathsTest {
   void rejectsMissingTargetsAndPrefixConflictsUnderDirectoryAliases() throws Exception {
     Path first = Files.createDirectory(directory.resolve("first"));
     Path second = Files.createDirectory(directory.resolve("second"));
-    WindowsPathIdentity.Snapshot common = WindowsPathIdentity.inspect(first);
+    PathIdentity.Snapshot common = PathIdentity.inspect(first);
     for (List<String> names :
         List.of(
             List.of("first/missing/entry.bin", "second/MISSING/ENTRY.bin"),
@@ -155,8 +154,8 @@ final class ExtractionPathsTest {
                         names,
                         TargetPolicy.FAIL,
                         IoContext.of(directory, Operation.EXTRACT),
-                        WindowsPathIdentity.Pin::close,
-                        path -> path.equals(second) ? common : WindowsPathIdentity.inspect(path))) {
+                        PathIdentity.Pin::close,
+                        path -> path.equals(second) ? common : PathIdentity.inspect(path))) {
                   plan.recheckRoot();
                 }
               });
@@ -180,9 +179,9 @@ final class ExtractionPathsTest {
             List.of("first/missing/one.bin", "second/missing/two.bin"),
             TargetPolicy.FAIL,
             IoContext.of(directory, Operation.EXTRACT),
-            WindowsPathIdentity.Pin::close,
+            PathIdentity.Pin::close,
             path ->
-                WindowsPathIdentity.inspect(
+                PathIdentity.inspect(
                     path.startsWith(second) ? first.resolve(second.relativize(path)) : path))) {
       assertEquals(2, plan.targets().size());
       plan.recheckRoot();
@@ -196,6 +195,8 @@ final class ExtractionPathsTest {
    * Qualifies absent-target collision checks against real NTFS short-directory names when enabled.
    */
   @Test
+  // Needs NTFS 8.3 short names, read through cmd.
+  @EnabledOnOs(OS.WINDOWS)
   void rejectsMissingOutputUnderRealShortDirectoryAlias() throws Exception {
     Path longParent =
         Files.createDirectory(directory.resolve("Long directory for archive extraction"));
@@ -283,6 +284,8 @@ final class ExtractionPathsTest {
    * A root handle prevents rename until closed, without locking descendant files against writes.
    */
   @Test
+  // Only the Windows pin denies deletion; the portable pin detects replacement instead.
+  @EnabledOnOs(OS.WINDOWS)
   void pinsRootAndReleasesHandle() throws Exception {
     Path root = Files.createDirectory(directory.resolve("root"));
     try (ExtractionPaths plan = preflight(root, List.of("entry.bin"), TargetPolicy.FAIL)) {
@@ -341,6 +344,8 @@ final class ExtractionPathsTest {
    * A junction is classified without traversing it, including when a normal directory is swapped.
    */
   @Test
+  // Creates an NTFS junction through cmd.
+  @EnabledOnOs(OS.WINDOWS)
   void rejectsJunctionsDuringPreflightAndRecheck() throws Exception {
     Path outside = Files.createDirectory(directory.resolve("outside"));
     Path root = Files.createDirectory(directory.resolve("root"));

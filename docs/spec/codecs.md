@@ -22,22 +22,12 @@ _Source decision: [accepted internal codec and provider boundary](https://github
 
 ## JBSA-CODEC-002
 
-The initial standard codec stack **MUST** use Java 25 `Deflater` and `Inflater`
-for the baseline zlib implementation and one hidden LWJGL 3.4.3 adapter backed
-by upstream LZ4 1.10.0 on Windows x64 for raw LZ4 HC and LZ4 frame. LZ4
-capability **MUST** be required only for an operation whose valid Archive Family
-and on-wire method require LZ4, and JBSA **MUST NOT** substitute one compression
-algorithm for another.
+Retired in specification `0.19.0`. The former stack named the native LZ4 adapter
+as the only LZ4 provider, so LZ4 operations were unavailable wherever that
+adapter could not load. [JBSA-CODEC-014](#jbsa-codec-014) replaces it with a
+stack that pairs the native adapter with a portable LZ4 provider.
 
-Archive Family codec permission and wire framing remain owned by
-[JBSA-BSA-001](formats/versioned-bsa.md#jbsa-bsa-001),
-[JBSA-BSA-009](formats/versioned-bsa.md#jbsa-bsa-009),
-[JBSA-BSA-010](formats/versioned-bsa.md#jbsa-bsa-010),
-[JBSA-GNRL-002](formats/general-ba2.md#jbsa-gnrl-002),
-[JBSA-GNRL-005](formats/general-ba2.md#jbsa-gnrl-005), and
-[JBSA-DX10-004](formats/dds-ba2.md#jbsa-dx10-004).
-
-_Source decision: [accepted zlib and LZ4 implementations](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decision: [accepted zlib and LZ4 implementations](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
 
 ## JBSA-CODEC-003
 
@@ -125,17 +115,12 @@ _Source decisions: [accepted bounded codec processing](https://github.com/evilda
 
 ## JBSA-CODEC-009
 
-After resolving the Archive Family and requested wire codec, JBSA **MUST**
-preflight that same-codec capability before destination side effects. A
-qualified native-zlib decoder **MAY** fall back to JDK zlib only when that native
-provider is unavailable. Invalid compressed data, decoded-size mismatch, or a
-provider execution failure **MUST NOT** be retried through another provider.
+Retired in specification `0.19.0`. The former rule let only a native-zlib decoder
+fall back to a portable provider and required unavailable native LZ4 to fail
+LZ4 operations. [JBSA-CODEC-015](#jbsa-codec-015) replaces it with a portable
+fallback for every native provider.
 
-Encoding **MUST** pin one provider before work and **MUST NOT** fall back
-mid-operation. Unavailable native LZ4 **MUST** fail only operations requiring
-LZ4 and **MUST NOT** disable stored or applicable zlib operations.
-
-_Source decision: [accepted capability preflight and fallback model](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decision: [accepted capability preflight and fallback model](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
 
 ## JBSA-CODEC-010
 
@@ -196,6 +181,58 @@ determinism, bounded-memory, performance, native-loading, packaging, and notice
 evidence before release.
 
 _Source decision: [accepted codec qualification posture](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
+
+## JBSA-CODEC-014
+
+The standard codec stack **MUST** use Java 25 `Deflater` and `Inflater` for the
+baseline zlib implementation. For raw LZ4 HC and LZ4 frame it **MUST** provide
+two providers: one hidden LWJGL 3.4.3 adapter backed by upstream LZ4 1.10.0,
+qualified on Windows x64, and one portable pure-Java provider that needs no
+native access and satisfies [JBSA-SCOPE-011](scope.md#jbsa-scope-011). Both
+providers **MUST** read and write the same wire formats. LZ4 capability **MUST**
+be required only for an operation whose valid Archive Family and on-wire method
+require LZ4, and JBSA **MUST NOT** substitute one compression algorithm for
+another.
+
+The portable LZ4 provider **MUST** be the community-maintained lz4-java
+(`at.yawk.lz4:lz4-java`) at version 1.10.1 or later, which fixes
+CVE-2025-12183 and CVE-2025-66566. JBSA **MUST** reach it only through
+`LZ4Factory.safeInstance()` and `XXHashFactory.safeInstance()`, **MUST** decode
+through its safe decompressor, and **MUST** pass those instances explicitly to
+any lz4-java frame stream. JBSA **MUST NOT** call a `native*`, `unsafe*`, or
+`fastest*` factory, because those can load lz4-java's bundled JNI libraries
+outside the native-access policy in [JBSA-CODEC-011](#jbsa-codec-011).
+
+lz4-java is an explicitly authorized provider artifact: its JAR **MAY** carry
+its bundled native libraries into the library dependency set and every CLI
+image. JBSA never loads them, so they do not admit a native dependency.
+
+Archive Family codec permission and wire framing remain owned by
+[JBSA-BSA-001](formats/versioned-bsa.md#jbsa-bsa-001),
+[JBSA-BSA-009](formats/versioned-bsa.md#jbsa-bsa-009),
+[JBSA-BSA-010](formats/versioned-bsa.md#jbsa-bsa-010),
+[JBSA-GNRL-002](formats/general-ba2.md#jbsa-gnrl-002),
+[JBSA-GNRL-005](formats/general-ba2.md#jbsa-gnrl-005), and
+[JBSA-DX10-004](formats/dds-ba2.md#jbsa-dx10-004).
+
+_Source decisions: [accepted zlib and LZ4 implementations](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971); portable lz4-java provider and its inert bundled native libraries by maintainer decision in specification `0.19.0`; licensing references dropped with the retirement of JBSA-LIC-007 and JBSA-LIC-008 in specification `0.19.0`, [CVE-2025-12183 fix](https://openwall.com/lists/oss-security/2025/12/01/5), [CVE-2025-66566 fix](https://github.com/yawkat/lz4-java/security/advisories/GHSA-cmp6-m4wj-q63q)._
+
+## JBSA-CODEC-015
+
+After resolving the Archive Family and requested wire codec, JBSA **MUST**
+preflight that same-codec capability before destination side effects. When a
+codec's native provider is unavailable, preflight **MUST** select that codec's
+portable provider instead: JDK zlib for a native zlib provider and the portable
+LZ4 provider from [JBSA-CODEC-014](#jbsa-codec-014) for native LZ4. Invalid
+compressed data, decoded-size mismatch, or a provider execution failure **MUST
+NOT** be retried through another provider.
+
+Encoding **MUST** pin one provider before work and **MUST NOT** fall back
+mid-operation. An unavailable native provider **MUST NOT** fail any operation
+that a portable provider can perform, and **MUST NOT** disable stored or
+applicable zlib operations.
+
+_Source decisions: [accepted capability preflight and fallback model](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971); portable fallback for every native provider by maintainer decision in specification `0.19.0`._
 
 ## Evidence boundaries
 

@@ -145,13 +145,13 @@
     {"id": "JBSA-CLI-012"},
     {"id": "JBSA-CLI-013"},
     {"id": "JBSA-CLI-014"},
-    {"id": "JBSA-CODEC-002"},
     {"id": "JBSA-CODEC-003"},
     {"id": "JBSA-CODEC-008"},
-    {"id": "JBSA-CODEC-009"},
     {"id": "JBSA-CODEC-010"},
     {"id": "JBSA-CODEC-011"},
     {"id": "JBSA-CODEC-012"},
+    {"id": "JBSA-CODEC-014"},
+    {"id": "JBSA-CODEC-015"},
     {"id": "JBSA-DDS-001"},
     {"id": "JBSA-DDS-002"},
     {"id": "JBSA-DDS-003"},
@@ -810,7 +810,7 @@
         "tes3": [
           "io.github.evildarkarchon.jbsa.Tes3PackTest#expandsDirectoryAndArchiveSourcesAndAppliesLaterOverlay",
           "io.github.evildarkarchon.jbsa.Tes3PackTest#hashCollisionsKeepDistinctNamesAndUseCanonicalByteTieOrder",
-          "io.github.evildarkarchon.jbsa.Tes3PackTest#splitsInCanonicalOrderAndIgnoresCompressionHints"
+          "io.github.evildarkarchon.jbsa.Tes3PackTest#splitsInCanonicalOrder"
         ],
         "bsa-067": [
           "io.github.evildarkarchon.jbsa.BsaPackTest#classifiesAutomaticFlagsByOrderedRoots",
@@ -831,8 +831,8 @@
       "applies_to": {"risk_tags": ["raw-lz4"]},
       "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
       "capability_requirements": {
-        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-004", "JBSA-DX10-006", "JBSA-DDS-013", "JBSA-CODEC-002"],
-        "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-003", "JBSA-GNRL-005", "JBSA-CODEC-002"]
+        "sf-dx10-v3-m3": ["JBSA-DX10-001", "JBSA-DX10-004", "JBSA-DX10-006", "JBSA-DDS-013", "JBSA-CODEC-014"],
+        "sf-gnrl-v3-m3": ["JBSA-GNRL-002", "JBSA-GNRL-003", "JBSA-GNRL-005", "JBSA-CODEC-014"]
       },
       "test_selectors": {
         "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#writesCodecSelectedHeadersAndRoundTrips", "io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#packagedProfileIdentifiesLevelTwelveRawLz4"],
@@ -1004,8 +1004,8 @@
       "applies_to": {"risk_tags": ["native-codec", "raw-lz4"]},
       "requirements": ["JBSA-ASR-003", "JBSA-ASR-004"],
       "capability_requirements": {
-        "sf-dx10-v3-m3": ["JBSA-DX10-004", "JBSA-CODEC-008", "JBSA-CODEC-009", "JBSA-CODEC-010", "JBSA-CODEC-011", "JBSA-CODEC-012"],
-        "sf-gnrl-v3-m3": ["JBSA-CODEC-008", "JBSA-CODEC-009", "JBSA-CODEC-010", "JBSA-CODEC-011", "JBSA-CODEC-012"]
+        "sf-dx10-v3-m3": ["JBSA-DX10-004", "JBSA-CODEC-008", "JBSA-CODEC-015", "JBSA-CODEC-010", "JBSA-CODEC-011", "JBSA-CODEC-012"],
+        "sf-gnrl-v3-m3": ["JBSA-CODEC-008", "JBSA-CODEC-015", "JBSA-CODEC-010", "JBSA-CODEC-011", "JBSA-CODEC-012"]
       },
       "test_selectors": {
         "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits"],

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** DDS packing behavior through the public archive API and independently specified wire fields. */
-@EnabledOnOs(OS.WINDOWS)
 class DdsBa2PackTest {
   @TempDir Path temporary;
 
@@ -247,6 +246,8 @@ class DdsBa2PackTest {
 
   /** Stored compression is never enabled by the immutable compatibility profile. */
   @Test
+  // The active ANSI code page is read from Windows (GetACP).
+  @EnabledOnOs(OS.WINDOWS)
   void rejectsStoredInEveryProfileBeforeOpeningSource() throws Exception {
     for (var profile :
         List.of(

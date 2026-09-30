@@ -15,7 +15,9 @@ import java.util.Objects;
  * A no-handle loose-source plan, consumed under a revalidated deny-write/delete lifetime.
  *
  * <p>The Windows NIO provider's absent file key is supplied by the native no-follow identity
- * adapter. Providers without stable identity fail closed; timestamps never substitute for identity.
+ * adapter; other default-filesystem hosts use the portable {@link PathIdentity} identity, not the
+ * bare reusable file key. Providers without stable identity fail closed; timestamps never
+ * substitute for identity.
  */
 public final class SourceFile {
   private final Path path;
@@ -48,23 +50,25 @@ public final class SourceFile {
     return plan(path, SourceFile::nativeAttributes);
   }
 
-  /** Binds NIO length/time metadata to the same native no-follow identity before and after it. */
+  /**
+   * Binds NIO length/time metadata to the same {@link PathIdentity} no-follow identity before and
+   * after it. Off Windows this is the portable identity, whose birth time tells a recreated file
+   * apart from the original even when POSIX hands it the same inode, length, and timestamp.
+   */
   private static BasicFileAttributes nativeAttributes(Path path) throws IOException {
     BasicFileAttributes attributes =
         Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-    if (path.getFileSystem() != java.nio.file.FileSystems.getDefault()
-        || !System.getProperty("os.name").startsWith("Windows")) return attributes;
-    WindowsPathIdentity.Snapshot before = WindowsPathIdentity.inspect(path);
+    if (path.getFileSystem() != java.nio.file.FileSystems.getDefault()) return attributes;
+    PathIdentity.Snapshot before = PathIdentity.inspect(path);
     attributes = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
-    WindowsPathIdentity.Snapshot after = WindowsPathIdentity.inspect(path);
+    PathIdentity.Snapshot after = PathIdentity.inspect(path);
     if (before == null || !before.equals(after))
       throw IoContext.of(path, Operation.PACK).failure(FailureKind.SOURCE, "source.changed", null);
     return new NativeAttributes(attributes, before);
   }
 
   /** Keeps native identity and reparse classification with the corresponding NIO timestamps. */
-  private record NativeAttributes(
-      BasicFileAttributes attributes, WindowsPathIdentity.Snapshot nativeInfo)
+  private record NativeAttributes(BasicFileAttributes attributes, PathIdentity.Snapshot nativeInfo)
       implements BasicFileAttributes {
     @Override
     public FileTime lastModifiedTime() {

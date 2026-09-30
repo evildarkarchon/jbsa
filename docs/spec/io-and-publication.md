@@ -24,7 +24,7 @@ _Source decision: [accepted positional large-file I/O](https://github.com/evilda
 ## JBSA-IO-002
 
 On the qualified OpenJDK 25 and Windows x64 baseline in
-[JBSA-SCOPE-001](scope.md#jbsa-scope-001), every file-backed archive-input
+[JBSA-SCOPE-010](scope.md#jbsa-scope-010), every file-backed archive-input
 handle and every pack-source handle while consumed **MUST** use `NOSHARE_WRITE`
 and `NOSHARE_DELETE` while permitting compatible readers. JBSA **MUST** report
 `CAPABILITY` or the applicable source conflict rather than silently weaken this

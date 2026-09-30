@@ -2,6 +2,8 @@ package io.github.evildarkarchon.jbsa;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.github.evildarkarchon.jbsa.internal.io.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -14,12 +16,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public SSE BSA packing observations with independent wire and round-trip expectations. */
-@EnabledOnOs(OS.WINDOWS)
 final class Bsa69PackTest {
   @TempDir Path directory;
 
@@ -320,7 +319,12 @@ final class Bsa69PackTest {
               ArchiveException.class, () -> Channels.newInputStream(content).readAllBytes());
       assertEquals(FailureKind.FORMAT, failure.kind());
       assertEquals(identifier, failure.primaryFailure().diagnosticIdentifier().orElseThrow());
-      assertEquals("jbsa-bsa-069-lz4-v1", failure.diagnostics().getFirst().values().get("profile"));
+      // The profile names the provider that decoded: native on Windows x64, portable elsewhere.
+      assertEquals(
+          Lz4Runtime.selected() == Lz4Runtime.Provider.NATIVE
+              ? BsaLz4Frame.PROFILE
+              : BsaLz4Frame.PORTABLE_PROFILE,
+          failure.diagnostics().getFirst().values().get("profile"));
     }
   }
 

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public texture-reader behavior from independently authored archive records. */
-@EnabledOnOs(OS.WINDOWS)
 final class DdsBa2ReaderTest {
   @TempDir Path directory;
 
@@ -77,6 +76,8 @@ final class DdsBa2ReaderTest {
 
   /** A Starfield v3 non-method-3 zlib stream is available only through the qualified profile. */
   @Test
+  // The active ANSI code page is read from Windows (GetACP).
+  @EnabledOnOs(OS.WINDOWS)
   void confinesStarfieldV3ZlibFallbackToCompatibilityProfile() throws Exception {
     byte[] zlib = java.util.HexFormat.of().parseHex("7801010800f7ff070000000000000000400008");
     Path path = Files.write(directory.resolve("fallback.ba2"), starfieldFixture(3, 0, zlib));

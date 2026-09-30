@@ -11,29 +11,41 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
 /** Fresh JVMs isolate process-lifetime native loading and Java 25 host policy. */
+// Native LZ4 is qualified and loaded only on the Windows x64 baseline.
 @EnabledOnOs(OS.WINDOWS)
 final class Lz4LaunchTest {
   /**
-   * Missing grants and missing native artifacts leave zlib available and fail LZ4
-   * deterministically.
+   * Missing grants and missing native artifacts leave zlib available, fail native admission
+   * deterministically, and pin the portable provider instead (JBSA-CODEC-015). The probe also fails
+   * if lz4-java ever loads its JNI library.
    */
   @Test
   void qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts() throws Exception {
-    assertEquals("LZ4_OK", launch(true, true, List.of(), "lz4"));
-    assertEquals("CAPABILITY:native-access", launch(false, true, List.of(), "lz4"));
-    assertEquals("CAPABILITY:provider-unavailable", launch(true, false, List.of(), "lz4"));
+    assertEquals("LZ4_OK NATIVE", launch(true, true, List.of(), "lz4"));
+    assertEquals("CAPABILITY:native-access PORTABLE", launch(false, true, List.of(), "lz4"));
+    assertEquals("CAPABILITY:provider-unavailable PORTABLE", launch(true, false, List.of(), "lz4"));
     assertEquals("ZLIB_OK", launch(false, false, List.of(), "zlib-only"));
-    assertEquals("CAPABILITY:provider-unavailable", launch(true, false, List.of(), "no-provider"));
     assertEquals(
-        "CAPABILITY:native-configuration",
+        "CAPABILITY:provider-unavailable PORTABLE", launch(true, false, List.of(), "no-provider"));
+    assertEquals(
+        "CAPABILITY:native-configuration PORTABLE",
         launch(true, true, List.of("-Dorg.lwjgl.librarypath=does-not-exist"), "lz4"));
-    assertEquals("CAPABILITY:platform", launch(true, true, List.of("-Dos.arch=aarch64"), "lz4"));
+    assertEquals(
+        "CAPABILITY:platform PORTABLE", launch(true, true, List.of("-Dos.arch=aarch64"), "lz4"));
+  }
+
+  /** LZ4 fails as a capability only when the native adapter and lz4-java are both missing. */
+  @Test
+  void reportsUnavailableOnlyWithoutEitherProvider() throws Exception {
+    assertEquals(
+        "CAPABILITY:provider-unavailable UNAVAILABLE",
+        launch(true, false, List.of(), "no-lz4-java"));
   }
 
   /** Resolves the same resource-module roots as the staged launcher and executes real preflight. */
   @Test
   void qualifiesNamedModuleLaunch() throws Exception {
-    assertEquals("LZ4_OK", launch(true, true, List.of(), "module"));
+    assertEquals("LZ4_OK NATIVE", launch(true, true, List.of(), "module"));
   }
 
   /**
@@ -52,6 +64,7 @@ final class Lz4LaunchTest {
             Arrays.stream(paths.split(File.pathSeparator))
                 .filter(path -> natives || !path.contains("natives-windows"))
                 .filter(path -> !mode.equals("no-provider") || !path.contains("lwjgl"))
+                .filter(path -> !mode.equals("no-lz4-java") || !path.contains("lz4-java"))
                 .toList());
     var command = new ArrayList<String>();
     command.add(Path.of(System.getProperty("java.home"), "bin", "java.exe").toString());

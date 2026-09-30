@@ -54,6 +54,7 @@ class PublicLibraryPluginFunctionalTest {
                 requires jdk.unsupported;
                 requires static org.lwjgl;
                 requires static org.lwjgl.lz4;
+                requires org.lz4.java;
                 exports io.github.evildarkarchon.jbsa;
             }
             """.trimIndent(),
@@ -116,7 +117,7 @@ class PublicLibraryPluginFunctionalTest {
         assertEquals("0.1.0-SNAPSHOT", descriptor.rawVersion().orElseThrow())
         assertEquals(setOf("io.github.evildarkarchon.jbsa"), descriptor.exports().map { it.source() }.toSet())
         assertEquals(
-            setOf("java.base", "jdk.unsupported", "org.lwjgl", "org.lwjgl.lz4"),
+            setOf("java.base", "jdk.unsupported", "org.lwjgl", "org.lwjgl.lz4", "org.lz4.java"),
             descriptor.requires().map { it.name() }.toSet(),
         )
         descriptor.requires().filter { it.name().startsWith("org.lwjgl") }.forEach { requirement ->
@@ -181,7 +182,7 @@ class PublicLibraryPluginFunctionalTest {
         assertEquals("", directText(scm, "tag"))
 
         val dependencies = root.getElementsByTagName("dependency")
-        assertEquals(4, dependencies.length)
+        assertEquals(5, dependencies.length)
         val actual =
             (0 until dependencies.length).map { index ->
                 val dependency = dependencies.item(index) as Element
@@ -199,6 +200,7 @@ class PublicLibraryPluginFunctionalTest {
                 listOf("org.lwjgl", "lwjgl-lz4", "3.4.3", "", "compile"),
                 listOf("org.lwjgl", "lwjgl", "3.4.3", "natives-windows", "runtime"),
                 listOf("org.lwjgl", "lwjgl-lz4", "3.4.3", "natives-windows", "runtime"),
+                listOf("at.yawk.lz4", "lz4-java", "1.12.0", "", "compile"),
             ),
             actual,
         )
@@ -238,16 +240,6 @@ class PublicLibraryPluginFunctionalTest {
         )
     }
 
-    /** Verifies publication remains local-only and build-only projects cannot acquire publications. */
-    @Test
-    fun `permits publication only for the library and configures no remote action`() {
-        val result = run("--write-locks", "verifyPublicationPolicy", ":jbsa-test-support:tasks", "--all")
-
-        assertTrue(result.output.contains("JBSA_PUBLICATION :jbsa=library"), result.output)
-        assertTrue(result.output.contains("JBSA_PUBLICATION_REMOTE_TASKS 0"), result.output)
-        assertFalse(result.output.contains(":jbsa-test-support:publish"), result.output)
-    }
-
     /** Verifies local publication cannot expand the compatible four-file artifact set. */
     @Test
     fun `disables incidental Gradle module metadata`() {
@@ -255,6 +247,35 @@ class PublicLibraryPluginFunctionalTest {
 
         assertEquals(TaskOutcome.SKIPPED, result.task(":jbsa:generateMetadataFileForLibraryPublication")?.outcome)
         assertFalse(Files.exists(projectDir.resolve("jbsa/target/publications/library/module.json")))
+    }
+
+    /** Verifies the library links with jlink once lz4-java carries its synthesized descriptor. */
+    @Test
+    fun `links the library and an explicit lz4-java module with jlink`() {
+        val result = run("--write-locks", ":jbsa:verifyLinkableRuntime")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":jbsa:verifyLinkableRuntime")?.outcome)
+        val release = Files.readString(projectDir.resolve("jbsa/target/jlink/linkable-runtime/release"))
+        val modules = Regex("MODULES=\"([^\"]*)\"").find(release)?.groupValues?.get(1)?.split(' ')?.toSet()
+        assertEquals(setOf("java.base", "jdk.unsupported", "org.lz4.java", "io.github.evildarkarchon.jbsa"), modules)
+    }
+
+    /** Verifies the check names the automatic module that jlink would reject when no descriptor applies. */
+    @Test
+    fun `rejects an automatic lz4-java module before jlink`() {
+        write(
+            "jbsa/build.gradle.kts",
+            """
+            // Drops the synthesized descriptor so lz4-java reaches the check as the automatic module it ships.
+            extensions.getByType(org.gradlex.javamodule.moduleinfo.ExtraJavaModuleInfoPluginExtension::class.java)
+                .moduleSpecs.empty()
+            """.trimIndent(),
+        )
+
+        val result = runAndFail("--write-locks", ":jbsa:verifyLinkableRuntime")
+
+        assertTrue(result.output.contains("Module org.lz4.java from"), result.output)
+        assertTrue(result.output.contains("is automatic, which jlink rejects"), result.output)
     }
 
     /** Verifies the artifact gate rejects a third-party type leaked through an exported signature. */
@@ -306,41 +327,6 @@ class PublicLibraryPluginFunctionalTest {
             result.output.contains("annotation value leaks prohibited type org.lwjgl.system.MemoryStack"),
             result.output,
         )
-    }
-
-    /** Verifies a build-only project cannot acquire Maven publication capability. */
-    @Test
-    fun `rejects build-only publication configuration`() {
-        write(
-            "jbsa-test-support/build.gradle.kts",
-            """
-            plugins { `maven-publish` }
-            publishing {
-                repositories { maven { url = uri("https://example.invalid/releases") } }
-            }
-            """.trimIndent(),
-        )
-
-        val result = runAndFail("--write-locks", "verifyPublicationPolicy")
-
-        assertTrue(result.output.contains(":jbsa-test-support is build-only and cannot apply maven-publish"), result.output)
-    }
-
-    /** Verifies the public library cannot configure a remote publication repository. */
-    @Test
-    fun `rejects a remote publication repository`() {
-        write(
-            "jbsa/build.gradle.kts",
-            """
-            publishing {
-                repositories { maven { url = uri("https://example.invalid/releases") } }
-            }
-            """.trimIndent(),
-        )
-
-        val result = runAndFail("--write-locks", "verifyPublicationPolicy")
-
-        assertTrue(result.output.contains("Remote publication repositories are prohibited for :jbsa"), result.output)
     }
 
     /** Writes one JUnit class whose observation log exposes ordering and test-process policy. */
@@ -424,6 +410,7 @@ class PublicLibraryPluginFunctionalTest {
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
+            lz4-java = "1.12.0"
             snakeyaml = "2.5"
 
             [libraries]
@@ -437,6 +424,7 @@ class PublicLibraryPluginFunctionalTest {
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
             lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
             lwjgl-lz4 = { module = "org.lwjgl:lwjgl-lz4", version.ref = "lwjgl" }
+            lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4-java" }
 
             [plugins]
             """.trimIndent(),

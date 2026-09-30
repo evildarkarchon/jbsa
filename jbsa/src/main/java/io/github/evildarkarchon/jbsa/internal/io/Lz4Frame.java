@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.lwjgl.util.lz4.LZ4Frame.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.ByteBuffer;
@@ -11,14 +12,46 @@ import org.lwjgl.PointerBuffer;
 import org.lwjgl.util.lz4.LZ4FDecompressOptions;
 import org.lwjgl.util.lz4.LZ4FPreferences;
 
-/** Release-pinned streaming frame adapter with independently owned, admitted native state. */
+/**
+ * Release-pinned streaming frame adapter with independently owned, admitted codec state. Each call
+ * runs through the provider {@link Lz4Runtime#preflight} pins: the native LWJGL adapter, or the
+ * portable {@link PortableLz4} provider when native LZ4 is unavailable.
+ */
 public final class Lz4Frame {
+  /** Native-provider heap bookkeeping per encoder or decoder. */
   public static final long HEAP_BYTES = 4096;
+
+  /** Native-provider memory for one encoder: its compression context and direct windows. */
   public static final long ENCODE_NATIVE_BYTES = 2 * 1024 * 1024 + 3 * 65536;
+
+  /** Native-provider memory for one decoder, bounded by a 4 MiB block plus direct windows. */
   public static final long DECODE_NATIVE_BYTES = 9 * 1024 * 1024 + 3 * 65536;
+
   private static final int WINDOW = 65536;
 
   private Lz4Frame() {}
+
+  /** Returns the heap one encoder reserves under the given provider. */
+  public static long encodeHeapBytes(Provider provider) {
+    return provider == Provider.NATIVE ? HEAP_BYTES : PortableLz4.FRAME_ENCODE_HEAP_BYTES;
+  }
+
+  /** Returns the native memory one encoder reserves; the portable provider allocates none. */
+  public static long encodeNativeBytes(Provider provider) {
+    return provider == Provider.NATIVE ? ENCODE_NATIVE_BYTES : 0;
+  }
+
+  /** Returns the heap one decoder's owner must reserve under the given provider. */
+  public static long decodeHeapBytes(Provider provider) {
+    return provider == Provider.NATIVE ? HEAP_BYTES : PortableLz4.FRAME_DECODE_HEAP_BYTES;
+  }
+
+  /**
+   * Returns the native memory one decoder's owner must reserve; the portable provider needs none.
+   */
+  public static long decodeNativeBytes(Provider provider) {
+    return provider == Provider.NATIVE ? DECODE_NATIVE_BYTES : 0;
+  }
 
   /**
    * Encodes an exact positional source in bounded windows. Callbacks are borrowed synchronously;
@@ -49,8 +82,8 @@ public final class Lz4Frame {
 
   /**
    * Encodes a BSA frame while borrowing a worker admission that already covers this codec's {@link
-   * #HEAP_BYTES} and {@link #ENCODE_NATIVE_BYTES}. The caller releases that lease after the private
-   * result has settled; this method does not charge or close it again.
+   * #encodeHeapBytes} and {@link #encodeNativeBytes} for the pinned provider. The caller releases
+   * that lease after the private result has settled; this method does not charge or close it again.
    */
   public static long encodeBsaPrecharged(
       JdkZlib.ByteSource source,
@@ -77,7 +110,30 @@ public final class Lz4Frame {
       boolean bsaProfile)
       throws IOException {
     if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
-    Lz4Runtime.preflight("lz4-frame", "encode", context);
+    Provider provider = Lz4Runtime.preflight("lz4-frame", "encode", context);
+    return encode(
+        provider, source, decodedSize, sink, checkpoint, budget, admission, context, bsaProfile);
+  }
+
+  /**
+   * Encodes through an explicit provider. Production code reaches this only with the pinned
+   * provider; tests use it to exercise both providers in one process.
+   */
+  static long encode(
+      Provider provider,
+      JdkZlib.ByteSource source,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      ResourceBudget.Lease admission,
+      IoContext context,
+      boolean bsaProfile)
+      throws IOException {
+    if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
+    if (provider == Provider.PORTABLE)
+      return PortableLz4.encodeFrame(
+          source, decodedSize, sink, checkpoint, budget, admission, context, bsaProfile);
     try (var lease =
             admission == null ? budget.reserve(HEAP_BYTES, ENCODE_NATIVE_BYTES, 0, 0) : null;
         var state = new State(true, context)) {
@@ -146,12 +202,44 @@ public final class Lz4Frame {
       throws ArchiveException {
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
-    Lz4Runtime.preflight("lz4-frame", "decode", context);
-    return new Decoder(source, storedSize, decodedSize, context);
+    Provider provider = Lz4Runtime.preflight("lz4-frame", "decode", context);
+    return decoder(provider, source, storedSize, decodedSize, context);
   }
 
-  /** Per-content sequential frame decoder with bounded direct input and output windows. */
-  public static final class Decoder implements AutoCloseable {
+  /** Creates a decoder through an explicit provider; tests use it to cross-decode providers. */
+  static Decoder decoder(
+      Provider provider,
+      JdkZlib.ByteSource source,
+      long storedSize,
+      long decodedSize,
+      IoContext context)
+      throws ArchiveException {
+    if (storedSize < 0 || decodedSize < 0)
+      throw new IllegalArgumentException("Negative codec size");
+    return provider == Provider.PORTABLE
+        ? PortableLz4.decoder(source, storedSize, decodedSize, context)
+        : new NativeDecoder(source, storedSize, decodedSize, context);
+  }
+
+  /**
+   * One content's sequential frame decoder. Its owner reserves {@link #decodeHeapBytes} and {@link
+   * #decodeNativeBytes} for the pinned provider before creating it and closes it exactly once.
+   */
+  public interface Decoder extends AutoCloseable {
+    /**
+     * Returns one bounded decoded window, or -1 after validating exact frame consumption.
+     *
+     * @throws IOException a structured codec, source, or closed-channel failure
+     */
+    int read(ByteBuffer destination) throws IOException;
+
+    /** Releases the decoder's state; closing is idempotent. */
+    @Override
+    void close();
+  }
+
+  /** Per-content sequential native frame decoder with bounded direct input and output windows. */
+  private static final class NativeDecoder implements Decoder {
     private final JdkZlib.ByteSource source;
     private final long storedSize, decodedSize;
     private final IoContext context;
@@ -160,7 +248,8 @@ public final class Lz4Frame {
     private boolean first = true, finished, closed;
 
     /** Allocates independent native state only after capability preflight and caller admission. */
-    private Decoder(JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context)
+    private NativeDecoder(
+        JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context)
         throws ArchiveException {
       this.source = source;
       this.storedSize = storedSize;
@@ -171,6 +260,7 @@ public final class Lz4Frame {
     }
 
     /** Returns one bounded decoded window and validates exact frame consumption at terminal EOF. */
+    @Override
     public synchronized int read(ByteBuffer destination) throws IOException {
       if (closed) throw new java.nio.channels.ClosedChannelException();
       if (!destination.hasRemaining()) return 0;
@@ -273,7 +363,26 @@ public final class Lz4Frame {
       throws IOException {
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
-    Lz4Runtime.preflight("lz4-frame", "decode", context);
+    Provider provider = Lz4Runtime.preflight("lz4-frame", "decode", context);
+    return decode(provider, source, storedSize, decodedSize, sink, checkpoint, budget, context);
+  }
+
+  /** Decodes one ordinary frame through an explicit provider, as {@link #decode} does. */
+  static long decode(
+      Provider provider,
+      JdkZlib.ByteSource source,
+      long storedSize,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      IoContext context)
+      throws IOException {
+    if (storedSize < 0 || decodedSize < 0)
+      throw new IllegalArgumentException("Negative codec size");
+    if (provider == Provider.PORTABLE)
+      return PortableLz4.decodeFrame(
+          source, storedSize, decodedSize, sink, checkpoint, budget, context);
     try (var lease = budget.reserve(HEAP_BYTES, DECODE_NATIVE_BYTES, 0, 0);
         var state = new State(false, context)) {
       long supplied = 0, produced = 0;

@@ -8,14 +8,14 @@ only as allowed by the framework.
 
 ## JBSA-SCOPE-001
 
-JBSA production code and Java-consumable artifacts **MUST** target Java 25. The
-qualified platform **MUST** be Windows 11 x64 on NTFS. The shipped CLI may carry
-its own Java 25 runtime, so this requirement does not imply that a CLI user
-installs Java separately. Other operating systems, architectures, filesystems,
-and Java releases **MAY** work, but this specification set makes no support,
-verification, or portability claim for them.
+Retired in specification `0.19.0`. The former baseline combined the Java 25
+target and the Windows 11 x64/NTFS qualified platform with a disclaimer of any
+verification or portability claim for other platforms.
+[JBSA-SCOPE-010](#jbsa-scope-010) retains the target and qualified platform;
+[JBSA-SCOPE-011](#jbsa-scope-011) replaces the disclaimer with a portability
+obligation.
 
-_Source decision: [accepted Windows, Java 25, and self-contained CLI baseline](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decision: [accepted Windows, Java 25, and self-contained CLI baseline](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247)._
 
 ## JBSA-SCOPE-002
 
@@ -96,3 +96,38 @@ apply to that later feature. All first-release completeness claims in this set
 **MUST** use this boundary; no other Archive Family or feature is deferred by it.
 
 _Source decision: [post-1.0 Xbox DDS deferral](../../.scratch/jbsa-1-0/issues/41-establish-the-interface-candidate-after-representative-archive-families.md#post-10-xbox-dds-deferral)._
+
+## JBSA-SCOPE-010
+
+JBSA production code and Java-consumable artifacts **MUST** target Java 25. The
+qualified platform **MUST** be Windows 11 x64 on NTFS. The shipped CLI may carry
+its own Java 25 runtime, so this requirement does not imply that a CLI user
+installs Java separately. Qualification, Release Qualification, and every claim
+that depends on them apply only to the qualified platform.
+
+_Source decisions: [accepted Windows, Java 25, and self-contained CLI baseline](https://github.com/evildarkarchon/jbsa/issues/16#issuecomment-5521258247); portability split by maintainer decision in specification `0.19.0`._
+
+## JBSA-SCOPE-011
+
+JBSA production code **MUST NOT** be restricted to one operating system.
+Platform-specific code **MAY** be used where it improves functionality on that
+operating system, such as Windows file-sharing denial, Windows filesystem
+identity, or a native codec provider. Every such path **MUST** have a portable
+fallback, selected before the operation's first side effect, that keeps the
+operation working on every other operating system. The fallback may offer
+weaker platform guarantees when the owning specification allows it, such as
+detecting a replaced file instead of preventing the replacement. A
+platform-specific path **MUST NOT** make an operation unavailable anywhere
+else. The Linux portability build **MUST** pass every test that does not
+exercise an explicit platform-specific path.
+
+The CLI **MAY** also be built for Linux as a self-contained `jlink` and
+`jpackage` application image that carries its own Java 25 runtime. The Windows
+x64 image remains the release package owned by [Distribution](distribution.md).
+
+A pass on another operating system, architecture, filesystem, or Java release,
+or through a portable fallback, verifies portability only. It **MUST NOT** be
+represented as qualification, Release Qualification, or Binary Conformance
+evidence under [JBSA-SCOPE-010](#jbsa-scope-010).
+
+_Source decision: maintainer decision recorded in specification `0.19.0`._

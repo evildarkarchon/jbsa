@@ -25,7 +25,17 @@ final class PublicModuleConsumerIT {
    */
   @Test
   void publicExportsSupportBothConsumerStyles() throws Exception {
-    String libraryJar = System.getProperty("jbsa.library.jar");
+    // The library requires the portable LZ4 provider, which its consumer POM declares at compile
+    // scope, so every module-path consumer carries it (JBSA-CODEC-014).
+    String libraryJar =
+        System.getProperty("jbsa.library.jar")
+            + java.io.File.pathSeparator
+            + Path.of(
+                net.jpountz.lz4.LZ4Factory.class
+                    .getProtectionDomain()
+                    .getCodeSource()
+                    .getLocation()
+                    .toURI());
     // The CLI and test-support JARs are deliberately absent from the consumer module path.
     for (String consumer : new String[] {"embedded", "cli"}) {
       Path source = Files.createDirectories(directory.resolve("source-" + consumer));

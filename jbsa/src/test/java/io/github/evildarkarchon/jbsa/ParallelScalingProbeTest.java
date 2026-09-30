@@ -20,12 +20,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Manual issue-48 performance checkpoint through the public archive operation API. */
-@EnabledOnOs(OS.WINDOWS)
 class ParallelScalingProbeTest {
   private static final int ENTRIES = 32;
   private static final int BYTES_PER_ENTRY = 1024 * 1024;

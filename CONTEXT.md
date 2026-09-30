@@ -16,6 +16,14 @@ _Avoid_: Game format, archive type
 The `BSA\0` format lineage spanning wire versions `0x67`, `0x68`, and `0x69` and their distinct Archive Families. It is colloquially called TES4 BSA; TES4 / Oblivion BSA denotes only the `0x67` Archive Family.
 _Avoid_: TES4 / Oblivion BSA when naming the whole lineage
 
+**Archive Part**:
+A numbered output of a split pack. The first part keeps the requested destination name; later parts insert their number before the extension. Each part is reported as an `ArchivePart`, and the whole set is published atomically.
+_Avoid_: Volume, chunk, split file
+
+**Content Sharing**:
+Identical payloads within a pack referencing one stored copy instead of repeating it. Its scope (one Archive Part or the whole archive set) and its comparison key are intrinsic to the Archive Family, because they determine output bytes. A digest only shortlists candidates; sharing always requires exact byte equality.
+_Avoid_: Deduplication, compression
+
 **Tolerated Noncanonical Archive**:
 A Bethesda Archive whose structure is noncanonical but remains bounded, unambiguous, and safely decodable. It produces a stable diagnostic and is never a valid encoder output.
 _Avoid_: Malformed-but-valid archive, lenient archive

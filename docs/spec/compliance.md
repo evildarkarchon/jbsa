@@ -1,39 +1,32 @@
 # Compliance
 
-This specification owns project licensing, independent reference use, fixture
-rights, dependency and native-byte provenance, contribution policy, and release
-input gates. It records engineering controls rather than legal advice; material
-that crosses an escalation boundary stays excluded until the required decision
-or qualified review exists.
+This specification owns fixture licensing and provenance, the exclusion of
+proprietary content, release license and notice preservation, and Reference
+Snapshot attribution. It records engineering controls rather than legal advice.
 
 ## JBSA-LIC-001
 
-Apache-2.0 **MUST** govern independently authored Java source and project-owned
-test and fixture-generator code. The top-level license **MUST NOT** be represented
-as relicensing the read-only `TES5Edit` submodule, CC0-1.0 fixture data, or
-separately licensed third-party content.
+Retired in specification `0.19.0`. The former rule required Apache-2.0 for
+project-authored source and limited what the top-level license covered. It was
+retired with the project's licensing and compliance policy gates.
 
-_Source decision: [accepted project-license and source-boundary policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decision: [accepted project-license and source-boundary policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## JBSA-LIC-002
 
-JBSA implementation **MUST** be independently authored from observable behavior,
-documented format facts, synthetic tests, and recorded citations. Contributors
-**MUST NOT** copy, mechanically translate, or preserve distinctive Reference
-Snapshot source structure, comments, or tables. No MPL adaptation lane is
-authorized; a proposed exception **MUST** stop before merge and obtain a fresh
-explicit decision and qualified legal review where appropriate.
+Retired in specification `0.19.0`. The former rule required independent
+authorship and barred copying or translating Reference Snapshot source. It was
+retired with the project's licensing and compliance policy gates.
 
-_Source decisions: [research-derived adaptation boundary](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted independent-only policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decisions: [research-derived adaptation boundary](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted independent-only policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## JBSA-LIC-003
 
-The project, packages, published artifacts, and executable **MUST** use the `jbsa`
-identity. “BSArch-compatible” **MAY** be used only descriptively with an
-independent and unaffiliated statement. Project materials **MUST NOT** use
-TES5Edit or BSArch logos or imply endorsement.
+Retired in specification `0.19.0`. The former rule fixed the `jbsa` project
+identity and limited descriptive use of the BSArch name. It was retired with the
+project's licensing and compliance policy gates.
 
-_Source decision: [accepted attribution and naming policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decision: [accepted attribution and naming policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## JBSA-LIC-004
 
@@ -65,29 +58,19 @@ _Source decision: [accepted fixture-provenance policy](https://github.com/evilda
 
 ## JBSA-LIC-007
 
-Maintained open-source dependencies **MAY** be used when their selected
-versions and redistributed bytes satisfy this specification. Native dependencies
-**MUST NOT** be admitted without evidence that pure Java cannot satisfy the
-applicable conformance or performance contract. An admitted native dependency
-**MUST** be pinned and audited, remain behind a non-public boundary replaceable
-without changing the exported library interface, and leave the main `jbsa`
-artifact thin. Only an explicitly authorized platform/provider artifact or the
-Windows CLI assembly **MAY** redistribute native bytes, and only after the exact
-artifact contents have been audited.
+Retired in specification `0.19.0`. The former rule set the admission, pinning,
+and audit conditions for open-source and native dependencies. It was retired
+with the project's licensing and compliance policy gates.
 
-_Source decisions: [resolved pure-Java/native evidence](https://github.com/evildarkarchon/jbsa/issues/4#issuecomment-5509001000), [accepted native-binary and Maven-distribution policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724), [accepted internal provider strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decisions: [resolved pure-Java/native evidence](https://github.com/evildarkarchon/jbsa/issues/4#issuecomment-5509001000), [accepted native-binary and Maven-distribution policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724), [accepted internal provider strategy](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
 
 ## JBSA-LIC-008
 
-Every redistributed dependency or native payload **MUST** record coordinates and
-classifier, version, cryptographic hash, license, required notices, upstream
-source and build provenance, and every release artifact containing its bytes.
-Opaque or unresolved payloads **MUST** be rejected. An optional native provider
-under qualification, including jlibdeflate before promotion, **MUST NOT** enter
-the normal CLI ZIP until all applicable conformance, performance, memory,
-native-loading, and notice gates pass.
+Retired in specification `0.19.0`. The former rule required a provenance
+inventory record for every redistributed dependency and native payload. It was
+retired with the project's licensing and compliance policy gates.
 
-_Source decisions: [accepted native-byte inventory policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724), [accepted provider-promotion gate](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decisions: [accepted native-byte inventory policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724), [accepted provider-promotion gate](https://github.com/evildarkarchon/jbsa/issues/11#issuecomment-5519440971)._
 
 ## JBSA-LIC-009
 
@@ -102,39 +85,35 @@ _Source decisions: [exact-byte audit constraint](https://github.com/evildarkarch
 
 ## JBSA-LIC-010
 
-Required repository policy material **MUST** comprise the Apache-2.0 `LICENSE`,
-applicable exact license texts under `LICENSES/`, per-file SPDX/REUSE metadata,
-`THIRD-PARTY-NOTICES.md`, a compact `CONTRIBUTING.md`, and
-`docs/reference-use.md`. `NOTICE` **MUST** be reserved for notices whose licenses
-require propagation and **MUST NOT** become a general acknowledgements file.
+Retired in specification `0.19.0`. The former rule listed the repository policy
+material the project had to carry. It was retired with the project's licensing
+and compliance policy gates.
 
-_Source decision: [accepted policy-material set](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decision: [accepted policy-material set](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## JBSA-LIC-011
 
-CI and release gates **MUST** verify SPDX/REUSE metadata, dependency and native
-licensing, SBOM generation, fixture provenance, and inspection of final release
-bytes. A clean metadata or build-tool validation result **MUST NOT** be treated by
-itself as proof of license compliance.
+Retired in specification `0.19.0`. The former rule required CI and release gates
+to verify licensing, SBOM, fixture provenance, and release bytes. It was retired
+with the project's licensing and compliance policy gates.
 
-_Source decisions: [Maven-metadata limitation](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted compliance-gate policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724), [external-contribution gate retirement](https://github.com/evildarkarchon/jbsa/issues/62)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decisions: [Maven-metadata limitation](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted compliance-gate policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724), [external-contribution gate retirement](https://github.com/evildarkarchon/jbsa/issues/62)._
 
 ## JBSA-LIC-012
 
-Merge or release **MUST** stop when proposed material involves Reference Snapshot
-adaptation, unclear third-party fixture rights, proprietary content, opaque
-native provenance, non-descriptive TES5Edit/BSArch branding, or unresolved
-substantial-similarity, trademark, patent, or EULA concerns. Uncertain material
-**MUST** remain excluded until an explicit decision and any appropriate qualified
-review resolve it.
+Retired in specification `0.19.0`. The former rule required merges and releases
+to stop on unresolved adaptation, rights, or provenance questions. It was
+retired with the project's licensing and compliance policy gates.
 
-_Source decisions: [identified counsel-dependent risks](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted escalation boundary](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decisions: [identified counsel-dependent risks](https://github.com/evildarkarchon/jbsa/issues/3#issuecomment-5508964649), [accepted escalation boundary](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## JBSA-LIC-013
 
-Project copyright **MUST** be attributed as `Copyright 2026 evildarkarchon`.
+Retired in specification `0.19.0`. The former rule fixed the project copyright
+attribution line. It was retired with the project's licensing and compliance
+policy gates.
 
-_Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## JBSA-LIC-014
 
@@ -148,9 +127,11 @@ _Source decision: [accepted attribution and naming policy](https://github.com/ev
 
 ## JBSA-LIC-015
 
-The project **MUST NOT** require a contributor license agreement.
+Retired in specification `0.19.0`. The former rule barred requiring a
+contributor license agreement. It was retired with the project's licensing and
+compliance policy gates.
 
-_Source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
+_Decision: maintainer decision recorded in specification `0.19.0`. Historical source decision: [accepted solo-maintainer and contributor policy](https://github.com/evildarkarchon/jbsa/issues/7#issuecomment-5517829724)._
 
 ## JBSA-LIC-016
 

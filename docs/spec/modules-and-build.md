@@ -3,7 +3,7 @@
 This specification owns the Gradle multi-project build, Java/JPMS seams,
 dependency exposure, and build outputs. The Java and operating-system
 qualification baseline is owned by
-[JBSA-SCOPE-001](scope.md#jbsa-scope-001). Detailed launcher behavior and release
+[JBSA-SCOPE-010](scope.md#jbsa-scope-010). Detailed launcher behavior and release
 qualification are owned by the distribution and release-gate specifications.
 
 ## JBSA-BUILD-001

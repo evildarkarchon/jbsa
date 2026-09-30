@@ -1,13 +1,18 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.ByteBuffer;
 import org.lwjgl.util.lz4.LZ4;
 import org.lwjgl.util.lz4.LZ4HC;
 
-/** Unsplittable raw-block profile with checked admission and independently owned native buffers. */
+/**
+ * Unsplittable raw-block profile with checked admission and independently owned codec buffers. Each
+ * call runs through the provider {@link Lz4Runtime#preflight} pins: native buffers for the LWJGL
+ * adapter, heap buffers for the portable {@link PortableLz4} provider.
+ */
 public final class Lz4Raw {
   private static final long MAX_INPUT = 0x7E000000L;
   private static final long DISPATCH_LIMIT = 16L * 1024 * 1024;
@@ -17,6 +22,19 @@ public final class Lz4Raw {
       DISPATCH_LIMIT + DISPATCH_LIMIT + DISPATCH_LIMIT / 255 + 16 + 16;
 
   private Lz4Raw() {}
+
+  /**
+   * Returns the largest heap one decode reserves beyond its 4096-byte bookkeeping. The portable
+   * provider holds the whole stored and decoded block on the heap instead of in native memory.
+   */
+  public static long maxDecodeHeapBytes(Provider provider) {
+    return provider == Provider.PORTABLE ? DECODE_NATIVE_BYTES : 0;
+  }
+
+  /** Returns the largest native memory one decode reserves; the portable provider needs none. */
+  public static long maxDecodeNativeBytes(Provider provider) {
+    return provider == Provider.NATIVE ? DECODE_NATIVE_BYTES : 0;
+  }
 
   /**
    * Encodes one admitted raw HC block at the shared level 9 without fallback or splitting. The
@@ -47,7 +65,31 @@ public final class Lz4Raw {
     if (compressionLevel < 1 || compressionLevel > 12)
       throw new IllegalArgumentException("Raw LZ4 HC level must be between 1 and 12");
     checkSize(decodedSize, DISPATCH_LIMIT, context);
-    Lz4Runtime.preflight("raw-lz4", "encode", context);
+    Provider provider = Lz4Runtime.preflight("raw-lz4", "encode", context);
+    return encode(
+        provider, source, decodedSize, sink, checkpoint, budget, context, compressionLevel);
+  }
+
+  /**
+   * Encodes through an explicit provider after the caller's size admission. Production code reaches
+   * this only with the pinned provider; tests use it to exercise both providers.
+   */
+  static long encode(
+      Provider provider,
+      JdkZlib.ByteSource source,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      IoContext context,
+      int compressionLevel)
+      throws IOException {
+    if (compressionLevel < 1 || compressionLevel > 12)
+      throw new IllegalArgumentException("Raw LZ4 HC level must be between 1 and 12");
+    checkSize(decodedSize, DISPATCH_LIMIT, context);
+    if (provider == Provider.PORTABLE)
+      return PortableLz4.rawEncode(
+          source, decodedSize, sink, checkpoint, budget, context, compressionLevel);
     long bound = decodedSize + decodedSize / 255 + 16;
     caller(checkpoint::check, context);
     // Explicit external HC state avoids an unaccounted provider allocation inside compression.
@@ -108,7 +150,25 @@ public final class Lz4Raw {
       IoContext context)
       throws IOException {
     admitDecode(storedSize, decodedSize, context);
-    Lz4Runtime.preflight("raw-lz4", "decode", context);
+    Provider provider = Lz4Runtime.preflight("raw-lz4", "decode", context);
+    return decode(provider, source, storedSize, decodedSize, sink, checkpoint, budget, context);
+  }
+
+  /** Decodes one admitted raw block through an explicit provider, as the public overload does. */
+  static long decode(
+      Provider provider,
+      JdkZlib.ByteSource source,
+      long storedSize,
+      long decodedSize,
+      JdkZlib.ByteSink sink,
+      JdkZlib.Checkpoint checkpoint,
+      ResourceBudget budget,
+      IoContext context)
+      throws IOException {
+    admitDecode(storedSize, decodedSize, context);
+    if (provider == Provider.PORTABLE)
+      return PortableLz4.rawDecode(
+          source, storedSize, decodedSize, sink, checkpoint, budget, context);
     caller(checkpoint::check, context);
     try (var lease = budget.reserve(4096, storedSize + decodedSize + 16, 0, 0);
         Arena arena = Arena.ofConfined()) {

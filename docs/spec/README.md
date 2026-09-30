@@ -90,24 +90,35 @@ exactly these required fields:
 - `id`: the permanent requirement identifier;
 - `owner`: `document` and stable `anchor` values locating the one normative
   owner;
-- `source_decisions`: one or more stable repository-relative local-ticket links to
-  the originating accepted decision or its explicit supersession; migrated historical
-  entries MAY retain their original external links as archival provenance;
+- `source_decisions`: stable links to the originating accepted decision or its
+  explicit supersession, each either a tracker ticket reference or, for migrated
+  historical entries, an original external link retained as archival
+  provenance. An empty list means the decision is recorded only in the owning
+  section and version history;
 - `lifecycle_state`: `active` or `retired`;
 - `verification_class`: one of `document-review`, `automated-test`,
   `build-verification`, `conformance-case`, `performance-case`,
   `release-qualification`, or `release-audit`;
-- `implementation_tickets`: one or more repository-relative paths to authoritative
-  local tracker records under `.scratch/` that are responsible for satisfying or
-  deliberately migrating the requirement; and
+- `implementation_tickets`: tracker ticket references responsible for
+  satisfying or deliberately migrating the requirement. An empty list means no
+  ticket owns the work; and
 - `test_evidence`: stable test selectors, case identifiers, or repository paths
   to evidence. An empty list means that no evidence is claimed yet.
 
-A retired entry additionally has a `retirement` mapping with a repository-relative local `ticket`
-path and `reason`. Registry consumers MUST reject duplicate identifiers, missing owners,
-owner anchors that do not match the identifier, unknown lifecycle or
-verification values, and normative-text fields such as `title`, `summary`, or
-`text`.
+A retired entry additionally has a `retirement` mapping with a `reason` and, when
+a ticket tracked the retirement, a tracker ticket reference as `ticket`.
+
+This is a single-maintainer project, so a tracker ticket is never required.
+When one is cited, a tracker ticket reference is either the canonical GitHub
+issue URL `https://github.com/evildarkarchon/jbsa/issues/<number>` or a
+repository-relative path to an existing record in the read-only historical
+tracker under `.scratch/`. Historical paths stay valid; they are not rewritten
+when their work resumes on GitHub.
+
+Registry consumers MUST reject duplicate identifiers, missing owners, owner
+anchors that do not match the identifier, unknown lifecycle or verification
+values, a missing retirement reason, cited ticket references in neither accepted
+form, and normative-text fields such as `title`, `summary`, or `text`.
 
 _Decision sources: [accepted registry contents](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [machine-readable registry acceptance criterion](https://github.com/evildarkarchon/jbsa/issues/24)._
 
@@ -155,12 +166,12 @@ _Decision sources: [specification authority and gate-reset policy](https://githu
 
 Every normative change MUST:
 
-1. have an authoritative local ticket under `.scratch/` that records the accepted
-   decision and affected scope;
+1. record the accepted decision in the owning section's decision line, linking a
+   tracker ticket only when one exists;
 2. update the owning Markdown section, registry metadata, and specification-set
    version together;
 3. preserve existing identifiers unless the old obligation is retired;
-4. identify affected implementation tickets and verification evidence; and
+4. identify affected verification evidence; and
 5. reset every affected gate when a requirement changes after its evidence was
    recorded.
 
@@ -169,7 +180,7 @@ affected conformance evidence; there is no separate Interface Freeze approval or
 source-hash baseline. A change that reveals unresolved product behavior records
 the unknown and stops at that boundary rather than inventing a default.
 
-_Decision sources: [retire Interface Freeze](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md), [affected-gate reset policy](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [framework change-control acceptance criterion](https://github.com/evildarkarchon/jbsa/issues/24)._
+_Decision sources: [retire Interface Freeze](../../.scratch/remove-source-hashing/issues/01-retire-interface-freeze.md), [affected-gate reset policy](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [framework change-control acceptance criterion](https://github.com/evildarkarchon/jbsa/issues/24); tracker tickets made optional by maintainer decision in specification `0.19.0`._
 
 ## Known contradiction and deferred specifics
 

@@ -14,7 +14,6 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public General BA2 contracts using independently specified wire records. */
-@EnabledOnOs(OS.WINDOWS)
 final class Ba2ReaderTest {
   @TempDir Path directory;
 
@@ -156,6 +155,8 @@ final class Ba2ReaderTest {
 
   /** A profile may decode a non-method-3 v3 archive without rewriting its detection status. */
   @Test
+  // The active ANSI code page is read from Windows (GetACP).
+  @EnabledOnOs(OS.WINDOWS)
   void appliesQualifiedVersionThreeZlibFallbackWithoutChangingRecognition() throws Exception {
     String fallback =
         "42544458 03000000 474e524c 01000000 5400000000000000 0100000000000000 02000000 "

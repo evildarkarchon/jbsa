@@ -9,10 +9,7 @@ object ConfigurationCachePolicy {
             "generateResolvedProductionDependencies",
             "smokeTestBenchmarkLauncher",
             "smokeTestThinCli",
-            "stageReleaseInputs",
             "verify",
-            "verifyCompliance",
-            "verifyStagedReleaseInputs",
         )
 
     /**

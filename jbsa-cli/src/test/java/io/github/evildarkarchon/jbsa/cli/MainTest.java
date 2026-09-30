@@ -23,7 +23,6 @@ class MainTest {
 
   /** The SSE selector exposes version 105 and family-default LZ4-frame round trips. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksSseLz4Frame() throws Exception {
     for (String codec : List.of("-z", "-z:lz4f")) {
       Path source = Files.createTempDirectory(temporary, "sse-source");
@@ -67,6 +66,7 @@ class MainTest {
 
   /** The compatibility profile places SSE after legacy Skyrim and before Fallout 4. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileSelectsSseBetweenVersion104AndFallout4() throws Exception {
     for (String[] order :
@@ -94,7 +94,6 @@ class MainTest {
 
   /** Each legacy game spelling selects version 104 and survives as a pack observation. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksVersion104Aliases() throws Exception {
     for (String selector : List.of("-fo3", "-FNV", "-tes5")) {
       for (boolean compressed : List.of(false, true)) {
@@ -132,6 +131,7 @@ class MainTest {
 
   /** Profile family priority must include version 104 and select its earliest-priority alias. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileSelectsVersion104BetweenTes4AndFallout4() throws Exception {
     for (String[] order :
@@ -192,6 +192,7 @@ class MainTest {
 
   /** DDS family selection defaults to compressed PC output and exposes texture chunk facts. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void packsDdsWithMandatoryDefaultCompression() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("dds-input/Textures"));
@@ -231,7 +232,6 @@ class MainTest {
 
   /** General BA2 commands expose compressed payloads through the public process boundary. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksFallout4GeneralZlib() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("fo4-input/Meshes"));
     Files.writeString(source.resolve("A.nif"), "payload".repeat(100));
@@ -260,7 +260,6 @@ class MainTest {
 
   /** Fallout 4 v7/v8 archives remain decode-only through dump and unpack CLI operations. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void dumpsAndUnpacksFallout4VersionsSevenAndEight() throws Exception {
     Path workingDirectory = Path.of("").toAbsolutePath();
     Path repository =
@@ -321,7 +320,6 @@ class MainTest {
 
   /** Starfield General CLI codec selection controls v2 versus v3/method-3 wire output. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksStarfieldGeneralVariants() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("sf-input/Data"));
     String payload = "starfield".repeat(200);
@@ -369,7 +367,6 @@ class MainTest {
 
   /** Starfield DDS CLI defaults to raw LZ4 and retains the explicit v2 zlib alternative. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksStarfieldDdsVariants() throws Exception {
     Path textures = Files.createDirectories(temporary.resolve("sf-dds-input/Textures"));
     var source = java.nio.ByteBuffer.allocate(160).order(java.nio.ByteOrder.LITTLE_ENDIAN);
@@ -436,7 +433,6 @@ class MainTest {
 
   /** TES4 switches reach the public packer and inspection renders actual compression and flags. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void packsAndUnpacksTes4ZlibWithDetachedDump() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("tes4-input/meshes"));
     Files.writeString(source.resolve("a.nif"), "payload".repeat(100));
@@ -499,6 +495,7 @@ class MainTest {
    * priority.
    */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileChoosesTes3BeforeTes4RegardlessOfSwitchOrder() throws Exception {
     for (String[] order :
@@ -522,6 +519,7 @@ class MainTest {
 
   /** Repeating a profile family selector preserves the same priority choice. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileAcceptsRepeatedFamilySelector() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("repeated-family-source"));
@@ -559,7 +557,6 @@ class MainTest {
   }
 
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void packAndDetachedListDumpPreserveNamesAndProduceAnArchive() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("Café sources"));
     Files.writeString(source.resolve("cafe.txt"), "payload", StandardCharsets.UTF_8);
@@ -583,7 +580,6 @@ class MainTest {
   }
 
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void unpackPublishesPayloadAndRequiresExplicitReplacement() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("input"));
     Files.writeString(source.resolve("entry.txt"), "payload");
@@ -604,6 +600,7 @@ class MainTest {
   }
 
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileUsesFirstValueAndPermissiveBooleanWhileRetainingTheSourceBoundary() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("profile-source"));
@@ -627,6 +624,7 @@ class MainTest {
 
   /** Repeated codec switches use the first profile value and remain invalid in safe mode. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileRepeatedCodecUsesTheFirstValue() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("repeated-codec-source/meshes"));
@@ -673,6 +671,7 @@ class MainTest {
 
   /** Profile boolean values other than no enable sharing, while safe parsing rejects them. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileBooleanShareHasObservableFirstValueSemantics() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("share-source"));
@@ -752,7 +751,6 @@ class MainTest {
 
   /** Only an existing malformed archive earns the profile's information-error zero status. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void profileArchiveInformationFailureExitsZero() throws Exception {
     Path missing = temporary.resolve("missing.bsa");
     Result safe = run(missing.toString());
@@ -771,6 +769,7 @@ class MainTest {
 
   /** Safe and profiled information keep warning identifiers but select distinct output streams. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profilePlacesArchiveWarningsOnStandardOutput() throws Exception {
     Path archive = temporary.resolve("warning.bsa");
@@ -846,6 +845,7 @@ class MainTest {
 
   /** Only the explicit profile ignores unknown long switches after required operands. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileIgnoresUnknownLongTailSwitch() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("source"));
@@ -872,6 +872,7 @@ class MainTest {
 
   /** Repeated unknown switches and extra operands remain ignored by the selected profile. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileIgnoresRepeatedUnknownTailArguments() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("repeated-tail-source"));
@@ -897,6 +898,7 @@ class MainTest {
 
   /** Profiled packing omits unusable roots but still needs an entry after library discovery. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileOmitsUnusablePackSources() throws Exception {
     Path missing = temporary.resolve("missing-source");
@@ -950,6 +952,7 @@ class MainTest {
 
   /** Profile omission cannot bypass the library's explicit output-source overlap rejection. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileRetainsOutputAliasesForLibrarySafetyPreflight() throws Exception {
     Path valid = Files.createDirectory(temporary.resolve("valid-source"));
@@ -970,7 +973,6 @@ class MainTest {
   }
 
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void versionReportsArtifactAndProfileAndOperationalFailuresUseStderr() throws Exception {
     Result version = run("--VERSION");
     assertEquals(0, version.status());
@@ -990,7 +992,6 @@ class MainTest {
    * compression rather than an empty or rejected pack request.
    */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void workerSelectionPreservesCrossFamilyObservationsAndBytes() throws Exception {
     List<WorkerCase> cases =
         List.of(
@@ -1105,7 +1106,6 @@ class MainTest {
 
   /** Redirected stderr and --no-progress suppress presentation without changing archive output. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void redirectedProgressDoesNotChangePackResults() throws Exception {
     Path source = Files.createDirectory(temporary.resolve("progress-source"));
     Files.writeString(source.resolve("entry.txt"), "payload".repeat(100));
@@ -1125,7 +1125,6 @@ class MainTest {
 
   /** Archive and directory sources retain operand order when a basename filter selects entries. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void archiveSourceOverlayAndBasenameFilterReachTheLibrary() throws Exception {
     Path base = Files.createDirectory(temporary.resolve("overlay-base"));
     Files.writeString(base.resolve("common.txt"), "base");
@@ -1156,14 +1155,14 @@ class MainTest {
     assertEquals("replacement", Files.readString(destination.resolve("common.txt")));
     assertEquals("old", Files.readString(destination.resolve("old.txt")));
     assertEquals("new", Files.readString(destination.resolve("new.txt")));
-    assertEquals("selected", Files.readString(destination.resolve("selected.BIN")));
+    // TES3 stores canonical lowercase names, so the unpacked spelling is lowercase on every host.
+    assertEquals("selected", Files.readString(destination.resolve("selected.bin")));
     assertTrue(Files.notExists(destination.resolve("excluded.bin")));
     assertTrue(Files.notExists(destination.resolve("also-excluded.bin")));
   }
 
   /** Omitting unpack's destination selects the archive's containing directory. */
   @Test
-  @EnabledOnOs(OS.WINDOWS)
   void unpackDefaultsToArchiveContainingDirectory() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("default-source/meshes"));
     Files.writeString(source.resolve("default-entry.txt"), "destination payload");
@@ -1182,6 +1181,7 @@ class MainTest {
 
   /** The complete profile selects implicit replacement for both pack and unpack mutations. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileImplicitlyReplacesPackAndUnpackTargets() throws Exception {
     String profile = "--compatibility-profile=bsarch-1.0/v1";
@@ -1210,6 +1210,7 @@ class MainTest {
 
   /** Profile zero flags retain automatic selection and a negative split packs whole entries. */
   @Test
+  // The compatibility profile reads the Windows active ANSI code page (GetACP).
   @EnabledOnOs(OS.WINDOWS)
   void profileZeroFlagsAndNegativeSplitPublishOnePartPerEntry() throws Exception {
     Path source = Files.createDirectories(temporary.resolve("legacy-options-source/meshes"));

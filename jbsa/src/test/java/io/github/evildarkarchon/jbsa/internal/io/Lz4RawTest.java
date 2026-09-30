@@ -7,18 +7,24 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.HexFormat;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 
-/** Exercises the internal raw-block qualification seam with independently authored wire bytes. */
-@EnabledOnOs(OS.WINDOWS)
+/**
+ * Exercises the internal raw-block qualification seam with independently authored wire bytes,
+ * through the process's pinned provider: native LWJGL on Windows x64, portable lz4-java elsewhere.
+ */
 final class Lz4RawTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("raw.ba2"), Operation.OPEN);
+
+  /**
+   * Covers one 16 MiB block under either provider: native buffers under LWJGL, or the same buffers
+   * plus the HC tables on the heap under lz4-java.
+   */
+  private static final long CEILING = 40_000_000;
 
   /** Borrowed callback faults retain operation identity and every admitted credit is returned. */
   @Test
   void normalizesCallbackFaultsAndReturnsCreditOnCancellation() throws Exception {
-    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 4096, 40000000, 0)) {
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
       var failure =
           assertThrows(
               ArchiveException.class,
@@ -49,7 +55,7 @@ final class Lz4RawTest {
                       },
                       budget,
                       CONTEXT)));
-      try (var all = budget.reserve(4096, 40000000, 0, 0)) {
+      try (var all = budget.reserve(CEILING, CEILING, 0, 0)) {
         assertNotNull(all);
       }
     }
@@ -65,7 +71,8 @@ final class Lz4RawTest {
       byte[] original = new byte[size];
       new java.util.Random(43).nextBytes(original);
       byte[] previous = null;
-      try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 4096, 40000000, 0)) {
+      try (var budget =
+          new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
         for (int repeat = 0; repeat < 2; repeat++) {
           var encoded = new java.io.ByteArrayOutputStream();
           Lz4Raw.encode(
@@ -102,7 +109,7 @@ final class Lz4RawTest {
   void decodesIndependentLiteralBlock() throws Exception {
     byte[] encoded = HexFormat.of().parseHex("5068656c6c6f");
     ByteBuffer output = ByteBuffer.allocate(5);
-    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 65536, 40000000, 0)) {
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
       Lz4Raw.decode(
           (offset, bytes) -> bytes.put(encoded, (int) offset, bytes.remaining()),
           encoded.length,

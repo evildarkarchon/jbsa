@@ -3,7 +3,7 @@
 Runs one deterministic JBSA build gate through the authoritative Gradle implementation.
 
 .PARAMETER Gate
-The compile, unit, architecture, formatting, policy, or Assurance v2 conformance gate to run.
+The compile, unit, architecture, formatting, or Assurance v2 conformance gate to run.
 
 .NOTES
 These gates produce hosted build evidence only. They do not perform or claim Release Qualification.
@@ -11,7 +11,7 @@ These gates produce hosted build evidence only. They do not perform or claim Rel
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('compile', 'unit', 'architecture', 'formatting', 'policy', 'conformance')]
+    [ValidateSet('compile', 'unit', 'architecture', 'formatting', 'conformance')]
     [string] $Gate
 )
 
@@ -30,7 +30,6 @@ $gradleArguments = switch ($Gate) {
     }
     'architecture' { @('--no-daemon', ':jbsa-conformance-tests:architectureTest') }
     'formatting' { @('--no-daemon', 'spotlessCheck') }
-    'policy' { @('--no-daemon', ':jbsa-conformance-tests:buildPolicyTest') }
     'conformance' { @('--no-daemon', ':jbsa-conformance-tests:automatedAssurance') }
 }
 
@@ -75,13 +74,6 @@ try {
     & $gradleWrapper @gradleArguments
     if ($LASTEXITCODE -ne 0) {
         throw "The $Gate Gradle gate failed with exit code $LASTEXITCODE."
-    }
-
-    if ($Gate -eq 'policy') {
-        & (Join-Path $PSScriptRoot 'verify-reproducible-build.ps1')
-        if (-not $?) {
-            throw 'The two-build reproducibility check failed.'
-        }
     }
 }
 finally {

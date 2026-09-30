@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
+    implementation(libs.extra.java.module.info)
     implementation(libs.foojay.resolver)
     implementation(libs.shadow.gradle.plugin)
     testImplementation(platform(libs.junit.bom))

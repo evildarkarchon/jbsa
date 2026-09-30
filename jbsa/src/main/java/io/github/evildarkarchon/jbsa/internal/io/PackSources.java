@@ -100,7 +100,7 @@ public final class PackSources {
       } else if (source instanceof PackSource.DetectedPath detected) {
         Path path = detected.path().toAbsolutePath().normalize();
         rejectOutput(path, request.destination(), context);
-        WindowsPathIdentity.Snapshot shape = shape(path, context);
+        PathIdentity.Snapshot shape = shape(path, context);
         if (shape == null || shape.indirection())
           throw context.failure(FailureKind.SOURCE, "source.not-regular", null);
         if (shape.directory()) {
@@ -168,7 +168,7 @@ public final class PackSources {
               for (long ordinal = 0; ordinal < archive.entryCount(); ordinal++) {
                 EntryMetadata metadata = archive.entry(ordinal).metadata();
                 if (metadata.normalizedNameIdentity().isEmpty())
-                  throw context.failure(FailureKind.POLICY, "tes3.invalid-encode-name", null);
+                  throw context.failure(FailureKind.POLICY, "pack.invalid-encode-name", null);
                 long selected = ordinal;
                 admit(
                     entry(
@@ -318,10 +318,9 @@ public final class PackSources {
   }
 
   /** Obtains no-follow Windows classification, treating absent native support as a capability. */
-  private static WindowsPathIdentity.Snapshot shape(Path path, IoContext context)
-      throws IOException {
+  private static PathIdentity.Snapshot shape(Path path, IoContext context) throws IOException {
     try {
-      return WindowsPathIdentity.inspect(path);
+      return PathIdentity.inspect(path);
     } catch (UnsupportedOperationException failure) {
       throw context.failure(FailureKind.CAPABILITY, "source.identity-unavailable", failure);
     } catch (IOException | SecurityException failure) {
@@ -383,7 +382,7 @@ public final class PackSources {
       throws ArchiveException {
     var identity = NormalizedNameIdentity.from(name, encoding);
     if (identity.isEmpty())
-      throw context.failure(FailureKind.POLICY, "tes3.invalid-encode-name", null);
+      throw context.failure(FailureKind.POLICY, "pack.invalid-encode-name", null);
     byte[] bytes;
     try {
       ByteBuffer encoded =
@@ -391,7 +390,7 @@ public final class PackSources {
       bytes = new byte[encoded.remaining()];
       encoded.get(bytes);
     } catch (CharacterCodingException failure) {
-      throw context.failure(FailureKind.POLICY, "tes3.invalid-encode-name", failure);
+      throw context.failure(FailureKind.POLICY, "pack.invalid-encode-name", failure);
     }
     return new Entry(
         name, identity.orElseThrow().value(), bytes, Tes3Names.hash(bytes), size, source);

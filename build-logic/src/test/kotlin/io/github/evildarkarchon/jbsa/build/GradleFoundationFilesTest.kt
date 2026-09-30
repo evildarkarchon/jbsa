@@ -179,13 +179,24 @@ class GradleFoundationFilesTest {
             )
             .forEach { assertSingleChecksumPerArtifact(it) }
 
-        val review =
+        // The migration-era review under .scratch is read-only history; later dependency changes
+        // record their independent checksum review in the living ledger under docs.
+        val history =
             Files.readString(repositoryRoot.resolve(".scratch/migrate-maven-to-gradle/dependency-verification-review.md"))
-        assertTrue(review.contains(sha256(repositoryRoot.resolve("gradle/verification-metadata.xml"))))
-        assertTrue(review.contains(sha256(repositoryRoot.resolve("build-logic/gradle/verification-metadata.xml"))))
-        assertTrue(review.contains(sha256(repositoryRoot.resolve("build-logic/gradle.lockfile"))))
-        assertTrue(review.contains(sha256(repositoryRoot.resolve("gradle/libs.versions.toml"))))
-        assertTrue(review.contains("All 124 values matched; failures: 0."))
+        assertTrue(history.contains("All 124 values matched; failures: 0."))
+        val review = Files.readString(repositoryRoot.resolve("docs/development/dependency-verification-review.md"))
+        listOf(
+                "gradle/verification-metadata.xml",
+                "build-logic/gradle/verification-metadata.xml",
+                "build-logic/gradle.lockfile",
+                "gradle/libs.versions.toml",
+            )
+            .forEach { input ->
+                assertTrue(
+                    review.contains(sha256(repositoryRoot.resolve(input))),
+                    "The dependency verification review does not record the current $input",
+                )
+            }
     }
 
     /** Verifies Gradle exposes the qualified Java formatter version and transformations. */

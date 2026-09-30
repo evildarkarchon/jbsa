@@ -189,15 +189,14 @@ _Source decisions: [accepted case-scoped Binary Conformance gate](https://github
 
 The Compliance Gate **MUST** follow Packaging and audit the exact final bytes
 under every active requirement in [Compliance](compliance.md), including
-[JBSA-LIC-009](compliance.md#jbsa-lic-009) and
-[JBSA-LIC-011](compliance.md#jbsa-lic-011). Its evidence **MUST** reconcile each
+[JBSA-LIC-009](compliance.md#jbsa-lic-009). Its evidence **MUST** reconcile each
 library, POM, source and Javadoc JAR, application-image file, ZIP entry, native
 library, license, notice, SBOM item, provenance record, fixture, and checksum to
 an approved inventory and authorization. Any unapproved adaptation,
 proprietary or local corpus material, opaque binary, credential, build-machine
 residue, or unresolved counsel-dependent question **MUST** leave the gate open.
 
-_Source decisions: [accepted release-byte audit gate](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [exact-byte compliance acceptance](https://github.com/evildarkarchon/jbsa/issues/57)._
+_Source decisions: [accepted release-byte audit gate](https://github.com/evildarkarchon/jbsa/issues/17#issuecomment-5521832241), [exact-byte compliance acceptance](https://github.com/evildarkarchon/jbsa/issues/57); JBSA-LIC-011 reference dropped with its retirement in specification `0.19.0`._
 
 ## JBSA-REL-014
 

@@ -76,6 +76,14 @@ This grants the existing no-follow filesystem identity adapter access. The expli
 profile also uses native access to snapshot the active Windows ANSI code page; default archive
 name decoding remains Windows-1252.
 
+The library module requires `org.lz4.java`, the automatic module of `at.yawk.lz4:lz4-java`, which
+the consumer POM declares at compile scope. Build tools that honor the POM supply it; a hand-built
+module path must include it. It is the portable LZ4 provider JBSA pins whenever native LZ4 cannot
+load (`JBSA-CODEC-014`). Do not grant it native access: JBSA never asks it to load its JNI library.
+`jlink` rejects automatic modules, so an application that links JBSA into a runtime image must give
+lz4-java an explicit descriptor named `org.lz4.java`. JBSA's own build does this for its
+`:jbsa:verifyLinkableRuntime` check, using the `org.gradlex.extra-java-module-info` plugin.
+
 ```java
 module example.archiveconsumer {
   requires io.github.evildarkarchon.jbsa;

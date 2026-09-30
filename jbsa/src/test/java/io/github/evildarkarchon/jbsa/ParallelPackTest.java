@@ -15,12 +15,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public worker-selection behavior for deterministic archive packing. */
-@EnabledOnOs(OS.WINDOWS)
 class ParallelPackTest {
   @TempDir Path temporary;
 
@@ -692,8 +689,9 @@ class ParallelPackTest {
   }
 
   /**
-   * Requests cancellation after observing native LZ4 work and discards its uncommitted result. The
-   * coordinator may sample the request after the worker leaves the native call.
+   * Requests cancellation after observing a worker inside the pinned LZ4 provider's compressor and
+   * discards its uncommitted result. The coordinator may sample the request after the worker leaves
+   * the compressor call.
    */
   @Test
   void cancellationRequestedDuringNativeLz4CallDiscardsResult() throws Exception {
@@ -874,8 +872,11 @@ class ParallelPackTest {
       String stack = java.util.Arrays.toString(entry.getValue());
       if (stack.contains("Lz4Frame.encode")) observedStack.set(stack);
       for (StackTraceElement frame : entry.getValue())
-        if (frame.getClassName().startsWith("org.lwjgl.util.lz4.")
-            && frame.getMethodName().contains("compressUpdate")) return true;
+        // The native provider compresses in LWJGL's LZ4F binding, the portable one in lz4-java.
+        if ((frame.getClassName().startsWith("org.lwjgl.util.lz4.")
+                && frame.getMethodName().contains("compressUpdate"))
+            || (frame.getClassName().startsWith("net.jpountz.lz4.")
+                && frame.getMethodName().equals("compress"))) return true;
     }
     return false;
   }

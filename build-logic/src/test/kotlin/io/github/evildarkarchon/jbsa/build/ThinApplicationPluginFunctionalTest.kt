@@ -48,6 +48,7 @@ class ThinApplicationPluginFunctionalTest {
             module io.github.evildarkarchon.jbsa {
                 requires static org.lwjgl;
                 requires static org.lwjgl.lz4;
+                requires org.lz4.java;
                 exports io.github.evildarkarchon.jbsa;
             }
             """.trimIndent(),
@@ -146,6 +147,7 @@ class ThinApplicationPluginFunctionalTest {
                     "19949bca7b780f55e5d2db12ac061a7657a4c1b7c860c30607f5406e7017aa2b",
                 "lwjgl-lz4-3.4.3-natives-windows.jar" to
                     "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc",
+                "lz4-java-1.12.0.jar" to "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26",
             )
         val actual =
             Files.list(runtimeDirectory).use { paths ->
@@ -229,6 +231,7 @@ class ThinApplicationPluginFunctionalTest {
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
+            lz4-java = "1.12.0"
             snakeyaml = "2.5"
             spotless = "8.10.2"
 
@@ -243,6 +246,7 @@ class ThinApplicationPluginFunctionalTest {
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
             lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
             lwjgl-lz4 = { module = "org.lwjgl:lwjgl-lz4", version.ref = "lwjgl" }
+            lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4-java" }
 
             [plugins]
             spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
@@ -263,7 +267,8 @@ class ThinApplicationPluginFunctionalTest {
             { "file": "lwjgl-3.4.3.jar", "sha256": "46eeca5471833c3cf5da3c1da015b41e3bb3eb16dd3da03f366886da10096751" },
             { "file": "lwjgl-lz4-3.4.3.jar", "sha256": "fd81606cbfdd7084cdbf576f6260087a2ae68bcfb53ca1ccbec0707ae603f876" },
             { "file": "lwjgl-3.4.3-natives-windows.jar", "sha256": "19949bca7b780f55e5d2db12ac061a7657a4c1b7c860c30607f5406e7017aa2b" },
-            { "file": "lwjgl-lz4-3.4.3-natives-windows.jar", "sha256": "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc" }
+            { "file": "lwjgl-lz4-3.4.3-natives-windows.jar", "sha256": "4980edf40520be80a7753bc791283edf303b936466dd47b633138b05887f0edc" },
+            { "file": "lz4-java-1.12.0.jar", "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26" }
           ]
         }
         """.trimIndent()

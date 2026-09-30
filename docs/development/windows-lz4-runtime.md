@@ -45,11 +45,8 @@ not claim that final application-image qualification has already passed.
 `compliance/dependency-inventory.json` pins the LWJGL 3.4.3 core and LZ4 binding
 JARs and both `natives-windows` classifiers. The native inventory additionally
 pins each uncompressed DLL and records upstream LZ4 1.10.0 provenance. Native
-JARs remain separate from the thin library JAR. `stage-release-inputs.ps1`
-consumes Gradle-resolved dependencies under `jbsa-dist/target/runtime-dependencies`,
-checks each inventory approval and SHA-256 before replacing staging, and records
-the exact coordinates and hashes in the release-input manifest. The existing
-compliance verifier recursively audits those JARs and their native contents.
+JARs remain separate from the thin library JAR. Gradle stages the resolved
+runtime JARs under `jbsa-dist/target/runtime-dependencies`.
 
 The upstream license texts are retained verbatim in
 `compliance/licenses/LWJGL-3.4.3.txt` and `compliance/licenses/LZ4-1.10.0.txt` and
@@ -71,23 +68,35 @@ The default launch grants native access to `io.github.evildarkarchon.jbsa`
 resolves `org.lwjgl.natives` and `org.lwjgl.lz4.natives`: the Java bindings do not
 require those resource-only modules. The classpath variant grants `ALL-UNNAMED`.
 Both use `--illegal-native-access=deny` and validate Windows x64, Java 25, and
-the four runtime JAR hashes before invoking the CLI. Arguments are passed as an
+the five runtime JAR hashes (the four LWJGL JARs and lz4-java) before invoking
+the CLI. Arguments are passed as an
 argument array. `launch-policy.json` records the exact runtime bytes.
 
 Embedding applications must provide the same runtime artifacts and native-access grants.
 JBSA must never modify host-process native policy. Providers initialize lazily
 when an applicable codec operation first needs LZ4, extract their bundled JAR
 resources, and retain native libraries for process lifetime. Public callers have
-no DLL path or provider selector. Missing grants or unavailable native support
-are capability failures; stored and applicable zlib operations remain usable.
+no DLL path or provider selector.
+
+Missing grants or unavailable native support no longer fail LZ4 operations
+(`JBSA-CODEC-015`). The first LZ4 preflight pins a provider for the process: the
+native adapter when it loads, otherwise the portable lz4-java provider, reached
+only through `LZ4Factory.safeInstance()` and `XXHashFactory.safeInstance()`
+(`JBSA-CODEC-014`). lz4-java needs no native-access grant and is deliberately not
+given one. Its bundled JNI libraries ship inside its JAR but are never loaded;
+they are inventoried as inert payloads. The portable provider writes the same
+wire formats under separate profile identities, `jbsa-lz4-portable-v1` and
+`jbsa-bsa-069-lz4-portable-v1`. A portable pass is portability evidence only,
+never qualification of `jbsa-lz4-v1` (`JBSA-SCOPE-011`, `JBSA-CODEC-013`).
+`CAPABILITY codec.unavailable` now means both providers are missing, or that the
+portable provider met a linked-block frame it cannot decode. Stored and
+applicable zlib operations remain usable either way.
 
 Java 25 ordinarily warns and continues without native grants, so the adapter
 preflight also checks `Module.isNativeAccessEnabled()` rather than relying on
 that default. See [Java 25 native access](https://docs.oracle.com/en/java/javase/25/core/restricted-methods.html)
 and the [pinned LWJGL loader](https://github.com/LWJGL/lwjgl3/blob/30fac9b95f99cda97312232be25ba55297bf9951/modules/lwjgl/lz4/src/generated/java/org/lwjgl/util/lz4/LibLZ4.java).
 
-`build/test-release-staging.ps1` verifies runtime byte accounting, deterministic
-restaging, stale removal, missing inputs, and fail-before-replacement for a
-tampered runtime. Codec and native-access subprocess qualification additionally
-exercise actual LZ4 operations; merely displaying CLI help does not initialize
+Codec and native-access subprocess qualification exercise actual LZ4
+operations; merely displaying CLI help does not initialize
 the lazy codec and therefore is not codec-loading evidence.

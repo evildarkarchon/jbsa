@@ -15,7 +15,6 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 /** Public TES3 encode examples independently calculated from the wire specification. */
-@EnabledOnOs(OS.WINDOWS)
 class Tes3PackTest {
   @TempDir Path temporary;
 
@@ -88,13 +87,16 @@ class Tes3PackTest {
     }
   }
 
-  /** Split membership follows hash order and compression never alters TES3's stored payloads. */
+  /**
+   * Split membership follows hash order. TES3 has no compressed wire form; a compressed choice is
+   * rejected (D6), so this pack names the stored default.
+   */
   @Test
-  void splitsInCanonicalOrderAndIgnoresCompressionHints() throws Exception {
+  void splitsInCanonicalOrder() throws Exception {
     var options =
         new PackOptions(
             List.of(),
-            PackOptions.Compression.ZLIB,
+            PackOptions.Compression.FAMILY_DEFAULT,
             false,
             new PackOptions.Splitting.UpToBytes(1),
             FlagSelection.AUTOMATIC,
@@ -357,6 +359,8 @@ class Tes3PackTest {
 
   /** Profile decode follows the actual host ACP and never silently uses Windows-1252. */
   @Test
+  // The active ANSI code page is read from Windows (GetACP).
+  @EnabledOnOs(OS.WINDOWS)
   void activeAnsiProfileDecodesWithTheHostCodePage() throws Throwable {
     assertTrue(Tes3PackTest.class.getModule().isNativeAccessEnabled());
     int codePage;
@@ -415,6 +419,8 @@ class Tes3PackTest {
    * An isolated embedded consumer cannot silently substitute defaults for unavailable active ANSI.
    */
   @Test
+  // The active ANSI code page is read from Windows (GetACP).
+  @EnabledOnOs(OS.WINDOWS)
   void activeAnsiProfileFailsClosedWithoutNativeAccess() throws Exception {
     Path archive = temporary.resolve("profile.bsa");
     Files.write(

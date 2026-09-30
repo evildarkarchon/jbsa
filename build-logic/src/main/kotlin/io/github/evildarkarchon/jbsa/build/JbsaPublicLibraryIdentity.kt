@@ -6,6 +6,7 @@ internal object JbsaPublicLibraryIdentity {
     const val PUBLICATION_NAME = "library"
     const val ASSEMBLE_PUBLICATION_TASK = "assembleLibraryPublication"
     const val VERIFY_ARTIFACT_TASK = "verifyPublicLibraryArtifact"
+    const val VERIFY_LINKABLE_RUNTIME_TASK = "verifyLinkableRuntime"
 
     /** Returns the Gradle-generated POM task for the single named publication. */
     fun generatePomTaskName(): String = "generatePomFileFor${PUBLICATION_NAME.replaceFirstChar(Char::uppercase)}Publication"

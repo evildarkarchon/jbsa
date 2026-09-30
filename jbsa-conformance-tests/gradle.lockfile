@@ -2,6 +2,7 @@
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
 # To regenerate this file, run: ./gradlew :jbsa-conformance-tests:dependencies --write-locks
+at.yawk.lz4:lz4-java:1.12.0=testCompileClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-annotations:2.22=testCompileClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-core:2.22.1=testCompileClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-databind:2.22.1=testCompileClasspath,testRuntimeClasspath

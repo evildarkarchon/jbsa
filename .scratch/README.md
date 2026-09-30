@@ -1,6 +1,6 @@
-# Local issue tracker
+# Local issue tracker (read-only history)
 
-Create and manage tickets using [the tracker conventions](../docs/agents/issue-tracker.md). Migrated JBSA 1.0 ticket filenames retain their GitHub issue numbers (#24–#60); the parent #23 is `jbsa-1-0/map.md`. Other ticket numbers are scoped to each feature; legacy GitHub numbers map through this index.
+New work is tracked in GitHub Issues; see [the tracker conventions](../docs/agents/issue-tracker.md). This directory is retained as read-only history and is no longer updated. Migrated JBSA 1.0 ticket filenames retain their GitHub issue numbers (#24–#60); the parent #23 is `jbsa-1-0/map.md`. Other ticket numbers are scoped to each feature; legacy GitHub numbers map through this index.
 
 | GitHub source | Local ticket | State | Triage status |
 | --- | --- | --- | --- |
@@ -51,7 +51,7 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | [#48](https://github.com/evildarkarchon/jbsa/issues/48) | [Introduce bounded deterministic parallel archive operations](jbsa-1-0/issues/48-introduce-bounded-deterministic-parallel-archive-operations.md) | closed | none |
 | [#49](https://github.com/evildarkarchon/jbsa/issues/49) | [Complete the cross-family BSArch-compatible CLI](jbsa-1-0/issues/49-complete-the-cross-family-bsarch-compatible-cli.md) | closed | none |
 | [#50](https://github.com/evildarkarchon/jbsa/issues/50) | [Complete the mandatory Automated Conformance matrix](jbsa-1-0/issues/50-complete-the-mandatory-automated-conformance-matrix.md) | closed | none |
-| [#51](https://github.com/evildarkarchon/jbsa/issues/51) | [Freeze the JBSA 1.0 public archive interface](jbsa-1-0/issues/51-freeze-the-jbsa-1-0-public-archive-interface.md) | open | ready-for-agent |
+| [#51](https://github.com/evildarkarchon/jbsa/issues/51) | [Freeze the JBSA 1.0 public archive interface](jbsa-1-0/issues/51-freeze-the-jbsa-1-0-public-archive-interface.md) | closed | none |
 | [#52](https://github.com/evildarkarchon/jbsa/issues/52) | [Qualify jlibdeflate and select the standard zlib dispatch](jbsa-1-0/issues/52-qualify-jlibdeflate-and-select-the-standard-zlib-dispatch.md) | closed | none |
 | [#53](https://github.com/evildarkarchon/jbsa/issues/53) | [Assemble and verify the self-contained Windows x64 application image](jbsa-1-0/issues/53-assemble-and-verify-the-self-contained-windows-x64-application-image.md) | open | needs-triage |
 | [#54](https://github.com/evildarkarchon/jbsa/issues/54) | [Complete release provenance, notices, and operator documentation](jbsa-1-0/issues/54-complete-release-provenance-notices-and-operator-documentation.md) | open | needs-triage |
@@ -63,4 +63,4 @@ Create and manage tickets using [the tracker conventions](../docs/agents/issue-t
 | [#60](https://github.com/evildarkarchon/jbsa/issues/60) | [Publish the first public JBSA GitHub Release](jbsa-1-0/issues/60-publish-the-first-public-jbsa-github-release.md) | open | needs-triage |
 | local | [Implement compact generated conformance and risk-based performance assurance](jbsa-1-0/issues/61-implement-assurance-v2.md) | closed | none |
 
-Migrated on 2026-09-10: #62 plus #23 and all 37 of its sub-issues. Local files are authoritative; update the index when states change. Original GitHub states remain unchanged. Source snapshots are retained alongside the tickets. Triage was reviewed against ownership, acceptance criteria, and native blockers: #41 is ready for an agent; blocked open children need readiness reassessment after prerequisites close. Closed history and the parent map have no active triage label. Intended owners and rationales are recorded in each ticket.
+Migrated on 2026-09-10: #62 plus #23 and all 37 of its sub-issues. Source snapshots are retained alongside the tickets, and the migration never changed the original GitHub states. The State and Triage status columns record each local ticket as it stood when tracking moved to GitHub Issues. Intended owners and triage rationales are recorded in each ticket. The columns are frozen, not maintained: do not update them. Read current state from GitHub, and resume open work as described in [the tracker conventions](../docs/agents/issue-tracker.md#historical-local-tracker).

@@ -130,66 +130,6 @@ class BenchmarkPluginFunctionalTest {
         assertTrue(result.output.contains("fixture.SampleBenchmark.sample"), result.output)
     }
 
-    /** Verifies the benchmark has no install/publication tasks and is absent from production dependency inputs. */
-    @Test
-    fun `keeps the standalone benchmark outside publication staging and production inputs`() {
-        val result = run("--write-locks", "verifyPublicationPolicy", ":jbsa-benchmarks:tasks", "--all")
-
-        assertTrue(result.output.contains("JBSA_BENCHMARK_PUBLICATION_TASKS 0"), result.output)
-        assertTrue(result.output.contains("JBSA_BENCHMARK_PRODUCTION_INPUTS 0"), result.output)
-        assertFalse(result.output.contains("publishToMavenLocal"), result.output)
-        assertFalse(Regex("(?m)^install(?:\\s|$)").containsMatchIn(result.output), result.output)
-    }
-
-    /** Verifies a production or staging project cannot make the build-only benchmark a dependency input. */
-    @Test
-    fun `rejects the benchmark project in production dependency inputs`() {
-        write(
-            "jbsa-cli/build.gradle.kts",
-            "dependencies { implementation(project(\":jbsa-benchmarks\")) }\n",
-        )
-
-        val result = runAndFail("--write-locks", "verifyPublicationPolicy")
-
-        assertTrue(
-            result.output.contains(":jbsa-cli must not consume build-only :jbsa-benchmarks"),
-            result.output,
-        )
-    }
-
-    /** Verifies a file dependency cannot smuggle the standalone JAR into production or staging inputs. */
-    @Test
-    fun `rejects the standalone artifact in production file inputs`() {
-        write(
-            "jbsa-benchmarks/target/jbsa-benchmarks-0.1.0-SNAPSHOT-standalone.jar",
-            "fixture standalone bytes",
-        )
-        write(
-            "jbsa-cli/build.gradle.kts",
-            "dependencies { runtimeOnly(files(\"../jbsa-benchmarks/target/jbsa-benchmarks-0.1.0-SNAPSHOT-standalone.jar\")) }\n",
-        )
-
-        val result = runAndFail("--write-locks", "verifyPublicationPolicy")
-
-        assertTrue(
-            result.output.contains(":jbsa-cli must not consume build-only :jbsa-benchmarks"),
-            result.output,
-        )
-    }
-
-    /** Verifies test-only use does not turn the benchmark into a production or staging input. */
-    @Test
-    fun `permits the benchmark project only in a test dependency graph`() {
-        write(
-            "jbsa-cli/build.gradle.kts",
-            "dependencies { testImplementation(project(\":jbsa-benchmarks\")) }\n",
-        )
-
-        val result = run("--write-locks", "verifyPublicationPolicy")
-
-        assertTrue(result.output.contains("JBSA_BENCHMARK_PRODUCTION_INPUTS 0"), result.output)
-    }
-
     /** Runs the fixture with the convention-plugin class path and repository verification disabled. */
     private fun run(vararg arguments: String) =
         GradleRunner.create()
@@ -217,6 +157,7 @@ class BenchmarkPluginFunctionalTest {
             jmh = "1.37"
             junit = "6.1.3"
             lwjgl = "3.4.3"
+            lz4-java = "1.12.0"
             snakeyaml = "2.5"
             shadow = "9.6.1"
             spotless = "8.10.2"
@@ -232,6 +173,7 @@ class BenchmarkPluginFunctionalTest {
             junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit" }
             lwjgl = { module = "org.lwjgl:lwjgl", version.ref = "lwjgl" }
             lwjgl-lz4 = { module = "org.lwjgl:lwjgl-lz4", version.ref = "lwjgl" }
+            lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4-java" }
             shadow-gradle-plugin = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
 
             [plugins]

@@ -144,6 +144,7 @@ final class SpillBufferTest {
 
   /** A real Windows delete denial returns the exact residual and transfers cleanup ownership. */
   @Test
+  // Forces the deletion failure with the DOS read-only attribute.
   @EnabledOnOs(OS.WINDOWS)
   void reportsExactResidualAndReturnsCreditsWhenScratchDeletionFails() throws Exception {
     IoContext context = IoContext.of(scratchParent, Operation.PACK);
@@ -208,6 +209,7 @@ final class SpillBufferTest {
   /** Replay damage stays primary when a subsequent real cleanup denial leaves a residual. */
   @ParameterizedTest
   @ValueSource(longs = {0, 1})
+  // Forces the deletion failure with the DOS read-only attribute.
   @EnabledOnOs(OS.WINDOWS)
   void preservesReplayFailureAndBoundsSecondaryCleanupFailures(long secondaryLimit)
       throws Exception {

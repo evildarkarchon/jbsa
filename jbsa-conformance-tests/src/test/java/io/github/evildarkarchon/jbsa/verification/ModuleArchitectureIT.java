@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.classfile.*;
 import java.lang.classfile.attribute.*;
+import java.lang.classfile.constantpool.ClassEntry;
+import java.lang.classfile.constantpool.MemberRefEntry;
+import java.lang.classfile.constantpool.PoolEntry;
 import java.lang.constant.ClassDesc;
 import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleFinder;
@@ -16,11 +19,15 @@ import java.lang.reflect.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -596,6 +603,107 @@ final class ModuleArchitectureIT {
     try (URLClassLoader loader = productionClassLoader()) {
       assertDoesNotThrow(() -> Class.forName(LIBRARY_ANCHOR, true, loader));
       assertDoesNotThrow(() -> Class.forName(CLI_ANCHOR, true, loader));
+    }
+  }
+
+  /**
+   * lz4-java factory methods that may load its bundled JNI libraries or use {@code
+   * sun.misc.Unsafe}: every {@code native*}, {@code unsafe*}, and {@code fastest*} entry point.
+   */
+  private static final Pattern FORBIDDEN_LZ4_JAVA_MEMBER =
+      Pattern.compile("(native|unsafe|fastest).*");
+
+  /**
+   * lz4-java classes that bind JNI directly or silently create a {@code fastest*} instance, such as
+   * the frame streams' implicit content-checksum hash.
+   */
+  private static final Set<String> FORBIDDEN_LZ4_JAVA_CLASSES =
+      Set.of(
+          "net/jpountz/lz4/LZ4FrameInputStream",
+          "net/jpountz/lz4/LZ4FrameOutputStream",
+          "net/jpountz/lz4/LZ4BlockInputStream",
+          "net/jpountz/lz4/LZ4BlockOutputStream",
+          "net/jpountz/util/Native");
+
+  /**
+   * Verifies JBSA-CODEC-014: production bytecode reaches lz4-java only through {@code
+   * LZ4Factory.safeInstance()} and {@code XXHashFactory.safeInstance()}, never through an entry
+   * point that could load lz4-java's inert JNI libraries.
+   *
+   * @throws IOException if a production JAR cannot be read
+   */
+  @Test
+  void productionReachesLz4JavaOnlyThroughSafeFactories() throws IOException {
+    List<String> violations = new ArrayList<>();
+    Set<String> safeFactories = new TreeSet<>();
+    for (Path path : List.of(libraryJar(), cliJar())) {
+      try (JarFile jar = new JarFile(path.toFile())) {
+        for (JarEntry entry : Collections.list(jar.entries())) {
+          if (!entry.getName().endsWith(".class")) continue;
+          try (InputStream input = jar.getInputStream(entry)) {
+            violations.addAll(lz4JavaViolations(input.readAllBytes(), safeFactories));
+          }
+        }
+      }
+    }
+    assertEquals(List.of(), violations);
+    // The positive half keeps the scan honest: an empty violation list must not mean "no lz4-java".
+    assertEquals(
+        Set.of(
+            "net/jpountz/lz4/LZ4Factory.safeInstance",
+            "net/jpountz/xxhash/XXHashFactory.safeInstance"),
+        safeFactories);
+  }
+
+  /**
+   * Verifies the lz4-java scan detects a forbidden factory reference, so the production result is
+   * meaningful.
+   *
+   * @throws IOException if the fixture class bytes cannot be read
+   */
+  @Test
+  void lz4JavaScanRejectsFastestFactory() throws IOException {
+    try (InputStream input =
+        ModuleArchitectureIT.class.getResourceAsStream(
+            "ModuleArchitectureIT$ForbiddenLz4JavaFixture.class")) {
+      assertNotNull(input);
+      List<String> violations = lz4JavaViolations(input.readAllBytes(), new TreeSet<>());
+      assertTrue(
+          violations.stream().anyMatch(violation -> violation.endsWith("fastestInstance")),
+          violations::toString);
+    }
+  }
+
+  /**
+   * Returns every forbidden lz4-java reference in one class file's constant pool and records each
+   * {@code safeInstance} factory it references.
+   */
+  private static List<String> lz4JavaViolations(byte[] classBytes, Set<String> safeFactories) {
+    ClassModel model = ClassFile.of().parse(classBytes);
+    String self = model.thisClass().asInternalName();
+    List<String> violations = new ArrayList<>();
+    for (PoolEntry entry : model.constantPool()) {
+      if (entry instanceof MemberRefEntry member
+          && member.owner().asInternalName().startsWith("net/jpountz/")) {
+        String reference = member.owner().asInternalName() + "." + member.name().stringValue();
+        if (FORBIDDEN_LZ4_JAVA_MEMBER.matcher(member.name().stringValue()).matches())
+          violations.add(self + " -> " + reference);
+        if (member.name().equalsString("safeInstance")) safeFactories.add(reference);
+      } else if (entry instanceof ClassEntry type
+          && FORBIDDEN_LZ4_JAVA_CLASSES.contains(type.asInternalName())) {
+        violations.add(self + " -> " + type.asInternalName());
+      }
+    }
+    return violations;
+  }
+
+  /** Scanner fixture that references a forbidden factory; it is parsed, never executed. */
+  private static final class ForbiddenLz4JavaFixture {
+    private ForbiddenLz4JavaFixture() {}
+
+    /** Returns the factory that may load lz4-java's JNI library. */
+    static Object fastest() {
+      return net.jpountz.lz4.LZ4Factory.fastestInstance();
     }
   }
 

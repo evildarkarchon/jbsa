@@ -110,6 +110,348 @@
           "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
         ]
       }
+    },
+    {
+      "name": "liblz4-java.dylib (darwin-aarch64)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/darwin/aarch64/liblz4-java.dylib",
+      "sha256": "651961ff586d6eb6076f3cc909a1f420a9bdc872940946c2bef6def733bbdf5f",
+      "platform": "darwin-aarch64",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
+    },
+    {
+      "name": "liblz4-java.dylib (darwin-x86_64)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/darwin/x86_64/liblz4-java.dylib",
+      "sha256": "d2f9bb558d01c9ebe329dcc08f8643f1531c1876100db8e6a65287efd4313f37",
+      "platform": "darwin-x86_64",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
+    },
+    {
+      "name": "liblz4-java.so (linux-aarch64)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/linux/aarch64/liblz4-java.so",
+      "sha256": "d787165929f9e1564da615735a048b4d0dbe18169c502cfb460eca6729b7ac2e",
+      "platform": "linux-aarch64",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
+    },
+    {
+      "name": "liblz4-java.so (linux-x86_64)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/linux/amd64/liblz4-java.so",
+      "sha256": "9e3f9a3deae369dc15788f07f68b84b0b6ea933356f59a0d43bc383bd17cb629",
+      "platform": "linux-x86_64",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
+    },
+    {
+      "name": "liblz4-java.so (linux-i386)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/linux/i386/liblz4-java.so",
+      "sha256": "1803f343ac220357d983b9b9ef90cb7b2e5ea24f646f162a34f3fc57e8c53678",
+      "platform": "linux-i386",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
+    },
+    {
+      "name": "liblz4-java.so (linux-ppc64le)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/linux/ppc64le/liblz4-java.so",
+      "sha256": "7708c1bce6d5862d101afa2976c371f3551367dd0831ff67f2fc132bdd7e13d6",
+      "platform": "linux-ppc64le",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
+    },
+    {
+      "name": "liblz4-java.so (linux-riscv64)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/linux/riscv64/liblz4-java.so",
+      "sha256": "9fc30de4bdfb5afc1061ca3c8a82ab2f6ca8876991cbdf8075fb0091b397ca11",
+      "platform": "linux-riscv64",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
+    },
+    {
+      "name": "liblz4-java.so (linux-s390x)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/linux/s390x/liblz4-java.so",
+      "sha256": "a4402c5b81f5b8ac8e97571bbd62ac02480400e3d97797257229f37b31e3f106",
+      "platform": "linux-s390x",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
+    },
+    {
+      "name": "liblz4-java.dll (windows-x86_64)",
+      "container": {
+        "groupId": "at.yawk.lz4",
+        "artifactId": "lz4-java",
+        "version": "1.12.0",
+        "classifier": null,
+        "sha256": "31c287041eab41f2459e93659d49162eff015a0eb858877e1c5e9dcce1a10c26"
+      },
+      "pathInContainer": "net/jpountz/util/windows/amd64/liblz4-java.dll",
+      "sha256": "381e9d8f76e4af2062da66a70bedd56bba4f21e66ab9277a1ccdd1ec031f4e6f",
+      "platform": "windows-x86_64",
+      "componentVersion": "lz4-java 1.12.0 / LZ4 1.10.0",
+      "eligibility": {
+        "pureJavaInsufficient": false,
+        "inert": true,
+        "evidence": "docs/spec/codecs.md#jbsa-codec-014: redistributed inside the authorized lz4-java provider artifact but never loaded, because JBSA calls only the safeInstance() factories."
+      },
+      "license": {
+        "spdx": "Apache-2.0 AND BSD-2-Clause",
+        "evidence": "https://github.com/yawkat/lz4-java/blob/v1.12.0/LICENSE.txt and https://github.com/lz4/lz4/blob/v1.10.0/LICENSE"
+      },
+      "requiredNotices": [
+        "Retain the lz4-java Apache-2.0 and LZ4 BSD-2-Clause copyright and license texts."
+      ],
+      "source": {
+        "repository": "https://github.com/yawkat/lz4-java",
+        "revision": "b98ff902baf30b591d2a62a2cfa7ef25eb6f5b00",
+        "buildProvenance": "Bundled in Maven Central at.yawk.lz4:lz4-java:1.12.0 from the v1.12.0 release build with LZ4 1.10.0 at ebb370ca83af193212df4dcbadcc5d87bc0de2f0."
+      },
+      "redistribution": {
+        "approved": true,
+        "evidence": "JBSA-CODEC-014 authorizes these inert payloads inside lz4-java; exact container and payload SHA-256 verified against the Maven Central 1.12.0 JAR; LZ4 BSD-2-Clause text preserved under compliance/licenses.",
+        "releaseArtifacts": [
+          "jbsa-cli-0.1.0-SNAPSHOT-windows-x64.zip"
+        ]
+      }
     }
   ]
 }

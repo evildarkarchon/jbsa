@@ -16,6 +16,7 @@ dependencyResolutionManagement {
             filter {
                 includeModule("com.gradleup.shadow", "shadow-gradle-plugin")
                 includeModule("org.gradle.toolchains", "foojay-resolver")
+                includeModule("org.gradlex", "extra-java-module-info")
             }
         }
         mavenCentral()
