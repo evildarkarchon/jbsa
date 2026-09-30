@@ -109,6 +109,42 @@ final class PayloadWindows {
   }
 
   /**
+   * Exposes one bounded range as a sequential channel that borrows the reader. End of stream falls
+   * exactly at the range end, so an encoder can never consume an adjacent record; closing the
+   * channel leaves the underlying spool to its owner.
+   */
+  static ReadableByteChannel channel(Reader source, long start, long size) {
+    return new ReadableByteChannel() {
+      private long position;
+
+      /** Reads at most the remaining range at its absolute position. */
+      @Override
+      public int read(ByteBuffer bytes) throws IOException {
+        if (position == size) return -1;
+        int count = (int) Math.min(bytes.remaining(), size - position);
+        ByteBuffer window = bytes.slice();
+        window.limit(count);
+        source.read(start + position, window);
+        bytes.position(bytes.position() + count);
+        position += count;
+        return count;
+      }
+
+      /** The range's owner controls its lifetime. */
+      @Override
+      public boolean isOpen() {
+        return true;
+      }
+
+      /** Borrowed: the owner closes the underlying spool. */
+      @Override
+      public void close() {
+        // Nothing to release; the channel only borrows the reader.
+      }
+    };
+  }
+
+  /**
    * Replays a stabilized range without counting its logical bytes again in progress. One window is
    * live; the sink observes cancellation on every write.
    */

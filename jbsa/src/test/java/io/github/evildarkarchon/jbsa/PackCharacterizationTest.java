@@ -477,7 +477,7 @@ class PackCharacterizationTest {
 
   /** Records a stabilized BA2 pack's progress, interleaved with its source reads. */
   @Test
-  void ba2StabilizationRunsInPreflightProgressPhase() throws Exception {
+  void ba2StabilizationRunsInProcessingProgressPhase() throws Exception {
     List<String> events = Collections.synchronizedList(new ArrayList<>());
     var request =
         sequential(
@@ -489,8 +489,8 @@ class PackCharacterizationTest {
                 logged("x/a.txt", 3, events),
                 logged("x/b.txt", 2, events)));
     BethesdaArchives.standard().pack(request, recording(events));
-    // Q10 (#72): BA2 stabilization will run in PROCESSING, moving both opens after its entry.
-    assertEquals(stabilizedProgress(List.of("open x/a.txt", "open x/b.txt")), events);
+    // Q10 (#72): BA2 stabilization runs in PROCESSING, so both opens follow that phase's entry.
+    assertEquals(processingStabilizedProgress(List.of("open x/a.txt", "open x/b.txt")), events);
   }
 
   /** A stored BSA pack with sharing enabled detects a target conflict before any source read. */
@@ -663,36 +663,6 @@ class PackCharacterizationTest {
         archiveFlags,
         FlagSelection.AUTOMATIC,
         entryCompression);
-  }
-
-  /**
-   * The Progress Snapshots and source opens of one sequential two-entry stabilized pack (sources of
-   * 3 and 2 bytes) that still stabilizes during PREFLIGHT. Stabilization itself emits no snapshot,
-   * so its phase shows only through where the "open" events land: between PREFLIGHT's last advance
-   * and its completion.
-   */
-  private static List<String> stabilizedProgress(List<String> stabilization) {
-    var events =
-        new ArrayList<>(
-            List.of("PREFLIGHT ENTRIES 0", "PREFLIGHT ENTRIES 1", "PREFLIGHT ENTRIES 2"));
-    events.addAll(stabilization);
-    events.addAll(
-        List.of(
-            "PREFLIGHT ENTRIES 2/2",
-            "PROCESSING ENTRIES 0",
-            "PROCESSING BYTES 0",
-            "PROCESSING BYTES 3",
-            "PROCESSING ENTRIES 1",
-            "PROCESSING BYTES 5",
-            "PROCESSING ENTRIES 2",
-            "PROCESSING ENTRIES 2/2",
-            "PROCESSING BYTES 5/5",
-            "PUBLISHING ARTIFACTS 0",
-            "PUBLISHING ARTIFACTS 1",
-            "PUBLISHING ARTIFACTS 1/1",
-            "CLEANUP ARTIFACTS 0",
-            "CLEANUP ARTIFACTS 1/1"));
-    return events;
   }
 
   /**

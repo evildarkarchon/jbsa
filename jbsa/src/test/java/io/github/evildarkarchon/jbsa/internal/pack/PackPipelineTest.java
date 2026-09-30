@@ -156,31 +156,31 @@ class PackPipelineTest {
     assertEquals(
         2,
         PackPipeline.knownPartCount(
-            stored, cheap, new PackOptions.Splitting.FamilyDefault(), context));
+            stored, cheap, new PackOptions.Splitting.FamilyDefault(), false, context));
 
     var encoded = List.of(encoded("a", 3), encoded("b", 3), encoded("c", 1));
     assertEquals(
         1,
         PackPipeline.knownPartCount(
-            encoded, cheap, new PackOptions.Splitting.UpToBytes(0), context));
+            encoded, cheap, new PackOptions.Splitting.UpToBytes(0), false, context));
     // A zero minimum cost lets entries share a part, so only the first part is certain.
     assertEquals(
         1,
         PackPipeline.knownPartCount(
-            encoded, cheap, new PackOptions.Splitting.LegacyPerEntry(), context));
+            encoded, cheap, new PackOptions.Splitting.LegacyPerEntry(), false, context));
     var costly = new MemoryEncoder(0, false, new ArrayList<>(), 200).admit(null, context);
     assertEquals(
         3,
         PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.LegacyPerEntry(), context));
+            encoded, costly, new PackOptions.Splitting.LegacyPerEntry(), false, context));
     assertEquals(
         3,
         PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.UpToBytes(200), context));
+            encoded, costly, new PackOptions.Splitting.UpToBytes(200), false, context));
     assertEquals(
         1,
         PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.UpToBytes(201), context));
+            encoded, costly, new PackOptions.Splitting.UpToBytes(201), false, context));
   }
 
   /** Preflight checks exactly the known part set before any source payload is opened. */
@@ -416,6 +416,113 @@ class PackPipelineTest {
     assertEquals("close", secondary.cause().orElseThrow().getMessage());
   }
 
+  /**
+   * Set-wide raw sharing decides owners once for the archive set: a shared owner costs a part only
+   * at its first reference, so equal payloads fit a part they would overflow unshared, and every
+   * part that references an owner emits its own copy. Worker count never changes the output.
+   */
+  @Test
+  void sharesRawOwnersAcrossTheArchiveSetOncePerPart() throws Exception {
+    for (long workers : new long[] {1, 4}) {
+      // Output order is z, y, x. x shares the owner y created, so it costs nothing in their part.
+      Path shared = temporary.resolve("shared" + workers + ".mem");
+      var report =
+          PackPipeline.pack(
+              request(
+                  shared,
+                  options(8, true, Map.of()),
+                  ResourceLimits.standard(),
+                  workers,
+                  source("x", new byte[] {1, 2, 3, 4}),
+                  source("y", new byte[] {1, 2, 3, 4}),
+                  source("z", new byte[] {1, 2, 3, 5})),
+              OperationControl.standard(),
+              MemoryEncoder.setWide(false));
+      assertEquals(1, report.archiveParts().size());
+      var records = MemoryEncoder.read(shared);
+      assertEquals(List.of("z", "y", "x"), records.stream().map(Record::name).toList());
+      assertEquals(records.get(1).offset(), records.get(2).offset());
+      assertEquals(8 + 3 * 16 + 8, Files.size(shared));
+
+      // Without sharing x costs its own four bytes and overflows into a second part.
+      var unshared =
+          PackPipeline.pack(
+              request(
+                  temporary.resolve("unshared" + workers + ".mem"),
+                  options(8, false, Map.of()),
+                  ResourceLimits.standard(),
+                  workers,
+                  source("x", new byte[] {1, 2, 3, 4}),
+                  source("y", new byte[] {1, 2, 3, 4}),
+                  source("z", new byte[] {1, 2, 3, 5})),
+              OperationControl.standard(),
+              MemoryEncoder.setWide(false));
+      assertEquals(2, unshared.archiveParts().size());
+
+      // One owner, referenced from two parts, is emitted in each of them. Shared, y costs nothing
+      // and still overflows a one-byte target; re-costed in its new part, it pays for the owner.
+      var perEntry =
+          PackPipeline.pack(
+              request(
+                  temporary.resolve("per-entry" + workers + ".mem"),
+                  options(1, true, Map.of()),
+                  ResourceLimits.standard(),
+                  workers,
+                  source("x", new byte[] {1, 2, 3, 4}),
+                  source("y", new byte[] {1, 2, 3, 4})),
+              OperationControl.standard(),
+              MemoryEncoder.setWide(false));
+      assertEquals(2, perEntry.archiveParts().size());
+      for (var part : perEntry.archiveParts()) {
+        assertEquals(8 + 16 + 4, part.byteSize());
+        assertArrayEquals(
+            new byte[] {1, 2, 3, 4}, MemoryEncoder.read(part.path()).getFirst().payload());
+      }
+    }
+  }
+
+  /**
+   * A declared readback reopens every staged part before any is published. MEM1 is not a readable
+   * archive, so the reopen's own structured failure is primary, and no part of the set appears.
+   */
+  @Test
+  void readbackFailurePublishesNoPart() throws Exception {
+    Path target = temporary.resolve("readback.mem");
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                PackPipeline.pack(
+                    request(
+                        target,
+                        options(1, false, Map.of()),
+                        ResourceLimits.standard(),
+                        1,
+                        source("a", 3),
+                        source("b", 3)),
+                    OperationControl.standard(),
+                    MemoryEncoder.setWide(true)));
+    assertEquals(FailureKind.FORMAT, failure.kind());
+    assertEquals(
+        Optional.of("archive.unrecognized"), failure.primaryFailure().diagnosticIdentifier());
+    assertFalse(Files.exists(target));
+    assertFalse(Files.exists(PublicationTransaction.splitPath(target, 2)));
+
+    // The same plan without a readback declaration publishes both parts.
+    var report =
+        PackPipeline.pack(
+            request(
+                target,
+                options(1, false, Map.of()),
+                ResourceLimits.standard(),
+                1,
+                source("a", 3),
+                source("b", 3)),
+            OperationControl.standard(),
+            MemoryEncoder.setWide(false));
+    assertEquals(2, report.archiveParts().size());
+  }
+
   /** Asserts a rejection before any source opens or output exists, returning the failure. */
   private ArchiveException assertRejected(
       MemoryEncoder encoder, PackRequest request, FailureKind kind, String identifier) {
@@ -566,9 +673,18 @@ class PackPipelineTest {
    * @param refuse whether admission fails with UNSUPPORTED {@code memory.admit-refused}
    * @param events the adapter calls made, in order
    * @param fixedCost the fixed per-entry split cost
+   * @param setWide whether payloads are stabilized and share raw owners across the archive set with
+   *     a first-owner split cost, instead of streaming with per-part sharing
+   * @param readback whether every staged part is read back; no reader recognizes MEM1, so a
+   *     readback always fails
    */
   private record MemoryEncoder(
-      long defaultSplitTarget, boolean refuse, List<String> events, long fixedCost)
+      long defaultSplitTarget,
+      boolean refuse,
+      List<String> events,
+      long fixedCost,
+      boolean setWide,
+      boolean readback)
       implements FamilyAdapter<String> {
     private static final int HEADER = 8;
     private static final int RECORD = 16;
@@ -579,6 +695,16 @@ class PackPipelineTest {
 
     MemoryEncoder(long defaultSplitTarget, boolean refuse, List<String> events) {
       this(defaultSplitTarget, refuse, events, 0);
+    }
+
+    MemoryEncoder(long defaultSplitTarget, boolean refuse, List<String> events, long fixedCost) {
+      this(defaultSplitTarget, refuse, events, fixedCost, false, false);
+    }
+
+    /** A set-wide stabilized encoder, optionally reading every part back. */
+    static MemoryEncoder setWide(boolean readback) {
+      return new MemoryEncoder(
+          0, false, Collections.synchronizedList(new ArrayList<>()), 0, true, readback);
     }
 
     @Override
@@ -603,17 +729,24 @@ class PackPipelineTest {
 
         @Override
         public Emission emission() {
-          return Emission.STREAMING;
+          return setWide ? Emission.STABILIZED : Emission.STREAMING;
         }
 
         @Override
         public SplitCost<String> splitCost() {
-          return new SplitCost<>(fixedCost, name -> 0, PayloadCost.DECODED);
+          return new SplitCost<>(
+              fixedCost, name -> 0, setWide ? PayloadCost.UNIQUE_STORED : PayloadCost.DECODED);
         }
 
         @Override
         public Sharing sharing() {
-          return new Sharing(Sharing.Scope.PER_PART, Sharing.Basis.RAW);
+          return new Sharing(
+              setWide ? Sharing.Scope.ARCHIVE_SET : Sharing.Scope.PER_PART, Sharing.Basis.RAW);
+        }
+
+        @Override
+        public Readback readback(List<Planned<String>> part, Layout layout) {
+          return readback ? new Readback("memory.noncanonical-staged-output", 0, 0, 1) : null;
         }
 
         @Override

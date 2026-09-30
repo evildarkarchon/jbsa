@@ -139,7 +139,8 @@ public final class BethesdaArchives {
             io.github.evildarkarchon.jbsa.internal.pack.PackPipeline.pack(
                 request, control, io.github.evildarkarchon.jbsa.internal.bsa.BsaAdapter.INSTANCE);
         case FO4_GENERAL_BA2, FO4_DDS_BA2, STARFIELD_GENERAL_BA2, STARFIELD_DDS_BA2 ->
-            io.github.evildarkarchon.jbsa.internal.ba2.Ba2Packer.pack(request, control);
+            io.github.evildarkarchon.jbsa.internal.pack.PackPipeline.pack(
+                request, control, io.github.evildarkarchon.jbsa.internal.ba2.Ba2Adapter.INSTANCE);
       };
     }
   }

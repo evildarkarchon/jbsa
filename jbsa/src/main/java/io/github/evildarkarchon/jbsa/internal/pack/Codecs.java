@@ -5,6 +5,7 @@ import io.github.evildarkarchon.jbsa.internal.io.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.io.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.io.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,13 +13,16 @@ import java.nio.channels.ReadableByteChannel;
 
 /**
  * The pipeline's private codec map. It is the only place that invokes a payload encoder and knows
- * its worst-case output bound and heap/native working set. Stored, zlib, and the versioned BSA LZ4
- * frame are routed here; raw LZ4 joins when BA2 migrates (#72). One conservative zlib bound serves
- * every family (D3).
+ * its worst-case output bound and heap/native working set. Stored, zlib, the versioned BSA LZ4
+ * frame, and Starfield raw LZ4 are routed here. One conservative zlib bound serves every family
+ * (D3).
  */
 final class Codecs {
   /** The versioned BSA 0x69 profile auto-flushes one LZ4 block per source window of this size. */
   private static final long LZ4_BLOCK_BYTES = 65536;
+
+  /** The raw LZ4 HC level Starfield BA2 output is qualified against. */
+  private static final int LZ4_RAW_LEVEL = 12;
 
   private Codecs() {}
 
@@ -43,8 +47,25 @@ final class Codecs {
           new Cost(zlibBound(decodedSize), JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES);
       case BSA_LZ4_FRAME ->
           new Cost(bsaLz4Bound(decodedSize), Lz4Frame.HEAP_BYTES, Lz4Frame.ENCODE_NATIVE_BYTES);
-      case LZ4_RAW -> throw unrouted(codec);
+      // Lz4Raw admits its whole block, output bound, and HC state against the operation budget on
+      // every call, so the map charges nothing up front; a precharge would count them twice.
+      case LZ4_RAW -> new Cost(lz4RawBound(decodedSize), 0, 0);
     };
+  }
+
+  /**
+   * Returns whether a transform-stage worker may run this encoder. Raw LZ4 stays on the
+   * coordinator, as BA2 always kept it: each call admits a whole block plus its multi-MiB native
+   * buffers against the operation budget itself, so concurrent workers would multiply that peak
+   * outside the stage's headroom rule.
+   */
+  static boolean workerEncodes(Codec codec) {
+    return codec != Codec.LZ4_RAW;
+  }
+
+  /** One raw LZ4 block's worst-case compressed size. */
+  static long lz4RawBound(long size) {
+    return Math.addExact(size, size / 255 + 16);
   }
 
   /**
@@ -71,7 +92,8 @@ final class Codecs {
    *
    * @param budget the operation budget a borrowing encoder settles against
    * @param admission a reservation already covering {@link #cost}'s heap and native bytes; only the
-   *     BSA LZ4 frame borrows it, and it may be null for the other codecs
+   *     BSA LZ4 frame borrows it, and it may be null for the other codecs. Raw LZ4 admits its own
+   *     working set against {@code budget} instead
    * @throws IOException a structured source-length, stall, codec, or sink failure
    */
   static void encode(
@@ -107,7 +129,24 @@ final class Codecs {
             processing);
         requireEnd(input, checkpoint, processing);
       }
-      case LZ4_RAW -> throw unrouted(codec);
+      case LZ4_RAW -> {
+        if (input == null)
+          throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
+        Lz4Raw.encode(
+            (offset, bytes) -> {
+              // Raw LZ4 reads its whole block once from offset zero; anything else is a JBSA bug.
+              if (offset != 0)
+                throw processing.failure(FailureKind.INTERNAL, "operation.internal-failure", null);
+              readExact(input, bytes, checkpoint, processing);
+            },
+            decodedSize,
+            sink::write,
+            checkpoint::check,
+            budget,
+            processing,
+            LZ4_RAW_LEVEL);
+        requireEnd(input, checkpoint, processing);
+      }
     }
   }
 
@@ -145,11 +184,5 @@ final class Codecs {
       if (count > 0) throw processing.failure(FailureKind.SOURCE, "source.length-mismatch", null);
       if (++idle > 16) throw processing.failure(FailureKind.SOURCE, "io.no-progress", null);
     }
-  }
-
-  /** A programming error: an adapter selected a codec before its family migrated. */
-  private static UnsupportedOperationException unrouted(Codec codec) {
-    return new UnsupportedOperationException(
-        codec + " is not routed through the Pack Pipeline yet");
   }
 }
