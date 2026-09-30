@@ -4,7 +4,9 @@
  * <p>Archive Family implementations and third-party providers remain encapsulated behind this
  * module.
  */
-// lz4-java publishes only an Automatic-Module-Name, so requiring it is deliberate.
+// lz4-java publishes only an Automatic-Module-Name, so requiring it is deliberate. Compilation and
+// consumers see that automatic module; jlink rejects it, so the build links against a synthesized
+// explicit descriptor of the same name (verifyLinkableRuntime in JbsaPublicLibraryPlugin).
 @SuppressWarnings("requires-automatic")
 module io.github.evildarkarchon.jbsa {
   requires jdk.unsupported;

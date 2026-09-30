@@ -249,6 +249,35 @@ class PublicLibraryPluginFunctionalTest {
         assertFalse(Files.exists(projectDir.resolve("jbsa/target/publications/library/module.json")))
     }
 
+    /** Verifies the library links with jlink once lz4-java carries its synthesized descriptor. */
+    @Test
+    fun `links the library and an explicit lz4-java module with jlink`() {
+        val result = run("--write-locks", ":jbsa:verifyLinkableRuntime")
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":jbsa:verifyLinkableRuntime")?.outcome)
+        val release = Files.readString(projectDir.resolve("jbsa/target/jlink/linkable-runtime/release"))
+        val modules = Regex("MODULES=\"([^\"]*)\"").find(release)?.groupValues?.get(1)?.split(' ')?.toSet()
+        assertEquals(setOf("java.base", "jdk.unsupported", "org.lz4.java", "io.github.evildarkarchon.jbsa"), modules)
+    }
+
+    /** Verifies the check names the automatic module that jlink would reject when no descriptor applies. */
+    @Test
+    fun `rejects an automatic lz4-java module before jlink`() {
+        write(
+            "jbsa/build.gradle.kts",
+            """
+            // Drops the synthesized descriptor so lz4-java reaches the check as the automatic module it ships.
+            extensions.getByType(org.gradlex.javamodule.moduleinfo.ExtraJavaModuleInfoPluginExtension::class.java)
+                .moduleSpecs.empty()
+            """.trimIndent(),
+        )
+
+        val result = runAndFail("--write-locks", ":jbsa:verifyLinkableRuntime")
+
+        assertTrue(result.output.contains("Module org.lz4.java from"), result.output)
+        assertTrue(result.output.contains("is automatic, which jlink rejects"), result.output)
+    }
+
     /** Verifies the artifact gate rejects a third-party type leaked through an exported signature. */
     @Test
     fun `rejects leaked public signature types`() {

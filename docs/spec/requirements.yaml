@@ -2691,6 +2691,7 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
+      - https://github.com/evildarkarchon/jbsa/issues/68
     lifecycle_state: active
     verification_class: conformance-case
     implementation_tickets:
@@ -2698,6 +2699,7 @@ requirements:
     test_evidence:
       - docs/development/interface-freeze.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/PackCharacterizationTest.java
   - id: JBSA-OPS-008
     owner:
       document: docs/spec/operation-semantics.md

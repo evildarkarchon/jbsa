@@ -261,6 +261,9 @@ class JbsaFoundationPlugin : Plugin<Project> {
                 project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named(
                     JbsaPublicLibraryIdentity.VERIFY_ARTIFACT_TASK
                 ),
+                project.project(JbsaPublicLibraryIdentity.PROJECT_PATH).tasks.named(
+                    JbsaPublicLibraryIdentity.VERIFY_LINKABLE_RUNTIME_TASK
+                ),
                 project.project(":jbsa-test-support").tasks.named("build"),
                 project.project(JbsaThinApplicationIdentity.PROJECT_PATH).tasks.named("check"),
                 project

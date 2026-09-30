@@ -85,9 +85,13 @@ Off Windows, `PathIdentity` selects a portable provider instead of the kernel32
 backend. It reads no-follow NIO attributes and the provider file key in one call.
 A regular file's identity also carries its birth time, because POSIX reuses a
 deleted file's inode at once, and rollback must not mistake a recreated file for
-its own output. The portable root pin holds no handle: it records the observed
-identity, and the existing revalidation detects replacement rather than denying
-it. Case collisions are keyed explicitly with the Windows NIO comparison rule,
+its own output. A directory's identity is the bare file key: where birth time is
+unavailable, NIO reports the modification time in its place, and that changes
+every time JBSA adds an entry. A directory deleted and recreated on a reused
+inode therefore passes revalidation. That is a concurrent namespace race, which
+the non-hostile destination-tree contract above excludes. The portable root pin
+holds no handle: it records the observed identity, and the existing revalidation
+detects replacement rather than denying it. Case collisions are keyed explicitly with the Windows NIO comparison rule,
 so extraction rejects the same name sets on every host. None of this changes the
 Windows baseline or qualifies another platform.
 

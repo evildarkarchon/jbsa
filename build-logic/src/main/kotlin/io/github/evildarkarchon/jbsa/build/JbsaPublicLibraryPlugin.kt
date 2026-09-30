@@ -2,6 +2,7 @@ package io.github.evildarkarchon.jbsa.build
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.attributes.Attribute
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -10,7 +11,9 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaToolchainService
 import org.gradle.kotlin.dsl.create
+import org.gradlex.javamodule.moduleinfo.ExtraJavaModuleInfoPluginExtension
 
 /** Builds and locally publishes the compatible `io.github.evildarkarchon:jbsa` public library. */
 class JbsaPublicLibraryPlugin : Plugin<Project> {
@@ -30,6 +33,7 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
         configureWhiteboxModuleTesting(project)
         configureArtifactBackedTests(project)
         configureArtifactVerification(project)
+        configureLinkableRuntime(project)
     }
 
     /**
@@ -213,5 +217,67 @@ class JbsaPublicLibraryPlugin : Plugin<Project> {
             libraryJar.set(binary.flatMap(Jar::getArchiveFile))
             runtimeClasspath.from(project.configurations.named("runtimeClasspath"))
         }
+    }
+
+    /**
+     * Gives lz4-java an explicit descriptor on a dedicated `jlink` module path and proves that the
+     * library links with it.
+     *
+     * lz4-java publishes only `Automatic-Module-Name: org.lz4.java`, and `jlink` rejects automatic
+     * modules, so the JBSA-DIST-005 runtime cannot link it as published. The descriptor is synthesized
+     * only in the `runtimeClasspath` view that the check links against. Compilation, tests, the
+     * consumer POM, the resolved production manifest, the SBOM, and the staged CLI inputs keep the
+     * unmodified Maven Central JAR and its reviewed SHA-256.
+     */
+    private fun configureLinkableRuntime(project: Project) {
+        project.pluginManager.apply("org.gradlex.extra-java-module-info")
+        val moduleInfo = project.extensions.getByType(ExtraJavaModuleInfoPluginExtension::class.java)
+        val sourceSets = project.extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class.java)
+        // The plugin activates every source set by default; the reviewed classpaths must stay untransformed.
+        moduleInfo.deactivate(sourceSets.getByName("main"))
+        moduleInfo.deactivate(sourceSets.getByName("test"))
+        // The same name keeps `requires org.lz4.java` valid; the packages and JDK read edge match jdeps.
+        moduleInfo.module("at.yawk.lz4:lz4-java", "org.lz4.java") {
+            exports("net.jpountz.lz4")
+            exports("net.jpountz.util")
+            exports("net.jpountz.xxhash")
+            requires("jdk.unsupported")
+        }
+
+        // A view that requests the plugin's javaModule=true variant runs the transform for jlink alone,
+        // over exactly the versions and artifacts runtimeClasspath already resolved and locked.
+        val modulePath =
+            project.configurations.named("runtimeClasspath").map { configuration ->
+                configuration.incoming
+                    .artifactView {
+                        attributes { attribute(JAVA_MODULE_ATTRIBUTE, true) }
+                    }
+                    .files
+            }
+
+        val binary = project.tasks.named("jar", Jar::class.java)
+        project.tasks.register(
+            JbsaPublicLibraryIdentity.VERIFY_LINKABLE_RUNTIME_TASK,
+            VerifyLinkableRuntime::class.java,
+        ) {
+            group = "verification"
+            description = "Links the public library and its runtime module path with the toolchain jlink."
+            libraryJar.set(binary.flatMap(Jar::getArchiveFile))
+            this.modulePath.from(modulePath)
+            javaLauncher.set(
+                project.extensions.getByType(JavaToolchainService::class.java).launcherFor {
+                    JdkPolicy.configureToolchain(this)
+                }
+            )
+            linkedRuntime.set(project.layout.buildDirectory.dir("jlink/linkable-runtime"))
+        }
+    }
+
+    private companion object {
+        /**
+         * The extra-java-module-info plugin's variant marker; its own constant is package-private, and
+         * Gradle matches attributes by name and type.
+         */
+        val JAVA_MODULE_ATTRIBUTE: Attribute<Boolean> = Attribute.of("javaModule", Boolean::class.javaObjectType)
     }
 }

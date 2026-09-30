@@ -133,6 +133,29 @@ final class PortableLz4Test {
   }
 
   /**
+   * Header 0x80000000 is an empty uncompressed block, not an end mark; the portable decoder skips
+   * it as the reference LZ4 1.10.0 decoder does, so both providers accept the same frames.
+   */
+  @Test
+  void skipsAnEmptyUncompressedBlockLikeTheReferenceDecoder() throws Exception {
+    byte[] data = sample(70_000, 51);
+    byte[] frame = withEmptyRawBlockBeforeEndMark(frame(0x60, 0x40, data, 65536, false));
+    assertArrayEquals(data, streamDecode(frame, data.length, 4096));
+    assertArrayEquals(data, frameDecode(Provider.PORTABLE, frame, data.length));
+  }
+
+  /** The native provider, the reference decoder, accepts the same empty uncompressed block. */
+  @Test
+  // Decoding through the native LWJGL adapter is a Windows x64 boundary.
+  @EnabledOnOs(OS.WINDOWS)
+  void nativeDecoderAlsoSkipsAnEmptyUncompressedBlock() throws Exception {
+    Lz4Runtime.nativePreflight("lz4-frame", "decode", CONTEXT);
+    byte[] data = sample(70_000, 51);
+    byte[] frame = withEmptyRawBlockBeforeEndMark(frame(0x60, 0x40, data, 65536, false));
+    assertArrayEquals(data, frameDecode(Provider.NATIVE, frame, data.length));
+  }
+
+  /**
    * Corruption, truncation, trailing bytes, reserved bits, and checksum or size mismatches fail as
    * FORMAT with the portable profile; nothing past the declared size is published.
    */
@@ -454,6 +477,18 @@ final class PortableLz4Test {
     }
     output.writeBytes(little(0));
     if ((flg & 0x04) != 0) output.writeBytes(little(XXHASH.hash32().hash(data, 0, data.length, 0)));
+    return output.toByteArray();
+  }
+
+  /**
+   * Inserts a 0x80000000 block header just before the end mark of a frame built without a content
+   * checksum, whose end mark is therefore its final four bytes.
+   */
+  private static byte[] withEmptyRawBlockBeforeEndMark(byte[] frame) {
+    var output = new ByteArrayOutputStream();
+    output.write(frame, 0, frame.length - 4);
+    output.writeBytes(little(0x80000000));
+    output.writeBytes(little(0));
     return output.toByteArray();
   }
 

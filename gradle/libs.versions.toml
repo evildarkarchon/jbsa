@@ -1,5 +1,6 @@
 [versions]
 cyclonedx = "3.4.1"
+extra-java-module-info = "1.14.2"
 foojay-toolchains = "1.0.0"
 google-java-format = "1.36.0"
 jackson = "2.22.1"
@@ -14,6 +15,7 @@ snakeyaml = "2.5"
 spotless = "8.10.2"
 
 [libraries]
+extra-java-module-info = { module = "org.gradlex:extra-java-module-info", version.ref = "extra-java-module-info" }
 foojay-resolver = { module = "org.gradle.toolchains:foojay-resolver", version.ref = "foojay-toolchains" }
 jackson-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 jlibdeflate = { module = "com.fulcrumgenomics:jlibdeflate", version.ref = "jlibdeflate" }

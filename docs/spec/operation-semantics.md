@@ -195,9 +195,12 @@ operational validation or discovery. A pre-cancelled operation and an unchecked
 contract failure **MUST NOT** enter a progress phase. `PROCESSING` **MUST** be
 entered after successful complete preflight and before ordinary payload
 processing, or at the corresponding zero-unit processing decision when no
-payload work exists. Pack stabilization required to complete output-set
-preflight under [JBSA-IO-008](io-and-publication.md#jbsa-io-008) remains
-`PREFLIGHT`.
+payload work exists. When a pack's output set depends on transformed sizes or
+sharing resolution, "complete preflight" means the preflight
+[JBSA-IO-008](io-and-publication.md#jbsa-io-008) requires before processing work
+is admitted. `PROCESSING` **MUST** then be entered before stabilization reads its
+first source. The stabilization, and the output-set preflight that completes
+once split membership is final, **MUST** run in `PROCESSING`.
 
 `PUBLISHING` **MUST** be entered for `pack` or an atomic-set or new-root
 `extract` after successful processing and immediately before its first
@@ -237,7 +240,7 @@ Cancellation that cannot change a successful result under
 sequence. Method return or exception, not a progress event, **MUST** remain the
 authoritative terminal signal.
 
-_Source decisions: [accepted semantic progress model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
+_Source decisions: [accepted semantic progress model](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048); pack stabilization moved from `PREFLIGHT` to `PROCESSING` by approved Pack Pipeline change [Q10](https://github.com/evildarkarchon/jbsa/issues/68) in specification `0.19.0`._
 
 ## JBSA-OPS-008
 

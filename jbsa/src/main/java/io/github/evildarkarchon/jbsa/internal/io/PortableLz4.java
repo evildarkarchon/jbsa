@@ -445,6 +445,9 @@ final class PortableLz4 {
     /** Decodes the next block into the pending window; returns false at the frame's end mark. */
     private boolean nextBlock() throws IOException {
       int header = readInt();
+      // Only the exact zero header is the end mark. 0x80000000 is an empty uncompressed block,
+      // which the reference LZ4 1.10.0 frame decoder (the native provider) accepts as a no-op, so
+      // rejecting it here would make the two providers disagree about the same archive.
       if (header == 0) return false;
       boolean raw = (header & 0x80000000) != 0;
       int size = header & 0x7FFFFFFF;
