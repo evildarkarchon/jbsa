@@ -178,7 +178,7 @@ final class OwnedArchiveRaceTest {
         context,
         builder -> {
           builder.declareEntries(1);
-          builder.addStored(
+          builder.add(
               new EntryMetadata(
                   ArchiveFamily.TES3_BSA,
                   ArchiveEncoding.tes3(),
@@ -189,7 +189,9 @@ final class OwnedArchiveRaceTest {
                   2,
                   2,
                   new EntryMetadata.Tes3(0, 0, 0, 0)),
-              0);
+              0,
+              2,
+              OwnedArchive.PayloadCodec.STORED);
           return new ArchiveInspection(
               detection,
               new ArchiveMetadata.Tes3(1, 0, 0),

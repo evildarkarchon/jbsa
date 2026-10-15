@@ -1,12 +1,12 @@
 package io.github.evildarkarchon.jbsa.internal.bsa;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.ArchiveNames;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
 import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import io.github.evildarkarchon.jbsa.internal.pack.FamilyAdapter;
-import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
@@ -42,7 +42,7 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
    */
   @Override
   public Admitted<WireName> admit(PackRequest request, IoContext context) throws ArchiveException {
-    Tes3Names.encoding(request.compatibilityProfile(), context);
+    ArchiveNames.encoding(request.compatibilityProfile(), context);
     int version =
         switch (request.family()) {
           case TES4_BSA -> 0x67;

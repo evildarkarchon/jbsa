@@ -140,7 +140,7 @@ final class OwnedArchiveValidationTest {
               }
             }
           }
-          builder.addStored(
+          builder.add(
               new EntryMetadata(
                   ArchiveFamily.TES3_BSA,
                   ArchiveEncoding.tes3(),
@@ -151,7 +151,9 @@ final class OwnedArchiveValidationTest {
                   1,
                   1,
                   new EntryMetadata.Tes3(0, 0, 0, 0)),
-              0);
+              0,
+              1,
+              OwnedArchive.PayloadCodec.STORED);
           return new ArchiveInspection(
               new ArchiveDetection(
                   DetectionStatus.SUPPORTED_FAMILY,
