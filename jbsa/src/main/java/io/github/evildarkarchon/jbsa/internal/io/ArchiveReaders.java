@@ -21,11 +21,13 @@ public final class ArchiveReaders {
         operation,
         policy,
         builder -> {
+          // The same recognizer and prefix length as BethesdaArchives.detect. Every reader reports
+          // this value unchanged, so detect and inspect agree on the evidence (JBSA-DET-001).
           ArchiveDetection detection =
               Detection.recognize(
                   builder.readSelectors((int) Math.min(36, builder.size())).array());
           if (detection.family().filter(ArchiveFamily.TES3_BSA::equals).isPresent())
-            return Tes3Reader.load(builder, path, options, operation, policy);
+            return Tes3Reader.load(builder, detection, path, options, operation, policy);
           if (detection
               .family()
               .filter(
@@ -33,7 +35,8 @@ public final class ArchiveReaders {
                       family == ArchiveFamily.TES4_BSA
                           || family == ArchiveFamily.FO3_FNV_SKYRIM_LE_BSA
                           || family == ArchiveFamily.SSE_BSA)
-              .isPresent()) return BsaReader.load(builder, path, options, operation, policy);
+              .isPresent())
+            return BsaReader.load(builder, detection, path, options, operation, policy);
           boolean generalBa2 =
               detection.ba2Subtype().filter(Ba2Subtype.GNRL::equals).isPresent()
                   && detection.wireVersion().isPresent()
@@ -52,7 +55,7 @@ public final class ArchiveReaders {
                       .isPresent()
                   || qualifiedFallback))
             return io.github.evildarkarchon.jbsa.internal.ba2.Ba2Reader.load(
-                builder, path, options, operation, policy);
+                builder, detection, path, options, operation, policy);
           IoContext context = IoContext.of(path, operation);
           boolean ddsBa2 =
               detection.ba2Subtype().filter(Ba2Subtype.DX10::equals).isPresent()
@@ -68,7 +71,7 @@ public final class ArchiveReaders {
                       .isPresent()
                   || qualifiedFallback))
             return io.github.evildarkarchon.jbsa.internal.ba2.DdsBa2Reader.load(
-                builder, path, options, operation, policy);
+                builder, detection, path, options, operation, policy);
           throw switch (detection.status()) {
             case UNRECOGNIZED -> context.failure(FailureKind.FORMAT, "archive.unrecognized", null);
             case INDETERMINATE ->

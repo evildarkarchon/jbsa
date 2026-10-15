@@ -14,6 +14,9 @@ import java.util.*;
 /** Bounded common 0x67/0x68/0x69 BSA reader; the parent archive owns lazy payload access. */
 public final class BsaReader {
   private final OwnedArchive.IndexBuilder builder;
+  // Dispatch's selector evidence, reported unchanged so inspection keeps every observed byte
+  // (JBSA-DET-001). Readers never rebuild it from the bytes they parse.
+  private final ArchiveDetection detection;
   private final IoContext context;
   private final Charset encoding;
   private final FailureRetention retention;
@@ -24,12 +27,14 @@ public final class BsaReader {
 
   private BsaReader(
       OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
       Path path,
       OpenOptions options,
       Operation operation,
       DiagnosticPolicy policy)
       throws ArchiveException {
     this.builder = builder;
+    this.detection = detection;
     context = IoContext.of(path, operation);
     encoding = Tes3Names.encoding(options.compatibilityProfile(), context);
     retention = new FailureRetention(options.resourceLimits(), operation, policy);
@@ -37,20 +42,28 @@ public final class BsaReader {
 
   /** Loads structural metadata with standard warning policy. */
   public static ArchiveInspection load(
-      OwnedArchive.IndexBuilder builder, Path path, OpenOptions options, Operation operation)
+      OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
+      Path path,
+      OpenOptions options,
+      Operation operation)
       throws IOException {
-    return load(builder, path, options, operation, DiagnosticPolicy.standard());
+    return load(builder, detection, path, options, operation, DiagnosticPolicy.standard());
   }
 
-  /** Applies warning policy before retention limits and attaches rejected structural evidence. */
+  /**
+   * Applies warning policy before retention limits and attaches rejected structural evidence. The
+   * returned inspection carries {@code detection} unchanged.
+   */
   public static ArchiveInspection load(
       OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
       Path path,
       OpenOptions options,
       Operation operation,
       DiagnosticPolicy policy)
       throws IOException {
-    BsaReader reader = new BsaReader(builder, path, options, operation, policy);
+    BsaReader reader = new BsaReader(builder, detection, path, options, operation, policy);
     ArchiveInspection result;
     try {
       result = reader.parse();
@@ -337,14 +350,6 @@ public final class BsaReader {
             new ValidationExtent.Structure(),
             retention.diagnostics());
     retention.latestAssessment(assessment);
-    ArchiveDetection detection =
-        new ArchiveDetection(
-            DetectionStatus.SUPPORTED_FAMILY,
-            new WireName(new byte[] {66, 83, 65, 0}),
-            Optional.of(family),
-            archiveEncoding.wireVersion(),
-            Optional.empty(),
-            OptionalLong.empty());
     return new ArchiveInspection(
         detection,
         new ArchiveMetadata.VersionedBsa(

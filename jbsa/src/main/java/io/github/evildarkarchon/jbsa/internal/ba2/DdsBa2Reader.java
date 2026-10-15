@@ -13,6 +13,9 @@ import java.util.*;
 /** Bounded DDS BA2 index reader with parent-owned lazy payload access. */
 public final class DdsBa2Reader {
   private final OwnedArchive.IndexBuilder builder;
+  // Dispatch's selector evidence, reported unchanged so inspection keeps every observed byte
+  // (JBSA-DET-001). Readers never rebuild it from the bytes they parse.
+  private final ArchiveDetection detection;
   private final IoContext context;
   private final Charset encoding;
   private final DdsTarget target;
@@ -23,12 +26,14 @@ public final class DdsBa2Reader {
   /** Binds metadata accounting and warning retention to the owning operation. */
   private DdsBa2Reader(
       OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
       Path path,
       OpenOptions options,
       Operation operation,
       DiagnosticPolicy policy)
       throws ArchiveException {
     this.builder = builder;
+    this.detection = detection;
     context = IoContext.of(path, operation);
     encoding = Tes3Names.encoding(options.compatibilityProfile(), context);
     compatibilityProfile = options.compatibilityProfile();
@@ -46,20 +51,28 @@ public final class DdsBa2Reader {
 
   /** Loads structural metadata with standard warning policy. */
   public static ArchiveInspection load(
-      OwnedArchive.IndexBuilder builder, Path path, OpenOptions options, Operation operation)
+      OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
+      Path path,
+      OpenOptions options,
+      Operation operation)
       throws IOException {
-    return load(builder, path, options, operation, DiagnosticPolicy.standard());
+    return load(builder, detection, path, options, operation, DiagnosticPolicy.standard());
   }
 
-  /** Applies warning policy before retention limits and attaches rejected structural evidence. */
+  /**
+   * Applies warning policy before retention limits and attaches rejected structural evidence. The
+   * returned inspection carries {@code detection} unchanged.
+   */
   public static ArchiveInspection load(
       OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
       Path path,
       OpenOptions options,
       Operation operation,
       DiagnosticPolicy policy)
       throws IOException {
-    DdsBa2Reader reader = new DdsBa2Reader(builder, path, options, operation, policy);
+    DdsBa2Reader reader = new DdsBa2Reader(builder, detection, path, options, operation, policy);
     ArchiveInspection result;
     try {
       result = reader.parse();
@@ -322,16 +335,6 @@ public final class DdsBa2Reader {
             new ValidationExtent.Structure(),
             retention.diagnostics());
     retention.latestAssessment(assessment);
-    ArchiveDetection detection =
-        new ArchiveDetection(
-            version == 3 && !rawLz4
-                ? DetectionStatus.UNSUPPORTED_VARIANT
-                : DetectionStatus.SUPPORTED_FAMILY,
-            new WireName(new byte[] {66, 84, 68, 88}),
-            version == 3 && !rawLz4 ? Optional.empty() : Optional.of(family),
-            archiveEncoding.wireVersion(),
-            Optional.of(Ba2Subtype.DX10),
-            archiveEncoding.compressionMethod());
     return new ArchiveInspection(
         detection,
         new ArchiveMetadata.DdsBa2(family, archiveEncoding, count, nameOffset, extraHeader),
