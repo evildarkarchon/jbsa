@@ -82,6 +82,49 @@ final class SharedDispositionRulesTest {
           + "4800000000000000 00000000 08000000 0000 0000 0df0adba "
           + "0700000000000000 ff";
 
+  // Further noncanonical causes, each one field changed from a canonical fixture in
+  // InspectionDetectionParityTest. TES3 stores a zero name hash instead of 0x8000003000000000.
+  private static final String TES3_HASH_MISMATCH =
+      "00010000 0e000000 01000000 01000000 00000000 00000000 6100 0000000000000000 07";
+  // Folder "a" stores a zero folder hash; its file record keeps the correct hash.
+  private static final String BSA_FOLDER_HASH_MISMATCH =
+      "42534100 67000000 24000000 03000000 01000000 01000000 02000000 02000000 00000000 "
+          + "0000000000000000 01000000 36000000 026100 "
+          + "6200016200000000 01000000 49000000 6200 07";
+  // The 0x69 folder record's paddingBefore field at 48 stores 1.
+  private static final String SSE_NONZERO_FOLDER_PADDING =
+      "42534100 69000000 24000000 03000000 01000000 01000000 02000000 02000000 00000000 "
+          + "6100016100000000 01000000 01000000 3e000000 00000000 026100 "
+          + "6200016200000000 01000000 51000000 6200 07";
+  // The record for a/b.txt stores a zero basename hash instead of 0xA3BC0074.
+  private static final String GENERAL_BASENAME_HASH_MISMATCH =
+      "42544458 01000000 474e524c 01000000 3d00000000000000 "
+          + "00000000 74787400 ce51b53a 00011000 3c00000000000000 00000000 01000000 0df0adba "
+          + "07 0700 612f622e747874";
+  // The record for a/b.txt stores a zero sentinel instead of 0xBAADF00D.
+  private static final String GENERAL_SENTINEL_MISMATCH =
+      "42544458 01000000 474e524c 01000000 3d00000000000000 "
+          + "7400bca3 74787400 ce51b53a 00011000 3c00000000000000 00000000 01000000 00000000 "
+          + "07 0700 612f622e747874";
+  // One stored 4x4 BC1 chunk without a filename table: both are noncanonical on their own.
+  private static final String DDS_STORED_CHUNK =
+      "42544458 01000000 44583130 01000000 0000000000000000 "
+          + "00000000 64647300 00000000 00 01 1800 0400 0400 01 47 00 00 "
+          + "4800000000000000 00000000 08000000 0000 0000 0df0adba "
+          + "0700000000000000";
+  // The same texture with mod index 1 and a zero chunk sentinel.
+  private static final String DDS_MOD_INDEX_AND_SENTINEL =
+      "42544458 01000000 44583130 01000000 0000000000000000 "
+          + "00000000 64647300 00000000 01 01 1800 0400 0400 01 47 00 00 "
+          + "4800000000000000 00000000 08000000 0000 0000 00000000 "
+          + "0700000000000000";
+  // Version 2 with one zlib chunk, whose extra header at 24 stores 2 instead of 1.
+  private static final String STARFIELD_DDS_EXTRA_HEADER =
+      "42544458 02000000 44583130 01000000 0000000000000000 0200000000000000 "
+          + "00000000 64647300 00000000 00 01 1800 0400 0400 01 47 00 00 "
+          + "5000000000000000 13000000 08000000 0000 0000 0df0adba "
+          + "7801010800f7ff070000000000000000400008";
+
   /** Supplies one archive per reader shape whose first entry's name cannot be decoded. */
   static Stream<Arguments> undecodableNames() {
     return Stream.of(
@@ -112,6 +155,53 @@ final class SharedDispositionRulesTest {
   static Stream<Arguments> inspectable() {
     return Stream.concat(
         undecodableNames(), trailingData().map(a -> Arguments.of(a.get()[0], a.get()[1])));
+  }
+
+  /**
+   * Supplies every noncanonical fixture with one diagnostic identifier its outcome must carry: the
+   * undecodable-name and trailing-data fixtures, plus further family causes such as hash
+   * mismatches, nonzero folder padding, BA2 constant fields and a stored DX10 chunk.
+   */
+  static Stream<Arguments> noncanonicalOutcomes() {
+    return Stream.of(
+            undecodableNames()
+                .map(
+                    a ->
+                        Arguments.of(
+                            a.get()[0], a.get()[1], "archive-name.undecodable-wire-bytes")),
+            trailingData().map(a -> Arguments.of(a.get()[0], a.get()[1], a.get()[2])),
+            Stream.of(
+                Arguments.of(
+                    ArchiveFamily.TES3_BSA, TES3_HASH_MISMATCH, "tes3.stored-hash-mismatch"),
+                Arguments.of(
+                    ArchiveFamily.TES4_BSA, BSA_FOLDER_HASH_MISMATCH, "bsa.folder-hash-mismatch"),
+                Arguments.of(
+                    ArchiveFamily.SSE_BSA,
+                    SSE_NONZERO_FOLDER_PADDING,
+                    "bsa.nonzero-folder-padding"),
+                Arguments.of(
+                    ArchiveFamily.FO4_GENERAL_BA2,
+                    GENERAL_BASENAME_HASH_MISMATCH,
+                    "ba2.basename-hash-mismatch"),
+                Arguments.of(
+                    ArchiveFamily.FO4_GENERAL_BA2,
+                    GENERAL_SENTINEL_MISMATCH,
+                    "gnrl.sentinel-mismatch"),
+                Arguments.of(ArchiveFamily.FO4_DDS_BA2, DDS_STORED_CHUNK, "dx10.stored-chunk"),
+                Arguments.of(ArchiveFamily.FO4_DDS_BA2, DDS_STORED_CHUNK, "ba2.missing-name-table"),
+                Arguments.of(
+                    ArchiveFamily.FO4_DDS_BA2,
+                    DDS_MOD_INDEX_AND_SENTINEL,
+                    "dx10.nonzero-mod-index"),
+                Arguments.of(
+                    ArchiveFamily.FO4_DDS_BA2,
+                    DDS_MOD_INDEX_AND_SENTINEL,
+                    "dx10.sentinel-mismatch"),
+                Arguments.of(
+                    ArchiveFamily.STARFIELD_DDS_BA2,
+                    STARFIELD_DDS_EXTRA_HEADER,
+                    "ba2.extra-header-value")))
+        .flatMap(cases -> cases);
   }
 
   /**
@@ -173,14 +263,21 @@ final class SharedDispositionRulesTest {
         trailing.getFirst().location().byteSpan());
   }
 
-  /** A Tolerated Noncanonical Archive always produces at least one diagnostic explaining why. */
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("inspectable")
-  void noncanonicalOutcomeCarriesDiagnostics(ArchiveFamily family, String hex) throws Exception {
+  /**
+   * A Tolerated Noncanonical Archive always produces at least one diagnostic explaining why,
+   * including the diagnostic for the fixture's own noncanonical cause.
+   */
+  @ParameterizedTest(name = "{0} {2}")
+  @MethodSource("noncanonicalOutcomes")
+  void noncanonicalOutcomeCarriesDiagnostics(ArchiveFamily family, String hex, String identifier)
+      throws Exception {
     Path path = literal(hex);
     ArchiveAssessment inspected = BethesdaArchives.standard().inspect(path).assessment();
     assertEquals(ArchiveDisposition.TOLERATED_NONCANONICAL, inspected.disposition());
     assertFalse(inspected.diagnostics().isEmpty());
+    assertTrue(
+        inspected.diagnostics().stream().anyMatch(d -> d.identifier().equals(identifier)),
+        () -> identifier + " missing from " + inspected.diagnostics());
     // Opening reports the same disposition; its diagnostics differ only by their operation.
     try (OpenArchive archive = BethesdaArchives.standard().open(path, OpenOptions.standard())) {
       ArchiveAssessment opened = archive.inspection().assessment();
