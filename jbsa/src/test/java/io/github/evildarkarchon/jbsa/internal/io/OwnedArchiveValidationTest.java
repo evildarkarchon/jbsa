@@ -122,15 +122,15 @@ final class OwnedArchiveValidationTest {
         path,
         limits,
         Operation.OPEN,
-        builder -> {
-          builder.declareEntries(1);
+        session -> {
+          session.declareEntries(1);
           if (exhaustCredits) {
             // First fill in bounded windows, then consume the remainder without retaining buffers.
             // Failed reservations are atomic, allowing the fixture's validated index to finish.
             for (int window : new int[] {65536, 64}) {
               while (true) {
                 try {
-                  builder.readMetadata(0, window);
+                  session.readMetadata(0, window);
                 } catch (ArchiveException full) {
                   assertEquals(
                       "io.resource-capacity",
@@ -140,7 +140,7 @@ final class OwnedArchiveValidationTest {
               }
             }
           }
-          builder.addStored(
+          session.add(
               new EntryMetadata(
                   ArchiveFamily.TES3_BSA,
                   ArchiveEncoding.tes3(),
@@ -151,7 +151,9 @@ final class OwnedArchiveValidationTest {
                   1,
                   1,
                   new EntryMetadata.Tes3(0, 0, 0, 0)),
-              0);
+              0,
+              1,
+              OwnedArchive.PayloadCodec.STORED);
           return new ArchiveInspection(
               new ArchiveDetection(
                   DetectionStatus.SUPPORTED_FAMILY,

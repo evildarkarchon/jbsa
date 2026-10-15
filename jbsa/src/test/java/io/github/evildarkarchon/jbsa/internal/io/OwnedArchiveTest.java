@@ -38,9 +38,9 @@ final class OwnedArchiveTest {
                     path,
                     limits,
                     Operation.OPEN,
-                    builder -> {
-                      builder.readMetadata(0, 1);
-                      builder.readName(1, 1);
+                    session -> {
+                      session.readMetadata(0, 1);
+                      session.readName(1, 1);
                       throw new AssertionError("Metadata limit must prevent the second read");
                     }));
     assertEquals("maxMetadataBytes", failure.diagnostics().getFirst().values().get("field"));
@@ -141,9 +141,9 @@ final class OwnedArchiveTest {
         path,
         limits,
         Operation.OPEN,
-        builder -> {
-          builder.declareEntries(1);
-          builder.addStored(
+        session -> {
+          session.declareEntries(1);
+          session.add(
               new EntryMetadata(
                   ArchiveFamily.TES3_BSA,
                   ArchiveEncoding.tes3(),
@@ -154,7 +154,9 @@ final class OwnedArchiveTest {
                   length,
                   length,
                   new EntryMetadata.Tes3(0, 0, 0, 0)),
-              0);
+              0,
+              length,
+              OwnedArchive.PayloadCodec.STORED);
           return inspection;
         });
   }

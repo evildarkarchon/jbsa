@@ -1,6 +1,6 @@
 schema_version: 2
 specification:
-  version: 0.19.0
+  version: 0.20.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -162,11 +162,16 @@ requirements:
       anchor: jbsa-bsa-004
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245
+      - https://github.com/evildarkarchon/jbsa/issues/75
     lifecycle_state: active
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
-    test_evidence: []
+      - https://github.com/evildarkarchon/jbsa/issues/75
+    test_evidence:
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#opensStoredVersion69FolderRecords"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#treatsNonzeroFolderPaddingAsNoncanonical"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#diagnosesEachNonzeroFolderPaddingField"
   - id: JBSA-BSA-005
     owner:
       document: docs/spec/formats/versioned-bsa.md
@@ -292,11 +297,16 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502
       - https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+      - https://github.com/evildarkarchon/jbsa/issues/75
     lifecycle_state: active
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
-    test_evidence: []
+      - https://github.com/evildarkarchon/jbsa/issues/75
+    test_evidence:
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#treatsNonzeroFolderPaddingAsNoncanonical"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#diagnosesEachNonzeroFolderPaddingField"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#canonicalFolderPaddingProducesNoDiagnostic"
   - id: JBSA-BSA-015
     owner:
       document: docs/spec/formats/versioned-bsa.md

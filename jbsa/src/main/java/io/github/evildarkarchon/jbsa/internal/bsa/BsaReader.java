@@ -2,76 +2,36 @@ package io.github.evildarkarchon.jbsa.internal.bsa;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.io.*;
-import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.file.Path;
 import java.util.*;
 
 /** Bounded common 0x67/0x68/0x69 BSA reader; the parent archive owns lazy payload access. */
 public final class BsaReader {
-  private final OwnedArchive.IndexBuilder builder;
+  private final IndexSession session;
   private final IoContext context;
-  private final Charset encoding;
-  private final FailureRetention retention;
-  private boolean noncanonical;
   private int version;
   private ArchiveFamily family;
   private ArchiveEncoding archiveEncoding;
 
-  private BsaReader(
-      OwnedArchive.IndexBuilder builder,
-      Path path,
-      OpenOptions options,
-      Operation operation,
-      DiagnosticPolicy policy)
-      throws ArchiveException {
-    this.builder = builder;
-    context = IoContext.of(path, operation);
-    encoding = Tes3Names.encoding(options.compatibilityProfile(), context);
-    retention = new FailureRetention(options.resourceLimits(), operation, policy);
+  /** Binds the walk to the session that owns its reads, rules and assessment. */
+  private BsaReader(IndexSession session) {
+    this.session = session;
+    context = session.context();
   }
 
-  /** Loads structural metadata with standard warning policy. */
-  public static ArchiveInspection load(
-      OwnedArchive.IndexBuilder builder, Path path, OpenOptions options, Operation operation)
-      throws IOException {
-    return load(builder, path, options, operation, DiagnosticPolicy.standard());
-  }
-
-  /** Applies warning policy before retention limits and attaches rejected structural evidence. */
-  public static ArchiveInspection load(
-      OwnedArchive.IndexBuilder builder,
-      Path path,
-      OpenOptions options,
-      Operation operation,
-      DiagnosticPolicy policy)
-      throws IOException {
-    BsaReader reader = new BsaReader(builder, path, options, operation, policy);
-    ArchiveInspection result;
-    try {
-      result = reader.parse();
-    } catch (ArchiveException failure) {
-      reader.retention.accept(failure);
-      if (failure.kind() == FailureKind.FORMAT)
-        reader.retention.latestAssessment(
-            new ArchiveAssessment(
-                ArchiveDisposition.REJECTED,
-                new ValidationExtent.Structure(),
-                reader.retention.diagnostics()));
-      throw reader.retention.finish(List.of());
-    }
-    ArchiveException rejected = reader.retention.finish(List.of());
-    if (rejected != null) throw rejected;
-    return result;
+  /**
+   * Walks a 0x67, 0x68 or 0x69 index into {@code session} without reading payloads beyond the
+   * bounded cubemap probe; the session owns the failure handling and the Archive Assessment.
+   */
+  public static ArchiveMetadata walk(IndexSession session) throws IOException {
+    return new BsaReader(session).walk();
   }
 
   /** Checks section arithmetic before allocation and preserves serialized name association. */
-  private ArchiveInspection parse() throws IOException {
-    ByteBuffer header = builder.readMetadata(0, 36);
+  private ArchiveMetadata walk() throws IOException {
+    ByteBuffer header = session.readMetadata(0, 36);
     if (header.getInt() != 0x00415342) throw malformed("bsa.invalid-selector");
     version = header.getInt();
     if (version != 0x67 && version != 0x68 && version != 0x69)
@@ -100,40 +60,39 @@ public final class BsaReader {
         ExactIo.end(
             recordsOffset,
             ExactIo.multiply(folderCount, folderRecordSize, context),
-            builder.size(),
+            session.size(),
             context);
     long namesStart =
-        ExactIo.end(blocksStart, ExactIo.multiply(count, 16, context), builder.size(), context);
-    namesStart = ExactIo.end(namesStart, folderNamesLength, builder.size(), context);
+        ExactIo.end(blocksStart, ExactIo.multiply(count, 16, context), session.size(), context);
+    namesStart = ExactIo.end(namesStart, folderNamesLength, session.size(), context);
     if ((flags & 1) != 0)
-      namesStart = ExactIo.end(namesStart, folderCount, builder.size(), context);
-    long dataStart = ExactIo.end(namesStart, fileNamesLength, builder.size(), context);
-    builder.declareEntries(count);
-    List<EntryMetadata> entries = new ArrayList<>();
-    List<Span> spans = new ArrayList<>();
-    Set<NormalizedNameIdentity> identities = new HashSet<>();
+      namesStart = ExactIo.end(namesStart, folderCount, session.size(), context);
+    long dataStart = ExactIo.end(namesStart, fileNamesLength, session.size(), context);
+    session.declareEntries(count);
     NameCursor names = new NameCursor(namesStart, dataStart);
     long block = blocksStart, ordinal = 0, folderBytes = 0;
     for (long folderOrdinal = 0; folderOrdinal < folderCount; folderOrdinal++) {
       long folderField = recordsOffset + folderOrdinal * folderRecordSize;
-      ByteBuffer folder = builder.readMetadata(folderField, folderRecordSize);
+      ByteBuffer folder = session.readMetadata(folderField, folderRecordSize);
       long folderHash = folder.getLong(), files = u32(folder), paddingBefore = 0, paddingAfter = 0;
       if (version == 0x69) paddingBefore = u32(folder);
       long folderOffset = u32(folder);
       if (version == 0x69) {
         paddingAfter = u32(folder);
-        // Padding is ignorable for bounded parsing but cannot be produced canonically.
-        noncanonical |= paddingBefore != 0 || paddingAfter != 0;
+        // Padding is ignorable for bounded parsing but cannot be produced canonically, so each
+        // nonzero field is a diagnosed noncanonical warning (JBSA-BSA-004, JBSA-BSA-014).
+        checkPadding(paddingBefore, "paddingBefore", folderField + 12);
+        checkPadding(paddingAfter, "paddingAfter", folderField + 20);
       }
       if (files > count - ordinal || folderOffset != block + fileNamesLength)
         throw malformed("bsa.invalid-folder-record");
       WireName folderName = null;
       long folderNameStart = block;
       if ((flags & 1) != 0) {
-        int length = Byte.toUnsignedInt(builder.readMetadata(block++, 1).get());
+        int length = Byte.toUnsignedInt(session.readMetadata(block++, 1).get());
         if (length == 0) throw malformed("bsa.invalid-folder-name");
         ExactIo.end(block, length, namesStart, context);
-        byte[] bytes = builder.readName(block, length).bytes();
+        byte[] bytes = session.readName(block, length).bytes();
         if (bytes[length - 1] != 0) throw malformed("bsa.unterminated-folder-name");
         for (int i = 0; i < length - 1; i++)
           if (bytes[i] == 0) throw malformed("bsa.invalid-folder-name");
@@ -147,7 +106,7 @@ public final class BsaReader {
       if (files == 0) checkHash(folderName, false, folderHash, -1, null, "folderHash", folderField);
       for (long local = 0; local < files; local++, ordinal++) {
         long fileField = block;
-        ByteBuffer file = builder.readMetadata(block, 16);
+        ByteBuffer file = session.readMetadata(block, 16);
         block += 16;
         long hash = file.getLong(), sizeToggle = u32(file), offset = u32(file);
         long size = sizeToggle & ~0x40000000L;
@@ -162,8 +121,10 @@ public final class BsaReader {
                 folderHash,
                 ordinal,
                 hash);
-        String folderText = decode(folderName, ordinal, synthetic, "folder", folderNameStart);
-        String basenameText = decode(basename, ordinal, synthetic, "basename", nameStart);
+        String folderText =
+            session.decodeComponent(folderName, ordinal, synthetic, "folder", folderNameStart);
+        String basenameText =
+            session.decodeComponent(basename, ordinal, synthetic, "basename", nameStart);
         if (folderName != null) wire.put("folder", folderName);
         if (basename != null) wire.put("basename", basename);
         String display =
@@ -172,36 +133,32 @@ public final class BsaReader {
                 : synthetic;
         Optional<NormalizedNameIdentity> identity =
             folderText != null && basenameText != null
-                ? NormalizedNameIdentity.from(display, encoding)
+                ? session.identify(display, "bsa.duplicate-name")
                 : Optional.empty();
-        if (identity.isPresent() && !identities.add(identity.orElseThrow()))
-          throw malformed("bsa.duplicate-name");
         if (local == 0)
           checkHash(folderName, false, folderHash, ordinal, display, "folderHash", folderField);
         checkHash(basename, true, hash, ordinal, display, "nameHash", fileField);
         if (offset < dataStart) throw malformed("bsa.payload-overlaps-index");
-        long end = ExactIo.end(offset, size, builder.size(), context);
+        long end = ExactIo.end(offset, size, session.size(), context);
         if (offset > Integer.MAX_VALUE)
-          warning(
+          session.warning(
               "bsa.payload-offset-over-signed-2gib",
-              ordinal,
-              display,
-              "dataOffset",
-              offset,
-              0,
+              session.location(ordinal, display, "dataOffset", offset, 0),
               Map.of(
-                  "stored", Long.toString(offset), "expected", Integer.toString(Integer.MAX_VALUE)),
-              false);
-        if (size > 0) spans.add(new Span(offset, end));
+                  "stored",
+                  Long.toString(offset),
+                  "expected",
+                  Integer.toString(Integer.MAX_VALUE)));
+        session.payload(offset, end);
         boolean compressed = ((flags & 4) != 0) ^ ((sizeToggle & 0x40000000L) != 0);
         // Oblivion's 0x0100 and XMem markers do not introduce embedded names or change zlib.
         boolean embedded = version != 0x67 && (flags & 0x100) != 0;
         long contentOffset = offset, contentSize = size;
         if (embedded) {
           if (contentSize == 0) throw malformed("bsa.invalid-embedded-name-framing");
-          int length = Byte.toUnsignedInt(builder.readMetadata(contentOffset++, 1).get());
+          int length = Byte.toUnsignedInt(session.readMetadata(contentOffset++, 1).get());
           ExactIo.end(contentOffset, length, end, context);
-          WireName embeddedName = builder.readName(contentOffset, length);
+          WireName embeddedName = session.readName(contentOffset, length);
           wire.put("embedded", embeddedName);
           if (folderName != null && basename != null) {
             // Compare the bounded prefix directly; a long index name must not allocate a joined
@@ -223,47 +180,32 @@ public final class BsaReader {
                           length);
             }
             if (!matches)
-              warning(
+              session.noncanonical(
                   "bsa.embedded-name-mismatch",
-                  ordinal,
-                  display,
-                  "embedded",
-                  contentOffset,
-                  length,
-                  Map.of(),
-                  true);
+                  session.location(ordinal, display, "embedded", contentOffset, length),
+                  Map.of());
           }
           if (basenameText != null && !basenameText.toLowerCase(Locale.ROOT).endsWith(".dds"))
-            warning(
+            session.warning(
                 "bsa.nontexture-with-embedded-name",
-                ordinal,
-                display,
-                "embedded",
-                contentOffset,
-                length,
-                Map.of(),
-                false);
+                session.location(ordinal, display, "embedded", contentOffset, length),
+                Map.of());
           if (version == 0x69 && !compressed)
-            warning(
+            session.warning(
                 "bsa.uncompressed-sse-embedded-name",
-                ordinal,
-                display,
-                "embedded",
-                contentOffset,
-                length,
-                Map.of(),
-                false);
+                session.location(ordinal, display, "embedded", contentOffset, length),
+                Map.of());
           contentOffset += length;
           contentSize -= 1L + length;
         }
         if (compressed && contentSize < 4) throw malformed("bsa.invalid-compressed-framing");
-        long decodedSize = compressed ? u32(builder.readMetadata(contentOffset, 4)) : contentSize;
+        long decodedSize = compressed ? u32(session.readMetadata(contentOffset, 4)) : contentSize;
         if (!embedded
             && basenameText != null
             && basenameText.toLowerCase(Locale.ROOT).endsWith(".dds")
             && decodedSize >= 128) {
           ByteBuffer dds =
-              builder.readPayloadPrefix(
+              session.readPayloadPrefix(
                   contentOffset + (compressed ? 4 : 0),
                   contentSize - (compressed ? 4 : 0),
                   decodedSize,
@@ -278,15 +220,10 @@ public final class BsaReader {
               && dds.getInt(4) == 124
               && dds.getInt(76) == 32
               && (dds.getInt(112) & 0x200) != 0)
-            warning(
+            session.warning(
                 "bsa.cubemap-without-embedded-name",
-                ordinal,
-                display,
-                "payload",
-                offset,
-                size,
-                Map.of(),
-                false);
+                session.location(ordinal, display, "payload", offset, size),
+                Map.of());
         }
         EntryMetadata metadata =
             new EntryMetadata(
@@ -309,74 +246,33 @@ public final class BsaReader {
                     sizeToggle,
                     offset,
                     compressed));
-        if (compressed && version == 0x69)
-          builder.addLz4Frame(metadata, contentOffset + 4, contentSize - 4);
-        else if (compressed) builder.addZlib(metadata, contentOffset + 4, contentSize - 4);
-        else builder.addStored(metadata, contentOffset, contentSize);
-        entries.add(metadata);
+        if (compressed)
+          session.add(
+              metadata,
+              contentOffset + 4,
+              contentSize - 4,
+              version == 0x69
+                  ? OwnedArchive.PayloadCodec.LZ4_FRAME
+                  : OwnedArchive.PayloadCodec.ZLIB);
+        else session.add(metadata, contentOffset, contentSize, OwnedArchive.PayloadCodec.STORED);
       }
     }
     if (ordinal != count
         || folderBytes != folderNamesLength
         || block != namesStart
         || names.position != dataStart) throw malformed("bsa.invalid-section-lengths");
-    spans.sort(Comparator.comparingLong(Span::start).thenComparingLong(Span::end));
-    Span previous = null;
-    for (Span span : spans) {
-      if (previous != null && span.start < previous.end && !span.equals(previous))
-        throw malformed("bsa.overlapping-payloads");
-      previous = span;
-    }
-    ArchiveAssessment assessment =
-        new ArchiveAssessment(
-            noncanonical
-                ? ArchiveDisposition.TOLERATED_NONCANONICAL
-                : ArchiveDisposition.CONFORMING,
-            new ValidationExtent.Structure(),
-            retention.diagnostics());
-    retention.latestAssessment(assessment);
-    ArchiveDetection detection =
-        new ArchiveDetection(
-            DetectionStatus.SUPPORTED_FAMILY,
-            new WireName(new byte[] {66, 83, 65, 0}),
-            Optional.of(family),
-            archiveEncoding.wireVersion(),
-            Optional.empty(),
-            OptionalLong.empty());
-    return new ArchiveInspection(
-        detection,
-        new ArchiveMetadata.VersionedBsa(
-            family,
-            archiveEncoding,
-            count,
-            recordsOffset,
-            flags,
-            folderCount,
-            folderNamesLength,
-            fileNamesLength,
-            fileFlags),
-        assessment,
-        entries);
-  }
-
-  /** Decodes strictly, keeping absent and undecodable components unresolved. */
-  private String decode(
-      WireName name, long ordinal, String display, String component, long offset) {
-    if (name == null) return null;
-    try {
-      return encoding.newDecoder().decode(ByteBuffer.wrap(name.bytes())).toString();
-    } catch (CharacterCodingException failure) {
-      warning(
-          "archive-name.undecodable-wire-bytes",
-          ordinal,
-          display,
-          component,
-          offset,
-          name.length(),
-          Map.of(),
-          true);
-      return null;
-    }
+    // Versioned BSA defines no trailing-data rule, so bytes after the last payload are not checked.
+    session.checkOverlaps("bsa.overlapping-payloads");
+    return new ArchiveMetadata.VersionedBsa(
+        family,
+        archiveEncoding,
+        count,
+        recordsOffset,
+        flags,
+        folderCount,
+        folderNamesLength,
+        fileNamesLength,
+        fileFlags);
   }
 
   /** Compares qualified ASCII components, excluding empty-stem basenames. */
@@ -393,47 +289,32 @@ public final class BsaReader {
         || (basename && !BsaNames.hasStem(name.bytes()))) return;
     long expected = BsaNames.hash(BsaNames.canonicalize(name.bytes()), basename, version);
     if (hash != expected)
-      warning(
+      session.noncanonical(
           basename ? "bsa.file-hash-mismatch" : "bsa.folder-hash-mismatch",
-          ordinal,
-          display,
-          field,
-          offset,
-          8,
+          session.location(ordinal, display, field, offset, 8),
           Map.of(
               "stored",
               String.format(Locale.ROOT, "%016X", hash),
               "expected",
-              String.format(Locale.ROOT, "%016X", expected)),
-          true);
+              String.format(Locale.ROOT, "%016X", expected)));
   }
 
-  /** Retains bounded warning evidence independently of intrinsic canonicality. */
-  private void warning(
-      String identifier,
-      long ordinal,
-      String name,
-      String field,
-      long offset,
-      long length,
-      Map<String, String> values,
-      boolean canonicality) {
-    noncanonical |= canonicality;
-    retention.diagnostic(
-        new Diagnostic(
-            identifier,
-            DiagnosticSeverity.WARNING,
-            context.operation(),
-            context.phase(),
-            new DiagnosticLocation(
-                Optional.of(context.path()),
-                ordinal < 0 ? OptionalLong.empty() : OptionalLong.of(ordinal),
-                Optional.ofNullable(name),
-                Optional.of(field),
-                Optional.of(new DiagnosticLocation.ByteSpan(offset, length)),
-                Optional.empty()),
-            new TreeMap<>(values),
-            Optional.empty()));
+  /**
+   * Warns once for a nonzero 0x69 folder padding field and marks the archive noncanonical.
+   *
+   * <p>Padding belongs to a folder record rather than an entry, so the location carries no entry
+   * ordinal or name; the field and its 4-byte span identify it.
+   *
+   * @param stored unsigned value read from the padding field
+   * @param field {@code paddingBefore} or {@code paddingAfter}
+   * @param offset absolute offset of the padding field
+   */
+  private void checkPadding(long stored, String field, long offset) {
+    if (stored != 0)
+      session.noncanonical(
+          "bsa.nonzero-folder-padding",
+          session.archiveLocation(field, offset, 4),
+          Map.of("stored", Long.toString(stored), "expected", "0"));
   }
 
   private static long u32(ByteBuffer bytes) {
@@ -441,10 +322,8 @@ public final class BsaReader {
   }
 
   private ArchiveException malformed(String identifier) {
-    return context.failure(FailureKind.FORMAT, identifier, null);
+    return session.malformed(identifier);
   }
-
-  private record Span(long start, long end) {}
 
   /** Reads each basename byte once within its declared metadata extent. */
   private final class NameCursor {
@@ -462,7 +341,7 @@ public final class BsaReader {
       ByteArrayOutputStream bytes = new ByteArrayOutputStream();
       while (position < end) {
         if (!window.hasRemaining())
-          window = builder.readMetadata(position, (int) Math.min(65536, end - position));
+          window = session.readMetadata(position, (int) Math.min(65536, end - position));
         byte value = window.get();
         position++;
         if (value == 0) return new WireName(bytes.toByteArray());
