@@ -2,7 +2,6 @@ package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.ba2.Ba2Reader;
-import io.github.evildarkarchon.jbsa.internal.ba2.DdsBa2Reader;
 import io.github.evildarkarchon.jbsa.internal.bsa.BsaReader;
 import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Reader;
 import java.io.IOException;
@@ -33,10 +32,8 @@ public final class ArchiveReaders {
             case TES3_BSA -> session.read(detection, profile, Tes3Reader::walk);
             case TES4_BSA, FO3_FNV_SKYRIM_LE_BSA, SSE_BSA ->
                 session.read(detection, profile, BsaReader::walk);
-            case FO4_GENERAL_BA2, STARFIELD_GENERAL_BA2 ->
-                session.read(detection, profile, s -> Ba2Reader.walk(s, profile));
-            case FO4_DDS_BA2, STARFIELD_DDS_BA2 ->
-                session.read(detection, profile, s -> DdsBa2Reader.walk(s, options));
+            case FO4_GENERAL_BA2, FO4_DDS_BA2, STARFIELD_GENERAL_BA2, STARFIELD_DDS_BA2 ->
+                session.read(detection, profile, s -> Ba2Reader.walk(s, detection, options));
             case null -> starfieldFallback(session, detection, options);
           };
         });
@@ -57,11 +54,14 @@ public final class ArchiveReaders {
         detection.status() == DetectionStatus.UNSUPPORTED_VARIANT
             && profile.isPresent()
             && detection.wireVersion().orElseThrow().value() == 3;
-    Optional<Ba2Subtype> subtype = detection.ba2Subtype();
-    if (qualified && subtype.filter(Ba2Subtype.GNRL::equals).isPresent())
-      return session.read(detection, profile, s -> Ba2Reader.walk(s, profile));
-    if (qualified && subtype.filter(Ba2Subtype.DX10::equals).isPresent())
-      return session.read(detection, profile, s -> DdsBa2Reader.walk(s, options));
+    boolean readable =
+        detection
+            .ba2Subtype()
+            .filter(subtype -> subtype.equals(Ba2Subtype.GNRL) || subtype.equals(Ba2Subtype.DX10))
+            .isPresent();
+    // Without a family, the reader picks its record shape from the detected subtype.
+    if (qualified && readable)
+      return session.read(detection, profile, s -> Ba2Reader.walk(s, detection, options));
     IoContext context = session.context();
     throw switch (detection.status()) {
       case UNRECOGNIZED -> context.failure(FailureKind.FORMAT, "archive.unrecognized", null);
