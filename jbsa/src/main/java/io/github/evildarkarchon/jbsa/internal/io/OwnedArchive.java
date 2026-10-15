@@ -7,7 +7,6 @@ import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -55,8 +54,12 @@ public final class OwnedArchive implements OpenArchive {
   /** Internal format integration seam; loaders validate metadata without reading payloads. */
   @FunctionalInterface
   public interface IndexLoader {
-    /** Returns detached structural evidence after populating the complete bounded index. */
-    ArchiveInspection load(IndexBuilder builder) throws IOException;
+    /**
+     * Returns detached structural evidence after populating the complete bounded index. A
+     * production loader returns {@link IndexSession#read}'s inspection; any other evidence is
+     * validated by the session before the archive is adopted.
+     */
+    ArchiveInspection load(IndexSession session) throws IOException;
   }
 
   /** Opens exactly one input and closes it if eager index construction fails. */
@@ -96,25 +99,9 @@ public final class OwnedArchive implements OpenArchive {
     ResourceBudget budget = new ResourceBudget(limits, context);
     try {
       budget.reserve(0, 0, 1, 0);
-      IndexBuilder builder = new IndexBuilder(input, budget, context);
-      ArchiveInspection inspection = Objects.requireNonNull(loader.load(builder));
-      if (builder.expected != builder.entries.size()
-          || inspection.metadata().entryCount() != builder.expected) {
-        throw context.failure(FailureKind.FORMAT, "io.index-count-mismatch", null);
-      }
-      inspection =
-          new ArchiveInspection(
-              inspection.detection(),
-              inspection.metadata(),
-              inspection.assessment(),
-              builder.entries.stream().map(StoredEntry::metadata).toList());
-      inspection =
-          ArchiveValidation.structure(
-              inspection,
-              builder.entries.stream().map(StoredEntry::metadata).toList(),
-              context,
-              new FailureRetention(limits, context.operation(), policy));
-      return new OwnedArchive(input, limits, context, budget, inspection, builder.entries);
+      IndexSession session = new IndexSession(input, budget, context, limits, policy);
+      ArchiveInspection inspection = session.complete(Objects.requireNonNull(loader.load(session)));
+      return new OwnedArchive(input, limits, context, budget, inspection, session.entries());
     } catch (IOException | RuntimeException | Error cause) {
       FailureRetention failures = new FailureRetention(limits, context.operation());
       if (cause instanceof ArchiveException failure) {
@@ -147,236 +134,10 @@ public final class OwnedArchive implements OpenArchive {
   }
 
   /**
-   * Eager index admission; format loaders remain internal and cannot publish an incomplete index.
+   * An encoded range has no decoded cache; each compressed child owns independent codec state.
+   * {@link IndexSession} fills the table during the load.
    */
-  public static final class IndexBuilder {
-    private final ArchiveInput input;
-    private final ResourceBudget budget;
-    private final IoContext context;
-    private final List<StoredEntry> entries = new ArrayList<>();
-    private long expected = -1;
-
-    /** Keeps the handle private so a loader cannot transfer or close parent ownership. */
-    private IndexBuilder(ArchiveInput input, ResourceBudget budget, IoContext context) {
-      this.input = input;
-      this.budget = budget;
-      this.context = context;
-    }
-
-    /** Returns the stable source extent without transferring handle ownership to the loader. */
-    public long size() {
-      return input.size();
-    }
-
-    /** Reads the fixed recognition prefix without charging it again as parsed format metadata. */
-    public ByteBuffer readSelectors(int length) throws IOException {
-      if (length < 0 || length > 36) throw new IllegalArgumentException("Selector extent");
-      ByteBuffer result = ByteBuffer.allocate(length).order(java.nio.ByteOrder.LITTLE_ENDIAN);
-      input.readExact(0, result);
-      return result.flip();
-    }
-
-    /** Checks the encoded count before a format loader allocates or constructs entry metadata. */
-    public void declareEntries(long count) throws ArchiveException {
-      if (expected != -1) throw new IllegalStateException("Entry count already declared");
-      ExactIo.multiply(count, 1, context);
-      budget.entryIndex(count);
-      if (count > Integer.MAX_VALUE)
-        throw context.failure(FailureKind.POLICY, "io.index-capacity", null);
-      expected = count;
-    }
-
-    /** Reads one encoded header/table window, charging metadata and heap before allocation. */
-    public ByteBuffer readMetadata(long offset, int length) throws IOException {
-      ExactIo.end(offset, length, input.size(), context);
-      if (length > ExactIo.WINDOW_BYTES)
-        throw context.failure(FailureKind.POLICY, "io.resource-capacity", null);
-      budget.metadata(length);
-      ByteBuffer result = ByteBuffer.allocate(length).order(java.nio.ByteOrder.LITTLE_ENDIAN);
-      input.readExact(offset, result);
-      return result.flip();
-    }
-
-    /** Retains an exact encoded name only after validating its full span and allocation credit. */
-    public WireName readName(long offset, long length) throws IOException {
-      ExactIo.end(offset, length, input.size(), context);
-      budget.metadata(length);
-      if (length > Integer.MAX_VALUE)
-        throw context.failure(FailureKind.POLICY, "io.resource-capacity", null);
-      byte[] bytes = new byte[Math.toIntExact(length)];
-      input.readExact(offset, ByteBuffer.wrap(bytes));
-      return new WireName(bytes);
-    }
-
-    /**
-     * Borrows at most 128 decoded bytes for format warnings without claiming complete payload
-     * validation. Codec and buffer credits are reserved before allocation and released on return.
-     *
-     * @param offset absolute stored stream offset after archive-specific framing
-     * @param streamSize exact stored stream size
-     * @param decodedSize declared decoded payload size
-     * @param codec codec required to expose the decoded prefix
-     * @param length maximum requested decoded prefix, from zero through 128 bytes
-     * @throws IOException if input, capability, codec, or resource admission fails
-     */
-    public ByteBuffer readPayloadPrefix(
-        long offset, long streamSize, long decodedSize, PayloadCodec codec, int length)
-        throws IOException {
-      if (length < 0 || length > 128) throw new IllegalArgumentException("Payload prefix extent");
-      ExactIo.end(offset, streamSize, input.size(), context);
-      try (var credit =
-          budget.reserve(
-              length
-                  + switch (codec) {
-                    case STORED -> 0;
-                    case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
-                    case LZ4_RAW -> 0;
-                    case LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
-                  },
-              switch (codec) {
-                case STORED -> 0;
-                case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
-                case LZ4_RAW -> 0;
-                case LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
-              },
-              0,
-              0)) {
-        ByteBuffer prefix =
-            ByteBuffer.allocate((int) Math.min(length, decodedSize))
-                .order(java.nio.ByteOrder.LITTLE_ENDIAN);
-        switch (codec) {
-          case LZ4_RAW ->
-              Lz4Raw.decode(
-                  (relative, bytes) -> input.readExact(offset + relative, bytes),
-                  streamSize,
-                  decodedSize,
-                  (relative, bytes) -> {
-                    if (relative < prefix.capacity()) {
-                      ByteBuffer available = bytes.slice();
-                      available.limit(
-                          (int) Math.min(available.remaining(), prefix.capacity() - relative));
-                      prefix.position(Math.toIntExact(relative));
-                      prefix.put(available);
-                    }
-                  },
-                  () -> {},
-                  budget,
-                  context);
-          case LZ4_FRAME -> {
-            try (var decoder =
-                BsaLz4Frame.decoder(
-                    (relative, bytes) -> input.readExact(offset + relative, bytes),
-                    streamSize,
-                    decodedSize,
-                    context)) {
-              while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
-                // Only the bounded prefix is requested; complete validation belongs to content EOF.
-              }
-            }
-          }
-          case ZLIB -> {
-            try (var decoder =
-                JdkZlib.decoder(
-                    (relative, bytes) -> input.readExact(offset + relative, bytes),
-                    streamSize,
-                    decodedSize,
-                    context)) {
-              while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
-                // Only the bounded prefix is requested; complete validation belongs to content EOF.
-              }
-            }
-          }
-          case STORED -> input.readExact(offset, prefix);
-        }
-        return prefix.flip();
-      }
-    }
-
-    /** Validates a stored span without touching payload bytes, retaining archive-order metadata. */
-    public void addStored(EntryMetadata metadata, long offset) throws ArchiveException {
-      addStored(metadata, offset, metadata.storedSize());
-    }
-
-    /** Admits stored content whose wire record may also include bounded framing bytes. */
-    public void addStored(EntryMetadata metadata, long offset, long contentSize)
-        throws ArchiveException {
-      if (expected < 0
-          || entries.size() >= expected
-          || metadata.ordinal() != entries.size()
-          || contentSize != metadata.decodedSize()
-          || contentSize > metadata.storedSize()) {
-        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
-      }
-      ExactIo.end(offset, contentSize, input.size(), context);
-      entries.add(new StoredEntry(metadata, offset, contentSize, PayloadCodec.STORED));
-    }
-
-    /**
-     * Admits zlib framing separately from its decoded size without eagerly decoding the payload.
-     */
-    public void addZlib(EntryMetadata metadata, long streamOffset, long streamSize)
-        throws ArchiveException {
-      if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
-        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
-      ExactIo.end(streamOffset, streamSize, input.size(), context);
-      entries.add(new StoredEntry(metadata, streamOffset, streamSize, PayloadCodec.ZLIB));
-    }
-
-    /** Admits one complete raw-LZ4 block for exact bounded decoding by its lazy content cursor. */
-    public void addLz4Raw(EntryMetadata metadata, long streamOffset, long streamSize)
-        throws ArchiveException {
-      if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
-        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
-      ExactIo.end(streamOffset, streamSize, input.size(), context);
-      entries.add(new StoredEntry(metadata, streamOffset, streamSize, PayloadCodec.LZ4_RAW));
-    }
-
-    /** Admits one complete LZ4 frame for exact validation by its lazy content cursor. */
-    public void addLz4Frame(EntryMetadata metadata, long streamOffset, long streamSize)
-        throws ArchiveException {
-      if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
-        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
-      ExactIo.end(streamOffset, streamSize, input.size(), context);
-      entries.add(new StoredEntry(metadata, streamOffset, streamSize, PayloadCodec.LZ4_FRAME));
-    }
-
-    /** Admits a generated DDS envelope followed by independently bounded texture chunks. */
-    public void addDds(
-        EntryMetadata metadata,
-        byte[] header,
-        List<EntryMetadata.DdsChunk> chunks,
-        PayloadCodec compressedCodec)
-        throws ArchiveException {
-      if (compressedCodec != PayloadCodec.ZLIB && compressedCodec != PayloadCodec.LZ4_RAW)
-        throw context.failure(FailureKind.INTERNAL, "io.invalid-dds-codec", null);
-      if (expected < 0 || entries.size() >= expected || metadata.ordinal() != entries.size())
-        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
-      long decoded = header.length;
-      for (EntryMetadata.DdsChunk chunk : chunks) {
-        ExactIo.end(
-            chunk.payloadOffset(),
-            chunk.packedSize() == 0 ? chunk.unpackedSize() : chunk.packedSize(),
-            input.size(),
-            context);
-        decoded = ExactIo.end(decoded, chunk.unpackedSize(), Long.MAX_VALUE, context);
-      }
-      if (decoded != metadata.decodedSize())
-        throw context.failure(FailureKind.FORMAT, "io.index-record-mismatch", null);
-      entries.add(
-          new StoredEntry(
-              metadata,
-              0,
-              0,
-              chunks.stream().anyMatch(c -> c.packedSize() != 0)
-                  ? compressedCodec
-                  : PayloadCodec.STORED,
-              header.clone(),
-              List.copyOf(chunks)));
-    }
-  }
-
-  /** An encoded range has no decoded cache; each compressed child owns independent codec state. */
-  private record StoredEntry(
+  record StoredEntry(
       EntryMetadata metadata,
       long offset,
       long streamSize,
@@ -384,7 +145,7 @@ public final class OwnedArchive implements OpenArchive {
       byte[] header,
       List<EntryMetadata.DdsChunk> chunks) {
     /** Retains the existing single-span representation for non-texture entries. */
-    private StoredEntry(EntryMetadata metadata, long offset, long streamSize, PayloadCodec codec) {
+    StoredEntry(EntryMetadata metadata, long offset, long streamSize, PayloadCodec codec) {
       this(metadata, offset, streamSize, codec, null, List.of());
     }
   }

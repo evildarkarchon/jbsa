@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.tes3;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.ArchiveNames;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
@@ -45,7 +46,7 @@ public final class Tes3Adapter implements FamilyAdapter<Tes3Adapter.WireName> {
     if (request.options().compression() != PackOptions.Compression.FAMILY_DEFAULT
         && request.options().compression() != PackOptions.Compression.STORED)
       throw context.failure(FailureKind.UNSUPPORTED, "tes3.unsupported-codec", null);
-    Tes3Names.encoding(request.compatibilityProfile(), context);
+    ArchiveNames.encoding(request.compatibilityProfile(), context);
     if (!request.encoding().equals(ArchiveEncoding.tes3()))
       throw context.failure(FailureKind.UNSUPPORTED, "archive.unsupported-encoding", null);
     if (request.options().archiveFlags() instanceof FlagSelection.Explicit

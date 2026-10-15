@@ -143,7 +143,7 @@ final class OwnedArchiveTest {
         Operation.OPEN,
         builder -> {
           builder.declareEntries(1);
-          builder.addStored(
+          builder.add(
               new EntryMetadata(
                   ArchiveFamily.TES3_BSA,
                   ArchiveEncoding.tes3(),
@@ -154,7 +154,9 @@ final class OwnedArchiveTest {
                   length,
                   length,
                   new EntryMetadata.Tes3(0, 0, 0, 0)),
-              0);
+              0,
+              length,
+              OwnedArchive.PayloadCodec.STORED);
           return inspection;
         });
   }

@@ -2,6 +2,7 @@ package io.github.evildarkarchon.jbsa.internal.ba2;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
+import io.github.evildarkarchon.jbsa.internal.io.ArchiveNames;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.io.Lz4Raw;
@@ -10,7 +11,6 @@ import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
 import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import io.github.evildarkarchon.jbsa.internal.pack.FamilyAdapter;
-import io.github.evildarkarchon.jbsa.internal.tes3.Tes3Names;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.CharBuffer;
@@ -74,7 +74,7 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
         family == ArchiveFamily.STARFIELD_GENERAL_BA2 || family == ArchiveFamily.STARFIELD_DDS_BA2;
     if (!dds && !starfield && family != ArchiveFamily.FO4_GENERAL_BA2)
       throw new IllegalArgumentException("Not a BA2 family");
-    Charset charset = Tes3Names.encoding(request.compatibilityProfile(), context);
+    Charset charset = ArchiveNames.encoding(request.compatibilityProfile(), context);
     PackOptions options = request.options();
     PackOptions.Compression global = options.compression();
     boolean rawLz4 =

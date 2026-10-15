@@ -59,15 +59,19 @@ public final class ArchiveValidation {
             && "123456789\u00b9\u00b2\u00b3".indexOf(stem.charAt(3)) >= 0);
   }
 
-  /** Establishes a new assessment without modifying the loader's detached structural evidence. */
-  public static ArchiveInspection structure(
-      ArchiveInspection inspection,
-      Iterable<EntryMetadata> entries,
-      IoContext context,
-      FailureRetention retention)
+  /**
+   * Establishes a new assessment without modifying the loader's detached structural evidence.
+   *
+   * <p>{@code retention} must already hold the structural assessment's diagnostics; the name
+   * warnings join them, so both share one order and one set of ceilings. Name warnings never change
+   * the disposition or extent.
+   *
+   * @throws ArchiveException if warning policy rejects a retained or new diagnostic
+   */
+  static ArchiveInspection structure(
+      ArchiveInspection inspection, IoContext context, FailureRetention retention)
       throws ArchiveException {
-    retention.assessment(inspection.assessment());
-    for (EntryMetadata entry : entries) name(entry, context, retention);
+    for (EntryMetadata entry : inspection.entries()) name(entry, context, retention);
     ArchiveAssessment assessment =
         new ArchiveAssessment(
             inspection.assessment().disposition(),
