@@ -6,6 +6,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HexFormat;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -48,6 +53,47 @@ final class Bsa69ReaderTest {
     var facts = (EntryMetadata.VersionedBsa) inspection.entries().getFirst().facts();
     assertEquals(1, facts.folderPaddingBeforeOffset());
     assertEquals(0, facts.folderPaddingAfterOffset());
+    // JBSA-BSA-014: the fixture's only folder record starts at 36, so paddingBefore is 48..52.
+    var warnings = paddingWarnings(inspection);
+    assertEquals(1, warnings.size());
+    var warning = warnings.getFirst();
+    assertEquals(DiagnosticSeverity.WARNING, warning.severity());
+    assertEquals(Optional.of("paddingBefore"), warning.location().field());
+    assertEquals(
+        Optional.of(new DiagnosticLocation.ByteSpan(48, 4)), warning.location().byteSpan());
+    assertEquals(Map.of("stored", "1", "expected", "0"), warning.values());
+  }
+
+  /** Each nonzero padding field of one folder record carries its own located warning. */
+  @Test
+  void diagnosesEachNonzeroFolderPaddingField() throws Exception {
+    var inspection =
+        BethesdaArchives.standard()
+            .inspect(
+                literal(
+                    STORED
+                        .replaceFirst("00000000 3e000000", "01000000 3e000000")
+                        .replaceFirst("3e000000 00000000", "3e000000 02000000")));
+    assertEquals(ArchiveDisposition.TOLERATED_NONCANONICAL, inspection.assessment().disposition());
+    var located =
+        paddingWarnings(inspection).stream()
+            .collect(
+                Collectors.toMap(
+                    warning -> warning.location().field().orElseThrow(), warning -> warning));
+    assertEquals(Set.of("paddingBefore", "paddingAfter"), located.keySet());
+    var after = located.get("paddingAfter");
+    assertEquals(DiagnosticSeverity.WARNING, after.severity());
+    assertEquals(Optional.of(new DiagnosticLocation.ByteSpan(56, 4)), after.location().byteSpan());
+    assertEquals(Map.of("stored", "2", "expected", "0"), after.values());
+    assertEquals(Map.of("stored", "1", "expected", "0"), located.get("paddingBefore").values());
+  }
+
+  /** Canonical zero padding stays conforming and carries no padding warning. */
+  @Test
+  void canonicalFolderPaddingProducesNoDiagnostic() throws Exception {
+    var inspection = BethesdaArchives.standard().inspect(literal(STORED));
+    assertEquals(ArchiveDisposition.CONFORMING, inspection.assessment().disposition());
+    assertEquals(List.of(), paddingWarnings(inspection));
   }
 
   /** Stored SSE entries with explicit embedded names retain the required stable warning. */
@@ -65,6 +111,13 @@ final class Bsa69ReaderTest {
             .orElseThrow();
     assertEquals(
         new DiagnosticLocation.ByteSpan(82, 3), warning.location().byteSpan().orElseThrow());
+  }
+
+  /** Selects the folder-padding warnings, leaving every other diagnostic to its own tests. */
+  private static List<Diagnostic> paddingWarnings(ArchiveInspection inspection) {
+    return inspection.assessment().diagnostics().stream()
+        .filter(d -> d.identifier().equals("bsa.nonzero-folder-padding"))
+        .toList();
   }
 
   /** Writes exact fixture bytes without calling the production serializer. */

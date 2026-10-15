@@ -122,8 +122,10 @@ public final class BsaReader {
       long folderOffset = u32(folder);
       if (version == 0x69) {
         paddingAfter = u32(folder);
-        // Padding is ignorable for bounded parsing but cannot be produced canonically.
-        noncanonical |= paddingBefore != 0 || paddingAfter != 0;
+        // Padding is ignorable for bounded parsing but cannot be produced canonically, so each
+        // nonzero field is a diagnosed noncanonical warning (JBSA-BSA-004, JBSA-BSA-014).
+        checkPadding(paddingBefore, "paddingBefore", folderField + 12);
+        checkPadding(paddingAfter, "paddingAfter", folderField + 20);
       }
       if (files > count - ordinal || folderOffset != block + fileNamesLength)
         throw malformed("bsa.invalid-folder-record");
@@ -405,6 +407,29 @@ public final class BsaReader {
               String.format(Locale.ROOT, "%016X", hash),
               "expected",
               String.format(Locale.ROOT, "%016X", expected)),
+          true);
+  }
+
+  /**
+   * Warns once for a nonzero 0x69 folder padding field and marks the archive noncanonical.
+   *
+   * <p>Padding belongs to a folder record rather than an entry, so the location carries no entry
+   * ordinal or name; the field and its 4-byte span identify it.
+   *
+   * @param stored unsigned value read from the padding field
+   * @param field {@code paddingBefore} or {@code paddingAfter}
+   * @param offset absolute offset of the padding field
+   */
+  private void checkPadding(long stored, String field, long offset) {
+    if (stored != 0)
+      warning(
+          "bsa.nonzero-folder-padding",
+          -1,
+          null,
+          field,
+          offset,
+          4,
+          Map.of("stored", Long.toString(stored), "expected", "0"),
           true);
   }
 
