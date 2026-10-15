@@ -168,7 +168,10 @@ requirements:
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/44-implement-bsa-for-skyrim-se-and-ae.md
       - https://github.com/evildarkarchon/jbsa/issues/75
-    test_evidence: []
+    test_evidence:
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#opensStoredVersion69FolderRecords"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#treatsNonzeroFolderPaddingAsNoncanonical"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69ReaderTest.java#diagnosesEachNonzeroFolderPaddingField"
   - id: JBSA-BSA-005
     owner:
       document: docs/spec/formats/versioned-bsa.md
