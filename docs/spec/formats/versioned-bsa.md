@@ -71,8 +71,11 @@ Version `0x69` **MUST** use a 24-byte folder record:
 `u32`. Its folder blocks and file records **MUST** otherwise use
 [JBSA-BSA-003](#jbsa-bsa-003). Canonical encode **MUST** write both padding
 fields as zero; nonzero padding is noncanonical and **MUST NOT** be emitted.
+Decode diagnoses each nonzero padding field, named `paddingBefore` and
+`paddingAfter` in record order, as specified by
+[JBSA-BSA-014](#jbsa-bsa-014).
 
-_Source decision: [accepted Reference Snapshot BSA layout](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245)._
+_Source decisions: [accepted Reference Snapshot BSA layout](https://github.com/evildarkarchon/jbsa/issues/2#issuecomment-5508994245); nonzero-padding diagnostic cross-reference by maintainer decision in specification `0.20.0` ([#75](https://github.com/evildarkarchon/jbsa/issues/75))._
 
 ## JBSA-BSA-005
 
@@ -352,7 +355,9 @@ Archive and **MUST NOT** be emitted. Synthetic display names from
 A bounded byte mismatch between an embedded full name and its complete present
 index name under [JBSA-BSA-011](#jbsa-bsa-011) **MUST** produce a stable warning
 and a Tolerated Noncanonical Archive when record and payload bounds remain
-unambiguous; the encoder **MUST NOT** emit that mismatch.
+unambiguous; the encoder **MUST NOT** emit that mismatch. Nonzero `0x69`
+folder padding under [JBSA-BSA-004](#jbsa-bsa-004) **MUST** remain decodable
+and **MUST** be a diagnosed Tolerated Noncanonical Archive.
 
 Encode **MUST** reject an empty entry set, an entry without a folder component,
 an empty extension-free basename stem, unmappable names, unpopulated payloads,
@@ -381,8 +386,9 @@ follow [JBSA-OPS-005](../operation-semantics.md#jbsa-ops-005).
 | Cubemap texture without embedded names | `bsa.cubemap-without-embedded-name` | Once per affected entry, at its payload |
 | Non-texture with embedded names | `bsa.nontexture-with-embedded-name` | Once per affected entry, at its embedded-name byte span |
 | Uncompressed `0x69` entry with embedded names | `bsa.uncompressed-sse-embedded-name` | Once per affected entry, at its embedded-name byte span |
+| Nonzero `0x69` folder padding | `bsa.nonzero-folder-padding` | Once per affected padding field, at that `paddingBefore` or `paddingAfter` field and its 4-byte span; stored value as an unsigned decimal and expected value `0` |
 
-_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [empty-stem rejection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
+_Source decisions: [accepted tolerated-noncanonical and rejection policy](https://github.com/evildarkarchon/jbsa/issues/10#issuecomment-5518347093), [accepted layered validation](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted name-validation clarification](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5524023451), [empty-stem rejection clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179502), [normalized-name-identity clarification](https://github.com/evildarkarchon/jbsa/pull/61#discussion_r3924179517), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183); nonzero `0x69` folder-padding diagnostic by maintainer decision in specification `0.20.0` ([#75](https://github.com/evildarkarchon/jbsa/issues/75))._
 
 ## JBSA-BSA-015
 
