@@ -28,27 +28,36 @@ public final class ArchiveReaders {
               Detection.recognize(
                   session.readSelectors((int) Math.min(36, session.size())).array());
           Optional<CompatibilityProfile> profile = options.compatibilityProfile();
+          IndexSession.IndexWalk ba2 = s -> Ba2Reader.walk(s, detection, options);
           return switch (detection.family().orElse(null)) {
             case TES3_BSA -> session.read(detection, profile, Tes3Reader::walk);
             case TES4_BSA, FO3_FNV_SKYRIM_LE_BSA, SSE_BSA ->
                 session.read(detection, profile, BsaReader::walk);
             case FO4_GENERAL_BA2, FO4_DDS_BA2, STARFIELD_GENERAL_BA2, STARFIELD_DDS_BA2 ->
-                session.read(detection, profile, s -> Ba2Reader.walk(s, detection, options));
-            case null -> starfieldFallback(session, detection, options);
+                session.read(detection, profile, ba2);
+            case null -> {
+              // The profile-gated Starfield version 3 fallback. Without a family, the reader picks
+              // its record shape from the detected subtype.
+              if (starfieldV3Fallback(detection, profile))
+                yield session.read(detection, profile, ba2);
+              throw unreadable(session.context(), detection);
+            }
           };
         });
   }
 
   /**
-   * Reads a BA2 that detection could not assign to a family, or reports why it cannot be read.
+   * Whether a BA2 that detection could not assign to a family is still read, through the Starfield
+   * version 3 fallback.
    *
    * <p>A Starfield version 3 BA2 whose compression method is not raw LZ4 is an unsupported variant.
    * Only the qualified Compatibility Profile decodes it, with the reader's zlib fallback; detection
    * keeps reporting it as an unsupported variant without a family.
+   *
+   * @param profile the open's Compatibility Profile; the fallback applies only when it is present
    */
-  private static ArchiveInspection starfieldFallback(
-      IndexSession session, ArchiveDetection detection, OpenOptions options) throws IOException {
-    Optional<CompatibilityProfile> profile = options.compatibilityProfile();
+  private static boolean starfieldV3Fallback(
+      ArchiveDetection detection, Optional<CompatibilityProfile> profile) {
     // An unsupported variant always carries the wire version that made it unsupported.
     boolean qualified =
         detection.status() == DetectionStatus.UNSUPPORTED_VARIANT
@@ -59,11 +68,17 @@ public final class ArchiveReaders {
             .ba2Subtype()
             .filter(subtype -> subtype.equals(Ba2Subtype.GNRL) || subtype.equals(Ba2Subtype.DX10))
             .isPresent();
-    // Without a family, the reader picks its record shape from the detected subtype.
-    if (qualified && readable)
-      return session.read(detection, profile, s -> Ba2Reader.walk(s, detection, options));
-    IoContext context = session.context();
-    throw switch (detection.status()) {
+    return qualified && readable;
+  }
+
+  /**
+   * Reports why an archive without a family cannot be read, from its detection status.
+   *
+   * @return the failure to throw; FORMAT for unrecognized or incomplete selectors, UNSUPPORTED for
+   *     an unsupported variant outside the Starfield version 3 fallback
+   */
+  private static ArchiveException unreadable(IoContext context, ArchiveDetection detection) {
+    return switch (detection.status()) {
       case UNRECOGNIZED -> context.failure(FailureKind.FORMAT, "archive.unrecognized", null);
       case INDETERMINATE ->
           context.failure(FailureKind.FORMAT, "archive.incomplete-selector", null);
