@@ -16,18 +16,23 @@ public final class Tes3Reader {
   private static final Set<String> UNSUPPORTED_ROOTS =
       Set.of("sound", "music", "video", "fonts", "splash");
   private final OwnedArchive.IndexBuilder builder;
+  // Dispatch's selector evidence, reported unchanged so inspection keeps every observed byte
+  // (JBSA-DET-001). Readers never rebuild it from the bytes they parse.
+  private final ArchiveDetection detection;
   private final IoContext context;
   private final FailureRetention retention;
   private boolean noncanonical;
 
   private Tes3Reader(
       OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
       Path path,
       OpenOptions options,
       Operation operation,
       DiagnosticPolicy policy)
       throws ArchiveException {
     this.builder = builder;
+    this.detection = detection;
     context = IoContext.of(path, operation);
     encoding = Tes3Names.encoding(options.compatibilityProfile(), context);
     retention = new FailureRetention(options.resourceLimits(), operation, policy);
@@ -50,22 +55,28 @@ public final class Tes3Reader {
    * Populates a parent-owned index and returns complete detached metadata without payload reads.
    */
   public static ArchiveInspection load(
-      OwnedArchive.IndexBuilder builder, Path path, OpenOptions options, Operation operation)
+      OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
+      Path path,
+      OpenOptions options,
+      Operation operation)
       throws IOException {
-    return load(builder, path, options, operation, DiagnosticPolicy.standard());
+    return load(builder, detection, path, options, operation, DiagnosticPolicy.standard());
   }
 
   /**
    * Retains selected policy during parse, including warnings later omitted by retention ceilings.
+   * The returned inspection carries {@code detection} unchanged.
    */
   public static ArchiveInspection load(
       OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
       Path path,
       OpenOptions options,
       Operation operation,
       DiagnosticPolicy policy)
       throws IOException {
-    Tes3Reader reader = new Tes3Reader(builder, path, options, operation, policy);
+    Tes3Reader reader = new Tes3Reader(builder, detection, path, options, operation, policy);
     ArchiveInspection result;
     try {
       result = reader.parse();
@@ -239,14 +250,6 @@ public final class Tes3Reader {
           builder.size() - payloadEnd,
           Map.of("stored", Long.toString(builder.size() - payloadEnd), "expected", "0"),
           true);
-    ArchiveDetection detection =
-        new ArchiveDetection(
-            DetectionStatus.SUPPORTED_FAMILY,
-            new WireName(new byte[] {0, 1, 0, 0}),
-            Optional.of(ArchiveFamily.TES3_BSA),
-            Optional.empty(),
-            Optional.empty(),
-            OptionalLong.empty());
     ArchiveAssessment assessment =
         new ArchiveAssessment(
             noncanonical

@@ -13,6 +13,9 @@ import java.util.*;
 /** Bounded General BA2 index reader with parent-owned lazy payload access. */
 public final class Ba2Reader {
   private final OwnedArchive.IndexBuilder builder;
+  // Dispatch's selector evidence, reported unchanged so inspection keeps every observed byte
+  // (JBSA-DET-001). Readers never rebuild it from the bytes they parse.
+  private final ArchiveDetection detection;
   private final IoContext context;
   private final Charset encoding;
   private final Optional<CompatibilityProfile> compatibilityProfile;
@@ -22,12 +25,14 @@ public final class Ba2Reader {
   /** Binds metadata accounting and warning retention to the owning operation. */
   private Ba2Reader(
       OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
       Path path,
       OpenOptions options,
       Operation operation,
       DiagnosticPolicy policy)
       throws ArchiveException {
     this.builder = builder;
+    this.detection = detection;
     context = IoContext.of(path, operation);
     encoding = Tes3Names.encoding(options.compatibilityProfile(), context);
     compatibilityProfile = options.compatibilityProfile();
@@ -36,20 +41,28 @@ public final class Ba2Reader {
 
   /** Loads structural metadata with standard warning policy. */
   public static ArchiveInspection load(
-      OwnedArchive.IndexBuilder builder, Path path, OpenOptions options, Operation operation)
+      OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
+      Path path,
+      OpenOptions options,
+      Operation operation)
       throws IOException {
-    return load(builder, path, options, operation, DiagnosticPolicy.standard());
+    return load(builder, detection, path, options, operation, DiagnosticPolicy.standard());
   }
 
-  /** Applies warning policy before retention limits and attaches rejected structural evidence. */
+  /**
+   * Applies warning policy before retention limits and attaches rejected structural evidence. The
+   * returned inspection carries {@code detection} unchanged.
+   */
   public static ArchiveInspection load(
       OwnedArchive.IndexBuilder builder,
+      ArchiveDetection detection,
       Path path,
       OpenOptions options,
       Operation operation,
       DiagnosticPolicy policy)
       throws IOException {
-    Ba2Reader reader = new Ba2Reader(builder, path, options, operation, policy);
+    Ba2Reader reader = new Ba2Reader(builder, detection, path, options, operation, policy);
     ArchiveInspection result;
     try {
       result = reader.parse();
@@ -268,16 +281,6 @@ public final class Ba2Reader {
             new ValidationExtent.Structure(),
             retention.diagnostics());
     retention.latestAssessment(assessment);
-    ArchiveDetection detection =
-        new ArchiveDetection(
-            version == 3 && !rawLz4
-                ? DetectionStatus.UNSUPPORTED_VARIANT
-                : DetectionStatus.SUPPORTED_FAMILY,
-            new WireName(new byte[] {66, 84, 68, 88}),
-            version == 3 && !rawLz4 ? Optional.empty() : Optional.of(family),
-            archiveEncoding.wireVersion(),
-            Optional.of(Ba2Subtype.GNRL),
-            archiveEncoding.compressionMethod());
     return new ArchiveInspection(
         detection,
         new ArchiveMetadata.GeneralBa2(family, archiveEncoding, count, nameOffset, extraHeader),
