@@ -29,7 +29,7 @@ final class OwnedArchiveRaceTest {
                     new ArchiveInput(channel, context),
                     ResourceLimits.standard(),
                     context,
-                    builder -> {
+                    session -> {
                       throw context.failure(FailureKind.FORMAT, "test.invalid-index", null);
                     }));
     assertEquals(FailureKind.FORMAT, failure.kind());
@@ -176,9 +176,9 @@ final class OwnedArchiveRaceTest {
         new ArchiveInput(channel, context),
         ResourceLimits.standard(),
         context,
-        builder -> {
-          builder.declareEntries(1);
-          builder.add(
+        session -> {
+          session.declareEntries(1);
+          session.add(
               new EntryMetadata(
                   ArchiveFamily.TES3_BSA,
                   ArchiveEncoding.tes3(),

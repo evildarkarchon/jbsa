@@ -150,6 +150,12 @@ public final class IndexSession {
    * Completes whatever the loader returned. An inspection from {@link #read} is already complete.
    * Any other loader (an internal test seam) supplies its own evidence; it is admitted into this
    * session's retention and validated the same way.
+   *
+   * <p>The seam exists because {@code OwnedArchiveTest}, {@code OwnedArchiveValidationTest} and
+   * {@code OwnedArchiveRaceTest} drive the load lifecycle with fake loaders that populate the
+   * session directly instead of walking a real index through {@link #read}. Their evidence must
+   * still pass the same count check and name-safety validation before {@code OwnedArchive} adopts
+   * it, so those tests cover the adoption checks production relies on.
    */
   ArchiveInspection complete(ArchiveInspection inspection) throws ArchiveException {
     if (completed != null) {
@@ -180,6 +186,7 @@ public final class IndexSession {
       throw context.failure(FailureKind.FORMAT, "io.index-count-mismatch", null);
   }
 
+  /** Returns the admitted entries' metadata in archive order, for the reported inspection. */
   private List<EntryMetadata> entryMetadata() {
     return entries.stream().map(StoredEntry::metadata).toList();
   }
@@ -400,6 +407,14 @@ public final class IndexSession {
   }
 
   /**
+   * Locates a diagnostic at an archive-level wire field, such as a header field, a folder record or
+   * trailing data, which belongs to no entry and so carries no entry ordinal or name.
+   */
+  public DiagnosticLocation archiveLocation(String field, long offset, long length) {
+    return location(-1, null, field, offset, length);
+  }
+
+  /**
    * Records a warning that makes the archive a Tolerated Noncanonical Archive. This is the only way
    * to mark an archive noncanonical, so a noncanonical outcome always carries a diagnostic.
    */
@@ -505,26 +520,32 @@ public final class IndexSession {
    * @throws ArchiveException FORMAT {@code overlapIdentifier} at the first partial overlap
    */
   public void checkOverlaps(String overlapIdentifier) throws ArchiveException {
-    checkOverlaps(overlapIdentifier, 0, 0, null);
+    checkOverlaps(overlapIdentifier, Optional.empty());
   }
 
   /**
    * Rejects registered payloads that intersect a reserved metadata region or partially overlap each
    * other, checking each span in offset order against the region first.
    *
-   * @param reservedStart first byte of the reserved region
-   * @param reservedEnd end of the reserved region, exclusive
-   * @param reservedIdentifier FORMAT identifier for a payload inside the region; null for none
+   * @param reserved the metadata region no payload may intersect
    * @throws ArchiveException FORMAT for the first offending span in offset order
    */
-  public void checkOverlaps(
-      String overlapIdentifier, long reservedStart, long reservedEnd, String reservedIdentifier)
+  public void checkOverlaps(String overlapIdentifier, ReservedRegion reserved)
+      throws ArchiveException {
+    checkOverlaps(overlapIdentifier, Optional.of(reserved));
+  }
+
+  /**
+   * The one span walk behind both public overlap checks; an empty {@code reserved} checks only
+   * partial overlaps between payloads.
+   */
+  private void checkOverlaps(String overlapIdentifier, Optional<ReservedRegion> reserved)
       throws ArchiveException {
     spans.sort(Comparator.comparingLong(Span::start).thenComparingLong(Span::end));
     Span previous = null;
     for (Span span : spans) {
-      if (reservedIdentifier != null && span.start < reservedEnd && span.end > reservedStart)
-        throw malformed(reservedIdentifier);
+      if (reserved.isPresent() && reserved.orElseThrow().intersects(span))
+        throw malformed(reserved.orElseThrow().identifier());
       if (previous != null && span.start < previous.end && !span.equals(previous))
         throw malformed(overlapIdentifier);
       previous = span;
@@ -540,8 +561,26 @@ public final class IndexSession {
    */
   public void trailingData(String identifier, long usedEnd, Map<String, String> values) {
     if (usedEnd < size())
-      noncanonical(
-          identifier, location(-1, null, "trailingData", usedEnd, size() - usedEnd), values);
+      noncanonical(identifier, archiveLocation("trailingData", usedEnd, size() - usedEnd), values);
+  }
+
+  /**
+   * A metadata region that no payload may intersect, such as a BA2 filename table.
+   *
+   * @param start first byte of the region
+   * @param end end of the region, exclusive
+   * @param identifier the family's FORMAT identifier for a payload inside the region
+   */
+  public record ReservedRegion(long start, long end, String identifier) {
+    /** Requires the family's identifier, so a reserved region always names its failure. */
+    public ReservedRegion {
+      Objects.requireNonNull(identifier, "identifier");
+    }
+
+    /** Whether a payload span shares at least one byte with this region. */
+    private boolean intersects(Span span) {
+      return span.start < end && span.end > start;
+    }
   }
 
   /** Nonempty payload range; exact duplicate ranges are shared without reading their bytes. */

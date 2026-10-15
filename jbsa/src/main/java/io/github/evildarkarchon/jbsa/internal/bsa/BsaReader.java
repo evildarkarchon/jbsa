@@ -15,6 +15,7 @@ public final class BsaReader {
   private ArchiveFamily family;
   private ArchiveEncoding archiveEncoding;
 
+  /** Binds the walk to the session that owns its reads, rules and assessment. */
   private BsaReader(IndexSession session) {
     this.session = session;
     context = session.context();
@@ -312,7 +313,7 @@ public final class BsaReader {
     if (stored != 0)
       session.noncanonical(
           "bsa.nonzero-folder-padding",
-          session.location(-1, null, field, offset, 4),
+          session.archiveLocation(field, offset, 4),
           Map.of("stored", Long.toString(stored), "expected", "0"));
   }
 

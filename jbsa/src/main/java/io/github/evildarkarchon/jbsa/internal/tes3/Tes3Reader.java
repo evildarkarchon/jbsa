@@ -15,6 +15,7 @@ public final class Tes3Reader {
   private final IndexSession session;
   private final IoContext context;
 
+  /** Binds the walk to the session that owns its reads, rules and assessment. */
   private Tes3Reader(IndexSession session) {
     this.session = session;
     context = session.context();

@@ -30,6 +30,7 @@ public final class Ba2Reader {
   // waits for the last record, so only the lowest chunk offset needs to be kept.
   private long firstPayload = Long.MAX_VALUE;
 
+  /** Binds the walk to its session and picks the record shape {@code detection} names. */
   private Ba2Reader(IndexSession session, ArchiveDetection detection, OpenOptions options) {
     this.session = session;
     context = session.context();
@@ -87,7 +88,7 @@ public final class Ba2Reader {
       if (storedExtra != 1)
         mismatch(
             "ba2.extra-header-value",
-            session.location(-1, null, "unknownValueAt24", 24, 8),
+            session.archiveLocation("unknownValueAt24", 24, 8),
             Long.toUnsignedString(storedExtra),
             "1");
     }
@@ -99,7 +100,7 @@ public final class Ba2Reader {
         if (compatibilityProfile.isEmpty()) throw unsupported("archive.unsupported-encoding");
         session.noncanonical(
             "ba2.sf3-zlib-fallback",
-            session.location(-1, null, "compressionMethod", 32, 4),
+            session.archiveLocation("compressionMethod", 32, 4),
             Map.of("stored", Long.toUnsignedString(method)));
       }
     }
@@ -119,7 +120,7 @@ public final class Ba2Reader {
     if (!named)
       session.noncanonical(
           "ba2.missing-name-table",
-          session.location(-1, null, "fileNameTableOffset", 16, 8),
+          session.archiveLocation("fileNameTableOffset", 16, 8),
           Map.of("stored", Long.toString(nameOffset)));
     if (shape.recordsEndKnownBeforeWalk) checkNamesAfterRecords(nameOffset);
     namePosition = nameOffset;
@@ -135,7 +136,8 @@ public final class Ba2Reader {
     // Empty chunks name no bytes, so the session never registers them for these overlap checks.
     if (named)
       session.checkOverlaps(
-          "ba2.overlapping-payloads", nameOffset, namePosition, "ba2.payload-overlaps-names");
+          "ba2.overlapping-payloads",
+          new IndexSession.ReservedRegion(nameOffset, namePosition, "ba2.payload-overlaps-names"));
     else session.checkOverlaps("ba2.overlapping-payloads");
     if (named) usedEnd = Math.max(usedEnd, namePosition);
     session.trailingData("ba2.trailing-data", usedEnd, Map.of());
@@ -167,6 +169,17 @@ public final class Ba2Reader {
      */
     final boolean recordsEndKnownBeforeWalk;
 
+    /**
+     * Declares one subtype's wire constants.
+     *
+     * @param selector the subtype selector octets at offset 8, as a little-endian integer
+     * @param subtype the subtype reported in the Archive Encoding
+     * @param fallout4 the family reported for a Fallout 4 wire version
+     * @param starfield the family reported for a Starfield wire version
+     * @param minimumRecordSize the fewest bytes one record can occupy
+     * @param recordsEndKnownBeforeWalk whether the records' end is known before the walk, which
+     *     decides when the index-overlap checks run
+     */
     RecordShape(
         int selector,
         Ba2Subtype subtype,
@@ -189,11 +202,19 @@ public final class Ba2Reader {
      */
     abstract long walk(long ordinal, long field) throws IOException;
 
+    /**
+     * Builds the subtype's archive metadata once every record has been walked.
+     *
+     * @param count the declared entry count
+     * @param nameOffset the stored filename table offset, reported even when no table exists
+     * @param extraHeader the value at offset 24, present only for versions with an extra header
+     */
     abstract ArchiveMetadata metadata(long count, long nameOffset, OptionalLong extraHeader);
   }
 
   /** Fixed 36-byte records, each naming one payload. */
   private final class General extends RecordShape {
+    /** Declares the {@code GNRL} selector and its fixed 36-byte record. */
     General() {
       super(
           0x4c524e47,
@@ -207,21 +228,12 @@ public final class Ba2Reader {
     @Override
     long walk(long ordinal, long field) throws IOException {
       ByteBuffer record = session.readMetadata(field, 36);
-      long baseHash = u32(record);
-      byte[] extension = new byte[4];
-      record.get(extension);
-      long directoryHash = u32(record),
-          mod = Byte.toUnsignedLong(record.get()),
-          chunks = Byte.toUnsignedLong(record.get()),
-          chunkSize = Short.toUnsignedLong(record.getShort());
+      EntryMetadata.Ba2Identity prefix = identity(record);
       long offset = record.getLong(), packed = u32(record), unpacked = u32(record);
       long sentinel = u32(record);
-      if (chunks != 1) throw malformed("gnrl.invalid-chunk-count");
-      EntryMetadata.Ba2Identity prefix =
-          new EntryMetadata.Ba2Identity(
-              baseHash, new WireName(extension), directoryHash, mod, chunks, chunkSize);
+      if (prefix.chunkCount() != 1) throw malformed("gnrl.invalid-chunk-count");
       EntryName name = name(prefix, ordinal, field);
-      constants(
+      checkModIndexAndChunkHeaderSize(
           "gnrl.nonzero-mod-index", "gnrl.chunk-header-size", 16, ordinal, name, field, prefix);
       if (sentinel != 0xbaadf00dL)
         mismatch(
@@ -258,6 +270,12 @@ public final class Ba2Reader {
   private final class Dx10 extends RecordShape {
     private final DdsTarget target;
 
+    /**
+     * Declares the {@code DX10} selector and its 48-byte minimum record, and resolves the DDS
+     * target every generated header uses.
+     *
+     * @param options supplies the explicit DDS target, or the profile that permits inferring it
+     */
     Dx10(OpenOptions options) {
       super(
           0x30315844,
@@ -285,13 +303,8 @@ public final class Ba2Reader {
     @Override
     long walk(long ordinal, long field) throws IOException {
       ByteBuffer record = session.readMetadata(field, 24);
-      long baseHash = u32(record);
-      byte[] extension = new byte[4];
-      record.get(extension);
-      long directoryHash = u32(record),
-          mod = Byte.toUnsignedLong(record.get()),
-          chunks = Byte.toUnsignedLong(record.get()),
-          chunkSize = Short.toUnsignedLong(record.getShort());
+      EntryMetadata.Ba2Identity prefix = identity(record);
+      long chunks = prefix.chunkCount();
       int height = Short.toUnsignedInt(record.getShort());
       int width = Short.toUnsignedInt(record.getShort());
       int mips = Byte.toUnsignedInt(record.get()), format = Byte.toUnsignedInt(record.get());
@@ -338,11 +351,8 @@ public final class Ba2Reader {
             new EntryMetadata.DdsChunk(offset, packed, decoded, start, endMip, sentinel));
       }
       if (nextMip != mips) throw malformed("dx10.invalid-mip-range");
-      EntryMetadata.Ba2Identity prefix =
-          new EntryMetadata.Ba2Identity(
-              baseHash, new WireName(extension), directoryHash, mod, chunks, chunkSize);
       EntryName name = name(prefix, ordinal, field);
-      constants(
+      checkModIndexAndChunkHeaderSize(
           "dx10.nonzero-mod-index", "dx10.chunk-header-size", 24, ordinal, name, field, prefix);
       byte[] ddsHeader =
           DdsEnvelope.canonicalHeader(
@@ -376,6 +386,10 @@ public final class Ba2Reader {
    */
   private record EntryName(
       String display, WireName wire, Optional<NormalizedNameIdentity> identity) {
+    /**
+     * Returns the entry's wire names keyed by component: the complete name, or none without a
+     * filename table.
+     */
     Map<String, WireName> wireNames() {
       return wire == null ? Map.of() : Map.of("complete", wire);
     }
@@ -401,8 +415,28 @@ public final class Ba2Reader {
     return new EntryName(name.display(), wire, name.identity());
   }
 
+  /**
+   * Parses the 16-byte identity prefix every BA2 record starts with: base name hash, extension,
+   * directory hash, mod index, chunk count and chunk header size. Building the identity cannot
+   * fail, because every field is read unsigned and the extension is always four octets, so parsing
+   * it before a record's own checks moves no read, span check or diagnostic.
+   *
+   * @param record the record window, positioned at its first byte and advanced past the prefix
+   */
+  private static EntryMetadata.Ba2Identity identity(ByteBuffer record) {
+    long baseHash = u32(record);
+    byte[] extension = new byte[4];
+    record.get(extension);
+    long directoryHash = u32(record),
+        mod = Byte.toUnsignedLong(record.get()),
+        chunks = Byte.toUnsignedLong(record.get()),
+        chunkSize = Short.toUnsignedLong(record.getShort());
+    return new EntryMetadata.Ba2Identity(
+        baseHash, new WireName(extension), directoryHash, mod, chunks, chunkSize);
+  }
+
   /** Diagnoses a nonzero mod index and a chunk header size other than the subtype's. */
-  private void constants(
+  private void checkModIndexAndChunkHeaderSize(
       String modId,
       String chunkSizeId,
       long expectedChunkSize,
