@@ -642,9 +642,7 @@ final class PublicationFaultsTest {
       throws ArchiveException {
     var operation = session(Operation.PACK);
     IoContext context = IoContext.of(destination, Operation.PACK);
-    var plan =
-        new PublicationTransaction.Plan.ArchiveSet(
-            destination, writers, policy, false, PublicationTransaction.SourceClose.NONE);
+    var plan = PublicationTransaction.Plan.ArchiveSet.streamed(destination, writers, policy);
     return operation.run(
         context,
         resources -> {
@@ -682,11 +680,10 @@ final class PublicationFaultsTest {
           SpillBuffer stable = SpillBuffer.open(scratch, budget, context);
           resources.register(stable::close);
           var plan =
-              new PublicationTransaction.Plan.ArchiveSet(
+              PublicationTransaction.Plan.ArchiveSet.stabilized(
                   destination,
                   writers,
                   policy,
-                  true,
                   () -> {
                     spoolCloses.incrementAndGet();
                     stable.close();

@@ -100,18 +100,6 @@ public final class ArchiveExtractor {
               entry.metadata().decodedSize(),
               entry.metadata().ordinal()));
     }
-    // Plan-level evidence, the budget's PREFLIGHT location among it, is located at the first
-    // selected entry's archive ordinal, or 0 for an empty selection (JBSA-OPS-006).
-    long planOrdinal = selected.isEmpty() ? 0 : selected.getFirst().metadata().ordinal();
-    ResourceBudget budget =
-        ResourceBudget.forMutation(
-            request.resourceLimits(),
-            new IoContext(
-                request.destination().toAbsolutePath().normalize(),
-                Operation.EXTRACT,
-                OperationPhase.PREFLIGHT,
-                OptionalLong.of(planOrdinal)));
-    resources.register(budget::close);
     var plan =
         new PublicationTransaction.Plan.Extraction(
             request.destination(),
@@ -128,6 +116,17 @@ public final class ArchiveExtractor {
             },
             // Source cleanup must succeed before the last selected file can become visible.
             () -> closeSource(source, request.source()));
+    // Plan-level evidence, the budget's PREFLIGHT location among it, is located at the first
+    // selected entry's archive ordinal, or 0 for an empty selection (JBSA-OPS-006).
+    ResourceBudget budget =
+        ResourceBudget.forMutation(
+            request.resourceLimits(),
+            new IoContext(
+                request.destination().toAbsolutePath().normalize(),
+                Operation.EXTRACT,
+                OperationPhase.PREFLIGHT,
+                OptionalLong.of(plan.planOrdinal())));
+    resources.register(budget::close);
     return new OperationSession.Published(PublicationTransaction.publish(operation, budget, plan));
   }
 

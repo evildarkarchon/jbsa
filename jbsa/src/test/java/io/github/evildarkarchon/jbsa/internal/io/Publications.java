@@ -72,9 +72,7 @@ final class Publications {
       PublicationTransaction.FileActions files)
       throws ArchiveException {
     IoContext context = IoContext.of(destination, Operation.PACK);
-    var plan =
-        new PublicationTransaction.Plan.ArchiveSet(
-            destination, writers, policy, false, PublicationTransaction.SourceClose.NONE);
+    var plan = PublicationTransaction.Plan.ArchiveSet.streamed(destination, writers, policy);
     return operation.run(
         context,
         resources -> {
@@ -153,13 +151,12 @@ final class Publications {
       ResourceLimits limits,
       PublicationTransaction.FileActions files)
       throws ArchiveException {
-    long planOrdinal = plan.entries().isEmpty() ? 0 : plan.entries().getFirst().archiveOrdinal();
     var budgetContext =
         new IoContext(
             plan.root().toAbsolutePath().normalize(),
             Operation.EXTRACT,
             OperationPhase.PREFLIGHT,
-            OptionalLong.of(planOrdinal));
+            OptionalLong.of(plan.planOrdinal()));
     return operation.run(
         IoContext.of(plan.root(), Operation.EXTRACT),
         resources -> {

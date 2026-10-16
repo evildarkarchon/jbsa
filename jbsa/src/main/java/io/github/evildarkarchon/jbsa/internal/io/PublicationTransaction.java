@@ -91,8 +91,22 @@ public final class PublicationTransaction {
     SourceClose closeSource();
 
     /**
+     * The ordinal of plan-level evidence that precedes or spans every output (JBSA-OPS-006): target
+     * preflight, private staging and its probes, and a new extraction root's Artifact. It is the
+     * first planned output's ordinal, or 0 for an empty plan, so a sparse extraction never reports
+     * an unselected entry's ordinal. This is its one definition; the extractor locates its budget
+     * here too.
+     *
+     * @return the first part's index for an archive set (always 0), or the first selected entry's
+     *     archive entry ordinal for an extraction, or 0 when it selects nothing
+     */
+    long planOrdinal();
+
+    /**
      * A finalized archive-part plan, published as one atomic set. Every part is staged before any
      * move. Stabilization that determines this plan must finish in operation-owned scratch first.
+     * The {@link #streamed} and {@link #stabilized} factories name the two shapes the Pack Pipeline
+     * builds.
      *
      * <p>Entry counting: each writer reports every final logical entry once through {@link
      * StagedFile#completedEntry}. Publication counts nothing itself.
@@ -120,6 +134,32 @@ public final class PublicationTransaction {
         writers = List.copyOf(writers);
         Objects.requireNonNull(policy, "policy");
         Objects.requireNonNull(closeSource, "closeSource");
+      }
+
+      /**
+       * A set whose parts read and close their own sources while they stage. Publication enters
+       * PROCESSING itself, and the plan holds no source to close.
+       */
+      public static ArchiveSet streamed(
+          Path destination, List<Writer> writers, TargetPolicy policy) {
+        return new ArchiveSet(destination, writers, policy, false, SourceClose.NONE);
+      }
+
+      /**
+       * A set whose payloads the operation already stabilized in PROCESSING (Q10), replayed from a
+       * spool that closes as the plan's source before the commit.
+       *
+       * @param closeSpool closes the stabilization spool
+       */
+      public static ArchiveSet stabilized(
+          Path destination, List<Writer> writers, TargetPolicy policy, SourceClose closeSpool) {
+        return new ArchiveSet(destination, writers, policy, true, closeSpool);
+      }
+
+      /** Every archive set starts at part index 0, even an empty one. */
+      @Override
+      public long planOrdinal() {
+        return 0;
       }
     }
 
@@ -164,6 +204,20 @@ public final class PublicationTransaction {
         for (int index = 1; index < entries.size(); index++)
           if (entries.get(index).archiveOrdinal() <= entries.get(index - 1).archiveOrdinal())
             throw new IllegalArgumentException("Extraction entries must keep archive order");
+      }
+
+      /** The first selected entry's archive entry ordinal, or 0 when nothing is selected. */
+      @Override
+      public long planOrdinal() {
+        return entries.isEmpty() ? 0 : entries.getFirst().archiveOrdinal();
+      }
+
+      /**
+       * Whether private workers stage this extraction: publication decides from the plan. One
+       * worker, or nothing to stage, keeps every stage on the caller thread.
+       */
+      boolean parallel() {
+        return !entries.isEmpty() && workers.workers() > 1;
       }
     }
   }
@@ -308,7 +362,7 @@ public final class PublicationTransaction {
      * Extraction entries are counted by the publication adapter after their writer completes.
      */
     public void completedEntry(long decodedBytes) throws ArchiveException {
-      if (owner.extraction != null)
+      if (owner.plan instanceof Plan.Extraction)
         throw new IllegalStateException("Extraction counts each writer once");
       owner.operationSession.processedEntry(decodedBytes);
     }
@@ -402,7 +456,8 @@ public final class PublicationTransaction {
 
   /**
    * Mutable state belongs to one synchronous invocation; no callback may retain this owner. The
-   * strategy flags below are derived from the plan once and stay private to this invocation.
+   * protocol is selected by dispatching on the sealed plan's case; the root shape is learned from
+   * target preflight and stays private to this invocation.
    */
   private static final class Session {
     private final Path destination;
@@ -411,11 +466,8 @@ public final class PublicationTransaction {
     private final FileActions files;
     private final Plan plan;
 
-    /** The extraction plan, or null for an archive set. */
-    private final Plan.Extraction extraction;
-
-    /** Whether private workers stage the extraction; publication decides from the plan. */
-    private final boolean parallel;
+    /** The operation the plan publishes for: PACK for an archive set, EXTRACT for an extraction. */
+    private final Operation operation;
 
     private final ResourceBudget budget;
     private final List<Part> parts = new ArrayList<>();
@@ -428,6 +480,10 @@ public final class PublicationTransaction {
     private Path stagedRoot;
     private boolean rootPublished;
     private boolean existingTree;
+
+    /** Whether target preflight found no extraction root, so the whole tree commits in one move. */
+    private boolean newRoot;
+
     private Part committing;
     private boolean commitInProgress;
     private final LinkedHashMap<Path, Long> createdDirectories = new LinkedHashMap<>();
@@ -441,11 +497,7 @@ public final class PublicationTransaction {
      */
     private final List<Long> plannedOrdinals;
 
-    /**
-     * The ordinal of plan-level evidence that precedes or spans every output: target preflight,
-     * private staging, and a new extraction root. It is the first planned output's ordinal, or 0
-     * for an empty plan, so a sparse extraction never reports an unselected entry's ordinal.
-     */
+    /** The ordinal of plan-level evidence, as {@link Plan#planOrdinal} defines it. */
     private final long planOrdinal;
 
     private long ordinal;
@@ -461,45 +513,41 @@ public final class PublicationTransaction {
      * cancellation or touching the disk. The borrowed budget stays alive until the caller closes
      * it, after publication has settled cleanup.
      */
-    Session(OperationSession operation, ResourceBudget budget, Plan plan, FileActions files) {
+    Session(OperationSession session, ResourceBudget budget, Plan plan, FileActions files) {
       this.plan = Objects.requireNonNull(plan, "plan");
       this.files = Objects.requireNonNull(files, "files");
       this.budget = Objects.requireNonNull(budget, "budget");
-      operationSession = Objects.requireNonNull(operation, "operation");
+      operationSession = Objects.requireNonNull(session, "operation");
       limits = budget.limits();
-      extraction = plan instanceof Plan.Extraction selected ? selected : null;
       Path target;
-      if (plan instanceof Plan.ArchiveSet set) {
-        target = set.destination();
-        policy = set.policy();
-        plannedOrdinals = partIndexes(set.writers().size());
-        processingEntered = set.processingEntered();
-        parallel = false;
-      } else {
-        target = extraction.root();
-        policy = extraction.policy();
-        plannedOrdinals = extraction.entries().stream().map(Entry::archiveOrdinal).toList();
-        processingEntered = false;
-        // One worker, or nothing to stage, keeps every stage on the caller thread.
-        parallel = !extraction.entries().isEmpty() && extraction.workers().workers() > 1;
+      switch (plan) {
+        case Plan.ArchiveSet set -> {
+          operation = Operation.PACK;
+          target = set.destination();
+          policy = set.policy();
+          plannedOrdinals = partIndexes(set.writers().size());
+          processingEntered = set.processingEntered();
+        }
+        case Plan.Extraction extraction -> {
+          operation = Operation.EXTRACT;
+          target = extraction.root();
+          policy = extraction.policy();
+          plannedOrdinals = extraction.entries().stream().map(Entry::archiveOrdinal).toList();
+          processingEntered = false;
+        }
       }
       destination = target.toAbsolutePath().normalize();
-      planOrdinal = plannedOrdinals.isEmpty() ? 0 : plannedOrdinals.getFirst();
+      planOrdinal = plan.planOrdinal();
       ordinal = planOrdinal;
     }
 
     /** The plan's writers, in plan order. */
     private List<Writer> writers() {
-      return extraction == null
-          ? ((Plan.ArchiveSet) plan).writers()
-          : extraction.entries().stream().map(Entry::writer).toList();
-    }
-
-    /** The extraction's validated names, in plan order; an archive set derives its own. */
-    private List<String> names() {
-      return extraction == null
-          ? List.of()
-          : extraction.entries().stream().map(Entry::name).toList();
+      return switch (plan) {
+        case Plan.ArchiveSet set -> set.writers();
+        case Plan.Extraction extraction ->
+            extraction.entries().stream().map(Entry::writer).toList();
+      };
     }
 
     /**
@@ -523,16 +571,16 @@ public final class PublicationTransaction {
     List<Artifact> run() {
       try {
         List<Writer> writers = writers();
-        List<String> names = names();
         if (processingEntered)
           operationSession.checkpoint(OperationPhase.PROCESSING, OptionalLong.empty());
         else operationSession.ensurePreflight();
         if (writers.size() > limits.maxOutputs())
           throw context()
               .limit("maxOutputs", limits.maxOutputs(), Integer.toString(writers.size()));
-        preflight(writers, names);
-        boolean newRoot = extraction != null && !existingTree;
-        if (extraction != null) operationSession.advance(ProgressMetric.ENTRIES, names.size());
+        switch (plan) {
+          case Plan.ArchiveSet set -> preflight(set);
+          case Plan.Extraction extraction -> preflight(extraction);
+        }
         checkpoint();
         if (!parts.isEmpty() || newRoot) {
           containment.recheckRoot(context());
@@ -554,12 +602,16 @@ public final class PublicationTransaction {
             operationSession.processing(existingTree);
           }
           phase = OperationPhase.PROCESSING;
-          if (!parallel) {
+          if (plan instanceof Plan.Extraction extraction && extraction.parallel()) {
+            stageParallel(extraction);
+            // A worker failure must leave PROCESSING interrupted, without a synthetic terminal.
+            checkpoint();
+          } else {
             for (Part part : parts) {
               ordinal = part.ordinal;
               checkpoint();
               long logicalBytes = stage(part);
-              if (extraction != null) {
+              if (plan instanceof Plan.Extraction extraction) {
                 extraction.onStaged().accept(part.ordinal);
                 operationSession.processedEntry(logicalBytes);
               }
@@ -569,10 +621,6 @@ public final class PublicationTransaction {
                 publishExisting(part);
               }
             }
-          } else {
-            stageParallel();
-            // A worker failure must leave PROCESSING interrupted, without a synthetic terminal.
-            checkpoint();
           }
           if (!existingTree) {
             // Every stage has settled and nothing is visible yet; the set or root commit is final.
@@ -653,37 +701,61 @@ public final class PublicationTransaction {
       return artifacts();
     }
 
-    /** Establishes the complete target plan before creating adjacent staging. */
-    private void preflight(List<Writer> writers, List<String> names) throws IOException {
-      if (extraction == null && destination.getFileName() == null) {
+    /**
+     * Establishes an archive set's complete target plan before creating adjacent staging: one part
+     * per writer at its split path, contained beside the destination.
+     */
+    private void preflight(Plan.ArchiveSet set) throws IOException {
+      if (destination.getFileName() == null) {
         throw context().failure(FailureKind.POLICY, "destination.not-file", null);
       }
-      long planHeap = Math.multiplyExact((long) writers.size(), 512);
+      reservePlan(set.writers().size(), List.of());
+      for (int index = 0; index < set.writers().size(); index++)
+        addPart(index, splitPath(destination, index + 1), set.writers().get(index));
+      // Containment reads identities and pins through the fault seam too, so every publication
+      // identity read and pin goes through FileActions.
+      containment =
+          TargetPaths.preflight(
+              destination.getParent(),
+              parts.stream().map(part -> part.target.getFileName().toString()).toList(),
+              policy,
+              context(),
+              files);
+    }
+
+    /**
+     * Establishes an extraction's complete target plan beneath its root before creating staging,
+     * learns whether the root already exists (an existing tree) or is new, then counts the whole
+     * selection as PREFLIGHT entries once the output count is known.
+     */
+    private void preflight(Plan.Extraction extraction) throws IOException {
+      List<String> names = extraction.entries().stream().map(Entry::name).toList();
+      reservePlan(extraction.entries().size(), names);
+      // Containment reads identities and pins through the fault seam too, so every publication
+      // identity read and pin goes through FileActions.
+      containment = TargetPaths.preflight(destination, names, policy, context(), files);
+      existingTree = containment.existingRoot();
+      newRoot = !existingTree;
+      for (int index = 0; index < extraction.entries().size(); index++)
+        addPart(index, containment.targets().get(index), extraction.entries().get(index).writer());
+      operationSession.advance(ProgressMetric.ENTRIES, names.size());
+    }
+
+    /**
+     * Reserves the plan's bookkeeping: per-output state and name copies, plus pin handles, one
+     * temporary inspection and its bounded UTF-16/native structures.
+     */
+    private void reservePlan(int outputs, List<String> names) throws ArchiveException {
+      long planHeap = Math.multiplyExact((long) outputs, 512);
       for (String name : names) planHeap = Math.addExact(planHeap, (long) name.length() * 12);
       // Pin handles plus one temporary inspection and its bounded UTF-16/native structures.
       credits.add(budget.reserve(planHeap, 128 * 1024, 2, 0));
-      // Containment reads identities and pins through the fault seam too, so every publication
-      // identity read and pin goes through FileActions.
-      if (extraction != null) {
-        containment = TargetPaths.preflight(destination, names, policy, context(), files);
-        existingTree = containment.existingRoot();
-      }
-      for (int index = 0; index < writers.size(); index++) {
-        Path target =
-            extraction != null
-                ? containment.targets().get(index)
-                : splitPath(destination, index + 1);
-        boolean exists = Files.exists(target, LinkOption.NOFOLLOW_LINKS);
-        parts.add(new Part(index, plannedOrdinals.get(index), target, writers.get(index), exists));
-      }
-      if (extraction == null)
-        containment =
-            TargetPaths.preflight(
-                destination.getParent(),
-                parts.stream().map(part -> part.target.getFileName().toString()).toList(),
-                policy,
-                context(),
-                files);
+    }
+
+    /** Plans one output at its plan position, recording whether a predecessor already exists. */
+    private void addPart(int index, Path target, Writer writer) {
+      boolean exists = Files.exists(target, LinkOption.NOFOLLOW_LINKS);
+      parts.add(new Part(index, plannedOrdinals.get(index), target, writer, exists));
     }
 
     /**
@@ -720,8 +792,11 @@ public final class PublicationTransaction {
       return size;
     }
 
-    /** Admits only bounded private stages and consumes their outcomes in plan order. */
-    private void stageParallel() throws IOException {
+    /**
+     * Admits only bounded private stages of an extraction and consumes their outcomes in plan
+     * order.
+     */
+    private void stageParallel(Plan.Extraction extraction) throws IOException {
       // The runner numbers work by plan position; its own failures are located by archive ordinal.
       try (var runner =
           new OrderedWorkerRunner<StagedResult>(
@@ -1155,11 +1230,7 @@ public final class PublicationTransaction {
 
     /** Supplies stable phase and ordinal evidence without provider exception text. */
     private IoContext context() {
-      return new IoContext(
-          destination,
-          extraction != null ? Operation.EXTRACT : Operation.PACK,
-          phase,
-          OptionalLong.of(ordinal));
+      return new IoContext(destination, operation, phase, OptionalLong.of(ordinal));
     }
   }
 

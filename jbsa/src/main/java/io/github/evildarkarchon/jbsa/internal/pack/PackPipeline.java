@@ -310,12 +310,8 @@ public final class PackPipeline {
       }
       // Streamed parts read and close their own sources, so the plan holds no source to close.
       var plan =
-          new PublicationTransaction.Plan.ArchiveSet(
-              request.destination(),
-              writers,
-              request.targetPolicy(),
-              false,
-              PublicationTransaction.SourceClose.NONE);
+          PublicationTransaction.Plan.ArchiveSet.streamed(
+              request.destination(), writers, request.targetPolicy());
       return new OperationSession.Published(
           PublicationTransaction.publish(run.operation, run.budget, plan), completed);
     }
@@ -398,8 +394,8 @@ public final class PackPipeline {
     // Progress already entered PROCESSING above, and the parts have consumed stabilization once
     // they have all staged, so the spool is the plan's source: it closes before the commit.
     var plan =
-        new PublicationTransaction.Plan.ArchiveSet(
-            request.destination(), writers, request.targetPolicy(), true, stable::close);
+        PublicationTransaction.Plan.ArchiveSet.stabilized(
+            request.destination(), writers, request.targetPolicy(), stable::close);
     try (var windows = run.budget.reserve(replayHeap, 0, 0, 0)) {
       return new OperationSession.Published(
           PublicationTransaction.publish(run.operation, run.budget, plan), completed);
