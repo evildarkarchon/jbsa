@@ -10,19 +10,21 @@ in `docs/spec/requirements.yaml`. Cancellation at Publication Commit also follow
 | --- | --- |
 | `JBSA-IO-007` | `SpillBuffer` uses a fixed 64 KiB heap window and spills to an operation-owned file. It admits retained extent before writes, supports bounded positional replay and backpatching, and seals a representation for reuse. `SpillBufferTest` checks replay, exact limits, lifetime, and real Windows cleanup denial. |
 | `JBSA-IO-008` | `PublicationTransaction` accepts a finalized output plan, admits its count and internal storage before adjacent staging, applies the split sibling naming rule, stages all archive parts, and lends one positional file writer per part. `PublicationFailuresTest` checks names, output limits, staging limits, and long reservations above 4 GiB without materializing a large file. |
-| `JBSA-IO-009` | `ExtractionPaths` validates the complete selection before host path conversion, rejects traversal, ADS, reserved names, Windows case collisions, prefix collisions, equal native identities, and descendant reparse points. `PathIdentity` pins the root and supplies stable no-follow identities, through `WindowsPathIdentity` on Windows. `ExtractionPathsTest` and `WindowsPathIdentityTest` cover junctions, changed identities, pin lifetimes, and name eligibility. |
+| `JBSA-IO-009` | `TargetPaths`, the target containment for archive-part targets and extraction targets alike, validates the complete selection before host path conversion, rejects traversal, ADS, reserved names, Windows case collisions, prefix collisions, equal native identities, and descendant reparse points. `PathIdentity` pins the root and supplies stable no-follow identities, through `WindowsPathIdentity` on Windows. `TargetPathsTest` and `WindowsPathIdentityTest` cover junctions, changed identities, pin lifetimes, and name eligibility. |
 | `JBSA-IO-010` | Explicit `FAIL` rejects existing targets in preflight; `REPLACE` moves each predecessor into staging before installation. The existing public request defaults remain `FAIL`. Publication tests verify unchanged predecessors and restoration. |
 | `JBSA-IO-011`, `JBSA-OPS-009` | Cancellation is sampled before effects, at bounded staged writes, and before each applicable commit. No cancellation is accepted inside an archive/split commit or current-file commit. Existing-tree cancellation retains completed siblings. |
 | `JBSA-IO-012` | A private same-volume probe checks atomic file or directory moves before processing. New extraction roots publish with one move; archive parts and existing-tree files publish individually in Logical Plan Order. A failed atomic capability is never replaced by a non-atomic fallback. |
-| `JBSA-IO-013` | Split failure rolls back the set; existing-tree failure rolls back only the currently committing file. Restoration failures retain the predecessor backup for the caller. Identity rechecks prevent rollback from deleting an observed external replacement. |
+| `JBSA-IO-013` | Split failure rolls back the set; existing-tree failure rolls back only the currently committing file. Restoration failures retain the predecessor backup for the caller. Identity rechecks prevent rollback from deleting an observed external replacement. `PublicationFaultsTest` injects rollback, move, cleanup and identity-change faults through `publish` on a stabilized archive set, an archive set on the planner's shared budget, and parallel extraction. |
 | `JBSA-IO-014`, `JBSA-OPS-011` | Owned paths are cleaned children first, and unremoved paths are reported exactly as normalized absolute Residual Artifacts. `FailureRetention` preserves the primary outcome, bounded ordered secondary failures, nested residuals, and truncation evidence. Cleanup after successful publication becomes a destination failure with published states retained. |
 | `JBSA-IO-015` | No forced durability, write-through rename, journal, startup scavenging, mapping, or crash-recovery mechanism is introduced. Rollback covers synchronously observed in-process failures. |
 
 ## Integration contracts
 
 These classes stay in the unexported `internal.io` package. `PublicationTransaction`
-is synchronous and owns its transaction, staging files, channels, resource budget,
-and containment pin. A writer borrows `StagedFile` only for its callback and uses
+is synchronous and owns its transaction, staging files, channels, and containment
+pin. It borrows the operation's resource budget, which its caller creates,
+registers with the operation template, and closes after publication settles.
+A writer borrows `StagedFile` only for its callback and uses
 positional `reserve`/`write` operations. Reservations do not allocate proportional
 buffers. A successful callback must have supplied all meaningful output bytes;
 reserved gaps are not a format-level promise of zero padding.
@@ -30,16 +32,39 @@ reserved gaps are not a format-level promise of zero padding.
 Archive-format code must establish source consistency and complete Logical Plan
 Order before entering this seam. When encoded sizes determine split membership,
 it first stabilizes bounded content with `SpillBuffer` outside the destination,
-then passes the complete finalized part writers to `archives`. The publication
-seam therefore cannot create destination staging during that stabilization gate.
-Callers must close scratch before their outer operation returns, and merge any
-scratch failure through `FailureRetention` with the publication artifacts.
+then passes the complete finalized part writers to `publish` in an archive-set
+plan. The publication seam therefore cannot create destination staging during
+that stabilization gate. Callers register scratch with the `OperationSession`
+operation template, which closes it before the operation finishes and retains any
+close failure in the same outcome as the publication artifacts. Publication cleans
+its own staging and returns its artifacts; it never finishes the operation itself.
+
+Publication has three operations: `publish`, which takes the operation session,
+the budget, and a sealed `Plan`; `preflightArchiveTargets`, which checks a known
+archive-part target set before any source is read; and the `splitPath` rule. The
+plan's case selects the strategy ([ADR-0005](../adr/0005-one-operation-template-and-one-publication-plan.md)):
+
+- `Plan.ArchiveSet` stages every part before one atomic set commit. It states
+  whether the operation already entered PROCESSING to stabilize its payloads.
+- `Plan.Extraction` carries one `Entry` shape (decoded name, writer, staged
+  extent, archive ordinal) and the worker snapshot. Publication decides between a
+  new root and an existing tree from preflight, and between caller-thread and
+  worker staging from the entry count and worker limit. It calls the plan's
+  on-staged hook with each entry's archive ordinal in both strategies.
+
+Each plan carries one source-close action. Publication runs it exactly once,
+after every admitted stage settles and before the final Publication Commit,
+including for an empty plan. When a failure ends publication first, the action
+does not run, and the caller's registered resource closes the source. Writers
+never close a source, spool, or archive.
 
 Extraction callers supply complete decoded names whose wire encoding and
 Normalized Name Identity have already been established by archive metadata
 validation; synthetic missing-name placeholders must never be passed here.
 The containment layer independently rejects structurally unsafe Unicode names
-and Windows host-ineligible segments. A missing extraction root requires an
+and Windows host-ineligible segments. Its later rechecks take publication's
+current phase and ordinal, so a containment failure is located where publication
+observed it rather than at preflight. A missing extraction root requires an
 existing immediate parent. An existing drive or share root stages beside its
 planned files within that root. Existing-tree extraction creates and records only
 planned missing directories, and never replaces the whole existing tree.
@@ -100,11 +125,13 @@ Windows baseline or qualifies another platform.
 Run on Windows with Java 17 or newer; Gradle supplies the Temurin Java 25 toolchain:
 
 ```powershell
-.\gradlew.bat :jbsa:test --tests '*SpillBufferTest' --tests '*ResourceBudgetTest' --tests '*WindowsPathIdentityTest' --tests '*ExtractionPathsTest' --tests '*PublicationTransactionTest' --tests '*PublicationFailuresTest' --tests '*PublicationDriveRootTest'
+.\gradlew.bat :jbsa:test --tests '*SpillBufferTest' --tests '*ResourceBudgetTest' --tests '*WindowsPathIdentityTest' --tests '*TargetPathsTest' --tests '*PublicationTransactionTest' --tests '*PublicationFailuresTest' --tests '*PublicationFaultsTest' --tests '*PublicationProgressTest' --tests '*PublicationPlanTest' --tests '*PublicationDriveRootTest'
 .\gradlew.bat clean verify
 ```
 
 The tests use authored byte sequences and disposable filesystem fixtures. Fault
-injection is limited to the internal filesystem mutation boundary; real Windows
-tests establish identity, junction, sharing, and cleanup behavior. No proprietary
+injection is limited to the internal filesystem-actions boundary: moves,
+deletions, the atomic-move probe, path-identity reads, and the destination pin,
+including target containment's. Real Windows tests establish identity, junction, sharing, and
+cleanup behavior. No proprietary
 assets or Reference Snapshot writes are involved.

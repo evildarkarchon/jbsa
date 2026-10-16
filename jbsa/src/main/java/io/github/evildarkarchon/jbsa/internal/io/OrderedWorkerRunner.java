@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.IntToLongFunction;
 
 /**
  * Operation-owned fixed platform workers beneath one synchronous, ordered coordinator.
@@ -35,6 +36,7 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
   private final Thread coordinator = Thread.currentThread();
   private final ResourceBudget budget;
   private final IoContext context;
+  private final IntToLongFunction locate;
   private final ExecutorService workers;
   private final int capacity;
   private final ArrayDeque<Slot<R>> pending = new ArrayDeque<>();
@@ -50,13 +52,30 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
   /**
    * Snapshots the operation's worker limit and creates its private fixed platform pool. The plan
    * count has already been established in Logical Plan Order; no descriptors are created here.
+   * Unexpected worker and cleanup failures are located at their plan position.
    */
   public OrderedWorkerRunner(
       WorkerSelection selection, int plannedCount, ResourceBudget budget, IoContext context) {
+    this(selection, plannedCount, budget, context, index -> index);
+  }
+
+  /**
+   * Creates the runner with a caller-supplied failure location for each plan position.
+   *
+   * @param locate maps a submitted plan position to the ordinal its unexpected worker and cleanup
+   *     failures report, such as the archive entry ordinal of a sparse extraction selection
+   */
+  public OrderedWorkerRunner(
+      WorkerSelection selection,
+      int plannedCount,
+      ResourceBudget budget,
+      IoContext context,
+      IntToLongFunction locate) {
     Objects.requireNonNull(selection, "selection");
     if (plannedCount < 0) throw new IllegalArgumentException("plannedCount must be nonnegative");
     this.budget = Objects.requireNonNull(budget, "budget");
     this.context = Objects.requireNonNull(context, "context");
+    this.locate = Objects.requireNonNull(locate, "locate");
     long selected = WorkerLimits.snapshot(selection).workers();
     // The internal pool cap prevents pathological thread counts without changing the public
     // ceiling.
@@ -389,7 +408,7 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
             context.path(),
             context.operation(),
             io.github.evildarkarchon.jbsa.OperationPhase.PROCESSING,
-            java.util.OptionalLong.of(ordinal));
+            java.util.OptionalLong.of(locate.applyAsLong(ordinal)));
     return failure instanceof IOException
         ? location.failure(FailureKind.SOURCE, "operation.source-io", failure)
         : location.failure(FailureKind.INTERNAL, "operation.internal-failure", failure);
@@ -403,7 +422,7 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
             context.path(),
             context.operation(),
             io.github.evildarkarchon.jbsa.OperationPhase.CLEANUP,
-            java.util.OptionalLong.of(ordinal));
+            java.util.OptionalLong.of(locate.applyAsLong(ordinal)));
     return location.failure(FailureKind.DESTINATION, "operation.destination-io", failure);
   }
 

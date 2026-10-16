@@ -32,6 +32,12 @@ public final class PackPipeline {
    * limit charged in Logical Plan Order. Target preflight always runs before any source payload is
    * read, for the part count the plan already knows.
    *
+   * <p>The pack runs as a body of the session's operation template ({@link OperationSession#run}),
+   * which owns the single failure epilogue (D7). A {@link RuntimeException} or {@link
+   * AssertionError} raised before publication therefore becomes an INTERNAL {@code
+   * operation.internal-failure} at the current phase, settled with CLEANUP progress like any other
+   * pre-publication failure. A {@link VirtualMachineError} still propagates.
+   *
    * @return the report, whose failure outcome is thrown after cleanup has settled
    * @throws ArchiveException the Primary Failure, with Secondary Failures and artifact evidence
    */
@@ -42,64 +48,55 @@ public final class PackPipeline {
         new OperationSession(
             Operation.PACK, request.resourceLimits(), request.diagnosticPolicy(), control);
     var context = IoContext.of(request.destination(), Operation.PACK);
-    OperationReport result = null;
-    var failures = new FailureRetention(request.resourceLimits(), Operation.PACK);
-    // The pipeline owns the budget lifetime (D10); it closes before the epilogue settles.
+    return operation.run(
+        context, resources -> pack(request, adapter, operation, context, resources));
+  }
+
+  /**
+   * The pack body: admission, planning, then the emission path that publishes. It registers the
+   * resource budget and, once stabilization opens it, the stable spool with the template.
+   *
+   * @return the artifacts publication settled and the staged Archive Parts
+   * @throws IOException a failure before publication; publication accepts its own failures
+   */
+  private static <K> OperationSession.Published pack(
+      PackRequest request,
+      FamilyAdapter<K> adapter,
+      OperationSession operation,
+      IoContext context,
+      OperationSession.Resources resources)
+      throws IOException {
+    // The pipeline owns the budget lifetime (D10); the template closes it before the epilogue
+    // settles.
     ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context);
-    var run = new Run(request, operation, context, budget);
-    try {
-      operation.begin();
-      run.workers = WorkerLimits.snapshot(request.workerSelection());
-      Admitted<K> admitted = adapter.admit(request, context);
-      validate(admitted);
-      // Capability admission is the last step of admit's rung: it runs before source planning, as
-      // the family packers' own checks did, but here rather than in the pure adapter.
-      for (Codec codec : admitted.requiredCodecs()) Codecs.preflight(codec, context);
-      List<PackSources.Entry> sources =
-          PackSources.plan(request, operation, budget, admitted.nameCharset());
-      List<Planned<K>> planned = admitted.plan(sources, context);
-      // Each lease stays live until the budget closes: it covers per-entry state the family keeps
-      // for the whole operation.
-      if (admitted.entryReserveBytes() > 0)
-        for (int index = 0; index < planned.size(); index++)
-          budget.reserve(admitted.entryReserveBytes(), 0, 0, 0);
-      rejectUnmatchedOverrides(request, sources, context);
-      if (planned.isEmpty())
-        throw context.failure(
-            FailureKind.POLICY, admitted.diagnosticPrefix() + ".empty-entry-set", null);
-      // A chunking family's decoded extent is known only from each envelope, so stabilization
-      // charges it instead, still in Logical Plan Order.
-      if (admitted.chunkHeadBytes() == 0) chargeDecoded(sources, request.resourceLimits(), context);
-      result =
-          switch (admitted.emission()) {
-            case STREAMING -> streamed(run, admitted, planned);
-            case STABILIZED -> stabilized(run, admitted, planned);
-          };
-    } catch (IOException failure) {
-      failures.accept(structured(failure, context));
-    } finally {
-      // Stabilization scratch normally closes inside the last writer, before commit; this settles
-      // it after any earlier failure. Closing an already closed spool is a no-op.
-      if (run.stable != null) {
-        try {
-          run.stable.close();
-        } catch (ArchiveException cleanup) {
-          failures.accept(cleanup);
-        }
-      }
-      budget.close();
-    }
-    // The single failure epilogue (D7). Publication already settled cleanup and progress for any
-    // failure it owns; an earlier failure still needs the session's cleanup phase and report.
-    if (failures.failed()) {
-      ArchiveException failure = failures.finish(result == null ? List.of() : result.artifacts());
-      if (run.publicationOwnsSession) throw failure;
-      operation.accept(failure);
-      operation.cleanup();
-      operation.cleaned(0);
-      return operation.finish(List.of());
-    }
-    return result;
+    resources.register(budget::close);
+    var run = new Run(request, operation, context, budget, resources);
+    operation.begin();
+    run.workers = WorkerLimits.snapshot(request.workerSelection());
+    Admitted<K> admitted = adapter.admit(request, context);
+    validate(admitted);
+    // Capability admission is the last step of admit's rung: it runs before source planning, as
+    // the family packers' own checks did, but here rather than in the pure adapter.
+    for (Codec codec : admitted.requiredCodecs()) Codecs.preflight(codec, context);
+    List<PackSources.Entry> sources =
+        PackSources.plan(request, operation, budget, admitted.nameCharset());
+    List<Planned<K>> planned = admitted.plan(sources, context);
+    // Each lease stays live until the budget closes: it covers per-entry state the family keeps
+    // for the whole operation.
+    if (admitted.entryReserveBytes() > 0)
+      for (int index = 0; index < planned.size(); index++)
+        budget.reserve(admitted.entryReserveBytes(), 0, 0, 0);
+    rejectUnmatchedOverrides(request, sources, context);
+    if (planned.isEmpty())
+      throw context.failure(
+          FailureKind.POLICY, admitted.diagnosticPrefix() + ".empty-entry-set", null);
+    // A chunking family's decoded extent is known only from each envelope, so stabilization
+    // charges it instead, still in Logical Plan Order.
+    if (admitted.chunkHeadBytes() == 0) chargeDecoded(sources, request.resourceLimits(), context);
+    return switch (admitted.emission()) {
+      case STREAMING -> streamed(run, admitted, planned);
+      case STABILIZED -> stabilized(run, admitted, planned);
+    };
   }
 
   /**
@@ -275,7 +272,7 @@ public final class PackPipeline {
    * Streams each part: its payloads are read while it stages, after every part's layout and the
    * complete target set were admitted during preflight.
    */
-  private static <K> OperationReport streamed(
+  private static <K> OperationSession.Published streamed(
       Run run, Admitted<K> admitted, List<Planned<K>> planned) throws IOException {
     PackRequest request = run.request;
     List<List<Planned<K>>> parts = split(planned, admitted, request.options().splitting());
@@ -311,16 +308,12 @@ public final class PackPipeline {
                 run));
         nextOrdinal += part.size();
       }
-      run.publicationOwnsSession = true;
-      return withParts(
-          PublicationTransaction.archives(
-              request.destination(),
-              writers,
-              request.targetPolicy(),
-              request.resourceLimits(),
-              run.operation,
-              run.budget),
-          completed);
+      // Streamed parts read and close their own sources, so the plan holds no source to close.
+      var plan =
+          PublicationTransaction.Plan.ArchiveSet.streamed(
+              request.destination(), writers, request.targetPolicy());
+      return new OperationSession.Published(
+          PublicationTransaction.publish(run.operation, run.budget, plan), completed);
     }
   }
 
@@ -329,7 +322,7 @@ public final class PackPipeline {
    * layout depend on exact stored sizes. Stabilization is processing work, so progress enters
    * PROCESSING before the first source is read (Q10) and publication continues in that phase.
    */
-  private static <K> OperationReport stabilized(
+  private static <K> OperationSession.Published stabilized(
       Run run, Admitted<K> admitted, List<Planned<K>> planned) throws IOException {
     PackRequest request = run.request;
     PackOptions.Splitting splitting = request.options().splitting();
@@ -347,6 +340,10 @@ public final class PackPipeline {
     run.stable =
         SpillBuffer.open(Path.of(System.getProperty("java.io.tmpdir")), run.budget, run.context);
     SpillBuffer stable = run.stable;
+    // Stabilization scratch normally closes through the publication plan's source-close action,
+    // after every part has staged and before commit; the template settles it after any earlier
+    // failure, before the budget it draws on. Closing an already closed spool is a no-op.
+    run.resources.register(stable::close);
     List<Planned<K>> sized;
     Replay<K> replay;
     long replayHeap;
@@ -389,24 +386,19 @@ public final class PackPipeline {
           writer(
               output -> {
                 replay.write(part, layout, output);
-                // The last part has consumed stabilization; its cleanup must precede the commit.
-                if (number == parts.size()) stable.close();
                 completed.add(archivePart(request, number, output, part));
               },
               admitted.readback(part, layout),
               run));
     }
+    // Progress already entered PROCESSING above, and the parts have consumed stabilization once
+    // they have all staged, so the spool is the plan's source: it closes before the commit.
+    var plan =
+        PublicationTransaction.Plan.ArchiveSet.stabilized(
+            request.destination(), writers, request.targetPolicy(), stable::close);
     try (var windows = run.budget.reserve(replayHeap, 0, 0, 0)) {
-      run.publicationOwnsSession = true;
-      return withParts(
-          PublicationTransaction.stabilizedArchives(
-              request.destination(),
-              writers,
-              request.targetPolicy(),
-              request.resourceLimits(),
-              run.operation,
-              run.budget),
-          completed);
+      return new OperationSession.Published(
+          PublicationTransaction.publish(run.operation, run.budget, plan), completed);
     }
   }
 
@@ -993,12 +985,11 @@ public final class PackPipeline {
       stage.close();
     } catch (Throwable cleanup) {
       if (pending == null) pending = cleanup;
-      else if (pending instanceof IOException first && cleanup instanceof IOException second) {
-        // Closing worker results can fail after processing; keep both structured outcomes.
-        var failures = new FailureRetention(run.request.resourceLimits(), Operation.PACK);
-        failures.accept(structured(first, run.context));
-        failures.accept(structured(second, run.context));
-        pending = failures.finish(List.of());
+      else if (pending instanceof IOException && cleanup instanceof IOException second) {
+        // Closing worker results can fail after processing; keep both structured outcomes. The
+        // close goes straight into the session and the first outcome is rethrown unchanged, since
+        // it may be the session's own raised failure, which the template must not admit again.
+        run.operation.accept(run.context.sourceFailure(second));
       } else pending.addSuppressed(cleanup);
     }
     if (pending instanceof IOException checked) throw checked;
@@ -1109,11 +1100,11 @@ public final class PackPipeline {
         scratch.close();
       } catch (ArchiveException cleanup) {
         if (primary == null) throw cleanup;
-        // Keep cleanup as structured secondary evidence, including any exact residual path.
-        var failures = new FailureRetention(run.request.resourceLimits(), Operation.PACK);
-        failures.accept(primary);
-        failures.accept(cleanup);
-        throw failures.finish(List.of());
+        // Keep cleanup as structured secondary evidence, including any exact residual path. It
+        // goes straight into the session and the primary is rethrown unchanged, since the primary
+        // may be the session's own raised failure, which publication must not admit again.
+        run.operation.accept(cleanup);
+        throw primary;
       }
     }
   }
@@ -1152,20 +1143,6 @@ public final class PackPipeline {
         part.size());
   }
 
-  /** Attaches the staged Archive Parts to publication's settled report. */
-  private static OperationReport withParts(
-      OperationReport report, List<OperationReport.ArchivePart> parts) {
-    return new OperationReport(
-        report.operation(), report.artifacts(), report.diagnostics(), report.assessment(), parts);
-  }
-
-  /** Wraps an unstructured I/O failure as SOURCE {@code operation.source-io}. */
-  private static ArchiveException structured(IOException failure, IoContext context) {
-    return failure instanceof ArchiveException archive
-        ? archive
-        : context.failure(FailureKind.SOURCE, "operation.source-io", failure);
-  }
-
   /**
    * One stabilized record: the entry with its exact stored size, and where its framed bytes start
    * in the stable spool.
@@ -1200,27 +1177,35 @@ public final class PackPipeline {
   }
 
   /**
-   * Operation-owned collaborators every emission path borrows, plus the lifecycle state the
-   * epilogue reads after a failure.
+   * Operation-owned collaborators every emission path borrows, plus the scope where it registers
+   * the caller-owned resources the operation template closes.
    */
   private static final class Run {
     final PackRequest request;
     final OperationSession operation;
     final IoContext context;
     final ResourceBudget budget;
+    final OperationSession.Resources resources;
     WorkerSelection.UpTo workers;
 
-    /** Once publication runs, it owns cleanup, progress, and the delivered failure. */
-    boolean publicationOwnsSession;
-
-    /** The stabilized emission's ordered spool, closed by the last writer or the epilogue. */
+    /**
+     * The stabilized emission's ordered spool, closed by the publication plan's source-close action
+     * or, after an earlier failure, by the operation template.
+     */
     SpillBuffer stable;
 
-    Run(PackRequest request, OperationSession operation, IoContext context, ResourceBudget budget) {
+    /** Collects the collaborators of one pack body. */
+    Run(
+        PackRequest request,
+        OperationSession operation,
+        IoContext context,
+        ResourceBudget budget,
+        OperationSession.Resources resources) {
       this.request = request;
       this.operation = operation;
       this.context = context;
       this.budget = budget;
+      this.resources = resources;
     }
   }
 }

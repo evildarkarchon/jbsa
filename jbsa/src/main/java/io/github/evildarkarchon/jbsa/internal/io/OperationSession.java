@@ -1,7 +1,9 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Objects;
@@ -16,6 +18,10 @@ import java.util.TreeMap;
  * fencing, callback delivery, and final settlement. Workers may concurrently call {@link #accept}
  * and {@link #checkpoint}; the outcome lock serializes their decisions with commit acceptance.
  * Callback code never runs under that lock. No method transfers resource or worker ownership.
+ *
+ * <p>Pack and extract run through one operation template, {@link #run}. It alone maps unexpected
+ * throwables, settles pre-publication failures with CLEANUP progress, closes the caller-owned
+ * resources an operation body registers, and finishes the operation exactly once.
  */
 public final class OperationSession {
   private final Operation operation;
@@ -27,10 +33,77 @@ public final class OperationSession {
   private OperationPhase phase;
   private boolean observerStopped;
   private boolean phaseCompleted;
-  private ArchiveException deliveredFailure;
   private boolean commitInProgress;
   private boolean publicationSettled;
+  private boolean finished;
+
+  /** The thread running the operation template, or null before {@link #run} starts. */
+  private Thread coordinator;
+
+  /**
+   * Whether this session has thrown its own retained failure on the coordinator thread. From then
+   * on the coordinator is unwinding that failure, so what it catches is already retained.
+   */
+  private boolean raisedToCoordinator;
+
   private Error fatalFailure;
+
+  /**
+   * The operation's settled result: the artifacts its publication reported and, for pack, the
+   * staged Archive Parts. Publication cleaned exactly these artifacts, so their count is the
+   * CLEANUP total.
+   *
+   * @param artifacts the settled artifacts publication reports, in any order
+   * @param archiveParts pack's staged Archive Parts in logical order; empty for extraction
+   */
+  public record Published(
+      List<Artifact> artifacts, List<OperationReport.ArchivePart> archiveParts) {
+    /** Copies both lists, so a body cannot change the result after returning it. */
+    public Published {
+      artifacts = List.copyOf(artifacts);
+      archiveParts = List.copyOf(archiveParts);
+    }
+
+    /** A result without Archive Parts, as every extraction publishes. */
+    public Published(List<Artifact> artifacts) {
+      this(artifacts, List.of());
+    }
+  }
+
+  /** A caller-owned resource the operation template closes after the operation body. */
+  @FunctionalInterface
+  public interface Resource {
+    /**
+     * Releases the resource. The template calls this at most once per registration.
+     *
+     * @throws IOException if the release fails; the template retains it as a CLEANUP failure
+     */
+    void close() throws IOException;
+  }
+
+  /** Where an operation body registers the caller-owned resources the template must close. */
+  @FunctionalInterface
+  public interface Resources {
+    /**
+     * Registers a resource the body has just acquired. Resources close in reverse registration
+     * order, after the body and before the operation finishes, whether the body succeeds or not.
+     */
+    void register(Resource resource);
+  }
+
+  /** One mutating operation's work, from {@code begin} through publication. */
+  @FunctionalInterface
+  public interface Body {
+    /**
+     * Runs the operation on the coordinator thread. Failures accepted into the session during
+     * publication do not need to be thrown: the template finishes with them either way.
+     *
+     * @param resources the scope where the body registers each caller-owned resource it acquires
+     * @return the published result; publication returns it even when it accepted a failure
+     * @throws IOException any failure before publication; the template accepts and settles it
+     */
+    Published run(Resources resources) throws IOException;
+  }
 
   /** Captures immutable request controls without invoking caller callbacks. */
   public OperationSession(Operation operation, ResourceLimits limits, OperationControl control) {
@@ -47,6 +120,87 @@ public final class OperationSession {
     this.control = Objects.requireNonNull(control, "control");
     this.limits = Objects.requireNonNull(limits, "limits");
     failures = new FailureRetention(limits, operation, policy);
+  }
+
+  /**
+   * The operation template: runs a pack or extract body and owns its whole epilogue.
+   *
+   * <ul>
+   *   <li>A {@link RuntimeException} or {@link AssertionError} from the body becomes INTERNAL
+   *       {@code operation.internal-failure} at the phase it interrupted (PREFLIGHT before {@link
+   *       #begin}), with no ordinal. An unstructured {@link IOException} becomes SOURCE {@code
+   *       operation.source-io} at {@code context}. Any other {@link Error} propagates after the
+   *       registered resources close.
+   *   <li>An {@link ArchiveException} from the body is settled through {@link #unwound}: when it is
+   *       the session's own raised failure, it is already retained and is not admitted again.
+   *   <li>Registered resources close in reverse registration order, after the body and before the
+   *       operation finishes, on success and on failure. A close failure is accepted as a CLEANUP
+   *       failure, so it orders behind any earlier Primary Failure.
+   *   <li>CLEANUP then reports the published artifact count, or zero when the body failed before
+   *       publication returned.
+   *   <li>The operation finishes exactly once, with the body's Archive Parts on success.
+   * </ul>
+   *
+   * <p>A session runs at most one template, on its coordinator thread.
+   *
+   * @param context the operation's location: its path locates mapped body and close failures
+   * @param body the operation, which registers its caller-owned resources as it acquires them
+   * @return the settled report
+   * @throws ArchiveException the Primary Failure, with Secondary Failures and artifact evidence
+   */
+  public OperationReport run(IoContext context, Body body) throws ArchiveException {
+    Objects.requireNonNull(context, "context");
+    Objects.requireNonNull(body, "body");
+    synchronized (outcome) {
+      if (coordinator != null) throw new IllegalStateException("The operation already ran");
+      coordinator = Thread.currentThread();
+    }
+    List<Resource> registered = new ArrayList<>();
+    Published published = null;
+    try {
+      published = body.run(resource -> registered.add(Objects.requireNonNull(resource)));
+    } catch (ArchiveException failure) {
+      unwound(failure);
+    } catch (IOException failure) {
+      accept(context.sourceFailure(failure));
+    } catch (RuntimeException | AssertionError unexpected) {
+      accept(
+          located(context, phase().orElse(OperationPhase.PREFLIGHT))
+              .failure(FailureKind.INTERNAL, "operation.internal-failure", unexpected));
+    } finally {
+      // ADR-0003 D10: caller-owned resources, the pack budget among them, close before the
+      // epilogue settles, so their failures and residuals belong to the one outcome.
+      close(registered, context);
+    }
+    cleanup();
+    if (published == null) {
+      cleaned(0);
+      return finish(List.of(), List.of());
+    }
+    cleaned(published.artifacts().size());
+    return finish(published.artifacts(), published.archiveParts());
+  }
+
+  /**
+   * Closes each registered resource, newest first, accepting every close failure at CLEANUP. A
+   * later close still runs after an earlier one fails.
+   */
+  private void close(List<Resource> registered, IoContext context) {
+    IoContext cleanup = located(context, OperationPhase.CLEANUP);
+    for (Resource resource : registered.reversed()) {
+      try {
+        resource.close();
+      } catch (IOException failure) {
+        accept(cleanup.sourceFailure(failure));
+      } catch (RuntimeException | AssertionError unexpected) {
+        accept(cleanup.failure(FailureKind.INTERNAL, "operation.internal-failure", unexpected));
+      }
+    }
+  }
+
+  /** Locates an operation-level failure at a phase, on the context's path, with no ordinal. */
+  private IoContext located(IoContext context, OperationPhase at) {
+    return new IoContext(context.path(), operation, at, OptionalLong.empty());
   }
 
   /**
@@ -220,26 +374,64 @@ public final class OperationSession {
     throwIfFailed();
   }
 
-  /** Starts cleanup without allowing an observer failure to skip owned resource settlement. */
-  public void cleanup() {
+  /**
+   * Starts cleanup without allowing an observer failure to skip owned resource settlement. Only the
+   * operation template enters CLEANUP; this stays private so nothing else can.
+   */
+  private void cleanup() {
     if (phase != null) enter(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS);
   }
 
-  /** Emits exact settled cleanup evidence even after an earlier non-observer failure. */
-  public void cleaned(long artifacts) {
+  /**
+   * Emits exact settled cleanup evidence even after an earlier non-observer failure. Only the
+   * operation template reports it.
+   */
+  private void cleaned(long artifacts) {
     if (phase == OperationPhase.CLEANUP) {
       completed.put(ProgressMetric.ARTIFACTS, artifacts);
       deliver(ProgressMetric.ARTIFACTS, OptionalLong.of(artifacts));
     }
   }
 
-  /** Accepts a candidate under the same lock used by cancellation; providers remain causes. */
+  /**
+   * Accepts a newly observed failure under the same lock used by cancellation; providers remain
+   * causes. A failure the coordinator caught while unwinding goes through {@link #unwound} instead,
+   * because it may be the session's own raised failure.
+   */
   public void accept(ArchiveException failure) {
     synchronized (outcome) {
-      // A thrown snapshot of our own accepted outcome must not be admitted a second time.
-      if (failure == deliveredFailure) return;
       failures.accept(failure);
     }
+  }
+
+  /**
+   * Settles a failure the coordinator caught while unwinding its work: the template's body, or
+   * publication's staging and commit. Once this session has raised its own retained failure on the
+   * coordinator, the coordinator is unwinding that failure, so the caught one is that failure
+   * itself and is already retained; it is not accepted again. Otherwise the caught failure is new
+   * and is accepted.
+   *
+   * <p>A combiner that adds evidence while the coordinator unwinds (a cleanup failure behind the
+   * raised failure) must accept that evidence with {@link #accept} and rethrow the raised failure,
+   * rather than folding both into a new exception.
+   *
+   * <p>Coordinator thread only.
+   */
+  void unwound(ArchiveException failure) {
+    synchronized (outcome) {
+      if (!raisedToCoordinator) failures.accept(failure);
+    }
+  }
+
+  /**
+   * Returns the progress phase the operation has entered, for locating a failure the coordinator
+   * raises itself. Only the coordinator thread changes the phase, so only it may rely on the
+   * answer.
+   *
+   * @return the current phase, or empty before {@link #begin} has entered PREFLIGHT
+   */
+  public Optional<OperationPhase> phase() {
+    return Optional.ofNullable(phase);
   }
 
   /** Reports whether cleanup follows an accepted failure without invoking caller code. */
@@ -249,26 +441,47 @@ public final class OperationSession {
     }
   }
 
-  /** Returns the settled immutable report or throws the selected checked outcome. */
-  public OperationReport finish(List<Artifact> artifacts) throws ArchiveException {
+  /**
+   * Reports whether the operation template has finished this operation. Finishing happens exactly
+   * once, at the end of {@link #run}, including when it then throws a deferred fatal error.
+   */
+  boolean finished() {
     synchronized (outcome) {
-      if (fatalFailure != null) throw fatalFailure;
-      ArchiveException failure = failures.finish(artifacts);
-      if (failure != null) {
-        deliveredFailure = failure;
-        throw failure;
-      }
-      return failures.report(artifacts);
+      return finished;
     }
   }
 
-  /** Checks acceptance without resampling cancellation during cleanup or commit settlement. */
+  /**
+   * Returns the settled immutable report, with pack's Archive Parts, or throws the selected checked
+   * outcome. Only the operation template finishes, and only once.
+   *
+   * @throws IllegalStateException if the operation has already finished
+   */
+  private OperationReport finish(
+      List<Artifact> artifacts, List<OperationReport.ArchivePart> archiveParts)
+      throws ArchiveException {
+    synchronized (outcome) {
+      if (finished) throw new IllegalStateException("The operation has already finished");
+      finished = true;
+      if (fatalFailure != null) throw fatalFailure;
+      ArchiveException failure = failures.finish(artifacts);
+      if (failure != null) throw failure;
+      return failures.report(artifacts, archiveParts);
+    }
+  }
+
+  /**
+   * Checks acceptance without resampling cancellation during cleanup or commit settlement. Raising
+   * the retained failure on the coordinator marks the coordinator as unwinding it (see {@link
+   * #unwound}). A worker's raise does not: the worker's exception reaches the coordinator rebuilt
+   * by its runner's own retention, which still carries the raised records into the session.
+   */
   private void throwIfFailed() throws ArchiveException {
     synchronized (outcome) {
       if (fatalFailure != null) throw fatalFailure;
       ArchiveException failure = failures.finish(List.of());
       if (failure != null) {
-        deliveredFailure = failure;
+        if (Thread.currentThread() == coordinator) raisedToCoordinator = true;
         throw failure;
       }
     }

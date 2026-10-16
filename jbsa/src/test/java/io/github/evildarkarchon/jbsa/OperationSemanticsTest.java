@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -109,6 +110,59 @@ class OperationSemanticsTest {
     assertEquals(FailureKind.OBSERVER, failure.secondaryFailures().getFirst().kind());
     assertSame(thrown, failure.secondaryFailures().getFirst().cause().orElseThrow());
     assertEquals(0, failure.getSuppressed().length);
+  }
+
+  /**
+   * The request's Diagnostic Policy governs the pack's one failure retention. With no room for
+   * Secondary Failures and {@code operation.records-truncated} rejected, a pre-publication observer
+   * failure is retained exactly once: no record is omitted, so no truncation summary is reported
+   * and the policy has no truncation to reject. A second retention that re-admitted the failure
+   * would overflow the ceiling with its own duplicate.
+   */
+  @Test
+  void requestTruncationPolicyGovernsPrePublicationFailures() {
+    var base = request();
+    var standard = ResourceLimits.standard();
+    var strict =
+        new PackRequest(
+            base.destination(),
+            base.family(),
+            base.encoding(),
+            base.compatibilityProfile(),
+            base.sources(),
+            base.targetPolicy(),
+            new DiagnosticPolicy(Set.of("operation.records-truncated")),
+            new ResourceLimits(
+                standard.maxEntries(),
+                standard.maxMetadataBytes(),
+                standard.maxDecodedBytes(),
+                standard.maxScratchBytes(),
+                standard.maxOutputs(),
+                standard.maxDiagnostics(),
+                0),
+            base.workerSelection(),
+            base.options(),
+            base.ddsTarget());
+    var thrown = new AssertionError("caller observer");
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                BethesdaArchives.standard()
+                    .pack(
+                        strict,
+                        new OperationControl(
+                            snapshot -> {
+                              throw thrown;
+                            },
+                            () -> false)));
+    assertEquals(FailureKind.OBSERVER, failure.kind());
+    assertEquals(OperationPhase.PREFLIGHT, failure.primaryFailure().phase());
+    assertSame(thrown, failure.getCause());
+    assertEquals(List.of(), failure.secondaryFailures());
+    assertEquals(
+        List.of("operation.observer-failed"),
+        failure.diagnostics().stream().map(Diagnostic::identifier).toList());
   }
 
   /** Constructs a real request whose v2 selector conflicts with default v3 raw-LZ4 encoding. */

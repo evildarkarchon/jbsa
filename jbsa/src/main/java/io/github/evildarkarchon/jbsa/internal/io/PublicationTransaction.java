@@ -6,59 +6,42 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.util.*;
-import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 
 /**
  * Synchronous, operation-owned staging and atomic publication beneath the archive format writers.
  * Writers borrow one bounded positional output at a time and must not retain it after returning.
+ *
+ * <p>Publication exposes three operations: {@link #publish} runs a sealed {@link Plan}, {@link
+ * #preflightArchiveTargets} checks a known archive-part target set before any source is read, and
+ * {@link #splitPath} is the split-name rule. The plan's type selects the strategy (ADR-0005).
  */
 public final class PublicationTransaction {
   private PublicationTransaction() {}
 
   /**
-   * Publishes a finalized archive-part plan. Stabilization that determines this plan must finish in
-   * operation-owned scratch before calling this method. All parts are staged before any move.
+   * Stages, commits, and cleans one publication plan inside the caller's operation template.
+   * Publication settles its own staging but not the operation: failures accumulate in the session,
+   * and the template finishes it. The plan's source-close action runs exactly once, after every
+   * admitted stage settles and before the final Publication Commit; if a failure ends publication
+   * first, the action does not run and the caller's registered resource closes the source.
+   *
+   * @param operation the operation session, already in PROCESSING when an archive-set plan says so
+   * @param budget the operation's mutation budget, shared with any planner; the caller owns and
+   *     closes it, and its limits are the publication's Resource Limits
+   * @param plan what to publish; its type selects the strategy
+   * @return the artifacts publication settled, whether or not it accepted a failure; their count is
+   *     the operation's CLEANUP total
    */
-  public static List<Artifact> archives(
-      Path destination,
-      List<Writer> writers,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationControl control)
-      throws ArchiveException {
-    return archives(destination, writers, policy, limits, control, new FileActions());
+  public static List<Artifact> publish(
+      OperationSession operation, ResourceBudget budget, Plan plan) {
+    return publish(operation, budget, plan, new FileActions());
   }
 
   /** Supplies the filesystem mutation boundary for deterministic publication and cleanup faults. */
-  static List<Artifact> archives(
-      Path destination,
-      List<Writer> writers,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationControl control,
-      FileActions files)
-      throws ArchiveException {
-    Session session =
-        new Session(
-            destination,
-            policy,
-            limits,
-            new OperationSession(Operation.PACK, limits, control),
-            files,
-            false);
-    return session.run(List.copyOf(writers), List.of()).artifacts();
-  }
-
-  /** Continues source preflight evidence and returns the complete report for an archive set. */
-  public static OperationReport archives(
-      Path destination,
-      List<Writer> writers,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationSession operation)
-      throws ArchiveException {
-    return new Session(destination, policy, limits, operation, new FileActions(), false)
-        .run(List.copyOf(writers), List.of());
+  static List<Artifact> publish(
+      OperationSession operation, ResourceBudget budget, Plan plan, FileActions files) {
+    return new Session(operation, budget, plan, files).run();
   }
 
   /**
@@ -84,156 +67,191 @@ public final class PublicationTransaction {
     List<String> names = new ArrayList<>(partCount);
     for (int index = 0; index < partCount; index++)
       names.add(splitPath(target, index + 1).getFileName().toString());
-    try (ExtractionPaths checked =
-        ExtractionPaths.preflight(target.getParent(), names, policy, context)) {
+    // Production filesystem actions: publication reads identities and pins only through
+    // FileActions.
+    try (TargetPaths checked =
+        TargetPaths.preflight(target.getParent(), names, policy, context, new FileActions())) {
       // The output set is validated now; the publishing transaction rechecks it before staging.
     }
   }
 
-  /** Borrows the planner's budget so retained stabilization and staged bytes share one ceiling. */
-  public static OperationReport archives(
-      Path destination,
-      List<Writer> writers,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationSession operation,
-      ResourceBudget budget)
-      throws ArchiveException {
-    return new Session(destination, policy, limits, operation, new FileActions(), false, budget)
-        .run(List.copyOf(writers), List.of());
-  }
-
   /**
-   * Publishes an archive set whose operation already entered PROCESSING to stabilize its payloads
-   * before the part plan existed (Q10). Progress continues in that phase instead of entering it
-   * again; target checks keep their PREFLIGHT failure location because they still precede staging.
+   * What one publication publishes. The case selects the strategy: an archive set stages every part
+   * before one atomic set commit, and an extraction publishes either one new root or ordered
+   * per-file commits into an existing tree, sequentially or on private workers.
+   *
+   * <p>Both cases stage through the one {@link StagedFile} type, so entry counting is a runtime
+   * rule documented on each case rather than a type distinction.
    */
-  public static OperationReport stabilizedArchives(
-      Path destination,
-      List<Writer> writers,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationSession operation,
-      ResourceBudget budget)
-      throws ArchiveException {
-    var session =
-        new Session(destination, policy, limits, operation, new FileActions(), false, budget);
-    session.processingEntered = true;
-    return session.run(List.copyOf(writers), List.of());
-  }
+  public sealed interface Plan permits Plan.ArchiveSet, Plan.Extraction {
+    /**
+     * The plan's single source-close action. Publication runs it exactly once, after every admitted
+     * stage settles and before the final Publication Commit, including for an empty plan.
+     */
+    SourceClose closeSource();
 
-  /**
-   * Publishes validated selected names as one new root or ordered per-file existing-tree commits.
-   */
-  public static List<Artifact> extract(
-      Path root,
-      List<Entry> entries,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationControl control)
-      throws ArchiveException {
-    return extract(root, entries, policy, limits, control, new FileActions());
-  }
+    /**
+     * The ordinal of plan-level evidence that precedes or spans every output (JBSA-OPS-006): target
+     * preflight, private staging and its probes, and a new extraction root's Artifact. It is the
+     * first planned output's ordinal, or 0 for an empty plan, so a sparse extraction never reports
+     * an unselected entry's ordinal. This is its one definition; the extractor locates its budget
+     * here too.
+     *
+     * @return the first part's index for an archive set (always 0), or the first selected entry's
+     *     archive entry ordinal for an extraction, or 0 when it selects nothing
+     */
+    long planOrdinal();
 
-  /** Supplies the same mutation fault boundary for both extraction publication surfaces. */
-  static List<Artifact> extract(
-      Path root,
-      List<Entry> entries,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationControl control,
-      FileActions files)
-      throws ArchiveException {
-    List<Entry> selection = List.copyOf(entries);
-    return new Session(
-            root,
-            policy,
-            limits,
-            new OperationSession(Operation.EXTRACT, limits, control),
-            files,
-            true)
-        .run(
-            selection.stream().map(Entry::writer).toList(),
-            selection.stream().map(Entry::name).toList())
-        .artifacts();
-  }
+    /**
+     * A finalized archive-part plan, published as one atomic set. Every part is staged before any
+     * move. Stabilization that determines this plan must finish in operation-owned scratch first.
+     * The {@link #streamed} and {@link #stabilized} factories name the two shapes the Pack Pipeline
+     * builds.
+     *
+     * <p>Entry counting: each writer reports every final logical entry once through {@link
+     * StagedFile#completedEntry}. Publication counts nothing itself.
+     *
+     * @param destination the first part's path; later parts follow {@link #splitPath}
+     * @param writers one writer per part, in part order
+     * @param policy the Target Policy for every part
+     * @param processingEntered whether the operation already entered PROCESSING to stabilize its
+     *     payloads before the part plan existed (Q10). Progress then continues in that phase
+     *     instead of entering it again; target checks keep their PREFLIGHT location because they
+     *     still precede staging.
+     * @param closeSource closes the stabilization spool, or {@link SourceClose#NONE} when parts
+     *     stream their sources themselves
+     */
+    record ArchiveSet(
+        Path destination,
+        List<Writer> writers,
+        TargetPolicy policy,
+        boolean processingEntered,
+        SourceClose closeSource)
+        implements Plan {
+      /** Copies the writers and rejects missing components before destination effects. */
+      public ArchiveSet {
+        Objects.requireNonNull(destination, "destination");
+        writers = List.copyOf(writers);
+        Objects.requireNonNull(policy, "policy");
+        Objects.requireNonNull(closeSource, "closeSource");
+      }
 
-  /**
-   * Continues source assessment and diagnostic policy through staging and publication settlement.
-   */
-  public static OperationReport extract(
-      Path root,
-      List<Entry> entries,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationSession operation)
-      throws ArchiveException {
-    List<Entry> selection = List.copyOf(entries);
-    return new Session(root, policy, limits, operation, new FileActions(), true)
-        .run(
-            selection.stream().map(Entry::writer).toList(),
-            selection.stream().map(Entry::name).toList());
-  }
+      /**
+       * A set whose parts read and close their own sources while they stage. Publication enters
+       * PROCESSING itself, and the plan holds no source to close.
+       */
+      public static ArchiveSet streamed(
+          Path destination, List<Writer> writers, TargetPolicy policy) {
+        return new ArchiveSet(destination, writers, policy, false, SourceClose.NONE);
+      }
 
-  /**
-   * Stages selected entries on private workers after complete target preflight, then consumes and
-   * publishes them only on the caller thread in Logical Plan Order.
-   */
-  public static OperationReport extractParallel(
-      Path root,
-      List<Entry> entries,
-      TargetPolicy policy,
-      ResourceLimits limits,
-      OperationSession operation,
-      WorkerSelection selection,
-      IntConsumer onStaged,
-      FinalStageAction beforeFinalCommit)
-      throws ArchiveException {
-    List<Entry> plan = List.copyOf(entries);
-    return new Session(root, policy, limits, operation, new FileActions(), true)
-        .runParallel(plan, selection, onStaged, beforeFinalCommit);
-  }
+      /**
+       * A set whose payloads the operation already stabilized in PROCESSING (Q10), replayed from a
+       * spool that closes as the plan's source before the commit.
+       *
+       * @param closeSpool closes the stabilization spool
+       */
+      public static ArchiveSet stabilized(
+          Path destination, List<Writer> writers, TargetPolicy policy, SourceClose closeSpool) {
+        return new ArchiveSet(destination, writers, policy, true, closeSpool);
+      }
 
-  /** A decoded entry name, staged writer, private output extent, and source archive ordinal. */
-  public record Entry(String name, Writer writer, long maximumStagedBytes, long inputOrdinal) {
-    /** Retains the sequential entry form used by existing extraction callers. */
-    public Entry(String name, Writer writer) {
-      this(name, writer, -1, -1);
+      /** Every archive set starts at part index 0, even an empty one. */
+      @Override
+      public long planOrdinal() {
+        return 0;
+      }
     }
 
-    /** Requires complete spelling, a writer, and paired parallel extent and source ordinal. */
+    /**
+     * Validated selected entries, published as one new root or as ordered per-file commits into an
+     * existing tree. Publication decides both the root shape (from the preflighted root) and the
+     * strategy: one worker or an empty selection stages on the caller thread; otherwise private
+     * workers stage and the caller thread consumes in Logical Plan Order.
+     *
+     * <p>Entry counting: writers must not call {@link StagedFile#completedEntry}; publication
+     * counts each entry once, with its staged extent, after its writer completes.
+     *
+     * @param root the extraction root
+     * @param entries the selection, in strictly increasing archive entry ordinal order
+     * @param policy the Target Policy for every selected file
+     * @param workers the operation's worker snapshot
+     * @param onStaged receives each staged entry's archive entry ordinal on the caller thread, in
+     *     Logical Plan Order, in both strategies; the extractor advances its Validation Extent here
+     * @param closeSource closes the extraction source archive
+     */
+    record Extraction(
+        Path root,
+        List<Entry> entries,
+        TargetPolicy policy,
+        WorkerSelection.UpTo workers,
+        LongConsumer onStaged,
+        SourceClose closeSource)
+        implements Plan {
+      /**
+       * Copies the entries and rejects missing components before destination effects.
+       *
+       * @throws IllegalArgumentException if the archive ordinals do not strictly increase, because
+       *     a selection always keeps archive order and Logical Plan Order depends on it
+       */
+      public Extraction {
+        Objects.requireNonNull(root, "root");
+        entries = List.copyOf(entries);
+        Objects.requireNonNull(policy, "policy");
+        Objects.requireNonNull(workers, "workers");
+        Objects.requireNonNull(onStaged, "onStaged");
+        Objects.requireNonNull(closeSource, "closeSource");
+        for (int index = 1; index < entries.size(); index++)
+          if (entries.get(index).archiveOrdinal() <= entries.get(index - 1).archiveOrdinal())
+            throw new IllegalArgumentException("Extraction entries must keep archive order");
+      }
+
+      /** The first selected entry's archive entry ordinal, or 0 when nothing is selected. */
+      @Override
+      public long planOrdinal() {
+        return entries.isEmpty() ? 0 : entries.getFirst().archiveOrdinal();
+      }
+
+      /**
+       * Whether private workers stage this extraction: publication decides from the plan. One
+       * worker, or nothing to stage, keeps every stage on the caller thread.
+       */
+      boolean parallel() {
+        return !entries.isEmpty() && workers.workers() > 1;
+      }
+    }
+  }
+
+  /**
+   * One selected extraction entry, in the same shape for both strategies.
+   *
+   * @param name the decoded entry name, already validated
+   * @param writer copies the entry's payload into its staged file
+   * @param stagedExtent the entry's decoded size: the most its staged file may hold
+   * @param archiveOrdinal the archive entry ordinal that locates every checkpoint, failure, and
+   *     Artifact of this entry (JBSA-OPS-006)
+   */
+  public record Entry(String name, Writer writer, long stagedExtent, long archiveOrdinal) {
+    /** Requires complete spelling, a writer, and a known extent and archive ordinal. */
     public Entry {
       Objects.requireNonNull(name, "name");
       Objects.requireNonNull(writer, "writer");
-      if (maximumStagedBytes < -1 || inputOrdinal < -1)
-        throw new IllegalArgumentException("Invalid parallel entry quantity");
+      if (stagedExtent < 0 || archiveOrdinal < 0)
+        throw new IllegalArgumentException("An entry needs its staged extent and archive ordinal");
     }
   }
 
-  /** Closes the extraction source after all admitted stages settle and before its final commit. */
+  /** Settles a plan's source before its final commit, so no published output outlives it. */
   @FunctionalInterface
-  public interface FinalStageAction {
-    /** Completes source ownership, reporting a structured source failure when it cannot close. */
-    void run() throws IOException;
-  }
+  public interface SourceClose {
+    /** The action for a plan that holds no source of its own. */
+    SourceClose NONE = () -> {};
 
-  /** Coordinator hooks and immutable per-entry costs for one parallel extraction. */
-  private record ParallelPlan(
-      List<Entry> entries,
-      WorkerSelection selection,
-      IntConsumer onStaged,
-      FinalStageAction beforeFinalCommit) {
-    /** Rejects missing scheduling or source-lifetime contracts before destination effects. */
-    private ParallelPlan {
-      entries = List.copyOf(entries);
-      Objects.requireNonNull(selection, "selection");
-      Objects.requireNonNull(onStaged, "onStaged");
-      Objects.requireNonNull(beforeFinalCommit, "beforeFinalCommit");
-      if (entries.stream()
-          .anyMatch(entry -> entry.maximumStagedBytes() < 0 || entry.inputOrdinal() < 0))
-        throw new IllegalArgumentException(
-            "Parallel entries need a known extent and input ordinal");
-    }
+    /**
+     * Completes source ownership. A structured failure keeps its own location; an unstructured
+     * {@link IOException} is located at publication's current phase and ordinal.
+     */
+    void close() throws IOException;
   }
 
   /** A format writer that fills or backpatches one borrowed, bounded staged file. */
@@ -344,7 +362,8 @@ public final class PublicationTransaction {
      * Extraction entries are counted by the publication adapter after their writer completes.
      */
     public void completedEntry(long decodedBytes) throws ArchiveException {
-      if (owner.extraction) throw new IllegalStateException("Extraction counts each writer once");
+      if (owner.plan instanceof Plan.Extraction)
+        throw new IllegalStateException("Extraction counts each writer once");
       owner.operationSession.processedEntry(decodedBytes);
     }
 
@@ -404,130 +423,208 @@ public final class PublicationTransaction {
     void delete(Path path) throws IOException {
       Files.deleteIfExists(path);
     }
+
+    /**
+     * Reads a path's detached no-follow identity, as {@link PathIdentity#inspect} does. This is
+     * publication's only identity read, including its target containment's, so identity changes are
+     * injectable through the same seam as moves and deletions.
+     *
+     * <p>Parallel extraction calls this from private worker threads for their staged files, so an
+     * override must be thread-safe.
+     *
+     * @return the entry's snapshot, or null when it or a parent does not exist
+     * @throws IOException if the entry cannot be inspected
+     * @throws UnsupportedOperationException if the host cannot establish a stable identity
+     */
+    PathIdentity.Snapshot inspect(Path path) throws IOException {
+      return PathIdentity.inspect(path);
+    }
+
+    /**
+     * Pins a destination directory, as {@link PathIdentity#pin} does. Target containment takes its
+     * root (or new root's parent) pin here, so the pin and its release are injectable through the
+     * same seam as every other identity read.
+     *
+     * @return the owned pin; target containment closes it
+     * @throws IOException if the entry is absent or cannot be pinned
+     * @throws UnsupportedOperationException if the host cannot establish a stable identity
+     */
+    PathIdentity.Pin pin(Path path) throws IOException {
+      return PathIdentity.pin(path);
+    }
   }
 
-  /** Mutable state belongs to one synchronous invocation; no callback may retain this owner. */
+  /**
+   * Mutable state belongs to one synchronous invocation; no callback may retain this owner. The
+   * protocol is selected by dispatching on the sealed plan's case; the root shape is learned from
+   * target preflight and stays private to this invocation.
+   */
   private static final class Session {
     private final Path destination;
     private final TargetPolicy policy;
     private final ResourceLimits limits;
     private final FileActions files;
-    private final boolean extraction;
+    private final Plan plan;
+
+    /** The operation the plan publishes for: PACK for an archive set, EXTRACT for an extraction. */
+    private final Operation operation;
+
     private final ResourceBudget budget;
-    private final boolean ownsBudget;
-    private ParallelPlan parallel;
     private final List<Part> parts = new ArrayList<>();
     private final LinkedHashMap<Path, Long> owned = new LinkedHashMap<>();
     private final List<ResourceBudget.Lease> credits = new ArrayList<>();
     private final OperationSession operationSession;
     private final Set<Path> retainedBackups = new HashSet<>();
     private Path staging;
-    private ExtractionPaths containment;
+    private TargetPaths containment;
     private Path stagedRoot;
     private boolean rootPublished;
     private boolean existingTree;
+
+    /** Whether target preflight found no extraction root, so the whole tree commits in one move. */
+    private boolean newRoot;
+
     private Part committing;
     private boolean commitInProgress;
     private final LinkedHashMap<Path, Long> createdDirectories = new LinkedHashMap<>();
     private final Set<Path> removedDirectories = new HashSet<>();
     private final LinkedHashMap<Path, Long> privateDirectories = new LinkedHashMap<>();
     private OperationPhase phase = OperationPhase.PREFLIGHT;
+
+    /**
+     * The location ordinal of each planned output, in plan order: the part index for an archive
+     * set, the archive entry ordinal for extraction.
+     */
+    private final List<Long> plannedOrdinals;
+
+    /** The ordinal of plan-level evidence, as {@link Plan#planOrdinal} defines it. */
+    private final long planOrdinal;
+
     private long ordinal;
 
     /** Whether the caller already moved the operation's progress into PROCESSING (Q10). */
-    private boolean processingEntered;
+    private final boolean processingEntered;
 
-    /** Validates programmer-owned arguments before observing cancellation or touching the disk. */
-    Session(
-        Path destination,
-        TargetPolicy policy,
-        ResourceLimits limits,
-        OperationSession operation,
-        FileActions files,
-        boolean extraction) {
-      this(destination, policy, limits, operation, files, extraction, null);
+    /** Whether the plan's source-close action has been attempted; it never runs twice. */
+    private boolean sourceClosed;
+
+    /**
+     * Derives the strategy from the plan and validates programmer-owned arguments before observing
+     * cancellation or touching the disk. The borrowed budget stays alive until the caller closes
+     * it, after publication has settled cleanup.
+     */
+    Session(OperationSession session, ResourceBudget budget, Plan plan, FileActions files) {
+      this.plan = Objects.requireNonNull(plan, "plan");
+      this.files = Objects.requireNonNull(files, "files");
+      this.budget = Objects.requireNonNull(budget, "budget");
+      operationSession = Objects.requireNonNull(session, "operation");
+      limits = budget.limits();
+      Path target;
+      switch (plan) {
+        case Plan.ArchiveSet set -> {
+          operation = Operation.PACK;
+          target = set.destination();
+          policy = set.policy();
+          plannedOrdinals = partIndexes(set.writers().size());
+          processingEntered = set.processingEntered();
+        }
+        case Plan.Extraction extraction -> {
+          operation = Operation.EXTRACT;
+          target = extraction.root();
+          policy = extraction.policy();
+          plannedOrdinals = extraction.entries().stream().map(Entry::archiveOrdinal).toList();
+          processingEntered = false;
+        }
+      }
+      destination = target.toAbsolutePath().normalize();
+      planOrdinal = plan.planOrdinal();
+      ordinal = planOrdinal;
     }
 
-    /** Keeps a borrowed planner budget alive until its stabilization owner has settled cleanup. */
-    Session(
-        Path destination,
-        TargetPolicy policy,
-        ResourceLimits limits,
-        OperationSession operation,
-        FileActions files,
-        boolean extraction,
-        ResourceBudget sharedBudget) {
-      this.destination =
-          Objects.requireNonNull(destination, "destination").toAbsolutePath().normalize();
-      this.policy = Objects.requireNonNull(policy, "policy");
-      this.limits = Objects.requireNonNull(limits, "limits");
-      this.files = Objects.requireNonNull(files, "files");
-      this.extraction = extraction;
-      operationSession = Objects.requireNonNull(operation, "operation");
-      ownsBudget = sharedBudget == null;
-      budget = ownsBudget ? ResourceBudget.forMutation(limits, context()) : sharedBudget;
+    /** The plan's writers, in plan order. */
+    private List<Writer> writers() {
+      return switch (plan) {
+        case Plan.ArchiveSet set -> set.writers();
+        case Plan.Extraction extraction ->
+            extraction.entries().stream().map(Entry::writer).toList();
+      };
     }
 
     /**
-     * Selects bounded worker staging while retaining the transaction's ordered publication path.
+     * Runs the plan's source-close action once, the first time publication reaches the point before
+     * its final commit. A second call is a no-op, and a failed close is not retried.
      */
-    OperationReport runParallel(
-        List<Entry> entries,
-        WorkerSelection selection,
-        IntConsumer onStaged,
-        FinalStageAction beforeFinalCommit)
-        throws ArchiveException {
-      parallel = new ParallelPlan(entries, selection, onStaged, beforeFinalCommit);
-      return run(
-          entries.stream().map(Entry::writer).toList(), entries.stream().map(Entry::name).toList());
+    private void closeSource() throws IOException {
+      if (sourceClosed) return;
+      sourceClosed = true;
+      plan.closeSource().close();
     }
 
-    /** Settles cleanup before returning evidence, preserving the first accepted failure. */
-    OperationReport run(List<Writer> writers, List<String> names) throws ArchiveException {
+    /**
+     * Stages, commits, and cleans this publication's own staging, accepting every failure into the
+     * operation session instead of throwing it. Only an {@link Error} other than {@link
+     * AssertionError} escapes.
+     *
+     * @return every settled artifact, including residuals; publication cleaned exactly these, so
+     *     their count is the operation's CLEANUP total
+     */
+    List<Artifact> run() {
       try {
+        List<Writer> writers = writers();
         if (processingEntered)
           operationSession.checkpoint(OperationPhase.PROCESSING, OptionalLong.empty());
         else operationSession.ensurePreflight();
         if (writers.size() > limits.maxOutputs())
           throw context()
               .limit("maxOutputs", limits.maxOutputs(), Integer.toString(writers.size()));
-        preflight(writers, names);
-        if (extraction) operationSession.advance(ProgressMetric.ENTRIES, names.size());
+        switch (plan) {
+          case Plan.ArchiveSet set -> preflight(set);
+          case Plan.Extraction extraction -> preflight(extraction);
+        }
         checkpoint();
-        if (!parts.isEmpty() || (extraction && !existingTree)) {
-          containment.recheckRoot();
+        if (!parts.isEmpty() || newRoot) {
+          containment.recheckRoot(context());
           // A drive/share root has no parent; staging beside its planned files stays on that
           // volume.
           Path stagingParent =
               destination.getParent() == null ? destination : destination.getParent();
           staging = Files.createTempDirectory(stagingParent, ".jbsa-");
-          own(staging, 0);
-          own(staging.resolve("atomic-probe"), 0);
-          own(staging.resolve("atomic-ready"), 0);
-          files.probeAtomic(staging, extraction && !existingTree);
-          if (extraction && !existingTree) {
+          own(staging, planOrdinal);
+          own(staging.resolve("atomic-probe"), planOrdinal);
+          own(staging.resolve("atomic-ready"), planOrdinal);
+          files.probeAtomic(staging, newRoot);
+          if (newRoot) {
             stagedRoot = Files.createDirectory(staging.resolve("tree"));
-            own(stagedRoot, 0);
+            own(stagedRoot, planOrdinal);
           }
           if (!processingEntered) {
             operationSession.completePhase();
             operationSession.processing(existingTree);
           }
           phase = OperationPhase.PROCESSING;
-          if (parallel == null) {
+          if (plan instanceof Plan.Extraction extraction && extraction.parallel()) {
+            stageParallel(extraction);
+            // A worker failure must leave PROCESSING interrupted, without a synthetic terminal.
+            checkpoint();
+          } else {
             for (Part part : parts) {
               ordinal = part.ordinal;
               checkpoint();
               long logicalBytes = stage(part);
-              if (extraction) operationSession.processedEntry(logicalBytes);
-              if (existingTree) publishExisting(part);
+              if (plan instanceof Plan.Extraction extraction) {
+                extraction.onStaged().accept(part.ordinal);
+                operationSession.processedEntry(logicalBytes);
+              }
+              if (existingTree) {
+                // The last per-file commit is the final Publication Commit.
+                if (part.index == parts.size() - 1) closeSource();
+                publishExisting(part);
+              }
             }
-          } else {
-            stageParallel();
-            // A worker failure must leave PROCESSING interrupted, without a synthetic terminal.
-            checkpoint();
           }
           if (!existingTree) {
+            // Every stage has settled and nothing is visible yet; the set or root commit is final.
+            closeSource();
             operationSession.completePhase();
             operationSession.publishing();
             phase = OperationPhase.PUBLISHING;
@@ -538,7 +635,8 @@ public final class PublicationTransaction {
             operationSession.beginCommit(phase, OptionalLong.of(ordinal));
             commitInProgress = true;
             if (stagedRoot != null) {
-              containment.recheckRoot();
+              // Located at the root commit: the last part's ordinal, in PUBLISHING.
+              containment.recheckRoot(context());
               files.move(stagedRoot, destination);
               rootPublished = true;
               privateDirectories.forEach(
@@ -561,12 +659,14 @@ public final class PublicationTransaction {
             operationSession.advance(ProgressMetric.ARTIFACTS, parts.size());
           }
         }
-        if (parts.isEmpty() && !(extraction && !existingTree)) {
+        if (parts.isEmpty() && !newRoot) {
           if (!processingEntered) {
             operationSession.completePhase();
             operationSession.processing(existingTree);
           }
           phase = OperationPhase.PROCESSING;
+          // An empty plan still settles its source before its (empty) final commit.
+          closeSource();
           operationSession.completePhase();
           if (!existingTree) {
             operationSession.publishing();
@@ -577,14 +677,15 @@ public final class PublicationTransaction {
         }
         operationSession.completePhase();
       } catch (IOException | UnsupportedOperationException | SecurityException cause) {
-        accept(cause);
+        unwound(cause);
         if (commitInProgress && stagedRoot == null) rollback();
       } catch (RuntimeException | AssertionError cause) {
         accept(context().failure(FailureKind.INTERNAL, "operation.internal-failure", cause));
         if (commitInProgress && stagedRoot == null) rollback();
       } finally {
+        // Failures located from here on are CLEANUP failures. The session itself enters CLEANUP
+        // and reports the count returned below once its operation template settles.
         phase = OperationPhase.CLEANUP;
-        operationSession.cleanup();
         cleanup();
         settleTargetStates();
         if (containment != null) {
@@ -596,39 +697,65 @@ public final class PublicationTransaction {
         }
         closeParallelOutcomes();
         credits.forEach(ResourceBudget.Lease::close);
-        if (ownsBudget) budget.close();
-        operationSession.cleaned(artifacts().size());
       }
-      List<Artifact> artifacts = artifacts();
-      return operationSession.finish(artifacts);
+      return artifacts();
     }
 
-    /** Establishes the complete target plan before creating adjacent staging. */
-    private void preflight(List<Writer> writers, List<String> names) throws IOException {
-      if (!extraction && destination.getFileName() == null) {
+    /**
+     * Establishes an archive set's complete target plan before creating adjacent staging: one part
+     * per writer at its split path, contained beside the destination.
+     */
+    private void preflight(Plan.ArchiveSet set) throws IOException {
+      if (destination.getFileName() == null) {
         throw context().failure(FailureKind.POLICY, "destination.not-file", null);
       }
-      long planHeap = Math.multiplyExact((long) writers.size(), 512);
+      reservePlan(set.writers().size(), List.of());
+      for (int index = 0; index < set.writers().size(); index++)
+        addPart(index, splitPath(destination, index + 1), set.writers().get(index));
+      // Containment reads identities and pins through the fault seam too, so every publication
+      // identity read and pin goes through FileActions.
+      containment =
+          TargetPaths.preflight(
+              destination.getParent(),
+              parts.stream().map(part -> part.target.getFileName().toString()).toList(),
+              policy,
+              context(),
+              files);
+    }
+
+    /**
+     * Establishes an extraction's complete target plan beneath its root before creating staging,
+     * learns whether the root already exists (an existing tree) or is new, then counts the whole
+     * selection as PREFLIGHT entries once the output count is known.
+     */
+    private void preflight(Plan.Extraction extraction) throws IOException {
+      List<String> names = extraction.entries().stream().map(Entry::name).toList();
+      reservePlan(extraction.entries().size(), names);
+      // Containment reads identities and pins through the fault seam too, so every publication
+      // identity read and pin goes through FileActions.
+      containment = TargetPaths.preflight(destination, names, policy, context(), files);
+      existingTree = containment.existingRoot();
+      newRoot = !existingTree;
+      for (int index = 0; index < extraction.entries().size(); index++)
+        addPart(index, containment.targets().get(index), extraction.entries().get(index).writer());
+      operationSession.advance(ProgressMetric.ENTRIES, names.size());
+    }
+
+    /**
+     * Reserves the plan's bookkeeping: per-output state and name copies, plus pin handles, one
+     * temporary inspection and its bounded UTF-16/native structures.
+     */
+    private void reservePlan(int outputs, List<String> names) throws ArchiveException {
+      long planHeap = Math.multiplyExact((long) outputs, 512);
       for (String name : names) planHeap = Math.addExact(planHeap, (long) name.length() * 12);
       // Pin handles plus one temporary inspection and its bounded UTF-16/native structures.
       credits.add(budget.reserve(planHeap, 128 * 1024, 2, 0));
-      if (extraction) {
-        containment = ExtractionPaths.preflight(destination, names, policy, context());
-        existingTree = containment.existingRoot();
-      }
-      for (int index = 0; index < writers.size(); index++) {
-        Path target =
-            extraction ? containment.targets().get(index) : splitPath(destination, index + 1);
-        boolean exists = Files.exists(target, LinkOption.NOFOLLOW_LINKS);
-        parts.add(new Part(index, target, writers.get(index), exists));
-      }
-      if (!extraction)
-        containment =
-            ExtractionPaths.preflight(
-                destination.getParent(),
-                parts.stream().map(part -> part.target.getFileName().toString()).toList(),
-                policy,
-                context());
+    }
+
+    /** Plans one output at its plan position, recording whether a predecessor already exists. */
+    private void addPart(int index, Path target, Writer writer) {
+      boolean exists = Files.exists(target, LinkOption.NOFOLLOW_LINKS);
+      parts.add(new Part(index, plannedOrdinals.get(index), target, writer, exists));
     }
 
     /**
@@ -661,26 +788,32 @@ public final class PublicationTransaction {
       }
       // Readback needs a closed write handle under Windows sharing rules, but must precede commit.
       part.writer.validate(part.staged);
-      part.stagedIdentity = PathIdentity.inspect(part.staged);
+      part.stagedIdentity = files.inspect(part.staged);
       return size;
     }
 
-    /** Admits only bounded private stages and consumes their outcomes in plan order. */
-    private void stageParallel() throws IOException {
+    /**
+     * Admits only bounded private stages of an extraction and consumes their outcomes in plan
+     * order.
+     */
+    private void stageParallel(Plan.Extraction extraction) throws IOException {
+      // The runner numbers work by plan position; its own failures are located by archive ordinal.
       try (var runner =
           new OrderedWorkerRunner<StagedResult>(
-              parallel.selection(), parts.size(), budget, context())) {
+              extraction.workers(),
+              parts.size(),
+              budget,
+              context(),
+              index -> parts.get(index).ordinal)) {
         int nextToSubmit = 0;
         int nextToConsume = 0;
         while (nextToSubmit < parts.size() || runner.hasPending()) {
           while (nextToSubmit < parts.size() && !runner.stopped()) {
             Part candidate = parts.get(nextToSubmit);
             ordinal = candidate.ordinal;
-            operationSession.checkpoint(
-                OperationPhase.PROCESSING,
-                OptionalLong.of(parallel.entries().get(nextToSubmit).inputOrdinal()));
+            checkpoint();
             prepareParallelStage(candidate);
-            long extent = parallel.entries().get(nextToSubmit).maximumStagedBytes();
+            long extent = extraction.entries().get(nextToSubmit).stagedExtent();
             var cost = new OrderedWorkerRunner.Cost(65536, 0, 1, extent);
             if (!runner.trySubmit(
                 nextToSubmit, cost, (stop, lease) -> stageWorker(candidate, stop, lease, extent)))
@@ -688,13 +821,12 @@ public final class PublicationTransaction {
             nextToSubmit++;
           }
           if (!runner.hasPending()) break;
-          int waitingFor = nextToConsume;
+          long waitingFor = parts.get(nextToConsume).ordinal;
           var outcome =
               runner.takeNext(
                   () ->
                       operationSession.checkpoint(
-                          OperationPhase.PROCESSING,
-                          OptionalLong.of(parallel.entries().get(waitingFor).inputOrdinal())));
+                          OperationPhase.PROCESSING, OptionalLong.of(waitingFor)));
           nextToConsume++;
           Part part = parts.get(outcome.ordinal());
           ordinal = part.ordinal;
@@ -710,21 +842,19 @@ public final class PublicationTransaction {
           }
           part.parallelOutcome = outcome;
           part.stagedIdentity = outcome.result().identity();
-          parallel.onStaged().accept(outcome.ordinal());
+          extraction.onStaged().accept(part.ordinal);
           operationSession.processedEntry(outcome.result().size());
           if (existingTree) {
-            if (part.ordinal == parts.size() - 1) {
+            if (part.index == parts.size() - 1) {
               // No source handle may close while an admitted sibling is still using it.
               runner.close();
-              parallel.beforeFinalCommit().run();
+              closeSource();
             }
             publishExisting(part);
           }
         }
-        if (!existingTree && !operationSession.failed() && nextToConsume == parts.size()) {
-          runner.close();
-          parallel.beforeFinalCommit().run();
-        }
+        // A new root closes its source after this method returns, once closing the runner has
+        // joined every worker that could still be reading it.
       }
     }
 
@@ -768,7 +898,8 @@ public final class PublicationTransaction {
         }
         // Readback and identity inspection happen after the write handle closes on Windows.
         part.writer.validate(part.staged);
-        StagedResult result = new StagedResult(size, PathIdentity.inspect(part.staged));
+        // On this worker thread too, identity reads go through the (thread-safe) fault seam.
+        StagedResult result = new StagedResult(size, files.inspect(part.staged));
         handleAndValidationClosed = true;
         return result;
       } catch (ArchiveException failure) {
@@ -814,7 +945,7 @@ public final class PublicationTransaction {
       commitInProgress = true;
       publish(part);
       commitInProgress = false;
-      operationSession.endCommit(part.ordinal == parts.size() - 1);
+      operationSession.endCommit(part.index == parts.size() - 1);
       committing = null;
       phase = OperationPhase.PROCESSING;
       operationSession.advance(ProgressMetric.ARTIFACTS, 1);
@@ -847,7 +978,7 @@ public final class PublicationTransaction {
     private void publish(Part part) throws IOException {
       recheck(part, false);
       if (part.predecessor) {
-        part.backupIdentity = PathIdentity.inspect(part.target);
+        part.backupIdentity = files.inspect(part.target);
         part.backup = staging.resolve("backup-" + part.ordinal);
         ResourceBudget.Lease backupCredit = budget.reserve(0, 0, 0, Files.size(part.target));
         credits.add(backupCredit);
@@ -863,18 +994,15 @@ public final class PublicationTransaction {
       releaseStage(part);
     }
 
-    /** Keeps a containment failure at the actual publication boundary rather than preflight. */
+    /**
+     * Rechecks one part's containment at the current phase and ordinal, so a failure is located at
+     * the actual publication boundary rather than at preflight.
+     *
+     * @param parentsOnly whether to skip the target's own identity, as install after a backup does
+     */
     private void recheck(Part part, boolean parentsOnly) throws ArchiveException {
-      try {
-        if (parentsOnly) containment.recheckParents(part.target);
-        else containment.recheck(part.target);
-      } catch (ArchiveException failure) {
-        throw context()
-            .failure(
-                failure.kind(),
-                failure.primaryFailure().diagnosticIdentifier().orElse("destination.changed"),
-                failure.getCause());
-      }
+      if (parentsOnly) containment.recheckParents(part.target, context());
+      else containment.recheck(part.target, context());
     }
 
     /**
@@ -887,7 +1015,7 @@ public final class PublicationTransaction {
         try {
           recheck(part, true);
           if (part.state == ArtifactState.PUBLISHED) {
-            var current = PathIdentity.inspect(part.target);
+            var current = files.inspect(part.target);
             if (!Objects.equals(current, part.stagedIdentity)) {
               part.state = current == null ? ArtifactState.MISSING : ArtifactState.UNCHANGED;
               throw context()
@@ -897,7 +1025,7 @@ public final class PublicationTransaction {
             part.state = ArtifactState.MISSING;
           }
           if (part.backedUp) {
-            if (!Objects.equals(part.backupIdentity, PathIdentity.inspect(part.backup))) {
+            if (!Objects.equals(part.backupIdentity, files.inspect(part.backup))) {
               throw context().failure(FailureKind.DESTINATION, "destination.changed-backup", null);
             }
             files.move(part.backup, part.target);
@@ -955,7 +1083,7 @@ public final class PublicationTransaction {
       for (Path path : missing.reversed()) {
         Files.createDirectory(path);
         createdDirectories.put(path, part.ordinal);
-        containment.createdDirectory(path);
+        containment.createdDirectory(path, context());
       }
     }
 
@@ -969,7 +1097,7 @@ public final class PublicationTransaction {
         if (removedDirectories.stream().anyMatch(part.target::startsWith)) continue;
         try {
           if (stagedRoot == null) recheck(part, true);
-          var current = PathIdentity.inspect(part.target);
+          var current = files.inspect(part.target);
           if (current == null) part.state = ArtifactState.MISSING;
           else if (part.state == ArtifactState.MISSING
               || (part.state == ArtifactState.PUBLISHED && !current.equals(part.stagedIdentity))
@@ -1000,6 +1128,23 @@ public final class PublicationTransaction {
 
     /** Cleanup never displaces an accepted primary failure or exceeds secondary retention. */
     private void accept(Throwable cause) {
+      operationSession.accept(structured(cause));
+    }
+
+    /**
+     * Settles the failure that ended staging or commit. It may be the session's own raised failure,
+     * which the session already retains, so it goes through {@link OperationSession#unwound}.
+     */
+    private void unwound(Throwable cause) {
+      operationSession.unwound(structured(cause));
+    }
+
+    /**
+     * Structures a publication failure: a non-archive throwable becomes {@code
+     * operation.destination-io} at the current location, and a resource-limit failure raised in
+     * another phase is relocated to the current phase and ordinal.
+     */
+    private ArchiveException structured(Throwable cause) {
       ArchiveException failure =
           cause instanceof ArchiveException archive
               ? archive
@@ -1055,7 +1200,7 @@ public final class PublicationTransaction {
                 failure.assessment(),
                 failure.secondaryFailures());
       }
-      operationSession.accept(failure);
+      return failure;
     }
 
     /** Reports planned artifacts first and residual paths next within their logical ordinal. */
@@ -1076,18 +1221,16 @@ public final class PublicationTransaction {
       if (stagedRoot != null)
         result.add(
             new Artifact(
-                destination, 0, rootPublished ? ArtifactState.PUBLISHED : ArtifactState.MISSING));
+                destination,
+                planOrdinal,
+                rootPublished ? ArtifactState.PUBLISHED : ArtifactState.MISSING));
       result.sort(Comparator.comparingLong(Artifact::ordinal));
       return List.copyOf(result);
     }
 
     /** Supplies stable phase and ordinal evidence without provider exception text. */
     private IoContext context() {
-      return new IoContext(
-          destination,
-          extraction ? Operation.EXTRACT : Operation.PACK,
-          phase,
-          OptionalLong.of(ordinal));
+      return new IoContext(destination, operation, phase, OptionalLong.of(ordinal));
     }
   }
 
@@ -1101,6 +1244,16 @@ public final class PublicationTransaction {
     return destination.resolveSibling(name.substring(0, dot) + number + name.substring(dot));
   }
 
+  /**
+   * Numbers an archive set's outputs by part index, which is both their plan position and their
+   * reported location and Artifact ordinal.
+   */
+  private static List<Long> partIndexes(int count) {
+    List<Long> indexes = new ArrayList<>(count);
+    for (long index = 0; index < count; index++) indexes.add(index);
+    return indexes;
+  }
+
   /** Immutable worker evidence; its staged-file credits belong to the containing Outcome. */
   private record StagedResult(long size, PathIdentity.Snapshot identity) implements AutoCloseable {
     /** The coordinator owns the staged path and the Outcome owns every live resource credit. */
@@ -1112,7 +1265,15 @@ public final class PublicationTransaction {
 
   /** One target's retained in-process publication history. */
   private static final class Part {
+    /** Position in the plan; it orders work and identifies the last output. */
+    final int index;
+
+    /**
+     * Location and Artifact ordinal: the part index for an archive set, the archive entry ordinal
+     * for extraction. The two differ for a sparse extraction selection.
+     */
     final long ordinal;
+
     final Path target;
     final Writer writer;
     final boolean predecessor;
@@ -1126,7 +1287,8 @@ public final class PublicationTransaction {
     ArtifactState state;
 
     /** Starts with the observed target state, before destination effects. */
-    Part(long ordinal, Path target, Writer writer, boolean predecessor) {
+    Part(int index, long ordinal, Path target, Writer writer, boolean predecessor) {
+      this.index = index;
       this.ordinal = ordinal;
       this.target = target;
       this.writer = writer;

@@ -166,6 +166,22 @@ in order:
 For each of keys 2 through 4 independently, every present value **MUST** sort
 before an absent value. Two absent values compare equal at that key, and
 comparison **MUST** continue with the next key.
+
+For `extract`, the logical input or artifact ordinal **MUST** be the archive
+entry ordinal of the selected entry, not its position in the selection. This
+applies to every failure and cancellation location and to every reported
+`Artifact.ordinal`, including created directories and Residual Artifacts. It
+remains a strict Logical Plan Order, because an entry selection keeps archive
+order. Plan-level preflight and staging evidence that precedes or spans every
+selected entry (target preflight, the private staging directory and its probes,
+and a new destination root's `Artifact`) **MUST** use the first selected entry's
+archive entry ordinal, or `0` when the selection is empty. Root commit evidence
+(the `PUBLISHING` recheck and move that publish a new destination root) **MUST**
+use the last selected entry's archive entry ordinal, the position at which that
+commit follows the plan. For `pack`,
+the ordinal of an Archive Part and its artifacts **MUST** remain its zero-based
+part index.
+
 Already-running earlier ordinals **MAY** settle before selection; no new work
 **MAY** be admitted after an outcome is accepted. Remaining observed failures
 **MUST** be retained up to `maxSecondaryFailures` in the same deterministic
@@ -173,7 +189,7 @@ order. Cleanup, rollback, observer, and later-phase failures **MUST NOT**
 displace an earlier Primary Failure. Cancellation **MUST** use the atomic
 acceptance rule in [JBSA-OPS-009](#jbsa-ops-009).
 
-_Source decisions: [accepted deterministic failure selection](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted concurrent failure settlement](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048)._
+_Source decisions: [accepted deterministic failure selection](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted concurrent failure settlement](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048); extraction archive-entry-ordinal clarification by maintainer decision in specification `0.21.0` ([#83](https://github.com/evildarkarchon/jbsa/issues/83)); root commit ordinal clarification by maintainer decision in specification `0.21.1` ([#81](https://github.com/evildarkarchon/jbsa/issues/81))._
 
 ## JBSA-OPS-007
 
