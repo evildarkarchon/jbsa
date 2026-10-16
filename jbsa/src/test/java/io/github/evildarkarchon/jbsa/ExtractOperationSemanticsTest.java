@@ -19,7 +19,8 @@ import org.junit.jupiter.api.io.TempDir;
  * The extract counterpart of {@link OperationSemanticsTest}: pins the exact Progress Snapshot
  * sequence and outcome of the public extraction entry point around success, pre-publication
  * failure, cancellation, and observer failure. Every request selects one worker so the sequential
- * strategy's snapshot timing is the one under test.
+ * strategy's snapshot timing is the one under test. A session-originated failure (cancellation or
+ * observer) is never re-admitted as its own Secondary Failure, so those cases pin an empty list.
  */
 final class ExtractOperationSemanticsTest {
   /** Stored TES3 archive with entries {@code a} = 07 and {@code b} = 08. */
@@ -48,6 +49,7 @@ final class ExtractOperationSemanticsTest {
                         request(literal(TWO_ENTRIES), destination, EntrySelection.ALL),
                         new OperationControl(snapshots::add, () -> true)));
     assertEquals(FailureKind.CANCELLED, failure.kind());
+    assertEquals(List.of(), failure.secondaryFailures());
     assertEquals(OperationPhase.PREFLIGHT, failure.primaryFailure().phase());
     assertEquals(OptionalLong.empty(), failure.primaryFailure().ordinal());
     assertTrue(snapshots.isEmpty());
@@ -212,6 +214,7 @@ final class ExtractOperationSemanticsTest {
                             },
                             cancelled::get)));
     assertEquals(FailureKind.CANCELLED, failure.kind());
+    assertEquals(List.of(), failure.secondaryFailures());
     assertEquals(OperationPhase.PREFLIGHT, failure.primaryFailure().phase());
     assertEquals(OptionalLong.empty(), failure.primaryFailure().ordinal());
     assertEquals(zeroCleanup(), snapshots);
@@ -243,6 +246,7 @@ final class ExtractOperationSemanticsTest {
                             },
                             cancelled::get)));
     assertEquals(FailureKind.CANCELLED, failure.kind());
+    assertEquals(List.of(), failure.secondaryFailures());
     assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
     assertEquals(OptionalLong.of(0), failure.primaryFailure().ordinal());
     assertEquals(
@@ -286,6 +290,7 @@ final class ExtractOperationSemanticsTest {
                             },
                             () -> false)));
     assertEquals(FailureKind.OBSERVER, failure.kind());
+    assertEquals(List.of(), failure.secondaryFailures());
     assertSame(thrown, failure.getCause());
     assertEquals(OperationPhase.PREFLIGHT, failure.primaryFailure().phase());
     assertEquals(1, count.get());
@@ -313,6 +318,7 @@ final class ExtractOperationSemanticsTest {
                             },
                             () -> false)));
     assertEquals(FailureKind.OBSERVER, failure.kind());
+    assertEquals(List.of(), failure.secondaryFailures());
     assertSame(thrown, failure.getCause());
     assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
     assertEquals(
