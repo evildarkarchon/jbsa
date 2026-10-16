@@ -74,6 +74,8 @@ public final class ArchiveExtractor {
       for (int index = 0; index < selected.size(); index++) {
         ArchiveEntry entry = selected.get(index);
         boolean last = index == selected.size() - 1;
+        // Both strategies locate every checkpoint, failure, and Artifact by the archive entry
+        // ordinal, which differs from the selection position for a sparse selection.
         if (sequential) {
           entries.add(
               new PublicationTransaction.Entry(
@@ -82,7 +84,9 @@ public final class ArchiveExtractor {
                     transfer(entry, output, operation, source.inspection().assessment(), validated);
                     // Source cleanup must succeed before the last selected file can become visible.
                     if (last) source.close();
-                  }));
+                  },
+                  entry.metadata().decodedSize(),
+                  entry.metadata().ordinal()));
         } else {
           IoContext entryContext =
               new IoContext(
@@ -115,8 +119,8 @@ public final class ArchiveExtractor {
                       request.resourceLimits(),
                       operation,
                       selectedWorkers,
-                      index -> {
-                        validated.add(selected.get(index).metadata().ordinal());
+                      archiveOrdinal -> {
+                        validated.add(archiveOrdinal);
                         operation.latestAssessment(
                             new ArchiveAssessment(
                                 source.inspection().assessment().disposition(),
