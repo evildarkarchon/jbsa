@@ -68,3 +68,5 @@ graphify-out/
 /docs/reviews/issue43-lz4-runtime/specification-rebinding/corpora/ca0190664f835abf/artifacts/e53d0bf336fb396d59feb69b2d81631688ea92f6bdbbb410ccab720d8de7d481.ba2
 
 .codegraph/
+
+/.claude/worktrees
