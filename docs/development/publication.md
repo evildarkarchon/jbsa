@@ -21,8 +21,10 @@ in `docs/spec/requirements.yaml`. Cancellation at Publication Commit also follow
 ## Integration contracts
 
 These classes stay in the unexported `internal.io` package. `PublicationTransaction`
-is synchronous and owns its transaction, staging files, channels, resource budget,
-and containment pin. A writer borrows `StagedFile` only for its callback and uses
+is synchronous and owns its transaction, staging files, channels, and containment
+pin. It borrows the operation's resource budget, which its caller creates,
+registers with the operation template, and closes after publication settles.
+A writer borrows `StagedFile` only for its callback and uses
 positional `reserve`/`write` operations. Reservations do not allocate proportional
 buffers. A successful callback must have supplied all meaningful output bytes;
 reserved gaps are not a format-level promise of zero padding.
@@ -30,12 +32,31 @@ reserved gaps are not a format-level promise of zero padding.
 Archive-format code must establish source consistency and complete Logical Plan
 Order before entering this seam. When encoded sizes determine split membership,
 it first stabilizes bounded content with `SpillBuffer` outside the destination,
-then passes the complete finalized part writers to `archives`. The publication
-seam therefore cannot create destination staging during that stabilization gate.
-Callers register scratch with the `OperationSession` operation template, which
-closes it before the operation finishes and retains any close failure in the same
-outcome as the publication artifacts. Publication cleans its own staging and
-returns its artifacts; it never finishes the operation itself.
+then passes the complete finalized part writers to `publish` in an archive-set
+plan. The publication seam therefore cannot create destination staging during
+that stabilization gate. Callers register scratch with the `OperationSession`
+operation template, which closes it before the operation finishes and retains any
+close failure in the same outcome as the publication artifacts. Publication cleans
+its own staging and returns its artifacts; it never finishes the operation itself.
+
+Publication has three operations: `publish`, which takes the operation session,
+the budget, and a sealed `Plan`; `preflightArchiveTargets`, which checks a known
+archive-part target set before any source is read; and the `splitPath` rule. The
+plan's case selects the strategy ([ADR-0005](../adr/0005-one-operation-template-and-one-publication-plan.md)):
+
+- `Plan.ArchiveSet` stages every part before one atomic set commit. It states
+  whether the operation already entered PROCESSING to stabilize its payloads.
+- `Plan.Extraction` carries one `Entry` shape (decoded name, writer, staged
+  extent, archive ordinal) and the worker snapshot. Publication decides between a
+  new root and an existing tree from preflight, and between caller-thread and
+  worker staging from the entry count and worker limit. It calls the plan's
+  on-staged hook with each entry's archive ordinal in both strategies.
+
+Each plan carries one source-close action. Publication runs it exactly once,
+after every admitted stage settles and before the final Publication Commit,
+including for an empty plan. When a failure ends publication first, the action
+does not run, and the caller's registered resource closes the source. Writers
+never close a source, spool, or archive.
 
 Extraction callers supply complete decoded names whose wire encoding and
 Normalized Name Identity have already been established by archive metadata
@@ -102,7 +123,7 @@ Windows baseline or qualifies another platform.
 Run on Windows with Java 17 or newer; Gradle supplies the Temurin Java 25 toolchain:
 
 ```powershell
-.\gradlew.bat :jbsa:test --tests '*SpillBufferTest' --tests '*ResourceBudgetTest' --tests '*WindowsPathIdentityTest' --tests '*ExtractionPathsTest' --tests '*PublicationTransactionTest' --tests '*PublicationFailuresTest' --tests '*PublicationDriveRootTest'
+.\gradlew.bat :jbsa:test --tests '*SpillBufferTest' --tests '*ResourceBudgetTest' --tests '*WindowsPathIdentityTest' --tests '*ExtractionPathsTest' --tests '*PublicationTransactionTest' --tests '*PublicationFailuresTest' --tests '*PublicationProgressTest' --tests '*PublicationPlanTest' --tests '*PublicationDriveRootTest'
 .\gradlew.bat clean verify
 ```
 
