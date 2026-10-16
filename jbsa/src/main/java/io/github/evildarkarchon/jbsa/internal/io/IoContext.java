@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,20 @@ public record IoContext(
   /** Creates a checked failure without deriving public data from a provider's message. */
   public ArchiveException failure(FailureKind kind, String identifier, Throwable cause) {
     return failure(kind, identifier, cause, Map.of());
+  }
+
+  /**
+   * Structures a failure to open, read, or close a source at this location. A structured failure
+   * keeps its own evidence and location; any other {@link IOException} becomes SOURCE {@code
+   * operation.source-io} here, with the provider exception retained only as its cause.
+   *
+   * @param failure the source-side failure
+   * @return the failure to throw or accept
+   */
+  public ArchiveException sourceFailure(IOException failure) {
+    return failure instanceof ArchiveException archive
+        ? archive
+        : failure(FailureKind.SOURCE, "operation.source-io", failure);
   }
 
   /** Records exact decimal policy evidence, including values beyond signed long after overflow. */

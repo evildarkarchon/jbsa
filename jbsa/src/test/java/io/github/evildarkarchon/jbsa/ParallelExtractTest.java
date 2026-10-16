@@ -465,6 +465,25 @@ final class ParallelExtractTest {
     assertFalse(Files.exists(parallel));
   }
 
+  /**
+   * Cancellation accepted while private workers stage the extraction is the operation's one Primary
+   * Failure: it is retained exactly once, never again as its own Secondary Failure.
+   */
+  @Test
+  void parallelExtractCancellationIsRetainedOnce() throws Exception {
+    Path archive = storedArchive("cancel-once.bsa", 5);
+    Path destination = directory.resolve("cancel-once");
+    ArchiveException failure =
+        assertThrows(
+            ArchiveCancelledException.class,
+            () ->
+                BethesdaArchives.standard()
+                    .extract(request(archive, destination, 4), cancelOnProcessing()));
+    assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
+    assertEquals(List.of(), failure.secondaryFailures());
+    assertFalse(Files.exists(destination));
+  }
+
   /** Sparse archive ordinals whose selection positions (0, 1, 2) differ from them. */
   private static final EntrySelection.Ordinals SPARSE =
       new EntrySelection.Ordinals(List.of(1L, 3L, 4L));

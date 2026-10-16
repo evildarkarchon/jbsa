@@ -100,18 +100,6 @@ public final class ArchiveExtractor {
               entry.metadata().decodedSize(),
               entry.metadata().ordinal()));
     }
-    // Plan-level evidence, the budget's PREFLIGHT location among it, is located at the first
-    // selected entry's archive ordinal, or 0 for an empty selection (JBSA-OPS-006).
-    long planOrdinal = selected.isEmpty() ? 0 : selected.getFirst().metadata().ordinal();
-    ResourceBudget budget =
-        ResourceBudget.forMutation(
-            request.resourceLimits(),
-            new IoContext(
-                request.destination().toAbsolutePath().normalize(),
-                Operation.EXTRACT,
-                OperationPhase.PREFLIGHT,
-                OptionalLong.of(planOrdinal)));
-    resources.register(budget::close);
     var plan =
         new PublicationTransaction.Plan.Extraction(
             request.destination(),
@@ -128,6 +116,17 @@ public final class ArchiveExtractor {
             },
             // Source cleanup must succeed before the last selected file can become visible.
             () -> closeSource(source, request.source()));
+    // Plan-level evidence, the budget's PREFLIGHT location among it, is located at the first
+    // selected entry's archive ordinal, or 0 for an empty selection (JBSA-OPS-006).
+    ResourceBudget budget =
+        ResourceBudget.forMutation(
+            request.resourceLimits(),
+            new IoContext(
+                request.destination().toAbsolutePath().normalize(),
+                Operation.EXTRACT,
+                OperationPhase.PREFLIGHT,
+                OptionalLong.of(plan.planOrdinal())));
+    resources.register(budget::close);
     return new OperationSession.Published(PublicationTransaction.publish(operation, budget, plan));
   }
 
@@ -140,11 +139,9 @@ public final class ArchiveExtractor {
   private static void closeSource(OpenArchive source, Path path) throws ArchiveException {
     try {
       source.close();
-    } catch (ArchiveException failure) {
-      throw failure;
     } catch (IOException failure) {
       throw new IoContext(path, Operation.EXTRACT, OperationPhase.CLEANUP, OptionalLong.empty())
-          .failure(FailureKind.SOURCE, "operation.source-io", failure);
+          .sourceFailure(failure);
     }
   }
 
@@ -179,10 +176,8 @@ public final class ArchiveExtractor {
       EntryContent content;
       try {
         content = entry.openContent();
-      } catch (ArchiveException failure) {
-        throw failure;
       } catch (IOException failure) {
-        throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+        throw sourceContext.sourceFailure(failure);
       }
       try (SourceContent release = () -> closeContent(content, sourceContext)) {
         ByteBuffer window = ByteBuffer.allocate(65536);
@@ -192,10 +187,8 @@ public final class ArchiveExtractor {
           int count;
           try {
             count = content.read(window);
-          } catch (ArchiveException failure) {
-            throw failure;
           } catch (IOException failure) {
-            throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+            throw sourceContext.sourceFailure(failure);
           }
           if (count < 0) break;
           window.flip();
@@ -214,10 +207,8 @@ public final class ArchiveExtractor {
       throws ArchiveException {
     try {
       content.close();
-    } catch (ArchiveException failure) {
-      throw failure;
     } catch (IOException failure) {
-      throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+      throw sourceContext.sourceFailure(failure);
     }
   }
 

@@ -611,6 +611,48 @@ class ParallelPackTest {
     assertFalse(Files.exists(target));
   }
 
+  /**
+   * Cancellation accepted while parallel workers stabilize sources is the operation's one Primary
+   * Failure: it is retained exactly once, never again as its own Secondary Failure.
+   */
+  @Test
+  void parallelPackCancellationIsRetainedOnce() throws Exception {
+    CountDownLatch firstRead = new CountDownLatch(1);
+    AtomicBoolean cancelled = new AtomicBoolean();
+    AtomicReference<Throwable> outcome = new AtomicReference<>();
+    PackSource slow =
+        new PackSource.GeneratedEntry(
+            "Data/Slow.bin", 1024 * 1024, () -> slowZeroChannel(1024 * 1024, firstRead));
+    Path target = temporary.resolve("cancel-once.ba2");
+    Thread caller =
+        Thread.ofPlatform()
+            .start(
+                () -> {
+                  try {
+                    BethesdaArchives.standard()
+                        .pack(
+                            request(
+                                target,
+                                List.of(slow, generated("Data/Fast.bin", new byte[1024])),
+                                2),
+                            new OperationControl(snapshot -> {}, cancelled::get));
+                  } catch (Throwable failure) {
+                    outcome.set(failure);
+                  }
+                });
+    try {
+      assertTrue(firstRead.await(5, TimeUnit.SECONDS));
+      cancelled.set(true);
+    } finally {
+      caller.join(20_000);
+    }
+    assertFalse(caller.isAlive());
+    var failure = assertInstanceOf(ArchiveCancelledException.class, outcome.get());
+    assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
+    assertEquals(List.of(), failure.secondaryFailures());
+    assertFalse(Files.exists(target));
+  }
+
   /** A nested observer operation cannot restore the outer caller interrupt before publication. */
   @Test
   void nestedOperationKeepsOuterInterruptDeferredUntilItsReturn() throws Exception {

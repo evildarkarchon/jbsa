@@ -550,6 +550,86 @@ final class PublicationFaultsTest {
   }
 
   /**
+   * A parallel extraction whose destination cannot be pinned fails in PREFLIGHT at the first
+   * selected entry's archive ordinal, before any staging exists and without closing its source.
+   */
+  @Test
+  void parallelRootPinFailureFailsPreflight() throws Exception {
+    Path root = directory.resolve("extract");
+    var files =
+        new PublicationTransaction.FileActions() {
+          /** Fails to pin the new root's parent, which target containment holds until close. */
+          @Override
+          PathIdentity.Pin pin(Path path) throws IOException {
+            throw new IOException("injected pin failure");
+          }
+        };
+    var closes = new AtomicInteger();
+    var plan =
+        new PublicationTransaction.Plan.Extraction(
+            root,
+            List.of(
+                new PublicationTransaction.Entry("a", bytes(1), 1, 2),
+                new PublicationTransaction.Entry("b", bytes(2), 1, 5)),
+            TargetPolicy.FAIL,
+            new WorkerSelection.UpTo(4),
+            ordinal -> {},
+            closes::incrementAndGet);
+    ArchiveException failure =
+        assertThrows(
+            ArchiveException.class,
+            () -> Publications.run(session(Operation.EXTRACT), plan, limits(), files));
+    assertEquals(
+        located(FailureKind.DESTINATION, OperationPhase.PREFLIGHT, 2, "extraction.destination-io"),
+        located(failure.primaryFailure()));
+    assertEquals(List.of(), secondaries(failure));
+    assertEquals(List.of(), failure.artifacts());
+    assertEquals(List.of(), list(directory));
+    assertEquals(0, closes.get());
+  }
+
+  /**
+   * A stabilized set whose destination pin cannot be released after publication keeps its published
+   * parts and reports the release as plan-level CLEANUP evidence at part 0.
+   */
+  @Test
+  void stabilizedPinReleaseFailureKeepsThePublishedSet() throws Exception {
+    Path first = directory.resolve("archive.ba2");
+    var files =
+        new PublicationTransaction.FileActions() {
+          /** Pins for real, but reports a failure after releasing the pin. */
+          @Override
+          PathIdentity.Pin pin(Path path) throws IOException {
+            PathIdentity.Pin pinned = super.pin(path);
+            return new PathIdentity.Pin() {
+              @Override
+              public PathIdentity.Snapshot snapshot() {
+                return pinned.snapshot();
+              }
+
+              @Override
+              public void close() throws IOException {
+                pinned.close();
+                throw new IOException("injected pin release failure");
+              }
+            };
+          }
+        };
+    var spoolCloses = new AtomicInteger();
+    ArchiveException failure =
+        assertThrows(
+            ArchiveException.class,
+            () -> stabilized(first, List.of(bytes(1)), TargetPolicy.FAIL, files, spoolCloses));
+    assertEquals(
+        located(FailureKind.DESTINATION, OperationPhase.CLEANUP, 0, "extraction.pin-cleanup"),
+        located(failure.primaryFailure()));
+    assertEquals(List.of(), secondaries(failure));
+    assertEquals(List.of(new Artifact(first, 0, ArtifactState.PUBLISHED)), failure.artifacts());
+    assertArrayEquals(new byte[] {1}, Files.readAllBytes(first));
+    assertEquals(1, spoolCloses.get());
+  }
+
+  /**
    * Runs a streamed archive-set plan on the budget its planner shares, the way the Pack Pipeline
    * does: per-entry planner leases and the layout's metadata stay charged until the budget closes,
    * and the coordinator's windows stay reserved across publication.
@@ -562,9 +642,7 @@ final class PublicationFaultsTest {
       throws ArchiveException {
     var operation = session(Operation.PACK);
     IoContext context = IoContext.of(destination, Operation.PACK);
-    var plan =
-        new PublicationTransaction.Plan.ArchiveSet(
-            destination, writers, policy, false, PublicationTransaction.SourceClose.NONE);
+    var plan = PublicationTransaction.Plan.ArchiveSet.streamed(destination, writers, policy);
     return operation.run(
         context,
         resources -> {
@@ -602,11 +680,10 @@ final class PublicationFaultsTest {
           SpillBuffer stable = SpillBuffer.open(scratch, budget, context);
           resources.register(stable::close);
           var plan =
-              new PublicationTransaction.Plan.ArchiveSet(
+              PublicationTransaction.Plan.ArchiveSet.stabilized(
                   destination,
                   writers,
                   policy,
-                  true,
                   () -> {
                     spoolCloses.incrementAndGet();
                     stable.close();

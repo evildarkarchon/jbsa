@@ -162,7 +162,7 @@ public final class OperationSession {
     } catch (ArchiveException failure) {
       unwound(failure);
     } catch (IOException failure) {
-      accept(context.failure(FailureKind.SOURCE, "operation.source-io", failure));
+      accept(context.sourceFailure(failure));
     } catch (RuntimeException | AssertionError unexpected) {
       accept(
           located(context, phase().orElse(OperationPhase.PREFLIGHT))
@@ -190,10 +190,8 @@ public final class OperationSession {
     for (Resource resource : registered.reversed()) {
       try {
         resource.close();
-      } catch (ArchiveException failure) {
-        accept(failure);
       } catch (IOException failure) {
-        accept(cleanup.failure(FailureKind.SOURCE, "operation.source-io", failure));
+        accept(cleanup.sourceFailure(failure));
       } catch (RuntimeException | AssertionError unexpected) {
         accept(cleanup.failure(FailureKind.INTERNAL, "operation.internal-failure", unexpected));
       }
@@ -378,9 +376,9 @@ public final class OperationSession {
 
   /**
    * Starts cleanup without allowing an observer failure to skip owned resource settlement. Only the
-   * operation template enters CLEANUP; this stays package-private so no other module can.
+   * operation template enters CLEANUP; this stays private so nothing else can.
    */
-  void cleanup() {
+  private void cleanup() {
     if (phase != null) enter(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS);
   }
 
@@ -388,7 +386,7 @@ public final class OperationSession {
    * Emits exact settled cleanup evidence even after an earlier non-observer failure. Only the
    * operation template reports it.
    */
-  void cleaned(long artifacts) {
+  private void cleaned(long artifacts) {
     if (phase == OperationPhase.CLEANUP) {
       completed.put(ProgressMetric.ARTIFACTS, artifacts);
       deliver(ProgressMetric.ARTIFACTS, OptionalLong.of(artifacts));
@@ -443,9 +441,14 @@ public final class OperationSession {
     }
   }
 
-  /** Returns the settled immutable report or throws the selected checked outcome. */
-  OperationReport finish(List<Artifact> artifacts) throws ArchiveException {
-    return finish(artifacts, List.of());
+  /**
+   * Reports whether the operation template has finished this operation. Finishing happens exactly
+   * once, at the end of {@link #run}, including when it then throws a deferred fatal error.
+   */
+  boolean finished() {
+    synchronized (outcome) {
+      return finished;
+    }
   }
 
   /**

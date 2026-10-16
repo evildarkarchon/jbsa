@@ -78,14 +78,18 @@ final class OperationSessionTest {
             Operation.PACK,
             ResourceLimits.standard(),
             new OperationControl(snapshot -> {}, cancelled::get));
-    session.begin();
-    session.beginCommit(OperationPhase.PUBLISHING, OptionalLong.of(0));
-    session.endCommit(true);
-    cancelled.set(true);
-    session.checkpoint(OperationPhase.CLEANUP, OptionalLong.empty());
-    session.cleanup();
-    session.cleaned(0);
-    assertEquals(Operation.PACK, session.finish(List.of()).operation());
+    OperationReport report =
+        session.run(
+            IoContext.of(Path.of("archive.bsa").toAbsolutePath(), Operation.PACK),
+            resources -> {
+              session.begin();
+              session.beginCommit(OperationPhase.PUBLISHING, OptionalLong.of(0));
+              session.endCommit(true);
+              cancelled.set(true);
+              session.checkpoint(OperationPhase.CLEANUP, OptionalLong.empty());
+              return new OperationSession.Published(List.of());
+            });
+    assertEquals(Operation.PACK, report.operation());
   }
 
   /** A fatal cleanup observer must not unwind before the caller settles its owned resources. */
@@ -103,12 +107,25 @@ final class OperationSessionTest {
                   if (snapshot.phase() == OperationPhase.CLEANUP) throw fatal;
                 },
                 () -> false));
-    session.begin();
-    int beforeCleanup = callbacks.get();
-    assertDoesNotThrow(session::cleanup);
-    session.cleaned(0);
-    assertEquals(beforeCleanup + 1, callbacks.get());
-    assertSame(fatal, assertThrows(InternalError.class, () -> session.finish(List.of())));
+    var beforeCleanup = new java.util.concurrent.atomic.AtomicInteger();
+    var released = new AtomicBoolean();
+    InternalError thrown =
+        assertThrows(
+            InternalError.class,
+            () ->
+                session.run(
+                    IoContext.of(Path.of("archive.bsa").toAbsolutePath(), Operation.PACK),
+                    resources -> {
+                      resources.register(() -> released.set(true));
+                      session.begin();
+                      beforeCleanup.set(callbacks.get());
+                      return new OperationSession.Published(List.of());
+                    }));
+    assertTrue(released.get());
+    assertEquals(beforeCleanup.get() + 1, callbacks.get());
+    assertSame(fatal, thrown);
+    // CLEANUP deferred the fatal callback failure: the template still finished the operation.
+    assertTrue(session.finished());
   }
 
   /**
@@ -574,7 +591,7 @@ final class OperationSessionTest {
 
   /** Asserts the template already finished the session, which accepts exactly one finish. */
   private static void assertSettled(OperationSession session) {
-    assertThrows(IllegalStateException.class, () -> session.finish(List.of()));
+    assertTrue(session.finished());
   }
 
   /** The snapshots of a failure in PREFLIGHT that settles zero CLEANUP progress. */

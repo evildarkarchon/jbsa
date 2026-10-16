@@ -310,12 +310,8 @@ public final class PackPipeline {
       }
       // Streamed parts read and close their own sources, so the plan holds no source to close.
       var plan =
-          new PublicationTransaction.Plan.ArchiveSet(
-              request.destination(),
-              writers,
-              request.targetPolicy(),
-              false,
-              PublicationTransaction.SourceClose.NONE);
+          PublicationTransaction.Plan.ArchiveSet.streamed(
+              request.destination(), writers, request.targetPolicy());
       return new OperationSession.Published(
           PublicationTransaction.publish(run.operation, run.budget, plan), completed);
     }
@@ -398,8 +394,8 @@ public final class PackPipeline {
     // Progress already entered PROCESSING above, and the parts have consumed stabilization once
     // they have all staged, so the spool is the plan's source: it closes before the commit.
     var plan =
-        new PublicationTransaction.Plan.ArchiveSet(
-            request.destination(), writers, request.targetPolicy(), true, stable::close);
+        PublicationTransaction.Plan.ArchiveSet.stabilized(
+            request.destination(), writers, request.targetPolicy(), stable::close);
     try (var windows = run.budget.reserve(replayHeap, 0, 0, 0)) {
       return new OperationSession.Published(
           PublicationTransaction.publish(run.operation, run.budget, plan), completed);
@@ -993,7 +989,7 @@ public final class PackPipeline {
         // Closing worker results can fail after processing; keep both structured outcomes. The
         // close goes straight into the session and the first outcome is rethrown unchanged, since
         // it may be the session's own raised failure, which the template must not admit again.
-        run.operation.accept(structured(second, run.context));
+        run.operation.accept(run.context.sourceFailure(second));
       } else pending.addSuppressed(cleanup);
     }
     if (pending instanceof IOException checked) throw checked;
@@ -1145,13 +1141,6 @@ public final class PackPipeline {
             request.destination().toAbsolutePath().normalize(), number),
         output.size(),
         part.size());
-  }
-
-  /** Wraps an unstructured I/O failure as SOURCE {@code operation.source-io}. */
-  private static ArchiveException structured(IOException failure, IoContext context) {
-    return failure instanceof ArchiveException archive
-        ? archive
-        : context.failure(FailureKind.SOURCE, "operation.source-io", failure);
   }
 
   /**
