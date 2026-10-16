@@ -436,6 +436,57 @@ final class OperationSessionTest {
   }
 
   /**
+   * A body that adds cleanup evidence while unwinding the session's raised failure accepts it into
+   * the session and rethrows the raised failure: the outcome keeps the raised failure once, with
+   * the cleanup failure as its only Secondary Failure.
+   */
+  @Test
+  void cleanupBehindRethrownSessionFailureIsRetainedOnce() {
+    var session =
+        new OperationSession(
+            Operation.PACK,
+            ResourceLimits.standard(),
+            new OperationControl(
+                snapshot -> {
+                  if (snapshot.phase() == OperationPhase.PROCESSING)
+                    throw new IllegalStateException("observer");
+                },
+                () -> false));
+    Path target = Path.of("archive.bsa").toAbsolutePath();
+    var cleanup =
+        new IoContext(target, Operation.PACK, OperationPhase.CLEANUP, OptionalLong.of(0))
+            .failure(FailureKind.SOURCE, "operation.source-io", new IOException("close"));
+
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                session.run(
+                    IoContext.of(target, Operation.PACK),
+                    resources -> {
+                      session.begin();
+                      session.completePhase();
+                      try {
+                        session.processing(false);
+                      } catch (ArchiveException raised) {
+                        session.accept(cleanup);
+                        throw raised;
+                      }
+                      throw new AssertionError("processing must raise the observer failure");
+                    }));
+
+    assertEquals(FailureKind.OBSERVER, failure.kind());
+    assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
+    assertEquals(List.of(cleanup.primaryFailure()), failure.secondaryFailures());
+    assertEquals(
+        1,
+        failure.diagnostics().stream()
+            .filter(diagnostic -> diagnostic.identifier().equals("operation.observer-failed"))
+            .count());
+    assertSettled(session);
+  }
+
+  /**
    * Extraction's source archive closes after publication has settled. When that close fails behind
    * a publication failure, it is a CLEANUP Secondary Failure of the one settled outcome.
    */

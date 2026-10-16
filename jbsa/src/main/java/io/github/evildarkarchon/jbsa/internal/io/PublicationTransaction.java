@@ -723,7 +723,7 @@ public final class PublicationTransaction {
         }
         operationSession.completePhase();
       } catch (IOException | UnsupportedOperationException | SecurityException cause) {
-        accept(cause);
+        unwound(cause);
         if (commitInProgress && stagedRoot == null) rollback();
       } catch (RuntimeException | AssertionError cause) {
         accept(context().failure(FailureKind.INTERNAL, "operation.internal-failure", cause));
@@ -1147,6 +1147,23 @@ public final class PublicationTransaction {
 
     /** Cleanup never displaces an accepted primary failure or exceeds secondary retention. */
     private void accept(Throwable cause) {
+      operationSession.accept(structured(cause));
+    }
+
+    /**
+     * Settles the failure that ended staging or commit. It may be the session's own raised failure,
+     * which the session already retains, so it goes through {@link OperationSession#unwound}.
+     */
+    private void unwound(Throwable cause) {
+      operationSession.unwound(structured(cause));
+    }
+
+    /**
+     * Structures a publication failure: a non-archive throwable becomes {@code
+     * operation.destination-io} at the current location, and a resource-limit failure raised in
+     * another phase is relocated to the current phase and ordinal.
+     */
+    private ArchiveException structured(Throwable cause) {
       ArchiveException failure =
           cause instanceof ArchiveException archive
               ? archive
@@ -1202,7 +1219,7 @@ public final class PublicationTransaction {
                 failure.assessment(),
                 failure.secondaryFailures());
       }
-      operationSession.accept(failure);
+      return failure;
     }
 
     /** Reports planned artifacts first and residual paths next within their logical ordinal. */

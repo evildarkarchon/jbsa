@@ -992,12 +992,11 @@ public final class PackPipeline {
       stage.close();
     } catch (Throwable cleanup) {
       if (pending == null) pending = cleanup;
-      else if (pending instanceof IOException first && cleanup instanceof IOException second) {
-        // Closing worker results can fail after processing; keep both structured outcomes.
-        var failures = new FailureRetention(run.request.resourceLimits(), Operation.PACK);
-        failures.accept(structured(first, run.context));
-        failures.accept(structured(second, run.context));
-        pending = failures.finish(List.of());
+      else if (pending instanceof IOException && cleanup instanceof IOException second) {
+        // Closing worker results can fail after processing; keep both structured outcomes. The
+        // close goes straight into the session and the first outcome is rethrown unchanged, since
+        // it may be the session's own raised failure, which the template must not admit again.
+        run.operation.accept(structured(second, run.context));
       } else pending.addSuppressed(cleanup);
     }
     if (pending instanceof IOException checked) throw checked;
@@ -1108,11 +1107,11 @@ public final class PackPipeline {
         scratch.close();
       } catch (ArchiveException cleanup) {
         if (primary == null) throw cleanup;
-        // Keep cleanup as structured secondary evidence, including any exact residual path.
-        var failures = new FailureRetention(run.request.resourceLimits(), Operation.PACK);
-        failures.accept(primary);
-        failures.accept(cleanup);
-        throw failures.finish(List.of());
+        // Keep cleanup as structured secondary evidence, including any exact residual path. It
+        // goes straight into the session and the primary is rethrown unchanged, since the primary
+        // may be the session's own raised failure, which publication must not admit again.
+        run.operation.accept(cleanup);
+        throw primary;
       }
     }
   }

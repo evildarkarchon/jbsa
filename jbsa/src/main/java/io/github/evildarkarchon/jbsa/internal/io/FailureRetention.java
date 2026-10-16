@@ -4,17 +4,14 @@ import io.github.evildarkarchon.jbsa.*;
 import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.PriorityQueue;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -32,14 +29,6 @@ public final class FailureRetention {
   private final PriorityQueue<Diagnostic> diagnostics =
       new PriorityQueue<>(DIAGNOSTIC_ORDER.reversed());
   private final PriorityQueue<Failure> secondary = new PriorityQueue<>(FAILURE_ORDER.reversed());
-
-  /** The exact diagnostic objects {@link #diagnostics} holds, by reference, for re-admission. */
-  private final Set<Diagnostic> retainedDiagnostics =
-      Collections.newSetFromMap(new IdentityHashMap<>());
-
-  /** The exact failure objects {@link #secondary} holds, by reference, for re-admission. */
-  private final Set<Failure> retainedSecondary = Collections.newSetFromMap(new IdentityHashMap<>());
-
   private final Map<Path, Artifact> artifacts = new HashMap<>();
   private Failure primary;
   private String message;
@@ -65,36 +54,16 @@ public final class FailureRetention {
   /**
    * Accepts observed failures in any completion order, retaining the smallest semantic-order
    * records within the configured ceilings. Nested truncation summaries are merged.
-   *
-   * <p>Each record is one observation, so a record this retention already holds (the same {@link
-   * Failure} or {@link Diagnostic} object) is never admitted again. That makes it safe to accept a
-   * failure this retention produced itself, or one a nested retention rebuilt around it: only
-   * records it has not seen are added. Such a derived failure's assessment and truncation summary
-   * describe this retention's own state, so they are not merged again either.
    */
   public void accept(ArchiveException failure) {
     Objects.requireNonNull(failure, "failure");
-    boolean derived = holds(failure.primaryFailure());
-    if (!derived) {
-      acceptCandidate(failure.primaryFailure(), failure.getMessage());
-      failure.assessment().ifPresent(value -> assessment = Optional.of(value));
-    }
+    acceptCandidate(failure.primaryFailure(), failure.getMessage());
+    failure.assessment().ifPresent(value -> assessment = Optional.of(value));
     for (Failure additional : failure.secondaryFailures())
-      if (!holds(additional))
-        acceptCandidate(additional, additional.diagnosticIdentifier().orElse(null));
-    for (Diagnostic diagnostic : failure.diagnostics()) {
-      if (retainedDiagnostics.contains(diagnostic)) continue;
-      // A derived summary repeats omissions already counted here; merging it would double them.
-      if (derived && TRUNCATED.equals(diagnostic.identifier())) continue;
-      diagnostic(diagnostic);
-    }
+      acceptCandidate(additional, additional.diagnosticIdentifier().orElse(null));
+    for (Diagnostic diagnostic : failure.diagnostics()) diagnostic(diagnostic);
     mergeArtifacts(failure.artifacts());
     rejectTruncation();
-  }
-
-  /** Reports whether this exact failure record is already the primary or a retained secondary. */
-  private boolean holds(Failure failure) {
-    return failure == primary || retainedSecondary.contains(failure);
   }
 
   /**
@@ -125,12 +94,7 @@ public final class FailureRetention {
           omittedSecondary.add(new BigInteger(values.get("omittedSecondaryFailures")));
       unseenDiagnostics |= Boolean.parseBoolean(values.get("additionalDiagnosticsMayExist"));
       unseenSecondary |= Boolean.parseBoolean(values.get("additionalSecondaryFailuresMayExist"));
-    } else if (!retain(
-        diagnostics,
-        retainedDiagnostics,
-        diagnostic,
-        limits.maxDiagnostics() - 1,
-        DIAGNOSTIC_ORDER)) {
+    } else if (!retain(diagnostics, diagnostic, limits.maxDiagnostics() - 1, DIAGNOSTIC_ORDER)) {
       omittedDiagnostics = omittedDiagnostics.add(BigInteger.ONE);
     }
     rejectTruncation();
@@ -263,8 +227,7 @@ public final class FailureRetention {
 
   /** Counts every omitted observed failure even when its diagnostic is independently retained. */
   private void retainSecondary(Failure failure) {
-    if (!retain(
-        secondary, retainedSecondary, failure, limits.maxSecondaryFailures(), FAILURE_ORDER)) {
+    if (!retain(secondary, failure, limits.maxSecondaryFailures(), FAILURE_ORDER)) {
       omittedSecondary = omittedSecondary.add(BigInteger.ONE);
     }
   }
@@ -291,20 +254,16 @@ public final class FailureRetention {
   /**
    * Keeps the earliest semantic records in a bounded max-heap; replacing its last record still
    * means exactly one observed record was omitted. No collection grows beyond its ceiling.
-   *
-   * @param identities the reference set mirroring {@code queue}, kept in step with every change
    */
   private static <T> boolean retain(
-      PriorityQueue<T> queue, Set<T> identities, T record, long ceiling, Comparator<T> order) {
+      PriorityQueue<T> queue, T record, long ceiling, Comparator<T> order) {
     if (queue.size() < ceiling) {
       queue.add(record);
-      identities.add(record);
       return true;
     }
     if (ceiling > 0 && order.compare(record, queue.element()) < 0) {
-      identities.remove(queue.remove());
+      queue.remove();
       queue.add(record);
-      identities.add(record);
     }
     return false;
   }

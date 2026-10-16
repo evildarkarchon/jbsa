@@ -36,6 +36,16 @@ public final class OperationSession {
   private boolean commitInProgress;
   private boolean publicationSettled;
   private boolean finished;
+
+  /** The thread running the operation template, or null before {@link #run} starts. */
+  private Thread coordinator;
+
+  /**
+   * Whether this session has thrown its own retained failure on the coordinator thread. From then
+   * on the coordinator is unwinding that failure, so what it catches is already retained.
+   */
+  private boolean raisedToCoordinator;
+
   private Error fatalFailure;
 
   /**
@@ -121,6 +131,8 @@ public final class OperationSession {
    *       #begin}), with no ordinal. An unstructured {@link IOException} becomes SOURCE {@code
    *       operation.source-io} at {@code context}. Any other {@link Error} propagates after the
    *       registered resources close.
+   *   <li>An {@link ArchiveException} from the body is settled through {@link #unwound}: when it is
+   *       the session's own raised failure, it is already retained and is not admitted again.
    *   <li>Registered resources close in reverse registration order, after the body and before the
    *       operation finishes, on success and on failure. A close failure is accepted as a CLEANUP
    *       failure, so it orders behind any earlier Primary Failure.
@@ -139,12 +151,16 @@ public final class OperationSession {
   public OperationReport run(IoContext context, Body body) throws ArchiveException {
     Objects.requireNonNull(context, "context");
     Objects.requireNonNull(body, "body");
+    synchronized (outcome) {
+      if (coordinator != null) throw new IllegalStateException("The operation already ran");
+      coordinator = Thread.currentThread();
+    }
     List<Resource> registered = new ArrayList<>();
     Published published = null;
     try {
       published = body.run(resource -> registered.add(Objects.requireNonNull(resource)));
     } catch (ArchiveException failure) {
-      accept(failure);
+      unwound(failure);
     } catch (IOException failure) {
       accept(context.failure(FailureKind.SOURCE, "operation.source-io", failure));
     } catch (RuntimeException | AssertionError unexpected) {
@@ -380,13 +396,32 @@ public final class OperationSession {
   }
 
   /**
-   * Accepts a candidate under the same lock used by cancellation; providers remain causes. A
-   * failure this session raised itself carries records it already retains, and the retention admits
-   * each retained record once, so rethrowing it here adds nothing.
+   * Accepts a newly observed failure under the same lock used by cancellation; providers remain
+   * causes. A failure the coordinator caught while unwinding goes through {@link #unwound} instead,
+   * because it may be the session's own raised failure.
    */
   public void accept(ArchiveException failure) {
     synchronized (outcome) {
       failures.accept(failure);
+    }
+  }
+
+  /**
+   * Settles a failure the coordinator caught while unwinding its work: the template's body, or
+   * publication's staging and commit. Once this session has raised its own retained failure on the
+   * coordinator, the coordinator is unwinding that failure, so the caught one is that failure
+   * itself and is already retained; it is not accepted again. Otherwise the caught failure is new
+   * and is accepted.
+   *
+   * <p>A combiner that adds evidence while the coordinator unwinds (a cleanup failure behind the
+   * raised failure) must accept that evidence with {@link #accept} and rethrow the raised failure,
+   * rather than folding both into a new exception.
+   *
+   * <p>Coordinator thread only.
+   */
+  void unwound(ArchiveException failure) {
+    synchronized (outcome) {
+      if (!raisedToCoordinator) failures.accept(failure);
     }
   }
 
@@ -432,12 +467,20 @@ public final class OperationSession {
     }
   }
 
-  /** Checks acceptance without resampling cancellation during cleanup or commit settlement. */
+  /**
+   * Checks acceptance without resampling cancellation during cleanup or commit settlement. Raising
+   * the retained failure on the coordinator marks the coordinator as unwinding it (see {@link
+   * #unwound}). A worker's raise does not: the worker's exception reaches the coordinator rebuilt
+   * by its runner's own retention, which still carries the raised records into the session.
+   */
   private void throwIfFailed() throws ArchiveException {
     synchronized (outcome) {
       if (fatalFailure != null) throw fatalFailure;
       ArchiveException failure = failures.finish(List.of());
-      if (failure != null) throw failure;
+      if (failure != null) {
+        if (Thread.currentThread() == coordinator) raisedToCoordinator = true;
+        throw failure;
+      }
     }
   }
 
