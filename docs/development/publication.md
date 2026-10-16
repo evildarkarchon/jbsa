@@ -131,7 +131,7 @@ Run on Windows with Java 17 or newer; Gradle supplies the Temurin Java 25 toolch
 
 The tests use authored byte sequences and disposable filesystem fixtures. Fault
 injection is limited to the internal filesystem-actions boundary: moves,
-deletions, the atomic-move probe, and path-identity reads, including target
-containment's. Real Windows tests establish identity, junction, sharing, and
+deletions, the atomic-move probe, path-identity reads, and the destination pin,
+including target containment's. Real Windows tests establish identity, junction, sharing, and
 cleanup behavior. No proprietary
 assets or Reference Snapshot writes are involved.

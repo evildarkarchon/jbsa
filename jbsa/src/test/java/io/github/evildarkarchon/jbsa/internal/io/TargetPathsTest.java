@@ -159,8 +159,13 @@ final class TargetPathsTest {
                         names,
                         TargetPolicy.FAIL,
                         IoContext.of(directory, Operation.EXTRACT),
-                        PathIdentity.Pin::close,
-                        path -> path.equals(second) ? common : PathIdentity.inspect(path))) {
+                        new PublicationTransaction.FileActions() {
+                          /** Reports the second directory as the first one's alias. */
+                          @Override
+                          PathIdentity.Snapshot inspect(Path path) throws java.io.IOException {
+                            return path.equals(second) ? common : super.inspect(path);
+                          }
+                        })) {
                   plan.recheckRoot(caller());
                 }
               });
@@ -184,10 +189,14 @@ final class TargetPathsTest {
             List.of("first/missing/one.bin", "second/missing/two.bin"),
             TargetPolicy.FAIL,
             IoContext.of(directory, Operation.EXTRACT),
-            PathIdentity.Pin::close,
-            path ->
-                PathIdentity.inspect(
-                    path.startsWith(second) ? first.resolve(second.relativize(path)) : path))) {
+            new PublicationTransaction.FileActions() {
+              /** Observes everything beneath the second directory through the first one. */
+              @Override
+              PathIdentity.Snapshot inspect(Path path) throws java.io.IOException {
+                return super.inspect(
+                    path.startsWith(second) ? first.resolve(second.relativize(path)) : path);
+              }
+            })) {
       assertEquals(2, plan.targets().size());
       plan.recheckRoot(caller());
       Path created = Files.createDirectory(first.resolve("missing"));
@@ -254,9 +263,24 @@ final class TargetPathsTest {
                     List.of("existing.bin"),
                     TargetPolicy.FAIL,
                     IoContext.of(directory, Operation.EXTRACT),
-                    pin -> {
-                      pin.close();
-                      throw cleanup;
+                    new PublicationTransaction.FileActions() {
+                      /** Pins for real, but reports a failure after releasing the pin. */
+                      @Override
+                      PathIdentity.Pin pin(Path path) throws java.io.IOException {
+                        PathIdentity.Pin pinned = super.pin(path);
+                        return new PathIdentity.Pin() {
+                          @Override
+                          public PathIdentity.Snapshot snapshot() {
+                            return pinned.snapshot();
+                          }
+
+                          @Override
+                          public void close() throws java.io.IOException {
+                            pinned.close();
+                            throw cleanup;
+                          }
+                        };
+                      }
                     }));
     assertEquals(FailureKind.POLICY, failure.kind());
     assertEquals(1, failure.secondaryFailures().size());
@@ -427,10 +451,18 @@ final class TargetPathsTest {
         directory, Operation.EXTRACT, OperationPhase.PUBLISHING, OptionalLong.of(3));
   }
 
-  /** Builds the plan using the same semantic location as the operation coordinator. */
+  /**
+   * Builds the plan using the same semantic location as the operation coordinator, through the
+   * production filesystem actions publication passes.
+   */
   private static TargetPaths preflight(Path root, List<String> names, TargetPolicy policy)
       throws Exception {
-    return TargetPaths.preflight(root, names, policy, IoContext.of(root, Operation.EXTRACT));
+    return TargetPaths.preflight(
+        root,
+        names,
+        policy,
+        IoContext.of(root, Operation.EXTRACT),
+        new PublicationTransaction.FileActions());
   }
 
   /** Creates a directory junction without requiring the Windows symbolic-link privilege. */

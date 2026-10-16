@@ -67,10 +67,10 @@ public final class PublicationTransaction {
     List<String> names = new ArrayList<>(partCount);
     for (int index = 0; index < partCount; index++)
       names.add(splitPath(target, index + 1).getFileName().toString());
-    // Production filesystem actions: publication reads identities only through FileActions.
+    // Production filesystem actions: publication reads identities and pins only through
+    // FileActions.
     try (TargetPaths checked =
-        TargetPaths.preflightWith(
-            target.getParent(), names, policy, context, new FileActions()::inspect)) {
+        TargetPaths.preflight(target.getParent(), names, policy, context, new FileActions())) {
       // The output set is validated now; the publishing transaction rechecks it before staging.
     }
   }
@@ -385,6 +385,19 @@ public final class PublicationTransaction {
     PathIdentity.Snapshot inspect(Path path) throws IOException {
       return PathIdentity.inspect(path);
     }
+
+    /**
+     * Pins a destination directory, as {@link PathIdentity#pin} does. Target containment takes its
+     * root (or new root's parent) pin here, so the pin and its release are injectable through the
+     * same seam as every other identity read.
+     *
+     * @return the owned pin; target containment closes it
+     * @throws IOException if the entry is absent or cannot be pinned
+     * @throws UnsupportedOperationException if the host cannot establish a stable identity
+     */
+    PathIdentity.Pin pin(Path path) throws IOException {
+      return PathIdentity.pin(path);
+    }
   }
 
   /**
@@ -649,11 +662,10 @@ public final class PublicationTransaction {
       for (String name : names) planHeap = Math.addExact(planHeap, (long) name.length() * 12);
       // Pin handles plus one temporary inspection and its bounded UTF-16/native structures.
       credits.add(budget.reserve(planHeap, 128 * 1024, 2, 0));
-      // Containment reads identities through the fault seam too, so every publication identity
-      // read goes through FileActions.
+      // Containment reads identities and pins through the fault seam too, so every publication
+      // identity read and pin goes through FileActions.
       if (extraction != null) {
-        containment =
-            TargetPaths.preflightWith(destination, names, policy, context(), files::inspect);
+        containment = TargetPaths.preflight(destination, names, policy, context(), files);
         existingTree = containment.existingRoot();
       }
       for (int index = 0; index < writers.size(); index++) {
@@ -666,12 +678,12 @@ public final class PublicationTransaction {
       }
       if (extraction == null)
         containment =
-            TargetPaths.preflightWith(
+            TargetPaths.preflight(
                 destination.getParent(),
                 parts.stream().map(part -> part.target.getFileName().toString()).toList(),
                 policy,
                 context(),
-                files::inspect);
+                files);
     }
 
     /**

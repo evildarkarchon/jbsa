@@ -44,7 +44,10 @@ public final class TargetPaths implements AutoCloseable {
   private final Path pinnedPath;
   private final PathIdentity.Pin pin;
   private final IoContext context;
-  private final SnapshotReader snapshotReader;
+
+  /** Publication's filesystem fault seam; every identity read and the pin go through it. */
+  private final PublicationTransaction.FileActions files;
+
   private boolean closed;
 
   /** Takes ownership of the root pin only after all caller names have passed lexical validation. */
@@ -55,7 +58,7 @@ public final class TargetPaths implements AutoCloseable {
       Path pinnedPath,
       PathIdentity.Pin pin,
       IoContext context,
-      SnapshotReader snapshotReader) {
+      PublicationTransaction.FileActions files) {
     this.root = root;
     this.existingRoot = existingRoot;
     this.targets = List.copyOf(targets);
@@ -63,7 +66,7 @@ public final class TargetPaths implements AutoCloseable {
     this.pinnedPath = pinnedPath;
     this.pin = pin;
     this.context = context;
-    this.snapshotReader = snapshotReader;
+    this.files = files;
     expected.put(pinnedPath, pin.snapshot());
   }
 
@@ -71,54 +74,26 @@ public final class TargetPaths implements AutoCloseable {
    * Validates every selected name before host conversion, then pins and inspects the output tree. A
    * missing root requires an existing immediate parent so its publication is one atomic move.
    *
+   * <p>Every identity read and the root pin go through {@code files}, publication's one filesystem
+   * fault seam, so containment faults are injectable on the same path production takes. The
+   * returned containment owns the pin and releases it on {@link #close}; a failed preflight
+   * releases it before throwing.
+   *
+   * @param files the filesystem actions whose identity reads and pin this containment uses
    * @throws ArchiveException for unsafe names/collisions, unavailable identity, or destination I/O
    */
-  public static TargetPaths preflight(
-      Path root, List<String> names, TargetPolicy policy, IoContext context)
-      throws ArchiveException {
-    return preflight(root, names, policy, context, PathIdentity.Pin::close);
-  }
-
-  /**
-   * Supplies deterministic fault injection at failed-preflight pin cleanup without leaking handles.
-   */
-  static TargetPaths preflight(
-      Path root, List<String> names, TargetPolicy policy, IoContext context, PinCloser cleanupPin)
-      throws ArchiveException {
-    return preflight(root, names, policy, context, cleanupPin, PathIdentity::inspect);
-  }
-
-  /**
-   * Reads every identity through the caller's reader, so publication's filesystem-actions fault
-   * seam also covers its containment, while the pin cleanup stays the production close. It has its
-   * own name because a lambda would fit both functional parameters of a same-arity overload.
-   */
-  static TargetPaths preflightWith(
-      Path root,
-      List<String> names,
-      TargetPolicy policy,
-      IoContext context,
-      SnapshotReader snapshotReader)
-      throws ArchiveException {
-    return preflight(root, names, policy, context, PathIdentity.Pin::close, snapshotReader);
-  }
-
-  /**
-   * Supplies detached identity observations for deterministic alias and namespace mutation tests.
-   */
   static TargetPaths preflight(
       Path root,
       List<String> names,
       TargetPolicy policy,
       IoContext context,
-      PinCloser cleanupPin,
-      SnapshotReader snapshotReader)
+      PublicationTransaction.FileActions files)
       throws ArchiveException {
     Objects.requireNonNull(root, "root");
     Objects.requireNonNull(names, "names");
     Objects.requireNonNull(policy, "policy");
     Objects.requireNonNull(context, "context");
-    Objects.requireNonNull(snapshotReader, "snapshotReader");
+    Objects.requireNonNull(files, "files");
     validateNames(names, context);
 
     // Do not move host conversion above validateNames: a later malformed entry invalidates the
@@ -149,13 +124,13 @@ public final class TargetPaths implements AutoCloseable {
 
     PathIdentity.Pin pin = null;
     try {
-      PathIdentity.Snapshot rootState = snapshotReader.read(absolute);
+      PathIdentity.Snapshot rootState = files.inspect(absolute);
       boolean exists = rootState != null;
       Path pinnedPath = exists ? absolute : absolute.getParent();
       if (pinnedPath == null) {
         throw context.failure(FailureKind.DESTINATION, "extraction.parent-unavailable", null);
       }
-      pin = PathIdentity.pin(pinnedPath);
+      pin = files.pin(pinnedPath);
       if (pin.snapshot().indirection() || !pin.snapshot().directory()) {
         throw context.failure(FailureKind.POLICY, "extraction.unsafe-directory", null);
       }
@@ -163,10 +138,10 @@ public final class TargetPaths implements AutoCloseable {
         throw context.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
       }
       TargetPaths plan =
-          new TargetPaths(absolute, exists, targets, pinnedPath, pin, context, snapshotReader);
+          new TargetPaths(absolute, exists, targets, pinnedPath, pin, context, files);
       if (!exists) {
         // A root that appeared between inspection and pinning is an unexpected mutation.
-        if (snapshotReader.read(absolute) != null) {
+        if (files.inspect(absolute) != null) {
           throw context.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
         }
         plan.expected.put(absolute, null);
@@ -187,7 +162,7 @@ public final class TargetPaths implements AutoCloseable {
       IOException cleanupFailure = null;
       if (pin != null) {
         try {
-          cleanupPin.close(pin);
+          pin.close();
         } catch (IOException cleanup) {
           cleanupFailure = cleanup;
         }
@@ -226,20 +201,6 @@ public final class TargetPaths implements AutoCloseable {
       }
       throw (RuntimeException) failure;
     }
-  }
-
-  /** The sole failed-preflight cleanup boundary; production closes the owned pin directly. */
-  @FunctionalInterface
-  interface PinCloser {
-    /** Releases the supplied pin, or reports its cleanup failure. */
-    void close(PathIdentity.Pin pin) throws IOException;
-  }
-
-  /** A no-handle classification seam; real host observations remain the production default. */
-  @FunctionalInterface
-  interface SnapshotReader {
-    /** Returns the named entry's identity and no-follow type, or null for an absent entry. */
-    PathIdentity.Snapshot read(Path path) throws IOException;
   }
 
   /** Returns the absolute destination root, preserving caller and archive display spelling. */
@@ -512,7 +473,7 @@ public final class TargetPaths implements AutoCloseable {
    */
   private PathIdentity.Snapshot inspect(Path path, IoContext location) throws ArchiveException {
     try {
-      return snapshotReader.read(path);
+      return files.inspect(path);
     } catch (UnsupportedOperationException failure) {
       throw location.failure(FailureKind.CAPABILITY, "extraction.identity-unavailable", failure);
     } catch (IOException | SecurityException failure) {
