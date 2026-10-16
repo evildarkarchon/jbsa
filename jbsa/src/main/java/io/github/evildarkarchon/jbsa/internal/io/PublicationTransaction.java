@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.util.*;
-import java.util.function.IntConsumer;
+import java.util.function.LongConsumer;
 
 /**
  * Synchronous, operation-owned staging and atomic publication beneath the archive format writers.
@@ -45,7 +45,8 @@ public final class PublicationTransaction {
             limits,
             new OperationSession(Operation.PACK, limits, control),
             files,
-            false);
+            false,
+            partIndexes(writers.size()));
     return session.run(List.copyOf(writers), List.of()).artifacts();
   }
 
@@ -57,7 +58,14 @@ public final class PublicationTransaction {
       ResourceLimits limits,
       OperationSession operation)
       throws ArchiveException {
-    return new Session(destination, policy, limits, operation, new FileActions(), false)
+    return new Session(
+            destination,
+            policy,
+            limits,
+            operation,
+            new FileActions(),
+            false,
+            partIndexes(writers.size()))
         .run(List.copyOf(writers), List.of());
   }
 
@@ -99,7 +107,15 @@ public final class PublicationTransaction {
       OperationSession operation,
       ResourceBudget budget)
       throws ArchiveException {
-    return new Session(destination, policy, limits, operation, new FileActions(), false, budget)
+    return new Session(
+            destination,
+            policy,
+            limits,
+            operation,
+            new FileActions(),
+            false,
+            partIndexes(writers.size()),
+            budget)
         .run(List.copyOf(writers), List.of());
   }
 
@@ -117,7 +133,15 @@ public final class PublicationTransaction {
       ResourceBudget budget)
       throws ArchiveException {
     var session =
-        new Session(destination, policy, limits, operation, new FileActions(), false, budget);
+        new Session(
+            destination,
+            policy,
+            limits,
+            operation,
+            new FileActions(),
+            false,
+            partIndexes(writers.size()),
+            budget);
     session.processingEntered = true;
     return session.run(List.copyOf(writers), List.of());
   }
@@ -151,7 +175,8 @@ public final class PublicationTransaction {
             limits,
             new OperationSession(Operation.EXTRACT, limits, control),
             files,
-            true)
+            true,
+            entryOrdinals(selection))
         .run(
             selection.stream().map(Entry::writer).toList(),
             selection.stream().map(Entry::name).toList())
@@ -169,7 +194,8 @@ public final class PublicationTransaction {
       OperationSession operation)
       throws ArchiveException {
     List<Entry> selection = List.copyOf(entries);
-    return new Session(root, policy, limits, operation, new FileActions(), true)
+    return new Session(
+            root, policy, limits, operation, new FileActions(), true, entryOrdinals(selection))
         .run(
             selection.stream().map(Entry::writer).toList(),
             selection.stream().map(Entry::name).toList());
@@ -178,6 +204,8 @@ public final class PublicationTransaction {
   /**
    * Stages selected entries on private workers after complete target preflight, then consumes and
    * publishes them only on the caller thread in Logical Plan Order.
+   *
+   * @param onStaged receives each consumed entry's archive entry ordinal on the caller thread
    */
   public static OperationReport extractParallel(
       Path root,
@@ -186,17 +214,50 @@ public final class PublicationTransaction {
       ResourceLimits limits,
       OperationSession operation,
       WorkerSelection selection,
-      IntConsumer onStaged,
+      LongConsumer onStaged,
       FinalStageAction beforeFinalCommit)
       throws ArchiveException {
     List<Entry> plan = List.copyOf(entries);
-    return new Session(root, policy, limits, operation, new FileActions(), true)
+    return new Session(
+            root, policy, limits, operation, new FileActions(), true, entryOrdinals(plan))
         .runParallel(plan, selection, onStaged, beforeFinalCommit);
+  }
+
+  /**
+   * Numbers an archive set's outputs by part index, which is both their plan position and their
+   * reported location and Artifact ordinal.
+   */
+  private static List<Long> partIndexes(int count) {
+    List<Long> indexes = new ArrayList<>(count);
+    for (long index = 0; index < count; index++) indexes.add(index);
+    return indexes;
+  }
+
+  /**
+   * Locates each extraction entry by its archive entry ordinal (JBSA-OPS-006). An entry built with
+   * the short form has no archive ordinal, so it falls back to its plan position.
+   *
+   * @throws IllegalArgumentException if the ordinals do not strictly increase, because a selection
+   *     always keeps archive order and Logical Plan Order depends on it
+   */
+  private static List<Long> entryOrdinals(List<Entry> entries) {
+    List<Long> ordinals = new ArrayList<>(entries.size());
+    for (int index = 0; index < entries.size(); index++) {
+      long inputOrdinal = entries.get(index).inputOrdinal();
+      long ordinal = inputOrdinal < 0 ? index : inputOrdinal;
+      if (!ordinals.isEmpty() && ordinal <= ordinals.getLast())
+        throw new IllegalArgumentException("Extraction entries must keep archive order");
+      ordinals.add(ordinal);
+    }
+    return ordinals;
   }
 
   /** A decoded entry name, staged writer, private output extent, and source archive ordinal. */
   public record Entry(String name, Writer writer, long maximumStagedBytes, long inputOrdinal) {
-    /** Retains the sequential entry form used by existing extraction callers. */
+    /**
+     * Builds a sequential entry with no known extent or archive ordinal. Publication locates it by
+     * its plan position instead; production extraction always supplies the archive ordinal.
+     */
     public Entry(String name, Writer writer) {
       this(name, writer, -1, -1);
     }
@@ -221,7 +282,7 @@ public final class PublicationTransaction {
   private record ParallelPlan(
       List<Entry> entries,
       WorkerSelection selection,
-      IntConsumer onStaged,
+      LongConsumer onStaged,
       FinalStageAction beforeFinalCommit) {
     /** Rejects missing scheduling or source-lifetime contracts before destination effects. */
     private ParallelPlan {
@@ -432,6 +493,20 @@ public final class PublicationTransaction {
     private final Set<Path> removedDirectories = new HashSet<>();
     private final LinkedHashMap<Path, Long> privateDirectories = new LinkedHashMap<>();
     private OperationPhase phase = OperationPhase.PREFLIGHT;
+
+    /**
+     * The location ordinal of each planned output, in plan order: the part index for an archive
+     * set, the archive entry ordinal for extraction.
+     */
+    private final List<Long> plannedOrdinals;
+
+    /**
+     * The ordinal of plan-level evidence that precedes or spans every output: target preflight,
+     * private staging, and a new extraction root. It is the first planned output's ordinal, or 0
+     * for an empty plan, so a sparse extraction never reports an unselected entry's ordinal.
+     */
+    private final long planOrdinal;
+
     private long ordinal;
 
     /** Whether the caller already moved the operation's progress into PROCESSING (Q10). */
@@ -444,11 +519,16 @@ public final class PublicationTransaction {
         ResourceLimits limits,
         OperationSession operation,
         FileActions files,
-        boolean extraction) {
-      this(destination, policy, limits, operation, files, extraction, null);
+        boolean extraction,
+        List<Long> plannedOrdinals) {
+      this(destination, policy, limits, operation, files, extraction, plannedOrdinals, null);
     }
 
-    /** Keeps a borrowed planner budget alive until its stabilization owner has settled cleanup. */
+    /**
+     * Keeps a borrowed planner budget alive until its stabilization owner has settled cleanup.
+     *
+     * @param plannedOrdinals each output's location and Artifact ordinal, strictly increasing
+     */
     Session(
         Path destination,
         TargetPolicy policy,
@@ -456,6 +536,7 @@ public final class PublicationTransaction {
         OperationSession operation,
         FileActions files,
         boolean extraction,
+        List<Long> plannedOrdinals,
         ResourceBudget sharedBudget) {
       this.destination =
           Objects.requireNonNull(destination, "destination").toAbsolutePath().normalize();
@@ -463,6 +544,10 @@ public final class PublicationTransaction {
       this.limits = Objects.requireNonNull(limits, "limits");
       this.files = Objects.requireNonNull(files, "files");
       this.extraction = extraction;
+      this.plannedOrdinals = List.copyOf(plannedOrdinals);
+      planOrdinal = this.plannedOrdinals.isEmpty() ? 0 : this.plannedOrdinals.getFirst();
+      // Set before the owned budget captures context(), so its PREFLIGHT limits share the location.
+      ordinal = planOrdinal;
       operationSession = Objects.requireNonNull(operation, "operation");
       ownsBudget = sharedBudget == null;
       budget = ownsBudget ? ResourceBudget.forMutation(limits, context()) : sharedBudget;
@@ -474,7 +559,7 @@ public final class PublicationTransaction {
     OperationReport runParallel(
         List<Entry> entries,
         WorkerSelection selection,
-        IntConsumer onStaged,
+        LongConsumer onStaged,
         FinalStageAction beforeFinalCommit)
         throws ArchiveException {
       parallel = new ParallelPlan(entries, selection, onStaged, beforeFinalCommit);
@@ -501,13 +586,13 @@ public final class PublicationTransaction {
           Path stagingParent =
               destination.getParent() == null ? destination : destination.getParent();
           staging = Files.createTempDirectory(stagingParent, ".jbsa-");
-          own(staging, 0);
-          own(staging.resolve("atomic-probe"), 0);
-          own(staging.resolve("atomic-ready"), 0);
+          own(staging, planOrdinal);
+          own(staging.resolve("atomic-probe"), planOrdinal);
+          own(staging.resolve("atomic-ready"), planOrdinal);
           files.probeAtomic(staging, extraction && !existingTree);
           if (extraction && !existingTree) {
             stagedRoot = Files.createDirectory(staging.resolve("tree"));
-            own(stagedRoot, 0);
+            own(stagedRoot, planOrdinal);
           }
           if (!processingEntered) {
             operationSession.completePhase();
@@ -620,7 +705,7 @@ public final class PublicationTransaction {
         Path target =
             extraction ? containment.targets().get(index) : splitPath(destination, index + 1);
         boolean exists = Files.exists(target, LinkOption.NOFOLLOW_LINKS);
-        parts.add(new Part(index, target, writers.get(index), exists));
+        parts.add(new Part(index, plannedOrdinals.get(index), target, writers.get(index), exists));
       }
       if (!extraction)
         containment =
@@ -667,18 +752,21 @@ public final class PublicationTransaction {
 
     /** Admits only bounded private stages and consumes their outcomes in plan order. */
     private void stageParallel() throws IOException {
+      // The runner numbers work by plan position; its own failures are located by archive ordinal.
       try (var runner =
           new OrderedWorkerRunner<StagedResult>(
-              parallel.selection(), parts.size(), budget, context())) {
+              parallel.selection(),
+              parts.size(),
+              budget,
+              context(),
+              index -> parts.get(index).ordinal)) {
         int nextToSubmit = 0;
         int nextToConsume = 0;
         while (nextToSubmit < parts.size() || runner.hasPending()) {
           while (nextToSubmit < parts.size() && !runner.stopped()) {
             Part candidate = parts.get(nextToSubmit);
             ordinal = candidate.ordinal;
-            operationSession.checkpoint(
-                OperationPhase.PROCESSING,
-                OptionalLong.of(parallel.entries().get(nextToSubmit).inputOrdinal()));
+            checkpoint();
             prepareParallelStage(candidate);
             long extent = parallel.entries().get(nextToSubmit).maximumStagedBytes();
             var cost = new OrderedWorkerRunner.Cost(65536, 0, 1, extent);
@@ -688,13 +776,12 @@ public final class PublicationTransaction {
             nextToSubmit++;
           }
           if (!runner.hasPending()) break;
-          int waitingFor = nextToConsume;
+          long waitingFor = parts.get(nextToConsume).ordinal;
           var outcome =
               runner.takeNext(
                   () ->
                       operationSession.checkpoint(
-                          OperationPhase.PROCESSING,
-                          OptionalLong.of(parallel.entries().get(waitingFor).inputOrdinal())));
+                          OperationPhase.PROCESSING, OptionalLong.of(waitingFor)));
           nextToConsume++;
           Part part = parts.get(outcome.ordinal());
           ordinal = part.ordinal;
@@ -710,10 +797,10 @@ public final class PublicationTransaction {
           }
           part.parallelOutcome = outcome;
           part.stagedIdentity = outcome.result().identity();
-          parallel.onStaged().accept(outcome.ordinal());
+          parallel.onStaged().accept(part.ordinal);
           operationSession.processedEntry(outcome.result().size());
           if (existingTree) {
-            if (part.ordinal == parts.size() - 1) {
+            if (part.index == parts.size() - 1) {
               // No source handle may close while an admitted sibling is still using it.
               runner.close();
               parallel.beforeFinalCommit().run();
@@ -814,7 +901,7 @@ public final class PublicationTransaction {
       commitInProgress = true;
       publish(part);
       commitInProgress = false;
-      operationSession.endCommit(part.ordinal == parts.size() - 1);
+      operationSession.endCommit(part.index == parts.size() - 1);
       committing = null;
       phase = OperationPhase.PROCESSING;
       operationSession.advance(ProgressMetric.ARTIFACTS, 1);
@@ -1076,7 +1163,9 @@ public final class PublicationTransaction {
       if (stagedRoot != null)
         result.add(
             new Artifact(
-                destination, 0, rootPublished ? ArtifactState.PUBLISHED : ArtifactState.MISSING));
+                destination,
+                planOrdinal,
+                rootPublished ? ArtifactState.PUBLISHED : ArtifactState.MISSING));
       result.sort(Comparator.comparingLong(Artifact::ordinal));
       return List.copyOf(result);
     }
@@ -1112,7 +1201,15 @@ public final class PublicationTransaction {
 
   /** One target's retained in-process publication history. */
   private static final class Part {
+    /** Position in the plan; it orders work and identifies the last output. */
+    final int index;
+
+    /**
+     * Location and Artifact ordinal: the part index for an archive set, the archive entry ordinal
+     * for extraction. The two differ for a sparse extraction selection.
+     */
     final long ordinal;
+
     final Path target;
     final Writer writer;
     final boolean predecessor;
@@ -1126,7 +1223,8 @@ public final class PublicationTransaction {
     ArtifactState state;
 
     /** Starts with the observed target state, before destination effects. */
-    Part(long ordinal, Path target, Writer writer, boolean predecessor) {
+    Part(int index, long ordinal, Path target, Writer writer, boolean predecessor) {
+      this.index = index;
       this.ordinal = ordinal;
       this.target = target;
       this.writer = writer;

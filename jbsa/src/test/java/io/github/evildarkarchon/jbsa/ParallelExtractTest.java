@@ -17,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -366,6 +365,10 @@ final class ParallelExtractTest {
                 request(archive, parallel, SPARSE, 4),
                 new OperationControl(fourProgress::add, () -> false));
 
+    // Every extracted file reports its archive entry ordinal. The root and the shared parent
+    // directory are created for the first selected entry, so they carry that entry's ordinal.
+    Set<Artifact> expected = new java.util.HashSet<>();
+    expected.add(new Artifact(Path.of(""), SPARSE.ordinals().getFirst(), ArtifactState.PUBLISHED));
     // TES3 orders entries by name hash, so each archive ordinal's name comes from the archive.
     for (EntryMetadata entry : BethesdaArchives.standard().inspect(archive).entries()) {
       // Archive names use backslash separators; extraction resolves them as path separators.
@@ -373,11 +376,18 @@ final class ParallelExtractTest {
       boolean selected = SPARSE.ordinals().contains(entry.ordinal());
       assertEquals(selected, Files.exists(sequential.resolve(name)), name);
       assertEquals(selected, Files.exists(parallel.resolve(name)), name);
-      if (selected)
+      if (selected) {
         assertArrayEquals(
             Files.readAllBytes(sequential.resolve(name)),
             Files.readAllBytes(parallel.resolve(name)));
+        expected.add(new Artifact(Path.of(name), entry.ordinal(), ArtifactState.PUBLISHED));
+        expected.add(
+            new Artifact(
+                Path.of(name).getParent(), SPARSE.ordinals().getFirst(), ArtifactState.PUBLISHED));
+      }
     }
+    assertEquals(expected, Set.copyOf(relative(sequential, one.artifacts())));
+    assertEquals(expected, Set.copyOf(relative(parallel, four.artifacts())));
     assertEquals(
         new ValidationExtent.Payloads(Set.of(1L, 3L, 4L)), one.assessment().orElseThrow().extent());
     assertEquals(one.assessment(), four.assessment());
@@ -429,9 +439,6 @@ final class ParallelExtractTest {
    * ordinal in both strategies.
    */
   @Test
-  @Disabled(
-      "Operation Lifecycle 02: the sequential strategy locates this cancellation at selection"
-          + " position 0, while the parallel strategy locates it at archive ordinal 1")
   void sparseSelectionParallelMatchesSequentialCancellationLocation() throws Exception {
     Path archive = storedArchive("sparse-cancel.bsa", 5);
     Path sequential = directory.resolve("cancel-sequential");
