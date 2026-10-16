@@ -114,6 +114,7 @@ class TransformStageTest {
     try (var budget = ResourceBudget.forMutation(limits, CONTEXT);
         var stage =
             new TransformStage(
+                operation,
                 List.of(entry("a", "abc"), entry("b", "de")),
                 new WorkerSelection.UpTo(2),
                 budget,
@@ -138,7 +139,7 @@ class TransformStageTest {
                         }))) {
       assertTrue(stage.parallel());
       for (String expected : new String[] {"ABC", "DE"}) {
-        try (var input = stage.next(operation)) {
+        try (var input = stage.next()) {
           assertTrue(input.hasEncoded());
           assertEquals(expected.length(), input.encodedSize());
           assertEquals(expected, read(input.encodedChannel(), expected.length()));
@@ -208,6 +209,7 @@ class TransformStageTest {
     try (var budget = ResourceBudget.forMutation(limits, CONTEXT);
         var stage =
             new TransformStage(
+                new OperationSession(Operation.PACK, limits, OperationControl.standard()),
                 sources,
                 new WorkerSelection.UpTo(2),
                 budget,
@@ -233,6 +235,7 @@ class TransformStageTest {
     try (var budget = ResourceBudget.forMutation(limits, CONTEXT);
         var stage =
             new TransformStage(
+                operation,
                 List.of(entry("a", "abc"), entry("b", "de")),
                 new WorkerSelection.UpTo(2),
                 budget,
@@ -241,7 +244,7 @@ class TransformStageTest {
                 ordinal ->
                     ordinal == 0 ? new TransformStage.Encoding(16, 0, 0, true, encoder) : null)) {
       assertTrue(stage.parallel());
-      return assertThrows(ArchiveException.class, () -> stage.next(operation));
+      return assertThrows(ArchiveException.class, () -> stage.next());
     }
   }
 

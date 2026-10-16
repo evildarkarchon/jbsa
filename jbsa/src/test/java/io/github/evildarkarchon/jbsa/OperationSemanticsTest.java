@@ -165,6 +165,74 @@ class OperationSemanticsTest {
         failure.diagnostics().stream().map(Diagnostic::identifier).toList());
   }
 
+  /**
+   * Cancellation observed while a sequential pack reads a source is the one Primary Failure. The
+   * stabilized BA2 pack enters PROCESSING before it reads, so its first PROCESSING cancellation
+   * checkpoint runs inside the source read: for a generated source and for a loose file alike, the
+   * read's own failure handling must not turn the stop into a Secondary Failure.
+   */
+  @Test
+  void cancellationDuringASequentialSourceReadIsRetainedOnce() throws Exception {
+    Path loose = directory.resolve("loose.bin");
+    Files.write(loose, new byte[4096]);
+    List<PackSource> kinds =
+        List.of(
+            new PackSource.GeneratedEntry(
+                "Data/Generated.bin",
+                4096,
+                () ->
+                    java.nio.channels.Channels.newChannel(
+                        new java.io.ByteArrayInputStream(new byte[4096]))),
+            new PackSource.NamedFile("Data/Loose.bin", loose));
+    for (PackSource source : kinds) {
+      Path target = directory.resolve("cancel-" + kinds.indexOf(source) + ".ba2");
+      var processing = new java.util.concurrent.atomic.AtomicBoolean();
+      var failure =
+          assertThrows(
+              ArchiveCancelledException.class,
+              () ->
+                  BethesdaArchives.standard()
+                      .pack(
+                          sequentialGeneral(target, List.of(source)),
+                          new OperationControl(
+                              snapshot -> {
+                                if (snapshot.phase() == OperationPhase.PROCESSING)
+                                  processing.set(true);
+                              },
+                              processing::get)));
+      assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase(), source.toString());
+      assertEquals(List.of(), failure.secondaryFailures(), source.toString());
+      assertEquals(List.of(), failure.diagnostics(), source.toString());
+      assertFalse(Files.exists(target));
+    }
+  }
+
+  /** A one-worker Fallout 4 General pack, which stabilizes every source on the caller thread. */
+  private static PackRequest sequentialGeneral(Path target, List<PackSource> sources) {
+    var standard =
+        PackRequest.standard(
+            target,
+            ArchiveFamily.FO4_GENERAL_BA2,
+            new ArchiveEncoding(
+                Optional.of(new WireVersion(1)),
+                Optional.of(Ba2Subtype.GNRL),
+                java.util.OptionalLong.empty()),
+            sources,
+            Optional.empty());
+    return new PackRequest(
+        standard.destination(),
+        standard.family(),
+        standard.encoding(),
+        standard.compatibilityProfile(),
+        standard.sources(),
+        standard.targetPolicy(),
+        standard.diagnosticPolicy(),
+        standard.resourceLimits(),
+        new WorkerSelection.UpTo(1),
+        standard.options(),
+        standard.ddsTarget());
+  }
+
   /** Constructs a real request whose v2 selector conflicts with default v3 raw-LZ4 encoding. */
   private PackRequest request() {
     return PackRequest.standard(

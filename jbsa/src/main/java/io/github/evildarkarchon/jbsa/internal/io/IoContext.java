@@ -17,7 +17,12 @@ public record IoContext(
     return new IoContext(path, operation, OperationPhase.PREFLIGHT, OptionalLong.empty());
   }
 
-  /** Creates a checked failure without deriving public data from a provider's message. */
+  /**
+   * Creates a checked failure without deriving public data from a provider's message.
+   *
+   * @throws IllegalStateException if {@code cause} is the session's {@link OperationStopped}
+   *     signal, which code must rethrow rather than structure
+   */
   public ArchiveException failure(FailureKind kind, String identifier, Throwable cause) {
     return failure(kind, identifier, cause, Map.of());
   }
@@ -50,6 +55,11 @@ public record IoContext(
    */
   private ArchiveException failure(
       FailureKind kind, String identifier, Throwable cause, Map<String, String> values) {
+    // The stop signal is not a failure, and the session already holds the one it stopped for.
+    // Wrapping it would admit a bogus failure, so a catch that missed rethrowing it fails loudly.
+    if (cause instanceof OperationStopped)
+      throw new IllegalStateException(
+          "The operation session's stop signal must reach the operation template unchanged", cause);
     boolean destination = kind == FailureKind.DESTINATION;
     DiagnosticLocation location =
         new DiagnosticLocation(

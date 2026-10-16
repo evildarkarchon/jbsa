@@ -55,6 +55,9 @@ public final class PackSources {
           failure.artifacts(),
           failure.assessment(),
           failure.secondaryFailures());
+    } catch (OperationStopped stopped) {
+      // A reader's session checkpoint stopped the pack; the session holds why.
+      throw stopped;
     } catch (IOException failure) {
       throw context.failure(FailureKind.SOURCE, "operation.source-io", failure);
     }
@@ -82,9 +85,7 @@ public final class PackSources {
             entry(
                 generated.name(),
                 generated.length(),
-                reader ->
-                    consumeGenerated(
-                        generated, reader, context, request.resourceLimits(), operation),
+                reader -> consumeGenerated(generated, reader, context, operation),
                 context,
                 encoding),
             overlay,
@@ -258,24 +259,29 @@ public final class PackSources {
   }
 
   /**
-   * Settles transferred generated channels explicitly so close errors remain structured evidence.
+   * Settles transferred generated channels explicitly so close errors remain structured evidence. A
+   * read and a close failure fold into one failure for the caller to throw.
    *
-   * @param operation the pack's session, which takes a close failure directly once it has failed
+   * @param operation the pack's session, which takes a close failure directly when the read was
+   *     stopped by the session, because the stop signal carries no evidence to fold it into
    */
   private static void consumeGenerated(
       PackSource.GeneratedEntry generated,
       Reader reader,
       IoContext context,
-      ResourceLimits limits,
       OperationSession operation)
       throws IOException {
-    var failures = new FailureRetention(limits, Operation.PACK);
+    var failures = FailureRetention.folding(Operation.PACK);
     ReadableByteChannel channel = null;
+    boolean stopped = false;
     try {
       channel = generated.contentFactory().open();
       if (channel == null)
         throw context.failure(FailureKind.SOURCE, "source.invalid-channel", null);
       reader.read(channel);
+    } catch (OperationStopped signal) {
+      stopped = true;
+      throw signal;
     } catch (ArchiveException failure) {
       failures.accept(failure);
     } catch (IOException failure) {
@@ -291,9 +297,7 @@ public final class PackSources {
               new IoContext(
                       context.path(), Operation.PACK, OperationPhase.CLEANUP, context.ordinal())
                   .failure(FailureKind.SOURCE, "operation.source-io", failure);
-          // Once the operation has failed, the read failure being unwound may be the session's
-          // own raised failure, which is not admitted again; keep the close in the session itself.
-          if (operation.failed()) operation.accept(closing);
+          if (stopped) operation.accept(closing);
           else failures.accept(closing);
         }
       }
@@ -415,14 +419,14 @@ public final class PackSources {
       PackRequest request,
       OperationSession operation,
       ResourceBudget budget)
-      throws ArchiveException {
+      throws IOException {
     account(entry, operation, budget);
     if (included(entry.displayName, request.options())) overlay.put(entry.identity, entry);
   }
 
   /** Reserves candidate objects and encoded metadata before growing the source plan. */
   private static void account(Entry entry, OperationSession operation, ResourceBudget budget)
-      throws ArchiveException {
+      throws IOException {
     operation.advance(ProgressMetric.ENTRIES, 1);
     budget.reserve(512L + entry.name.length * 8L, 0, 0, 0);
   }

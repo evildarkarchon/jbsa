@@ -23,7 +23,13 @@ public final class FailureRetention {
   private static final Comparator<Diagnostic> DIAGNOSTIC_ORDER =
       FailureRetention::compareDiagnostic;
   private static final Comparator<Failure> FAILURE_ORDER = FailureRetention::compareFailure;
-  private final ResourceLimits limits;
+
+  /** Diagnostics retained beside the one reserved truncation summary slot. */
+  private final long diagnosticCeiling;
+
+  /** Secondary Failures retained before further ones are only counted as omitted. */
+  private final long secondaryCeiling;
+
   private final Operation operation;
   private final DiagnosticPolicy policy;
   private final PriorityQueue<Diagnostic> diagnostics =
@@ -46,9 +52,35 @@ public final class FailureRetention {
 
   /** Reserves summary capacity and evaluates immutable warning policy before dropping records. */
   public FailureRetention(ResourceLimits limits, Operation operation, DiagnosticPolicy policy) {
-    this.limits = Objects.requireNonNull(limits, "limits");
+    this(
+        Objects.requireNonNull(limits, "limits").maxDiagnostics() - 1,
+        limits.maxSecondaryFailures(),
+        operation,
+        policy);
+  }
+
+  /** Retains up to the given ceilings, evaluating the policy before dropping any record. */
+  private FailureRetention(
+      long diagnosticCeiling, long secondaryCeiling, Operation operation, DiagnosticPolicy policy) {
+    this.diagnosticCeiling = diagnosticCeiling;
+    this.secondaryCeiling = secondaryCeiling;
     this.operation = Objects.requireNonNull(operation, "operation");
     this.policy = Objects.requireNonNull(policy, "policy");
+  }
+
+  /**
+   * Returns a retention for folding several failures into the one a caller throws, such as a worker
+   * settling its private spools behind the failure that stopped it. It omits no record and rejects
+   * no warning, so the operation session that finally accepts the fold applies the request's
+   * Diagnostic Policy and ceilings to every record exactly once. Its output must reach that
+   * session; it is never a final outcome itself.
+   *
+   * @param operation the operation the folded failures belong to
+   * @return an empty fold
+   */
+  public static FailureRetention folding(Operation operation) {
+    return new FailureRetention(
+        Long.MAX_VALUE, Long.MAX_VALUE, operation, DiagnosticPolicy.standard());
   }
 
   /**
@@ -94,7 +126,7 @@ public final class FailureRetention {
           omittedSecondary.add(new BigInteger(values.get("omittedSecondaryFailures")));
       unseenDiagnostics |= Boolean.parseBoolean(values.get("additionalDiagnosticsMayExist"));
       unseenSecondary |= Boolean.parseBoolean(values.get("additionalSecondaryFailuresMayExist"));
-    } else if (!retain(diagnostics, diagnostic, limits.maxDiagnostics() - 1, DIAGNOSTIC_ORDER)) {
+    } else if (!retain(diagnostics, diagnostic, diagnosticCeiling, DIAGNOSTIC_ORDER)) {
       omittedDiagnostics = omittedDiagnostics.add(BigInteger.ONE);
     }
     rejectTruncation();
@@ -227,7 +259,7 @@ public final class FailureRetention {
 
   /** Counts every omitted observed failure even when its diagnostic is independently retained. */
   private void retainSecondary(Failure failure) {
-    if (!retain(secondary, failure, limits.maxSecondaryFailures(), FAILURE_ORDER)) {
+    if (!retain(secondary, failure, secondaryCeiling, FAILURE_ORDER)) {
       omittedSecondary = omittedSecondary.add(BigInteger.ONE);
     }
   }

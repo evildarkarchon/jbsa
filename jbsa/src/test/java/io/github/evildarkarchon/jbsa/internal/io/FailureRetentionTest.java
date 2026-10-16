@@ -213,6 +213,52 @@ final class FailureRetentionTest {
     assertEquals(absent, absentOrdinals.finish(List.of()).primaryFailure());
   }
 
+  /**
+   * A fold neither omits records nor applies a policy, so failures folded into one and then
+   * accepted settle exactly as if each had been accepted directly. Here the operation's ceilings
+   * keep one diagnostic and one Secondary Failure: a fold that applied them itself would drop the
+   * rejected warning before the operation's policy could see it.
+   */
+  @Test
+  void foldedFailuresSettleLikeFailuresAcceptedOneByOne() {
+    var limits = new ResourceLimits(1, 1, 1, 1, 1, 2, 1);
+    var policy = new DiagnosticPolicy(Set.of("archive.warning"));
+    List<ArchiveException> observed =
+        List.of(
+            withDiagnostic(
+                failure(FailureKind.SOURCE, OperationPhase.PROCESSING, 0, "source.early"),
+                warning("other.warning", 0)),
+            withDiagnostic(
+                failure(FailureKind.DESTINATION, OperationPhase.CLEANUP, 1, "destination.cleanup"),
+                warning("archive.warning", 1)),
+            failure(FailureKind.DESTINATION, OperationPhase.CLEANUP, 2, "destination.later"));
+
+    var direct = new FailureRetention(limits, Operation.PACK, policy);
+    observed.forEach(direct::accept);
+    var fold = FailureRetention.folding(Operation.PACK);
+    observed.forEach(fold::accept);
+    var settled = new FailureRetention(limits, Operation.PACK, policy);
+    settled.accept(fold.finish(List.of()));
+
+    ArchiveException expected = direct.finish(List.of());
+    ArchiveException actual = settled.finish(List.of());
+    assertEquals(FailureKind.POLICY, expected.kind());
+    assertEquals(expected.primaryFailure(), actual.primaryFailure());
+    assertEquals(expected.secondaryFailures(), actual.secondaryFailures());
+    assertEquals(expected.diagnostics(), actual.diagnostics());
+  }
+
+  /** Returns the failure with one more diagnostic, as a nested retention's output carries it. */
+  private static ArchiveException withDiagnostic(ArchiveException failure, Diagnostic diagnostic) {
+    return new ArchiveException(
+        failure.getMessage(),
+        failure.primaryFailure(),
+        List.of(diagnostic),
+        List.of(),
+        Optional.empty(),
+        List.of());
+  }
+
   /** Supplies a format warning with a stable archive-order location. */
   private static Diagnostic warning(String id, long ordinal) {
     return new Diagnostic(

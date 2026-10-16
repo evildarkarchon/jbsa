@@ -22,6 +22,11 @@ import java.util.TreeMap;
  * <p>Pack and extract run through one operation template, {@link #run}. It alone maps unexpected
  * throwables, settles pre-publication failures with CLEANUP progress, closes the caller-owned
  * resources an operation body registers, and finishes the operation exactly once.
+ *
+ * <p>Once the operation has failed, a session method that observes it throws {@link
+ * OperationStopped}, a signal that carries no evidence, never a copy of its retained failure. The
+ * only failure the session ever throws is the settled outcome {@link #run} finishes with, so no
+ * {@link ArchiveException} a caller catches during the operation is a copy the session raised.
  */
 public final class OperationSession {
   private final Operation operation;
@@ -37,14 +42,8 @@ public final class OperationSession {
   private boolean publicationSettled;
   private boolean finished;
 
-  /** The thread running the operation template, or null before {@link #run} starts. */
-  private Thread coordinator;
-
-  /**
-   * Whether this session has thrown its own retained failure on the coordinator thread. From then
-   * on the coordinator is unwinding that failure, so what it catches is already retained.
-   */
-  private boolean raisedToCoordinator;
+  /** Whether {@link #run} has started; a session runs at most one template. */
+  private boolean started;
 
   private Error fatalFailure;
 
@@ -100,7 +99,8 @@ public final class OperationSession {
      *
      * @param resources the scope where the body registers each caller-owned resource it acquires
      * @return the published result; publication returns it even when it accepted a failure
-     * @throws IOException any failure before publication; the template accepts and settles it
+     * @throws IOException any failure before publication; the template accepts and settles it,
+     *     except {@link OperationStopped}, whose failure the session already holds
      */
     Published run(Resources resources) throws IOException;
   }
@@ -131,8 +131,8 @@ public final class OperationSession {
    *       #begin}), with no ordinal. An unstructured {@link IOException} becomes SOURCE {@code
    *       operation.source-io} at {@code context}. Any other {@link Error} propagates after the
    *       registered resources close.
-   *   <li>An {@link ArchiveException} from the body is settled through {@link #unwound}: when it is
-   *       the session's own raised failure, it is already retained and is not admitted again.
+   *   <li>An {@link ArchiveException} from the body is accepted. {@link OperationStopped} is not a
+   *       failure and admits nothing: the session already holds the failure it stopped for.
    *   <li>Registered resources close in reverse registration order, after the body and before the
    *       operation finishes, on success and on failure. A close failure is accepted as a CLEANUP
    *       failure, so it orders behind any earlier Primary Failure.
@@ -152,15 +152,17 @@ public final class OperationSession {
     Objects.requireNonNull(context, "context");
     Objects.requireNonNull(body, "body");
     synchronized (outcome) {
-      if (coordinator != null) throw new IllegalStateException("The operation already ran");
-      coordinator = Thread.currentThread();
+      if (started) throw new IllegalStateException("The operation already ran");
+      started = true;
     }
     List<Resource> registered = new ArrayList<>();
     Published published = null;
     try {
       published = body.run(resource -> registered.add(Objects.requireNonNull(resource)));
+    } catch (OperationStopped stopped) {
+      // A signal, not a failure: the session already holds every record of what stopped the body.
     } catch (ArchiveException failure) {
-      unwound(failure);
+      accept(failure);
     } catch (IOException failure) {
       accept(context.sourceFailure(failure));
     } catch (RuntimeException | AssertionError unexpected) {
@@ -206,7 +208,7 @@ public final class OperationSession {
   /**
    * Enters preflight for a fresh invocation, or verifies a collaborating adapter is still there.
    */
-  public void ensurePreflight() throws ArchiveException {
+  public void ensurePreflight() throws OperationStopped {
     if (phase == null) begin();
     else if (phase != OperationPhase.PREFLIGHT)
       throw new IllegalStateException("The operation has already left preflight");
@@ -214,7 +216,7 @@ public final class OperationSession {
   }
 
   /** Admits immutable evidence under the outcome lock and stops immediately on policy rejection. */
-  public void diagnostic(Diagnostic diagnostic) throws ArchiveException {
+  public void diagnostic(Diagnostic diagnostic) throws OperationStopped {
     synchronized (outcome) {
       failures.diagnostic(diagnostic);
       throwIfFailed();
@@ -222,7 +224,7 @@ public final class OperationSession {
   }
 
   /** Establishes new immutable assessment evidence, evaluating its warnings before retention. */
-  public void assessment(ArchiveAssessment assessment) throws ArchiveException {
+  public void assessment(ArchiveAssessment assessment) throws OperationStopped {
     synchronized (outcome) {
       failures.assessment(assessment);
       throwIfFailed();
@@ -239,7 +241,7 @@ public final class OperationSession {
   /**
    * Accounts for one final logical entry and its decoded bytes without counting physical replay.
    */
-  public void processedEntry(long bytes) throws ArchiveException {
+  public void processedEntry(long bytes) throws OperationStopped {
     advance(ProgressMetric.BYTES, bytes);
     advance(ProgressMetric.ENTRIES, 1);
   }
@@ -249,7 +251,7 @@ public final class OperationSession {
    * cancellation code runs outside the lock; its result is accepted only if the fence still permits
    * it.
    */
-  public void beginCommit(OperationPhase phase, OptionalLong ordinal) throws ArchiveException {
+  public void beginCommit(OperationPhase phase, OptionalLong ordinal) throws OperationStopped {
     boolean requested = control.cancellationRequested().getAsBoolean();
     synchronized (outcome) {
       if (commitInProgress || publicationSettled)
@@ -274,7 +276,7 @@ public final class OperationSession {
   }
 
   /** Enters preflight only after the initial cancellation observation. */
-  public void begin() throws ArchiveException {
+  public void begin() throws OperationStopped {
     checkpoint(OperationPhase.PREFLIGHT, OptionalLong.empty());
     enter(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES);
     throwIfFailed();
@@ -295,7 +297,7 @@ public final class OperationSession {
   }
 
   /** Completes the entered pairs with exact totals; interrupted phases are never completed. */
-  public void completePhase() throws ArchiveException {
+  public void completePhase() throws OperationStopped {
     if (phase == null) throw new IllegalStateException("No progress phase has started");
     if (!phaseCompleted) {
       phaseCompleted = true;
@@ -306,7 +308,7 @@ public final class OperationSession {
   }
 
   /** Adds semantic units once at their logical completion, never from physical replay or writes. */
-  public void advance(ProgressMetric metric, long units) throws ArchiveException {
+  public void advance(ProgressMetric metric, long units) throws OperationStopped {
     if (phaseCompleted) throw new IllegalStateException("The progress phase has already completed");
     if (units < 0 || !completed.containsKey(metric))
       throw new IllegalArgumentException("Metric must belong to the current phase");
@@ -323,7 +325,7 @@ public final class OperationSession {
    * Rejects semantic admission before progress changes, preserving unsigned counts after overflow.
    */
   private void checkLimit(String field, long ceiling, long previous, long units)
-      throws ArchiveException {
+      throws OperationStopped {
     BigInteger observed = BigInteger.valueOf(previous).add(BigInteger.valueOf(units));
     if (observed.compareTo(BigInteger.valueOf(ceiling)) > 0) {
       String identifier = "operation.resource-limit";
@@ -357,7 +359,7 @@ public final class OperationSession {
   }
 
   /** Enters processing after complete preflight, even for a zero-entry plan. */
-  public void processing(boolean existingTree) throws ArchiveException {
+  public void processing(boolean existingTree) throws OperationStopped {
     if (existingTree)
       enter(
           OperationPhase.PROCESSING,
@@ -369,7 +371,7 @@ public final class OperationSession {
   }
 
   /** Enters atomic-set publication immediately before its commit decision. */
-  public void publishing() throws ArchiveException {
+  public void publishing() throws OperationStopped {
     enter(OperationPhase.PUBLISHING, ProgressMetric.ARTIFACTS);
     throwIfFailed();
   }
@@ -395,31 +397,11 @@ public final class OperationSession {
 
   /**
    * Accepts a newly observed failure under the same lock used by cancellation; providers remain
-   * causes. A failure the coordinator caught while unwinding goes through {@link #unwound} instead,
-   * because it may be the session's own raised failure.
+   * causes. Any thread may accept; the retention orders failures independently of arrival order.
    */
   public void accept(ArchiveException failure) {
     synchronized (outcome) {
       failures.accept(failure);
-    }
-  }
-
-  /**
-   * Settles a failure the coordinator caught while unwinding its work: the template's body, or
-   * publication's staging and commit. Once this session has raised its own retained failure on the
-   * coordinator, the coordinator is unwinding that failure, so the caught one is that failure
-   * itself and is already retained; it is not accepted again. Otherwise the caught failure is new
-   * and is accepted.
-   *
-   * <p>A combiner that adds evidence while the coordinator unwinds (a cleanup failure behind the
-   * raised failure) must accept that evidence with {@link #accept} and rethrow the raised failure,
-   * rather than folding both into a new exception.
-   *
-   * <p>Coordinator thread only.
-   */
-  void unwound(ArchiveException failure) {
-    synchronized (outcome) {
-      if (!raisedToCoordinator) failures.accept(failure);
     }
   }
 
@@ -432,6 +414,17 @@ public final class OperationSession {
    */
   public Optional<OperationPhase> phase() {
     return Optional.ofNullable(phase);
+  }
+
+  /**
+   * Stops the caller if the operation has failed, without sampling cancellation. Code that settled
+   * failures straight into the session, such as a closing worker runner, uses it to stop its caller
+   * the same way every other session method does.
+   *
+   * @throws OperationStopped if the operation has failed
+   */
+  void stopIfFailed() throws OperationStopped {
+    throwIfFailed();
   }
 
   /** Reports whether cleanup follows an accepted failure without invoking caller code. */
@@ -471,19 +464,14 @@ public final class OperationSession {
   }
 
   /**
-   * Checks acceptance without resampling cancellation during cleanup or commit settlement. Raising
-   * the retained failure on the coordinator marks the coordinator as unwinding it (see {@link
-   * #unwound}). A worker's raise does not: the worker's exception reaches the coordinator rebuilt
-   * by its runner's own retention, which still carries the raised records into the session.
+   * Checks acceptance without resampling cancellation during cleanup or commit settlement. A failed
+   * operation stops its caller with {@link OperationStopped}, never with a copy of the retained
+   * failure, so no caller can admit that failure a second time.
    */
-  private void throwIfFailed() throws ArchiveException {
+  private void throwIfFailed() throws OperationStopped {
     synchronized (outcome) {
       if (fatalFailure != null) throw fatalFailure;
-      ArchiveException failure = failures.finish(List.of());
-      if (failure != null) {
-        if (Thread.currentThread() == coordinator) raisedToCoordinator = true;
-        throw failure;
-      }
+      if (failures.failed()) throw new OperationStopped();
     }
   }
 
@@ -529,7 +517,7 @@ public final class OperationSession {
   }
 
   /** Observes cancellation before any operational validation or externally visible work. */
-  public void checkpoint(OperationPhase phase, OptionalLong ordinal) throws ArchiveException {
+  public void checkpoint(OperationPhase phase, OptionalLong ordinal) throws OperationStopped {
     synchronized (outcome) {
       throwIfFailed();
       if (commitInProgress || publicationSettled) return;

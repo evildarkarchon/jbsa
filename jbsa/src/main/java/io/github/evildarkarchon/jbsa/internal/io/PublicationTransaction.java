@@ -301,7 +301,7 @@ public final class PublicationTransaction {
     }
 
     /** Reserves a checked extent without allocating a header-sized heap buffer. */
-    public void reserve(long extent) throws ArchiveException {
+    public void reserve(long extent) throws IOException {
       if (extent < 0) throw new IllegalArgumentException("Negative output extent");
       if (!channel.isOpen()) throw new IllegalStateException("Staged output lifetime has ended");
       owner.checkpoint();
@@ -361,7 +361,7 @@ public final class PublicationTransaction {
      * Archive framing, replay, backpatching, and shared-payload copies must not call this method.
      * Extraction entries are counted by the publication adapter after their writer completes.
      */
-    public void completedEntry(long decodedBytes) throws ArchiveException {
+    public void completedEntry(long decodedBytes) throws OperationStopped {
       if (owner.plan instanceof Plan.Extraction)
         throw new IllegalStateException("Extraction counts each writer once");
       owner.operationSession.processedEntry(decodedBytes);
@@ -370,12 +370,12 @@ public final class PublicationTransaction {
     /**
      * Admits a warning before retention and stops staging immediately if request policy rejects it.
      */
-    public void diagnostic(Diagnostic diagnostic) throws ArchiveException {
+    public void diagnostic(Diagnostic diagnostic) throws OperationStopped {
       owner.operationSession.diagnostic(diagnostic);
     }
 
     /** Observes explicit stop state around codec calls and other bounded non-I/O work. */
-    public void checkpoint() throws ArchiveException {
+    public void checkpoint() throws OperationStopped {
       owner.checkpoint();
     }
 
@@ -676,8 +676,11 @@ public final class PublicationTransaction {
           operationSession.endCommit(true);
         }
         operationSession.completePhase();
+      } catch (OperationStopped stopped) {
+        // A signal, not a failure: the session already holds what stopped publication.
+        if (commitInProgress && stagedRoot == null) rollback();
       } catch (IOException | UnsupportedOperationException | SecurityException cause) {
-        unwound(cause);
+        accept(cause);
         if (commitInProgress && stagedRoot == null) rollback();
       } catch (RuntimeException | AssertionError cause) {
         accept(context().failure(FailureKind.INTERNAL, "operation.internal-failure", cause));
@@ -800,6 +803,7 @@ public final class PublicationTransaction {
       // The runner numbers work by plan position; its own failures are located by archive ordinal.
       try (var runner =
           new OrderedWorkerRunner<StagedResult>(
+              operationSession,
               extraction.workers(),
               parts.size(),
               budget,
@@ -1122,21 +1126,16 @@ public final class PublicationTransaction {
     }
 
     /** Samples explicit cancellation only before a publication surface begins. */
-    private void checkpoint() throws ArchiveException {
+    private void checkpoint() throws OperationStopped {
       operationSession.checkpoint(phase, OptionalLong.of(ordinal));
     }
 
-    /** Cleanup never displaces an accepted primary failure or exceeds secondary retention. */
+    /**
+     * Accepts a newly observed publication failure into the session. Cleanup never displaces an
+     * accepted primary failure or exceeds secondary retention.
+     */
     private void accept(Throwable cause) {
       operationSession.accept(structured(cause));
-    }
-
-    /**
-     * Settles the failure that ended staging or commit. It may be the session's own raised failure,
-     * which the session already retains, so it goes through {@link OperationSession#unwound}.
-     */
-    private void unwound(Throwable cause) {
-      operationSession.unwound(structured(cause));
     }
 
     /**
