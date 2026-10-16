@@ -116,6 +116,84 @@ class PackPipelineTest {
     assertEquals(OperationPhase.PREFLIGHT, failure.primaryFailure().phase());
   }
 
+  /**
+   * A programmer error raised by admission ends as INTERNAL {@code operation.internal-failure} at
+   * PREFLIGHT, retaining the error as its cause, and still settles zero CLEANUP progress.
+   */
+  @Test
+  void unexpectedAdmitErrorSettlesInternalFailureWithCleanup() {
+    var bug = new IllegalStateException("admit bug");
+    FamilyAdapter<String> adapter =
+        (request, context) -> {
+          throw bug;
+        };
+    var snapshots = new ArrayList<ProgressSnapshot>();
+    var request =
+        request(
+            temporary.resolve("admit.mem"),
+            options(0, true, Map.of()),
+            limits(10),
+            1,
+            source("a", 1));
+
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                PackPipeline.pack(
+                    request, new OperationControl(snapshots::add, () -> false), adapter));
+
+    assertInternal(failure, OperationPhase.PREFLIGHT);
+    assertSame(bug, failure.primaryFailure().cause().orElseThrow());
+    assertEquals(
+        List.of(
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 0, OptionalLong.empty()),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, OptionalLong.empty()),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, OptionalLong.of(0))),
+        snapshots);
+    assertEquals(0, opens.get());
+    assertFalse(Files.exists(request.destination()), "an output was left");
+  }
+
+  /**
+   * A programmer error raised by the adapter's plan, after source planning counted its one entry,
+   * ends the same way: INTERNAL at PREFLIGHT with its cause, then zero CLEANUP progress.
+   */
+  @Test
+  void unexpectedPlanErrorSettlesInternalFailureWithCleanup() {
+    var snapshots = new ArrayList<ProgressSnapshot>();
+    var request =
+        request(
+            temporary.resolve("plan.mem"),
+            options(0, true, Map.of()),
+            limits(10),
+            1,
+            source("boom", 1));
+
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                PackPipeline.pack(
+                    request,
+                    new OperationControl(snapshots::add, () -> false),
+                    new MemoryEncoder(0)));
+
+    assertInternal(failure, OperationPhase.PREFLIGHT);
+    var cause =
+        assertInstanceOf(AssertionError.class, failure.primaryFailure().cause().orElseThrow());
+    assertEquals("plan bug", cause.getMessage());
+    assertEquals(
+        List.of(
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 0, OptionalLong.empty()),
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 1, OptionalLong.empty()),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, OptionalLong.empty()),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, OptionalLong.of(0))),
+        snapshots);
+    assertEquals(0, opens.get());
+    assertFalse(Files.exists(request.destination()), "an output was left");
+  }
+
   /** The three Splitting arms, driven by the adapter's declarative split cost. */
   @Test
   void splitArmsFormWholeEntryParts() throws Exception {
@@ -544,6 +622,26 @@ class PackPipelineTest {
     return failure;
   }
 
+  /**
+   * Asserts an INTERNAL {@code operation.internal-failure} primary at the given phase, with no
+   * ordinal, no Secondary Failures and no artifacts.
+   */
+  private static void assertInternal(ArchiveException failure, OperationPhase phase) {
+    var primary = failure.primaryFailure();
+    assertEquals(FailureKind.INTERNAL, primary.kind());
+    assertEquals(Optional.of("operation.internal-failure"), primary.diagnosticIdentifier());
+    assertEquals(phase, primary.phase());
+    assertEquals(OptionalLong.empty(), primary.ordinal());
+    assertEquals(List.of(), failure.secondaryFailures());
+    assertEquals(List.of(), failure.artifacts());
+  }
+
+  /** One pack Progress Snapshot. */
+  private static ProgressSnapshot snapshot(
+      OperationPhase phase, ProgressMetric metric, long completed, OptionalLong total) {
+    return new ProgressSnapshot(Operation.PACK, phase, metric, completed, total);
+  }
+
   /** Returns part sizes for a split under the given family default target. */
   private static List<Integer> sizes(
       List<Admitted.Planned<String>> planned, long familyDefault, PackOptions.Splitting splitting)
@@ -667,7 +765,8 @@ class PackPipelineTest {
   /**
    * A test-only family: "MEM1", a u32 count, then per entry a u32 payload-relative offset, u32
    * size, and an 8-byte NUL-padded name; payloads follow. Output order reverses Logical Plan Order,
-   * so tests can tell the two apart, and the name "bad" breaks its only per-entry rule.
+   * so tests can tell the two apart, and the name "bad" breaks its only per-entry rule. The name
+   * "boom" makes {@code plan} throw an {@link AssertionError}, standing in for a programmer error.
    *
    * @param defaultSplitTarget the FamilyDefault split target
    * @param refuse whether admission fails with UNSUPPORTED {@code memory.admit-refused}
@@ -757,6 +856,8 @@ class PackPipelineTest {
           for (var source : sources) {
             if (source.displayName().equals("bad"))
               throw context.failure(FailureKind.POLICY, "memory.bad-name", null);
+            // Stands in for a programmer error inside an adapter, which no family rule describes.
+            if (source.displayName().equals("boom")) throw new AssertionError("plan bug");
             planned.add(new Planned<>(source, source.displayName(), Codec.STORED, new byte[0]));
           }
           Collections.reverse(planned);

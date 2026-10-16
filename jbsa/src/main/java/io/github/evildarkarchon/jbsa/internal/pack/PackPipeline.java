@@ -32,6 +32,10 @@ public final class PackPipeline {
    * limit charged in Logical Plan Order. Target preflight always runs before any source payload is
    * read, for the part count the plan already knows.
    *
+   * <p>A {@link RuntimeException} or {@link AssertionError} raised before publication becomes an
+   * INTERNAL {@code operation.internal-failure} at the current phase, settled with CLEANUP progress
+   * like any other pre-publication failure. A {@link VirtualMachineError} still propagates.
+   *
    * @return the report, whose failure outcome is thrown after cleanup has settled
    * @throws ArchiveException the Primary Failure, with Secondary Failures and artifact evidence
    */
@@ -77,6 +81,11 @@ public final class PackPipeline {
           };
     } catch (IOException failure) {
       failures.accept(structured(failure, context));
+    } catch (RuntimeException | AssertionError unexpected) {
+      // Publication maps its own unexpected throwables and has already finished the session, so
+      // one escaping after the hand-off has no outcome left to join.
+      if (run.publicationOwnsSession) throw unexpected;
+      failures.accept(internal(unexpected, operation, context));
     } finally {
       // Stabilization scratch normally closes inside the last writer, before commit; this settles
       // it after any earlier failure. Closing an already closed spool is a no-op.
@@ -1157,6 +1166,19 @@ public final class PackPipeline {
       OperationReport report, List<OperationReport.ArchivePart> parts) {
     return new OperationReport(
         report.operation(), report.artifacts(), report.diagnostics(), report.assessment(), parts);
+  }
+
+  /**
+   * Maps a programmer error raised before publication to INTERNAL {@code
+   * operation.internal-failure}, retaining it as the cause. The failure is located at the
+   * operation's current phase with no ordinal; before the session has begun, that is PREFLIGHT.
+   * {@link VirtualMachineError} is never passed here; it propagates.
+   */
+  private static ArchiveException internal(
+      Throwable unexpected, OperationSession operation, IoContext context) {
+    OperationPhase phase = operation.phase().orElse(OperationPhase.PREFLIGHT);
+    return new IoContext(context.path(), Operation.PACK, phase, OptionalLong.empty())
+        .failure(FailureKind.INTERNAL, "operation.internal-failure", unexpected);
   }
 
   /** Wraps an unstructured I/O failure as SOURCE {@code operation.source-io}. */
