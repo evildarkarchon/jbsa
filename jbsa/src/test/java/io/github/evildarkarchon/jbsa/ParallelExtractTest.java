@@ -601,7 +601,7 @@ final class ParallelExtractTest {
                         .anyMatch(
                             frame ->
                                 frame.getMethodName().equals("stageWorker")
-                                    || frame.getMethodName().equals("transferParallel")));
+                                    || frame.getMethodName().equals("copy")));
   }
 
   /** Selects a worker limit without changing the public extraction policies under test. */

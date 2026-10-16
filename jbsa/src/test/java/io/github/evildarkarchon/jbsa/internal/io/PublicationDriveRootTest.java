@@ -33,11 +33,14 @@ class PublicationDriveRootTest {
     try {
       Path root = Path.of(drive + "\\");
       var artifacts =
-          PublicationTransaction.extract(
+          Publications.extract(
               root,
               List.of(
                   new PublicationTransaction.Entry(
-                      "file.txt", output -> output.write(0, ByteBuffer.wrap(new byte[] {7})))),
+                      "file.txt",
+                      output -> output.write(0, ByteBuffer.wrap(new byte[] {7})),
+                      1,
+                      0)),
               TargetPolicy.FAIL,
               ResourceLimits.standard(),
               OperationControl.standard());

@@ -4,7 +4,7 @@ JBSA packs every Archive Family through one Pack Pipeline module (`internal/pack
 
 The pipeline owns these steps, in this order:
 
-1. Operation session, `IoContext`, and `ResourceBudget` setup and teardown.
+1. Operation session, `IoContext`, and `ResourceBudget` setup and teardown. Teardown runs through the operation template in `OperationSession` (see [ADR-0005](0005-one-operation-template-and-one-publication-plan.md)).
 2. Admission and planning:
    1. `adapter.admit`;
    2. source planning under the adapter's name charset;
@@ -15,7 +15,7 @@ The pipeline owns these steps, in this order:
 3. The split loop and target preflight. Preflight always runs, for the part count the plan knows.
 4. The parallel ordered-transform stage, the Content Sharing index, and the private codec map.
 5. Payload placement, then the adapter's positional table patches.
-6. The `OperationReport` and its Archive Parts, then the single `FailureRetention` epilogue.
+6. The `OperationReport` and its Archive Parts, then the single `FailureRetention` epilogue. Publication takes one archive-set plan, and the operation template owns the epilogue (see [ADR-0005](0005-one-operation-template-and-one-publication-plan.md)).
 
 `FamilyAdapter.admit` returns an immutable `Admitted<K>` holding all request-derived state. It exposes data (name charset, diagnostic prefix, default split target, emission kind, split cost, sharing scope and basis, a per-entry reserve) and pure functions (`plan`, `checkStored`, `chunk`, `layout`, `tables`, `readback`). Adapters perform no I/O, own no resources, and never observe cancellation. Each method is therefore testable as input → output. Family dispatch in `BethesdaArchives.pack` is an exhaustive `switch` over `ArchiveFamily`.
 

@@ -308,15 +308,16 @@ public final class PackPipeline {
                 run));
         nextOrdinal += part.size();
       }
-      return new OperationSession.Published(
-          PublicationTransaction.archives(
+      // Streamed parts read and close their own sources, so the plan holds no source to close.
+      var plan =
+          new PublicationTransaction.Plan.ArchiveSet(
               request.destination(),
               writers,
               request.targetPolicy(),
-              request.resourceLimits(),
-              run.operation,
-              run.budget),
-          completed);
+              false,
+              PublicationTransaction.SourceClose.NONE);
+      return new OperationSession.Published(
+          PublicationTransaction.publish(run.operation, run.budget, plan), completed);
     }
   }
 
@@ -343,9 +344,9 @@ public final class PackPipeline {
     run.stable =
         SpillBuffer.open(Path.of(System.getProperty("java.io.tmpdir")), run.budget, run.context);
     SpillBuffer stable = run.stable;
-    // Stabilization scratch normally closes inside the last writer, before commit; the template
-    // settles it after any earlier failure, before the budget it draws on. Closing an already
-    // closed spool is a no-op.
+    // Stabilization scratch normally closes through the publication plan's source-close action,
+    // after every part has staged and before commit; the template settles it after any earlier
+    // failure, before the budget it draws on. Closing an already closed spool is a no-op.
     run.resources.register(stable::close);
     List<Planned<K>> sized;
     Replay<K> replay;
@@ -389,23 +390,19 @@ public final class PackPipeline {
           writer(
               output -> {
                 replay.write(part, layout, output);
-                // The last part has consumed stabilization; its cleanup must precede the commit.
-                if (number == parts.size()) stable.close();
                 completed.add(archivePart(request, number, output, part));
               },
               admitted.readback(part, layout),
               run));
     }
+    // Progress already entered PROCESSING above, and the parts have consumed stabilization once
+    // they have all staged, so the spool is the plan's source: it closes before the commit.
+    var plan =
+        new PublicationTransaction.Plan.ArchiveSet(
+            request.destination(), writers, request.targetPolicy(), true, stable::close);
     try (var windows = run.budget.reserve(replayHeap, 0, 0, 0)) {
       return new OperationSession.Published(
-          PublicationTransaction.stabilizedArchives(
-              request.destination(),
-              writers,
-              request.targetPolicy(),
-              request.resourceLimits(),
-              run.operation,
-              run.budget),
-          completed);
+          PublicationTransaction.publish(run.operation, run.budget, plan), completed);
     }
   }
 
@@ -1203,8 +1200,8 @@ public final class PackPipeline {
     WorkerSelection.UpTo workers;
 
     /**
-     * The stabilized emission's ordered spool, closed by the last writer or, after an earlier
-     * failure, by the operation template.
+     * The stabilized emission's ordered spool, closed by the publication plan's source-close action
+     * or, after an earlier failure, by the operation template.
      */
     SpillBuffer stable;
 

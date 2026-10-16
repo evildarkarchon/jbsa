@@ -4,6 +4,7 @@ import io.github.evildarkarchon.jbsa.*;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.LockSupport;
@@ -27,9 +28,10 @@ public final class ArchiveExtractor {
   }
 
   /**
-   * The extraction body: preflight of the selected plan, then publication. The opened source
-   * archive is registered with the template, which closes it after publication settles if no writer
-   * or final-commit action already did (closing it again is a no-op).
+   * The extraction body: preflight of the selected plan, then publication of one extraction plan.
+   * The opened source archive is registered with the template, which closes it after publication
+   * settles if the plan's source-close action did not already run (closing it again is a no-op).
+   * The mutation budget is registered after it, so it closes first.
    *
    * @return the artifacts publication settled
    * @throws IOException a failure before publication; publication accepts its own failures
@@ -80,116 +82,86 @@ public final class ArchiveExtractor {
     }
     Set<Long> validated = new TreeSet<>();
     List<PublicationTransaction.Entry> entries = new ArrayList<>();
-    boolean sequential = selected.isEmpty() || selectedWorkers.workers() == 1;
     // The opened archive's native budget admits one decoder. Stored entries still run freely.
     Semaphore compressedDecoder = new Semaphore(1, true);
-    for (int index = 0; index < selected.size(); index++) {
-      ArchiveEntry entry = selected.get(index);
-      boolean last = index == selected.size() - 1;
-      // Both strategies locate every checkpoint, failure, and Artifact by the archive entry
-      // ordinal, which differs from the selection position for a sparse selection.
-      if (sequential) {
-        entries.add(
-            new PublicationTransaction.Entry(
-                entry.metadata().displayName(),
-                output -> {
-                  transfer(entry, output, operation, source.inspection().assessment(), validated);
-                  // Source cleanup must succeed before the last selected file can become visible.
-                  if (last) source.close();
-                },
-                entry.metadata().decodedSize(),
-                entry.metadata().ordinal()));
-      } else {
-        IoContext entryContext =
-            new IoContext(
-                request.source(),
-                Operation.EXTRACT,
-                OperationPhase.PROCESSING,
-                OptionalLong.of(entry.metadata().ordinal()));
-        entries.add(
-            new PublicationTransaction.Entry(
-                entry.metadata().displayName(),
-                output -> transferParallel(entry, output, compressedDecoder, entryContext),
-                entry.metadata().decodedSize(),
-                entry.metadata().ordinal()));
-      }
+    for (ArchiveEntry entry : selected) {
+      // Every checkpoint, failure, and Artifact is located by the archive entry ordinal, which
+      // differs from the selection position for a sparse selection.
+      IoContext entryContext =
+          new IoContext(
+              request.source(),
+              Operation.EXTRACT,
+              OperationPhase.PROCESSING,
+              OptionalLong.of(entry.metadata().ordinal()));
+      entries.add(
+          new PublicationTransaction.Entry(
+              entry.metadata().displayName(),
+              output -> copy(entry, output, compressedDecoder, entryContext),
+              entry.metadata().decodedSize(),
+              entry.metadata().ordinal()));
     }
-    if (selected.isEmpty()) source.close();
-    List<Artifact> artifacts =
-        sequential
-            ? PublicationTransaction.extractSequential(
-                request.destination(),
-                entries,
-                request.targetPolicy(),
-                request.resourceLimits(),
-                operation)
-            : PublicationTransaction.extractParallel(
-                request.destination(),
-                entries,
-                request.targetPolicy(),
-                request.resourceLimits(),
-                operation,
-                selectedWorkers,
-                archiveOrdinal -> {
-                  validated.add(archiveOrdinal);
-                  operation.latestAssessment(
-                      new ArchiveAssessment(
-                          source.inspection().assessment().disposition(),
-                          new ValidationExtent.Payloads(validated),
-                          source.inspection().assessment().diagnostics()));
-                },
-                () -> {
-                  try {
-                    source.close();
-                  } catch (ArchiveException failure) {
-                    throw failure;
-                  } catch (IOException failure) {
-                    throw new IoContext(
-                            request.source(),
-                            Operation.EXTRACT,
-                            OperationPhase.CLEANUP,
-                            OptionalLong.empty())
-                        .failure(FailureKind.SOURCE, "operation.source-io", failure);
-                  }
-                });
-    return new OperationSession.Published(artifacts);
+    // Plan-level evidence, the budget's PREFLIGHT location among it, is located at the first
+    // selected entry's archive ordinal, or 0 for an empty selection (JBSA-OPS-006).
+    long planOrdinal = selected.isEmpty() ? 0 : selected.getFirst().metadata().ordinal();
+    ResourceBudget budget =
+        ResourceBudget.forMutation(
+            request.resourceLimits(),
+            new IoContext(
+                request.destination().toAbsolutePath().normalize(),
+                Operation.EXTRACT,
+                OperationPhase.PREFLIGHT,
+                OptionalLong.of(planOrdinal)));
+    resources.register(budget::close);
+    var plan =
+        new PublicationTransaction.Plan.Extraction(
+            request.destination(),
+            entries,
+            request.targetPolicy(),
+            selectedWorkers,
+            archiveOrdinal -> {
+              validated.add(archiveOrdinal);
+              operation.latestAssessment(
+                  new ArchiveAssessment(
+                      source.inspection().assessment().disposition(),
+                      new ValidationExtent.Payloads(validated),
+                      source.inspection().assessment().diagnostics()));
+            },
+            // Source cleanup must succeed before the last selected file can become visible.
+            () -> closeSource(source, request.source()));
+    return new OperationSession.Published(PublicationTransaction.publish(operation, budget, plan));
   }
 
   /**
-   * Copies one decoded payload in bounded windows and records EOF evidence under extraction
-   * ownership.
+   * The extraction's source-close action, which publication runs once before its final commit.
+   *
+   * @throws ArchiveException SOURCE {@code operation.source-io} at CLEANUP, with no ordinal, when
+   *     the archive cannot close; a structured close failure keeps its own location
    */
-  private static void transfer(
-      ArchiveEntry entry,
-      PublicationTransaction.StagedFile output,
-      OperationSession operation,
-      ArchiveAssessment structure,
-      Set<Long> validated)
-      throws IOException {
-    try (EntryContent content = entry.openContent()) {
-      ByteBuffer window = ByteBuffer.allocate(65536);
-      long position = 0;
-      while (true) {
-        operation.checkpoint(
-            OperationPhase.PROCESSING, OptionalLong.of(entry.metadata().ordinal()));
-        int count = content.read(window);
-        if (count < 0) break;
-        window.flip();
-        output.write(position, window);
-        position += count;
-        window.clear();
-      }
-      validated.add(entry.metadata().ordinal());
-      operation.latestAssessment(
-          new ArchiveAssessment(
-              structure.disposition(),
-              new ValidationExtent.Payloads(validated),
-              structure.diagnostics()));
+  private static void closeSource(OpenArchive source, Path path) throws ArchiveException {
+    try {
+      source.close();
+    } catch (ArchiveException failure) {
+      throw failure;
+    } catch (IOException failure) {
+      throw new IoContext(path, Operation.EXTRACT, OperationPhase.CLEANUP, OptionalLong.empty())
+          .failure(FailureKind.SOURCE, "operation.source-io", failure);
     }
   }
 
-  /** Copies one payload on a worker without touching coordinator-owned progress or assessment. */
-  private static void transferParallel(
+  /**
+   * Copies one decoded payload in bounded windows: the one copy loop for both strategies. Its only
+   * strategy-dependent step is the checkpoint, and the staged file supplies that: the coordinator's
+   * cancellation checkpoint when publication stages on the caller thread, or the worker stop state
+   * on a private worker. The loop never touches coordinator-owned progress or assessment;
+   * publication's on-staged hook advances the Validation Extent.
+   *
+   * <p>Every unstructured failure to open, read, or close the entry's source content is SOURCE
+   * {@code operation.source-io} at the entry's archive ordinal, in both strategies. Failures from
+   * the staged output, including a worker stop, pass through unchanged.
+   *
+   * @param sourceContext PROCESSING at the entry's archive entry ordinal
+   */
+  private static void copy(
       ArchiveEntry entry,
       PublicationTransaction.StagedFile output,
       Semaphore compressedDecoder,
@@ -212,7 +184,7 @@ public final class ArchiveExtractor {
       } catch (IOException failure) {
         throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
       }
-      try (content) {
+      try (SourceContent release = () -> closeContent(content, sourceContext)) {
         ByteBuffer window = ByteBuffer.allocate(65536);
         long position = 0;
         while (true) {
@@ -231,14 +203,30 @@ public final class ArchiveExtractor {
           position += count;
           window.clear();
         }
-      } catch (ArchiveException failure) {
-        throw failure;
-      } catch (IOException failure) {
-        throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
       }
     } finally {
       if (compressed) compressedDecoder.release();
     }
+  }
+
+  /** Closes one entry's source content, structuring an unstructured close failure as SOURCE. */
+  private static void closeContent(EntryContent content, IoContext sourceContext)
+      throws ArchiveException {
+    try {
+      content.close();
+    } catch (ArchiveException failure) {
+      throw failure;
+    } catch (IOException failure) {
+      throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+    }
+  }
+
+  /** Scopes one entry's source content so its close failure is structured like its reads. */
+  @FunctionalInterface
+  private interface SourceContent extends AutoCloseable {
+    /** Closes the content, reporting an unstructured failure as SOURCE. */
+    @Override
+    void close() throws ArchiveException;
   }
 
   /** Identifies payloads that may reserve the opened archive's sole native decoder capacity. */

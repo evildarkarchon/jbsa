@@ -25,9 +25,9 @@ class PublicationTransactionTest {
         assertThrows(
             ArchiveCancelledException.class,
             () ->
-                PublicationTransaction.extract(
+                Publications.extract(
                     root,
-                    List.of(new PublicationTransaction.Entry("nested/file", bytes(1))),
+                    List.of(new PublicationTransaction.Entry("nested/file", bytes(1), 1, 0)),
                     TargetPolicy.FAIL,
                     ResourceLimits.standard(),
                     control));
@@ -43,7 +43,7 @@ class PublicationTransactionTest {
     assertThrows(
         ArchiveCancelledException.class,
         () ->
-            PublicationTransaction.archives(
+            Publications.archives(
                 directory.resolve("archive"),
                 List.of(
                     output -> {
@@ -62,11 +62,11 @@ class PublicationTransactionTest {
   void existingTreeScratchLimitCountsRetainedExtentRatherThanPublishedBytes() throws Exception {
     Path root = Files.createDirectory(directory.resolve("extract"));
     var limits = new ResourceLimits(10, 1000, 1000, 1, 10, 10, 10);
-    PublicationTransaction.extract(
+    Publications.extract(
         root,
         List.of(
-            new PublicationTransaction.Entry("first", bytes(1)),
-            new PublicationTransaction.Entry("second", bytes(2))),
+            new PublicationTransaction.Entry("first", bytes(1), 1, 0),
+            new PublicationTransaction.Entry("second", bytes(2), 1, 1)),
         TargetPolicy.FAIL,
         limits,
         OperationControl.standard());
@@ -95,7 +95,7 @@ class PublicationTransactionTest {
     assertThrows(
         ArchiveException.class,
         () ->
-            PublicationTransaction.archives(
+            Publications.archives(
                 first,
                 List.of(bytes(1), bytes(2)),
                 TargetPolicy.FAIL,
@@ -114,7 +114,7 @@ class PublicationTransactionTest {
         assertThrows(
             ArchiveCancelledException.class,
             () ->
-                PublicationTransaction.extract(
+                Publications.extract(
                     root,
                     List.of(
                         new PublicationTransaction.Entry(
@@ -122,7 +122,9 @@ class PublicationTransactionTest {
                             output -> {
                               bytes(1).write(output);
                               cancelled.set(true);
-                            })),
+                            },
+                            1,
+                            0)),
                     TargetPolicy.FAIL,
                     ResourceLimits.standard(),
                     new OperationControl(snapshot -> {}, cancelled::get)));
@@ -139,15 +141,17 @@ class PublicationTransactionTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.extract(
+                Publications.extract(
                     root,
                     List.of(
-                        new PublicationTransaction.Entry("nested/first.txt", bytes(1)),
+                        new PublicationTransaction.Entry("nested/first.txt", bytes(1), 1, 0),
                         new PublicationTransaction.Entry(
                             "second.txt",
                             output -> {
                               throw new IOException("bad payload");
-                            })),
+                            },
+                            1,
+                            1)),
                     TargetPolicy.REPLACE,
                     ResourceLimits.standard(),
                     OperationControl.standard()));
@@ -164,7 +168,7 @@ class PublicationTransactionTest {
   @Test
   void newTreeHasNoVisibleFilesUntilSingleRootMove() throws Exception {
     Path root = directory.resolve("extract");
-    PublicationTransaction.extract(
+    Publications.extract(
         root,
         List.of(
             new PublicationTransaction.Entry(
@@ -172,13 +176,17 @@ class PublicationTransactionTest {
                 output -> {
                   assertFalse(Files.exists(root));
                   bytes(1).write(output);
-                }),
+                },
+                1,
+                0),
             new PublicationTransaction.Entry(
                 "b/second.txt",
                 output -> {
                   assertFalse(Files.exists(root));
                   bytes(2).write(output);
-                })),
+                },
+                1,
+                1)),
         TargetPolicy.FAIL,
         ResourceLimits.standard(),
         OperationControl.standard());
@@ -205,7 +213,7 @@ class PublicationTransactionTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     first,
                     List.of(
                         bytes(1),
@@ -234,7 +242,7 @@ class PublicationTransactionTest {
         assertThrows(
             ArchiveCancelledException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(
                         output -> {
@@ -263,7 +271,7 @@ class PublicationTransactionTest {
           }
         };
     var result =
-        PublicationTransaction.archives(
+        Publications.archives(
             target,
             List.of(bytes(1), bytes(2)),
             TargetPolicy.REPLACE,
@@ -293,7 +301,7 @@ class PublicationTransactionTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(bytes(1)),
                     TargetPolicy.REPLACE,
@@ -338,7 +346,7 @@ class PublicationTransactionTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     first,
                     List.of(bytes(7), bytes(8)),
                     TargetPolicy.REPLACE,
@@ -368,7 +376,7 @@ class PublicationTransactionTest {
   void stagesAndBackpatchesBeforeAtomicallyPublishingOneArchive() throws Exception {
     Path destination = directory.resolve("archive.ba2");
     List<Artifact> result =
-        PublicationTransaction.archives(
+        Publications.archives(
             destination,
             List.of(
                 output -> {

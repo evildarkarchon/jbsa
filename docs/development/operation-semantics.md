@@ -32,8 +32,9 @@ A mutation coordinator creates one `OperationSession` from the operation,
 before operational discovery and counts every considered source candidate through
 `PREFLIGHT/ENTRIES`, including candidates subsequently filtered or overlaid. It
 establishes assessments and admits warnings before discarding any diagnostic
-records. It passes that same session to `PublicationTransaction` after
-source-shape, configuration, capability, and finalized output-plan validation.
+records. It passes that same session, its mutation budget, and one sealed
+publication plan to `PublicationTransaction.publish` after source-shape,
+configuration, capability, and finalized output-plan validation.
 Publication completes destination preflight, owns its staging and cleans it, and
 returns its artifacts while failures accumulate in the session. Pack and extract
 each run as a body of the session's operation template (`OperationSession.run`),
