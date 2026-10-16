@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.Operation;
+import io.github.evildarkarchon.jbsa.OperationPhase;
 import io.github.evildarkarchon.jbsa.TargetPolicy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -16,8 +18,11 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** Exercises extraction preflight and identity rechecks on the host filesystem. */
-final class ExtractionPathsTest {
+/**
+ * Exercises target containment preflight and identity rechecks on the host filesystem, through
+ * extraction-shaped target sets.
+ */
+final class TargetPathsTest {
   @TempDir Path directory;
 
   /** Unsafe names fail as policy before any missing root or valid preceding entry is created. */
@@ -83,13 +88,13 @@ final class ExtractionPathsTest {
   @Test
   void plansMissingRootWithoutCreatingIt() throws Exception {
     Path root = directory.resolve("new-root");
-    try (ExtractionPaths plan =
+    try (TargetPaths plan =
         preflight(root, List.of("Textures/Mixed.DDS", "COM10.bin"), TargetPolicy.FAIL)) {
       assertFalse(plan.existingRoot());
       assertEquals(root, plan.root());
       assertEquals(
           List.of(root.resolve("Textures/Mixed.DDS"), root.resolve("COM10.bin")), plan.targets());
-      plan.recheckRoot();
+      plan.recheckRoot(caller());
       assertFalse(Files.exists(root));
     }
   }
@@ -120,10 +125,10 @@ final class ExtractionPathsTest {
         assertThrows(
             ArchiveException.class,
             () -> {
-              try (ExtractionPaths plan =
+              try (TargetPaths plan =
                   preflight(
                       directory, List.of("original.bin", "alias.bin"), TargetPolicy.REPLACE)) {
-                plan.recheckRoot();
+                plan.recheckRoot(caller());
               }
             });
     assertEquals(FailureKind.POLICY, failure.kind());
@@ -148,15 +153,15 @@ final class ExtractionPathsTest {
           assertThrows(
               ArchiveException.class,
               () -> {
-                try (ExtractionPaths plan =
-                    ExtractionPaths.preflight(
+                try (TargetPaths plan =
+                    TargetPaths.preflight(
                         directory,
                         names,
                         TargetPolicy.FAIL,
                         IoContext.of(directory, Operation.EXTRACT),
                         PathIdentity.Pin::close,
                         path -> path.equals(second) ? common : PathIdentity.inspect(path))) {
-                  plan.recheckRoot();
+                  plan.recheckRoot(caller());
                 }
               });
       assertEquals(FailureKind.POLICY, failure.kind());
@@ -173,8 +178,8 @@ final class ExtractionPathsTest {
   void acceptsDivergingMissingOutputsUnderDirectoryAliases() throws Exception {
     Path first = Files.createDirectory(directory.resolve("first"));
     Path second = Files.createDirectory(directory.resolve("second"));
-    try (ExtractionPaths plan =
-        ExtractionPaths.preflight(
+    try (TargetPaths plan =
+        TargetPaths.preflight(
             directory,
             List.of("first/missing/one.bin", "second/missing/two.bin"),
             TargetPolicy.FAIL,
@@ -184,10 +189,10 @@ final class ExtractionPathsTest {
                 PathIdentity.inspect(
                     path.startsWith(second) ? first.resolve(second.relativize(path)) : path))) {
       assertEquals(2, plan.targets().size());
-      plan.recheckRoot();
+      plan.recheckRoot(caller());
       Path created = Files.createDirectory(first.resolve("missing"));
-      plan.createdDirectory(created);
-      plan.recheck(second.resolve("missing/two.bin"));
+      plan.createdDirectory(created, caller());
+      plan.recheck(second.resolve("missing/two.bin"), caller());
     }
   }
 
@@ -219,14 +224,14 @@ final class ExtractionPathsTest {
         assertThrows(
             ArchiveException.class,
             () -> {
-              try (ExtractionPaths plan =
+              try (TargetPaths plan =
                   preflight(
                       directory,
                       List.of(
                           longParent.getFileName() + "/new/entry.bin",
                           shortName + "/NEW/ENTRY.bin"),
                       TargetPolicy.FAIL)) {
-                plan.recheckRoot();
+                plan.recheckRoot(caller());
               }
             });
     assertEquals(FailureKind.POLICY, failure.kind());
@@ -244,7 +249,7 @@ final class ExtractionPathsTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                ExtractionPaths.preflight(
+                TargetPaths.preflight(
                     directory,
                     List.of("existing.bin"),
                     TargetPolicy.FAIL,
@@ -271,11 +276,12 @@ final class ExtractionPathsTest {
             ArchiveException.class,
             () -> preflight(directory, List.of("entry.bin"), TargetPolicy.FAIL));
     assertEquals(FailureKind.POLICY, failure.kind());
-    try (ExtractionPaths plan = preflight(directory, List.of("entry.bin"), TargetPolicy.REPLACE)) {
-      plan.recheck(target);
+    try (TargetPaths plan = preflight(directory, List.of("entry.bin"), TargetPolicy.REPLACE)) {
+      plan.recheck(target, caller());
       Files.move(target, directory.resolve("moved.bin"));
       Files.writeString(target, "new");
-      ArchiveException changed = assertThrows(ArchiveException.class, () -> plan.recheck(target));
+      ArchiveException changed =
+          assertThrows(ArchiveException.class, () -> plan.recheck(target, caller()));
       assertEquals(FailureKind.DESTINATION, changed.kind());
     }
   }
@@ -288,11 +294,11 @@ final class ExtractionPathsTest {
   @EnabledOnOs(OS.WINDOWS)
   void pinsRootAndReleasesHandle() throws Exception {
     Path root = Files.createDirectory(directory.resolve("root"));
-    try (ExtractionPaths plan = preflight(root, List.of("entry.bin"), TargetPolicy.FAIL)) {
+    try (TargetPaths plan = preflight(root, List.of("entry.bin"), TargetPolicy.FAIL)) {
       assertTrue(plan.existingRoot());
       assertThrows(java.io.IOException.class, () -> Files.move(root, directory.resolve("renamed")));
       Files.writeString(root.resolve("unrelated"), "allowed");
-      plan.recheck(root.resolve("entry.bin"));
+      plan.recheck(root.resolve("entry.bin"), caller());
     }
     Files.move(root, directory.resolve("renamed"));
   }
@@ -301,22 +307,22 @@ final class ExtractionPathsTest {
   @Test
   void detectsChangedAncestorAndUnexpectedTarget() throws Exception {
     Path ancestor = Files.createDirectory(directory.resolve("folder"));
-    try (ExtractionPaths plan =
-        preflight(directory, List.of("folder/entry.bin"), TargetPolicy.FAIL)) {
+    try (TargetPaths plan = preflight(directory, List.of("folder/entry.bin"), TargetPolicy.FAIL)) {
       Files.move(ancestor, directory.resolve("previous-folder"));
       Files.createDirectory(ancestor);
       ArchiveException changed =
           assertThrows(
-              ArchiveException.class, () -> plan.recheckParents(ancestor.resolve("entry.bin")));
+              ArchiveException.class,
+              () -> plan.recheckParents(ancestor.resolve("entry.bin"), caller()));
       assertEquals(FailureKind.DESTINATION, changed.kind());
     }
-    try (ExtractionPaths plan =
-        preflight(directory, List.of("unexpected.bin"), TargetPolicy.FAIL)) {
+    try (TargetPaths plan = preflight(directory, List.of("unexpected.bin"), TargetPolicy.FAIL)) {
       Files.writeString(directory.resolve("unexpected.bin"), "racer");
       assertEquals(
           FailureKind.DESTINATION,
           assertThrows(
-                  ArchiveException.class, () -> plan.recheck(directory.resolve("unexpected.bin")))
+                  ArchiveException.class,
+                  () -> plan.recheck(directory.resolve("unexpected.bin"), caller()))
               .kind());
     }
   }
@@ -327,16 +333,16 @@ final class ExtractionPathsTest {
   @Test
   void acceptsRecordedDirectoriesAndRechecksParentsAfterBackup() throws Exception {
     Path predecessor = Files.writeString(directory.resolve("old.bin"), "old");
-    try (ExtractionPaths plan =
+    try (TargetPaths plan =
         preflight(directory, List.of("new/deep/file.bin", "old.bin"), TargetPolicy.REPLACE)) {
       Path first = Files.createDirectory(directory.resolve("new"));
-      plan.createdDirectory(first);
+      plan.createdDirectory(first, caller());
       Path second = Files.createDirectory(first.resolve("deep"));
-      plan.createdDirectory(second);
-      plan.recheck(second.resolve("file.bin"));
-      plan.recheck(predecessor);
+      plan.createdDirectory(second, caller());
+      plan.recheck(second.resolve("file.bin"), caller());
+      plan.recheck(predecessor, caller());
       Files.move(predecessor, directory.resolve("backup.bin"));
-      plan.recheckParents(predecessor);
+      plan.recheckParents(predecessor, caller());
     }
   }
 
@@ -362,12 +368,14 @@ final class ExtractionPathsTest {
       Files.delete(link);
     }
     Files.createDirectory(link);
-    try (ExtractionPaths plan = preflight(root, List.of("folder/file.bin"), TargetPolicy.FAIL)) {
+    try (TargetPaths plan = preflight(root, List.of("folder/file.bin"), TargetPolicy.FAIL)) {
       Files.delete(link);
       createJunction(link, outside);
       assertEquals(
           FailureKind.DESTINATION,
-          assertThrows(ArchiveException.class, () -> plan.recheck(root.resolve("folder/file.bin")))
+          assertThrows(
+                  ArchiveException.class,
+                  () -> plan.recheck(root.resolve("folder/file.bin"), caller()))
               .kind());
     } finally {
       Files.delete(link);
@@ -375,10 +383,54 @@ final class ExtractionPathsTest {
     assertFalse(Files.exists(outside.resolve("file.bin")));
   }
 
+  /**
+   * Every check after preflight is located where its caller observed it, not at the preflight
+   * context: the root, a target, and a created directory each report the caller's phase and
+   * ordinal.
+   */
+  @Test
+  void recheckFailuresAreLocatedByTheirCaller() throws Exception {
+    Path target = Files.writeString(directory.resolve("entry.bin"), "old");
+    try (TargetPaths plan =
+        preflight(directory, List.of("entry.bin", "new/file.bin"), TargetPolicy.REPLACE)) {
+      // Moving the predecessor aside keeps its identity alive, so the replacement cannot reuse it.
+      Files.move(target, directory.resolve("moved.bin"));
+      Files.writeString(target, "replacement");
+      assertCallerLocation(
+          assertThrows(ArchiveException.class, () -> plan.recheck(target, caller())));
+      Path created = Files.writeString(directory.resolve("new"), "not a directory");
+      assertCallerLocation(
+          assertThrows(ArchiveException.class, () -> plan.createdDirectory(created, caller())));
+    }
+    Path root = directory.resolve("missing");
+    try (TargetPaths plan = preflight(root, List.of("entry.bin"), TargetPolicy.FAIL)) {
+      Files.createDirectory(root);
+      assertCallerLocation(assertThrows(ArchiveException.class, () -> plan.recheckRoot(caller())));
+    }
+  }
+
+  /** Requires a changed destination located exactly at {@link #caller()}. */
+  private void assertCallerLocation(ArchiveException failure) {
+    var primary = failure.primaryFailure();
+    assertEquals(FailureKind.DESTINATION, primary.kind());
+    assertEquals(OperationPhase.PUBLISHING, primary.phase());
+    assertEquals(OptionalLong.of(3), primary.ordinal());
+    assertEquals("extraction.destination-changed", primary.diagnosticIdentifier().orElseThrow());
+  }
+
+  /**
+   * A publication caller's current location, deliberately unlike the PREFLIGHT context every plan
+   * here is built with.
+   */
+  private IoContext caller() {
+    return new IoContext(
+        directory, Operation.EXTRACT, OperationPhase.PUBLISHING, OptionalLong.of(3));
+  }
+
   /** Builds the plan using the same semantic location as the operation coordinator. */
-  private static ExtractionPaths preflight(Path root, List<String> names, TargetPolicy policy)
+  private static TargetPaths preflight(Path root, List<String> names, TargetPolicy policy)
       throws Exception {
-    return ExtractionPaths.preflight(root, names, policy, IoContext.of(root, Operation.EXTRACT));
+    return TargetPaths.preflight(root, names, policy, IoContext.of(root, Operation.EXTRACT));
   }
 
   /** Creates a directory junction without requiring the Windows symbolic-link privilege. */

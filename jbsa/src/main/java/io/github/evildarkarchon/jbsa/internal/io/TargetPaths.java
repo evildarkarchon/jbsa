@@ -18,15 +18,23 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Complete extraction-name preflight and a pinned destination lifetime on the qualified provider.
+ * Target containment: complete target-name preflight and a pinned destination lifetime on the
+ * qualified provider. It contains both publication target sets, an archive set's part files beside
+ * the destination and an extraction's files beneath its root, so it is named for targets rather
+ * than for either operation. Its diagnostic identifiers keep their published {@code extraction.*}
+ * spelling.
  *
  * <p>The coordinator owns this object and serializes directory creation and publication. Detached
  * descendant identities detect unexpected mutation; the root handle denies deletion until close.
  * This is the non-hostile destination-tree contract, not protection against a privileged racer. Off
  * Windows the {@link PathIdentity} pin holds no handle, so root replacement is detected by the same
  * revalidation rather than denied.
+ *
+ * <p>Preflight failures are located by the preflight context. Every later check takes the caller's
+ * current location, so a recheck failure reports the phase and ordinal where publication observed
+ * it; only the pin's own cleanup, which is plan-level, keeps the preflight ordinal.
  */
-public final class ExtractionPaths implements AutoCloseable {
+public final class TargetPaths implements AutoCloseable {
   private final Path root;
   private final boolean existingRoot;
   private final List<Path> targets;
@@ -40,7 +48,7 @@ public final class ExtractionPaths implements AutoCloseable {
   private boolean closed;
 
   /** Takes ownership of the root pin only after all caller names have passed lexical validation. */
-  private ExtractionPaths(
+  private TargetPaths(
       Path root,
       boolean existingRoot,
       List<Path> targets,
@@ -65,7 +73,7 @@ public final class ExtractionPaths implements AutoCloseable {
    *
    * @throws ArchiveException for unsafe names/collisions, unavailable identity, or destination I/O
    */
-  public static ExtractionPaths preflight(
+  public static TargetPaths preflight(
       Path root, List<String> names, TargetPolicy policy, IoContext context)
       throws ArchiveException {
     return preflight(root, names, policy, context, PathIdentity.Pin::close);
@@ -74,16 +82,31 @@ public final class ExtractionPaths implements AutoCloseable {
   /**
    * Supplies deterministic fault injection at failed-preflight pin cleanup without leaking handles.
    */
-  static ExtractionPaths preflight(
+  static TargetPaths preflight(
       Path root, List<String> names, TargetPolicy policy, IoContext context, PinCloser cleanupPin)
       throws ArchiveException {
     return preflight(root, names, policy, context, cleanupPin, PathIdentity::inspect);
   }
 
   /**
+   * Reads every identity through the caller's reader, so publication's filesystem-actions fault
+   * seam also covers its containment, while the pin cleanup stays the production close. It has its
+   * own name because a lambda would fit both functional parameters of a same-arity overload.
+   */
+  static TargetPaths preflightWith(
+      Path root,
+      List<String> names,
+      TargetPolicy policy,
+      IoContext context,
+      SnapshotReader snapshotReader)
+      throws ArchiveException {
+    return preflight(root, names, policy, context, PathIdentity.Pin::close, snapshotReader);
+  }
+
+  /**
    * Supplies detached identity observations for deterministic alias and namespace mutation tests.
    */
-  static ExtractionPaths preflight(
+  static TargetPaths preflight(
       Path root,
       List<String> names,
       TargetPolicy policy,
@@ -139,8 +162,8 @@ public final class ExtractionPaths implements AutoCloseable {
       if (exists && !rootState.equals(pin.snapshot())) {
         throw context.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
       }
-      ExtractionPaths plan =
-          new ExtractionPaths(absolute, exists, targets, pinnedPath, pin, context, snapshotReader);
+      TargetPaths plan =
+          new TargetPaths(absolute, exists, targets, pinnedPath, pin, context, snapshotReader);
       if (!exists) {
         // A root that appeared between inspection and pinning is an unexpected mutation.
         if (snapshotReader.read(absolute) != null) {
@@ -158,7 +181,7 @@ public final class ExtractionPaths implements AutoCloseable {
         }
       }
       plan.checkPhysicalPaths();
-      plan.recheckRoot();
+      plan.recheckRoot(context);
       return plan;
     } catch (IOException | RuntimeException | Error failure) {
       IOException cleanupFailure = null;
@@ -234,38 +257,52 @@ public final class ExtractionPaths implements AutoCloseable {
     return targets;
   }
 
-  /** Revalidates the root, each target parent, and the target immediately before its first move. */
-  public void recheck(Path target) throws ArchiveException {
-    recheckParents(target);
-    verify(target);
+  /**
+   * Revalidates the root, each target parent, and the target immediately before its first move.
+   *
+   * @param location the caller's current phase and ordinal, which locate any failure
+   * @throws ArchiveException if the containment chain or the target no longer matches the plan
+   */
+  public void recheck(Path target, IoContext location) throws ArchiveException {
+    recheckParents(target, location);
+    verify(target, location);
   }
 
   /**
    * Revalidates the containment chain immediately before install, including after an owned backup
    * removed the predecessor. Deliberately does not compare the target's previous identity.
+   *
+   * @param location the caller's current phase and ordinal, which locate any failure
+   * @throws ArchiveException if the root or a target parent no longer matches the plan
    */
-  public void recheckParents(Path target) throws ArchiveException {
+  public void recheckParents(Path target, IoContext location) throws ArchiveException {
     requireTarget(target);
-    recheckRoot();
+    recheckRoot(location);
     for (Path parent : descendants(target.getParent())) {
-      verify(parent);
+      verify(parent, location);
     }
   }
 
   /**
    * Revalidates the pinned root, or its pinned parent and continued absence for a new-root move.
+   *
+   * @param location the caller's current phase and ordinal, which locate any failure
+   * @throws ArchiveException if the pinned path, or a new root's absence, no longer holds
    */
-  public void recheckRoot() throws ArchiveException {
-    if (closed) throw new IllegalStateException("Extraction containment is closed");
-    verify(pinnedPath);
-    if (!existingRoot) verify(root);
+  public void recheckRoot(IoContext location) throws ArchiveException {
+    if (closed) throw new IllegalStateException("Target containment is closed");
+    verify(pinnedPath, location);
+    if (!existingRoot) verify(root, location);
   }
 
   /**
    * Records a planned missing directory immediately after the coordinator creates it. Parents must
    * already match the plan, and unexpected existing paths cannot be adopted as operation-owned.
+   *
+   * @param location the caller's current phase and ordinal, which locate any failure
+   * @throws ArchiveException if a parent changed or the path is not the directory just created
    */
-  public void createdDirectory(Path path) throws ArchiveException {
+  public void createdDirectory(Path path, IoContext location) throws ArchiveException {
     if (!path.startsWith(root)
         || path.equals(root)
         || targetSet.contains(path)
@@ -273,13 +310,13 @@ public final class ExtractionPaths implements AutoCloseable {
         || expected.get(path) != null) {
       throw new IllegalArgumentException("Directory is not a planned missing parent");
     }
-    recheckRoot();
+    recheckRoot(location);
     for (Path parent : descendants(path.getParent())) {
-      verify(parent);
+      verify(parent, location);
     }
-    PathIdentity.Snapshot state = inspect(path);
+    PathIdentity.Snapshot state = inspect(path, location);
     if (state == null || !state.directory() || state.indirection()) {
-      throw context.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
+      throw location.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
     }
     // Known short-name aliases share operation-owned growth, while unrelated paths retain their
     // original expected state and must still fail revalidation if another actor creates them.
@@ -365,7 +402,10 @@ public final class ExtractionPaths implements AutoCloseable {
    */
   private record PhysicalPath(Object parentIdentity, Path suffix) {}
 
-  /** Releases the owned root pin; after close no path can be admitted for publication. */
+  /**
+   * Releases the owned root pin; after close no path can be admitted for publication. A failed
+   * release is plan-level evidence, so it is located in CLEANUP at the preflight ordinal.
+   */
   @Override
   public void close() throws ArchiveException {
     if (!closed) {
@@ -450,21 +490,33 @@ public final class ExtractionPaths implements AutoCloseable {
     return reversed.reversed();
   }
 
-  /** Compares detached no-follow identity and classification with the expected operation state. */
-  private void verify(Path path) throws ArchiveException {
-    if (!expected.containsKey(path) || !Objects.equals(expected.get(path), inspect(path))) {
-      throw context.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
+  /**
+   * Compares detached no-follow identity and classification with the expected operation state,
+   * locating a mismatch or read failure at {@code location}.
+   */
+  private void verify(Path path, IoContext location) throws ArchiveException {
+    if (!expected.containsKey(path)
+        || !Objects.equals(expected.get(path), inspect(path, location))) {
+      throw location.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
     }
   }
 
-  /** Converts provider errors into semantic containment failures without copying their messages. */
+  /** Reads one preflight identity, locating any failure at the preflight context. */
   private PathIdentity.Snapshot inspect(Path path) throws ArchiveException {
+    return inspect(path, context);
+  }
+
+  /**
+   * Converts provider errors into semantic containment failures without copying their messages,
+   * located at {@code location}.
+   */
+  private PathIdentity.Snapshot inspect(Path path, IoContext location) throws ArchiveException {
     try {
       return snapshotReader.read(path);
     } catch (UnsupportedOperationException failure) {
-      throw context.failure(FailureKind.CAPABILITY, "extraction.identity-unavailable", failure);
+      throw location.failure(FailureKind.CAPABILITY, "extraction.identity-unavailable", failure);
     } catch (IOException | SecurityException failure) {
-      throw context.failure(FailureKind.DESTINATION, "extraction.destination-io", failure);
+      throw location.failure(FailureKind.DESTINATION, "extraction.destination-io", failure);
     }
   }
 
@@ -473,7 +525,7 @@ public final class ExtractionPaths implements AutoCloseable {
    */
   private void requireTarget(Path target) {
     if (!targetSet.contains(target)) {
-      throw new IllegalArgumentException("Target is not in the extraction plan");
+      throw new IllegalArgumentException("Target is not in the planned target set");
     }
   }
 }
