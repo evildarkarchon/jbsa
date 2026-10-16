@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -342,6 +343,245 @@ final class ParallelExtractTest {
     assertTrue(Files.exists(destination.resolve("data/a.bin")));
   }
 
+  /**
+   * A sparse selection extracts the same files, Artifacts, Validation Extent, progress, and
+   * diagnostics whether one worker or several stage it.
+   */
+  @Test
+  void sparseSelectionParallelMatchesSequentialOutcome() throws Exception {
+    Path archive = storedArchive("sparse.bsa", 5);
+    Path sequential = directory.resolve("sparse-sequential");
+    Path parallel = directory.resolve("sparse-parallel");
+    List<ProgressSnapshot> oneProgress = new ArrayList<>();
+    List<ProgressSnapshot> fourProgress = new ArrayList<>();
+
+    OperationReport one =
+        BethesdaArchives.standard()
+            .extract(
+                request(archive, sequential, SPARSE, 1),
+                new OperationControl(oneProgress::add, () -> false));
+    OperationReport four =
+        BethesdaArchives.standard()
+            .extract(
+                request(archive, parallel, SPARSE, 4),
+                new OperationControl(fourProgress::add, () -> false));
+
+    // TES3 orders entries by name hash, so each archive ordinal's name comes from the archive.
+    for (EntryMetadata entry : BethesdaArchives.standard().inspect(archive).entries()) {
+      // Archive names use backslash separators; extraction resolves them as path separators.
+      String name = entry.displayName().replace('\\', '/');
+      boolean selected = SPARSE.ordinals().contains(entry.ordinal());
+      assertEquals(selected, Files.exists(sequential.resolve(name)), name);
+      assertEquals(selected, Files.exists(parallel.resolve(name)), name);
+      if (selected)
+        assertArrayEquals(
+            Files.readAllBytes(sequential.resolve(name)),
+            Files.readAllBytes(parallel.resolve(name)));
+    }
+    assertEquals(
+        new ValidationExtent.Payloads(Set.of(1L, 3L, 4L)), one.assessment().orElseThrow().extent());
+    assertEquals(one.assessment(), four.assessment());
+    assertEquals(one.diagnostics(), four.diagnostics());
+    assertEquals(oneProgress, fourProgress);
+    assertEquals(relative(sequential, one.artifacts()), relative(parallel, four.artifacts()));
+  }
+
+  /**
+   * A corrupt payload in a later selected entry fails at that entry's archive ordinal with the same
+   * Primary Failure, Secondary Failures, Artifacts, and assessment in both strategies.
+   */
+  @Test
+  void sparseSelectionParallelMatchesSequentialFailureLocation() throws Exception {
+    Path archive = compressedArchive("sparse-corrupt.ba2", 5);
+    corruptPayload(archive, 4);
+    Path sequential = directory.resolve("corrupt-sequential");
+    Path parallel = directory.resolve("corrupt-parallel");
+
+    ArchiveException one =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                BethesdaArchives.standard()
+                    .extract(request(archive, sequential, SPARSE, 1), OperationControl.standard()));
+    ArchiveException four =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                BethesdaArchives.standard()
+                    .extract(request(archive, parallel, SPARSE, 4), OperationControl.standard()));
+
+    assertEquals(FailureKind.FORMAT, one.kind());
+    assertEquals(OperationPhase.PROCESSING, one.primaryFailure().phase());
+    assertEquals(OptionalLong.of(4), one.primaryFailure().ordinal());
+    assertEquals(located(one.primaryFailure()), located(four.primaryFailure()));
+    assertEquals(
+        one.secondaryFailures().stream().map(ParallelExtractTest::located).toList(),
+        four.secondaryFailures().stream().map(ParallelExtractTest::located).toList());
+    assertEquals(one.diagnostics(), four.diagnostics());
+    assertEquals(one.assessment(), four.assessment());
+    assertEquals(relative(sequential, one.artifacts()), relative(parallel, four.artifacts()));
+    assertFalse(Files.exists(sequential));
+    assertFalse(Files.exists(parallel));
+  }
+
+  /**
+   * Cancellation accepted on entering PROCESSING is located at the first selected entry's archive
+   * ordinal in both strategies.
+   */
+  @Test
+  @Disabled(
+      "Operation Lifecycle 02: the sequential strategy locates this cancellation at selection"
+          + " position 0, while the parallel strategy locates it at archive ordinal 1")
+  void sparseSelectionParallelMatchesSequentialCancellationLocation() throws Exception {
+    Path archive = storedArchive("sparse-cancel.bsa", 5);
+    Path sequential = directory.resolve("cancel-sequential");
+    Path parallel = directory.resolve("cancel-parallel");
+
+    ArchiveException one =
+        assertThrows(
+            ArchiveCancelledException.class,
+            () ->
+                BethesdaArchives.standard()
+                    .extract(request(archive, sequential, SPARSE, 1), cancelOnProcessing()));
+    ArchiveException four =
+        assertThrows(
+            ArchiveCancelledException.class,
+            () ->
+                BethesdaArchives.standard()
+                    .extract(request(archive, parallel, SPARSE, 4), cancelOnProcessing()));
+
+    assertEquals(OperationPhase.PROCESSING, one.primaryFailure().phase());
+    assertEquals(OptionalLong.of(1), one.primaryFailure().ordinal());
+    assertEquals(located(one.primaryFailure()), located(four.primaryFailure()));
+    assertEquals(relative(sequential, one.artifacts()), relative(parallel, four.artifacts()));
+    assertFalse(Files.exists(sequential));
+    assertFalse(Files.exists(parallel));
+  }
+
+  /** Sparse archive ordinals whose selection positions (0, 1, 2) differ from them. */
+  private static final EntrySelection.Ordinals SPARSE =
+      new EntrySelection.Ordinals(List.of(1L, 3L, 4L));
+
+  /** Packs a stored TES3 archive whose entry {@code i} is named Data/Entry{i}.bin. */
+  private Path storedArchive(String name, int count) throws Exception {
+    List<PackSource> sources = new ArrayList<>();
+    for (int index = 0; index < count; index++) {
+      byte value = (byte) index;
+      sources.add(
+          new PackSource.GeneratedEntry(
+              "Data/Entry" + index + ".bin",
+              1,
+              () -> Channels.newChannel(new ByteArrayInputStream(new byte[] {value}))));
+    }
+    Path archive = directory.resolve(name);
+    BethesdaArchives.standard()
+        .pack(
+            PackRequest.standard(
+                archive, ArchiveFamily.TES3_BSA, ArchiveEncoding.tes3(), sources, Optional.empty()),
+            OperationControl.standard());
+    return archive;
+  }
+
+  /** Packs a zlib-compressed general BA2 whose entry {@code i} is named Data/Entry{i}.bin. */
+  private Path compressedArchive(String name, int count) throws Exception {
+    List<PackSource> sources = new ArrayList<>();
+    for (int index = 0; index < count; index++) {
+      byte[] payload =
+          ("compressed-payload-" + index).repeat(256).getBytes(StandardCharsets.US_ASCII);
+      sources.add(
+          new PackSource.NamedFile(
+              "Data/Entry" + index + ".bin",
+              Files.write(directory.resolve(name + "-source-" + index + ".bin"), payload)));
+    }
+    Path archive = directory.resolve(name);
+    PackRequest standard =
+        PackRequest.standard(
+            archive,
+            ArchiveFamily.FO4_GENERAL_BA2,
+            new ArchiveEncoding(
+                Optional.of(new WireVersion(1)),
+                Optional.of(Ba2Subtype.GNRL),
+                OptionalLong.empty()),
+            sources,
+            Optional.empty());
+    PackOptions zlib =
+        new PackOptions(
+            List.of(),
+            PackOptions.Compression.ZLIB,
+            false,
+            new PackOptions.Splitting.UpToBytes(0),
+            FlagSelection.AUTOMATIC,
+            FlagSelection.AUTOMATIC);
+    BethesdaArchives.standard()
+        .pack(
+            new PackRequest(
+                standard.destination(),
+                standard.family(),
+                standard.encoding(),
+                standard.compatibilityProfile(),
+                standard.sources(),
+                standard.targetPolicy(),
+                standard.diagnosticPolicy(),
+                standard.resourceLimits(),
+                new WorkerSelection.UpTo(1),
+                zlib,
+                standard.ddsTarget()),
+            OperationControl.standard());
+    return archive;
+  }
+
+  /**
+   * Zeroes one entry's packed zlib stream in place, so its header check fails when the payload is
+   * decoded while the archive's structure stays valid for opening.
+   */
+  private static void corruptPayload(Path archive, long ordinal) throws Exception {
+    EntryMetadata metadata =
+        BethesdaArchives.standard().inspect(archive).entries().get(Math.toIntExact(ordinal));
+    assertEquals(ordinal, metadata.ordinal());
+    var general = (EntryMetadata.GeneralBa2) metadata.facts();
+    assertTrue(general.packedSize() > 0, "the corrupted entry must be compressed");
+    try (var channel =
+        java.nio.channels.FileChannel.open(archive, java.nio.file.StandardOpenOption.WRITE)) {
+      channel.write(
+          java.nio.ByteBuffer.allocate(Math.toIntExact(general.packedSize())),
+          general.payloadOffset());
+    }
+  }
+
+  /** Cancels at the first PROCESSING snapshot, which only the coordinator thread delivers. */
+  private static OperationControl cancelOnProcessing() {
+    AtomicBoolean cancelled = new AtomicBoolean();
+    return new OperationControl(
+        snapshot -> {
+          if (snapshot.phase() == OperationPhase.PROCESSING) cancelled.set(true);
+        },
+        cancelled::get);
+  }
+
+  /**
+   * Reduces a failure to its observable location, dropping the cause because throwables compare by
+   * identity.
+   */
+  private static List<Object> located(Failure failure) {
+    return List.of(
+        failure.kind(),
+        failure.phase(),
+        failure.ordinal(),
+        failure.diagnosticIdentifier(),
+        failure.location());
+  }
+
+  /** Re-roots Artifacts under their destination so two destinations can be compared. */
+  private static List<Artifact> relative(Path destination, List<Artifact> artifacts) {
+    Path root = destination.toAbsolutePath().normalize();
+    return artifacts.stream()
+        .map(
+            artifact ->
+                new Artifact(
+                    root.relativize(artifact.path()), artifact.ordinal(), artifact.state()))
+        .toList();
+  }
+
   /** Detects a named platform worker inside its private stage or payload transfer. */
   private static boolean activeExtractWorker() {
     return Thread.getAllStackTraces().entrySet().stream()
@@ -359,10 +599,16 @@ final class ParallelExtractTest {
 
   /** Selects a worker limit without changing the public extraction policies under test. */
   private static ExtractRequest request(Path source, Path destination, long workers) {
+    return request(source, destination, EntrySelection.ALL, workers);
+  }
+
+  /** Selects entries and a worker limit without changing the other public extraction policies. */
+  private static ExtractRequest request(
+      Path source, Path destination, EntrySelection selection, long workers) {
     return new ExtractRequest(
         source,
         destination,
-        EntrySelection.ALL,
+        selection,
         TargetPolicy.FAIL,
         DiagnosticPolicy.standard(),
         new WorkerSelection.UpTo(workers),
