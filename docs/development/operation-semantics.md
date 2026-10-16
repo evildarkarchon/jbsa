@@ -40,8 +40,9 @@ returns its artifacts while failures accumulate in the session. Pack and extract
 each run as a body of the session's operation template (`OperationSession.run`),
 which alone maps unexpected throwables, settles pre-publication failures with
 CLEANUP progress, closes the caller-owned resources the body registers (the pack
-resource budget, the stabilization spool, and the open source archive) in reverse
-registration order, and finishes the operation exactly once.
+resource budget, the stabilization spool, the open source archive, and the
+extraction budget) in reverse registration order, and finishes the operation
+exactly once.
 
 Pack writers call `StagedFile.completedEntry(decodedBytes)` once per final logical
 entry. Encoded framing, backpatches, compression, sharing, and replay never add
