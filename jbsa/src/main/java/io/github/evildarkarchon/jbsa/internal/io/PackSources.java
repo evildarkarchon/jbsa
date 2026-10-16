@@ -82,7 +82,9 @@ public final class PackSources {
             entry(
                 generated.name(),
                 generated.length(),
-                reader -> consumeGenerated(generated, reader, context, request.resourceLimits()),
+                reader ->
+                    consumeGenerated(
+                        generated, reader, context, request.resourceLimits(), operation),
                 context,
                 encoding),
             overlay,
@@ -257,9 +259,15 @@ public final class PackSources {
 
   /**
    * Settles transferred generated channels explicitly so close errors remain structured evidence.
+   *
+   * @param operation the pack's session, which takes a close failure directly once it has failed
    */
   private static void consumeGenerated(
-      PackSource.GeneratedEntry generated, Reader reader, IoContext context, ResourceLimits limits)
+      PackSource.GeneratedEntry generated,
+      Reader reader,
+      IoContext context,
+      ResourceLimits limits,
+      OperationSession operation)
       throws IOException {
     var failures = new FailureRetention(limits, Operation.PACK);
     ReadableByteChannel channel = null;
@@ -279,10 +287,14 @@ public final class PackSources {
         try {
           channel.close();
         } catch (IOException failure) {
-          failures.accept(
+          ArchiveException closing =
               new IoContext(
                       context.path(), Operation.PACK, OperationPhase.CLEANUP, context.ordinal())
-                  .failure(FailureKind.SOURCE, "operation.source-io", failure));
+                  .failure(FailureKind.SOURCE, "operation.source-io", failure);
+          // Once the operation has failed, the read failure being unwound may be the session's
+          // own raised failure, which is not admitted again; keep the close in the session itself.
+          if (operation.failed()) operation.accept(closing);
+          else failures.accept(closing);
         }
       }
     }

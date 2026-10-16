@@ -38,16 +38,15 @@ public final class PublicationTransaction {
       OperationControl control,
       FileActions files)
       throws ArchiveException {
+    var operation = new OperationSession(Operation.PACK, limits, control);
     Session session =
         new Session(
-            destination,
-            policy,
-            limits,
-            new OperationSession(Operation.PACK, limits, control),
-            files,
-            false,
-            partIndexes(writers.size()));
-    return session.run(List.copyOf(writers), List.of()).artifacts();
+            destination, policy, limits, operation, files, false, partIndexes(writers.size()));
+    return settle(
+            operation,
+            IoContext.of(destination, Operation.PACK),
+            () -> session.run(List.copyOf(writers), List.of()))
+        .artifacts();
   }
 
   /** Continues source preflight evidence and returns the complete report for an archive set. */
@@ -58,15 +57,36 @@ public final class PublicationTransaction {
       ResourceLimits limits,
       OperationSession operation)
       throws ArchiveException {
-    return new Session(
+    Session session =
+        new Session(
             destination,
             policy,
             limits,
             operation,
             new FileActions(),
             false,
-            partIndexes(writers.size()))
-        .run(List.copyOf(writers), List.of());
+            partIndexes(writers.size()));
+    return settle(
+        operation,
+        IoContext.of(destination, Operation.PACK),
+        () -> session.run(List.copyOf(writers), List.of()));
+  }
+
+  /**
+   * Runs one publication as a whole operation through the session's operation template, for the
+   * entry points that own their operation instead of serving a pack or extract body.
+   */
+  private static OperationReport settle(
+      OperationSession operation, IoContext context, Publication publication)
+      throws ArchiveException {
+    return operation.run(context, resources -> new OperationSession.Published(publication.run()));
+  }
+
+  /** One publication run, returning the artifacts it settled. */
+  @FunctionalInterface
+  private interface Publication {
+    /** Publishes, accepting every failure into the operation session instead of throwing it. */
+    List<Artifact> run() throws IOException;
   }
 
   /**
@@ -98,8 +118,14 @@ public final class PublicationTransaction {
     }
   }
 
-  /** Borrows the planner's budget so retained stabilization and staged bytes share one ceiling. */
-  public static OperationReport archives(
+  /**
+   * Borrows the planner's budget so retained stabilization and staged bytes share one ceiling.
+   * Publication settles its own staging but not the operation: failures accumulate in the session,
+   * and the caller's operation template finishes it.
+   *
+   * @return the artifacts publication settled, whether or not it accepted a failure
+   */
+  public static List<Artifact> archives(
       Path destination,
       List<Writer> writers,
       TargetPolicy policy,
@@ -123,8 +149,10 @@ public final class PublicationTransaction {
    * Publishes an archive set whose operation already entered PROCESSING to stabilize its payloads
    * before the part plan existed (Q10). Progress continues in that phase instead of entering it
    * again; target checks keep their PREFLIGHT failure location because they still precede staging.
+   *
+   * @return the artifacts publication settled; the caller's operation template finishes the session
    */
-  public static OperationReport stabilizedArchives(
+  public static List<Artifact> stabilizedArchives(
       Path destination,
       List<Writer> writers,
       TargetPolicy policy,
@@ -169,17 +197,16 @@ public final class PublicationTransaction {
       FileActions files)
       throws ArchiveException {
     List<Entry> selection = List.copyOf(entries);
-    return new Session(
-            root,
-            policy,
-            limits,
-            new OperationSession(Operation.EXTRACT, limits, control),
-            files,
-            true,
-            entryOrdinals(selection))
-        .run(
-            selection.stream().map(Entry::writer).toList(),
-            selection.stream().map(Entry::name).toList())
+    var operation = new OperationSession(Operation.EXTRACT, limits, control);
+    Session session =
+        new Session(root, policy, limits, operation, files, true, entryOrdinals(selection));
+    return settle(
+            operation,
+            IoContext.of(root, Operation.EXTRACT),
+            () ->
+                session.run(
+                    selection.stream().map(Entry::writer).toList(),
+                    selection.stream().map(Entry::name).toList()))
         .artifacts();
   }
 
@@ -187,6 +214,33 @@ public final class PublicationTransaction {
    * Continues source assessment and diagnostic policy through staging and publication settlement.
    */
   public static OperationReport extract(
+      Path root,
+      List<Entry> entries,
+      TargetPolicy policy,
+      ResourceLimits limits,
+      OperationSession operation)
+      throws ArchiveException {
+    List<Entry> selection = List.copyOf(entries);
+    Session session =
+        new Session(
+            root, policy, limits, operation, new FileActions(), true, entryOrdinals(selection));
+    return settle(
+        operation,
+        IoContext.of(root, Operation.EXTRACT),
+        () ->
+            session.run(
+                selection.stream().map(Entry::writer).toList(),
+                selection.stream().map(Entry::name).toList()));
+  }
+
+  /**
+   * Publishes validated selected names one at a time on the caller thread, as one new root or
+   * ordered per-file existing-tree commits. Publication settles its own staging but not the
+   * operation: failures accumulate in the session, and the caller's operation template finishes it.
+   *
+   * @return the artifacts publication settled, whether or not it accepted a failure
+   */
+  public static List<Artifact> extractSequential(
       Path root,
       List<Entry> entries,
       TargetPolicy policy,
@@ -206,8 +260,9 @@ public final class PublicationTransaction {
    * publishes them only on the caller thread in Logical Plan Order.
    *
    * @param onStaged receives each consumed entry's archive entry ordinal on the caller thread
+   * @return the artifacts publication settled; the caller's operation template finishes the session
    */
-  public static OperationReport extractParallel(
+  public static List<Artifact> extractParallel(
       Path root,
       List<Entry> entries,
       TargetPolicy policy,
@@ -556,19 +611,25 @@ public final class PublicationTransaction {
     /**
      * Selects bounded worker staging while retaining the transaction's ordered publication path.
      */
-    OperationReport runParallel(
+    List<Artifact> runParallel(
         List<Entry> entries,
         WorkerSelection selection,
         LongConsumer onStaged,
-        FinalStageAction beforeFinalCommit)
-        throws ArchiveException {
+        FinalStageAction beforeFinalCommit) {
       parallel = new ParallelPlan(entries, selection, onStaged, beforeFinalCommit);
       return run(
           entries.stream().map(Entry::writer).toList(), entries.stream().map(Entry::name).toList());
     }
 
-    /** Settles cleanup before returning evidence, preserving the first accepted failure. */
-    OperationReport run(List<Writer> writers, List<String> names) throws ArchiveException {
+    /**
+     * Stages, commits, and cleans this publication's own staging, accepting every failure into the
+     * operation session instead of throwing it. Only an {@link Error} other than {@link
+     * AssertionError} escapes.
+     *
+     * @return every settled artifact, including residuals; publication cleaned exactly these, so
+     *     their count is the operation's CLEANUP total
+     */
+    List<Artifact> run(List<Writer> writers, List<String> names) {
       try {
         if (processingEntered)
           operationSession.checkpoint(OperationPhase.PROCESSING, OptionalLong.empty());
@@ -662,14 +723,15 @@ public final class PublicationTransaction {
         }
         operationSession.completePhase();
       } catch (IOException | UnsupportedOperationException | SecurityException cause) {
-        accept(cause);
+        unwound(cause);
         if (commitInProgress && stagedRoot == null) rollback();
       } catch (RuntimeException | AssertionError cause) {
         accept(context().failure(FailureKind.INTERNAL, "operation.internal-failure", cause));
         if (commitInProgress && stagedRoot == null) rollback();
       } finally {
+        // Failures located from here on are CLEANUP failures. The session itself enters CLEANUP
+        // and reports the count returned below once its operation template settles.
         phase = OperationPhase.CLEANUP;
-        operationSession.cleanup();
         cleanup();
         settleTargetStates();
         if (containment != null) {
@@ -682,10 +744,8 @@ public final class PublicationTransaction {
         closeParallelOutcomes();
         credits.forEach(ResourceBudget.Lease::close);
         if (ownsBudget) budget.close();
-        operationSession.cleaned(artifacts().size());
       }
-      List<Artifact> artifacts = artifacts();
-      return operationSession.finish(artifacts);
+      return artifacts();
     }
 
     /** Establishes the complete target plan before creating adjacent staging. */
@@ -1087,6 +1147,23 @@ public final class PublicationTransaction {
 
     /** Cleanup never displaces an accepted primary failure or exceeds secondary retention. */
     private void accept(Throwable cause) {
+      operationSession.accept(structured(cause));
+    }
+
+    /**
+     * Settles the failure that ended staging or commit. It may be the session's own raised failure,
+     * which the session already retains, so it goes through {@link OperationSession#unwound}.
+     */
+    private void unwound(Throwable cause) {
+      operationSession.unwound(structured(cause));
+    }
+
+    /**
+     * Structures a publication failure: a non-archive throwable becomes {@code
+     * operation.destination-io} at the current location, and a resource-limit failure raised in
+     * another phase is relocated to the current phase and ordinal.
+     */
+    private ArchiveException structured(Throwable cause) {
       ArchiveException failure =
           cause instanceof ArchiveException archive
               ? archive
@@ -1142,7 +1219,7 @@ public final class PublicationTransaction {
                 failure.assessment(),
                 failure.secondaryFailures());
       }
-      operationSession.accept(failure);
+      return failure;
     }
 
     /** Reports planned artifacts first and residual paths next within their logical ordinal. */

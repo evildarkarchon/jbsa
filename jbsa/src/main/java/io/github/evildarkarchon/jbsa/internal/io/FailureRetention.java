@@ -192,9 +192,21 @@ public final class FailureRetention {
 
   /** Returns a detached successful report after every artifact state has settled. */
   public OperationReport report(List<Artifact> settledArtifacts) {
+    return report(settledArtifacts, List.of());
+  }
+
+  /**
+   * Returns a detached successful report after every artifact state has settled, carrying pack's
+   * staged Archive Parts.
+   *
+   * @param archiveParts the published Archive Parts in logical order; empty for extraction
+   */
+  public OperationReport report(
+      List<Artifact> settledArtifacts, List<OperationReport.ArchivePart> archiveParts) {
     if (failed()) throw new IllegalStateException("An accepted failure cannot produce success");
     mergeArtifacts(settledArtifacts);
-    return new OperationReport(operation, orderedArtifacts(), diagnostics(), assessment);
+    return new OperationReport(
+        operation, orderedArtifacts(), diagnostics(), assessment, archiveParts);
   }
 
   /** Orders normalized artifact states independently of discovery or cleanup completion timing. */

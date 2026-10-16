@@ -32,10 +32,15 @@ A mutation coordinator creates one `OperationSession` from the operation,
 before operational discovery and counts every considered source candidate through
 `PREFLIGHT/ENTRIES`, including candidates subsequently filtered or overlaid. It
 establishes assessments and admits warnings before discarding any diagnostic
-records. It passes that same session to the `PublicationTransaction` report
-overload after source-shape, configuration, capability, and finalized output-plan
-validation. The adapter completes destination preflight and owns publication and
-cleanup. Outer scratch ownership must also be settled before the operation returns.
+records. It passes that same session to `PublicationTransaction` after
+source-shape, configuration, capability, and finalized output-plan validation.
+Publication completes destination preflight, owns its staging and cleans it, and
+returns its artifacts while failures accumulate in the session. Pack and extract
+each run as a body of the session's operation template (`OperationSession.run`),
+which alone maps unexpected throwables, settles pre-publication failures with
+CLEANUP progress, closes the caller-owned resources the body registers (the pack
+resource budget, the stabilization spool, and the open source archive) in reverse
+registration order, and finishes the operation exactly once.
 
 Pack writers call `StagedFile.completedEntry(decodedBytes)` once per final logical
 entry. Encoded framing, backpatches, compression, sharing, and replay never add
