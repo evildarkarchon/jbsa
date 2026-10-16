@@ -32,8 +32,10 @@ Order before entering this seam. When encoded sizes determine split membership,
 it first stabilizes bounded content with `SpillBuffer` outside the destination,
 then passes the complete finalized part writers to `archives`. The publication
 seam therefore cannot create destination staging during that stabilization gate.
-Callers must close scratch before their outer operation returns, and merge any
-scratch failure through `FailureRetention` with the publication artifacts.
+Callers register scratch with the `OperationSession` operation template, which
+closes it before the operation finishes and retains any close failure in the same
+outcome as the publication artifacts. Publication cleans its own staging and
+returns its artifacts; it never finishes the operation itself.
 
 Extraction callers supply complete decoded names whose wire encoding and
 Normalized Name Identity have already been established by archive metadata

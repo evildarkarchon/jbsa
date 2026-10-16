@@ -14,6 +14,8 @@ public final class ArchiveExtractor {
 
   /**
    * Validates the complete selected plan before staging and settles the source before final commit.
+   * The extraction runs as a body of the session's operation template, which owns the epilogue:
+   * mapping unexpected throwables, closing the source archive, and finishing the operation once.
    */
   public static OperationReport extract(ExtractRequest request, OperationControl control)
       throws ArchiveException {
@@ -21,154 +23,136 @@ public final class ArchiveExtractor {
         new OperationSession(
             Operation.EXTRACT, request.resourceLimits(), request.diagnosticPolicy(), control);
     IoContext context = IoContext.of(request.source(), Operation.EXTRACT);
-    OpenArchive archive = null;
-    boolean publicationOwnsSession = false;
-    List<Artifact> artifacts = List.of();
-    try {
-      operation.begin();
-      WorkerSelection.UpTo selectedWorkers = WorkerLimits.snapshot(request.workerSelection());
-      archive =
-          ArchiveReaders.open(
-              request.source(),
-              request.openOptions(),
-              Operation.EXTRACT,
-              request.diagnosticPolicy());
-      operation.assessment(archive.inspection().assessment());
-      OpenArchive source = archive;
-      Set<Long> requested =
-          request.entries() instanceof EntrySelection.Ordinals selection
-              ? new HashSet<>(selection.ordinals())
-              : null;
-      if (requested != null
-          && requested.stream().anyMatch(ordinal -> ordinal >= source.entryCount()))
-        throw context.failure(FailureKind.POLICY, "extract.invalid-entry-ordinal", null);
-      List<ArchiveEntry> selected = new ArrayList<>();
-      long decodedBytes = 0;
-      for (long ordinal = 0; ordinal < archive.entryCount(); ordinal++) {
-        if (requested != null && !requested.contains(ordinal)) continue;
-        operation.checkpoint(OperationPhase.PREFLIGHT, OptionalLong.of(ordinal));
-        ArchiveEntry entry = archive.entry(ordinal);
-        if (entry.metadata().normalizedNameIdentity().isEmpty())
-          throw new IoContext(
-                  request.source(),
-                  Operation.EXTRACT,
-                  OperationPhase.PREFLIGHT,
-                  OptionalLong.of(ordinal))
-              .failure(FailureKind.POLICY, "extract.ineligible-name", null);
-        if (entry.metadata().decodedSize()
-            > request.resourceLimits().maxDecodedBytes() - decodedBytes)
-          throw context.limit(
-              "maxDecodedBytes",
-              request.resourceLimits().maxDecodedBytes(),
-              BigInteger.valueOf(decodedBytes)
-                  .add(BigInteger.valueOf(entry.metadata().decodedSize()))
-                  .toString());
-        decodedBytes += entry.metadata().decodedSize();
-        selected.add(entry);
-      }
-      Set<Long> validated = new TreeSet<>();
-      List<PublicationTransaction.Entry> entries = new ArrayList<>();
-      boolean sequential = selected.isEmpty() || selectedWorkers.workers() == 1;
-      // The opened archive's native budget admits one decoder. Stored entries still run freely.
-      Semaphore compressedDecoder = new Semaphore(1, true);
-      for (int index = 0; index < selected.size(); index++) {
-        ArchiveEntry entry = selected.get(index);
-        boolean last = index == selected.size() - 1;
-        // Both strategies locate every checkpoint, failure, and Artifact by the archive entry
-        // ordinal, which differs from the selection position for a sparse selection.
-        if (sequential) {
-          entries.add(
-              new PublicationTransaction.Entry(
-                  entry.metadata().displayName(),
-                  output -> {
-                    transfer(entry, output, operation, source.inspection().assessment(), validated);
-                    // Source cleanup must succeed before the last selected file can become visible.
-                    if (last) source.close();
-                  },
-                  entry.metadata().decodedSize(),
-                  entry.metadata().ordinal()));
-        } else {
-          IoContext entryContext =
-              new IoContext(
-                  request.source(),
-                  Operation.EXTRACT,
-                  OperationPhase.PROCESSING,
-                  OptionalLong.of(entry.metadata().ordinal()));
-          entries.add(
-              new PublicationTransaction.Entry(
-                  entry.metadata().displayName(),
-                  output -> transferParallel(entry, output, compressedDecoder, entryContext),
-                  entry.metadata().decodedSize(),
-                  entry.metadata().ordinal()));
-        }
-      }
-      if (selected.isEmpty()) source.close();
-      publicationOwnsSession = true;
-      artifacts =
-          (sequential
-                  ? PublicationTransaction.extract(
-                      request.destination(),
-                      entries,
-                      request.targetPolicy(),
-                      request.resourceLimits(),
-                      operation)
-                  : PublicationTransaction.extractParallel(
-                      request.destination(),
-                      entries,
-                      request.targetPolicy(),
-                      request.resourceLimits(),
-                      operation,
-                      selectedWorkers,
-                      archiveOrdinal -> {
-                        validated.add(archiveOrdinal);
-                        operation.latestAssessment(
-                            new ArchiveAssessment(
-                                source.inspection().assessment().disposition(),
-                                new ValidationExtent.Payloads(validated),
-                                source.inspection().assessment().diagnostics()));
-                      },
-                      () -> {
-                        try {
-                          source.close();
-                        } catch (ArchiveException failure) {
-                          throw failure;
-                        } catch (IOException failure) {
-                          throw new IoContext(
-                                  request.source(),
-                                  Operation.EXTRACT,
-                                  OperationPhase.CLEANUP,
-                                  OptionalLong.empty())
-                              .failure(FailureKind.SOURCE, "operation.source-io", failure);
-                        }
-                      }))
-              .artifacts();
-    } catch (ArchiveException failure) {
-      if (publicationOwnsSession) artifacts = failure.artifacts();
-      else operation.accept(failure);
-    } catch (IOException failure) {
-      operation.accept(context.failure(FailureKind.SOURCE, "operation.source-io", failure));
-    } finally {
-      if (archive != null) {
-        try {
-          archive.close();
-        } catch (IOException failure) {
-          operation.accept(
-              failure instanceof ArchiveException checked
-                  ? checked
-                  : new IoContext(
-                          request.source(),
-                          Operation.EXTRACT,
-                          OperationPhase.CLEANUP,
-                          OptionalLong.empty())
-                      .failure(FailureKind.SOURCE, "operation.source-io", failure));
-        }
-      }
-      if (!publicationOwnsSession) {
-        operation.cleanup();
-        operation.cleaned(0);
+    return operation.run(context, resources -> extract(request, operation, context, resources));
+  }
+
+  /**
+   * The extraction body: preflight of the selected plan, then publication. The opened source
+   * archive is registered with the template, which closes it after publication settles if no writer
+   * or final-commit action already did (closing it again is a no-op).
+   *
+   * @return the artifacts publication settled
+   * @throws IOException a failure before publication; publication accepts its own failures
+   */
+  private static OperationSession.Published extract(
+      ExtractRequest request,
+      OperationSession operation,
+      IoContext context,
+      OperationSession.Resources resources)
+      throws IOException {
+    operation.begin();
+    WorkerSelection.UpTo selectedWorkers = WorkerLimits.snapshot(request.workerSelection());
+    OpenArchive archive =
+        ArchiveReaders.open(
+            request.source(), request.openOptions(), Operation.EXTRACT, request.diagnosticPolicy());
+    resources.register(archive::close);
+    operation.assessment(archive.inspection().assessment());
+    OpenArchive source = archive;
+    Set<Long> requested =
+        request.entries() instanceof EntrySelection.Ordinals selection
+            ? new HashSet<>(selection.ordinals())
+            : null;
+    if (requested != null && requested.stream().anyMatch(ordinal -> ordinal >= source.entryCount()))
+      throw context.failure(FailureKind.POLICY, "extract.invalid-entry-ordinal", null);
+    List<ArchiveEntry> selected = new ArrayList<>();
+    long decodedBytes = 0;
+    for (long ordinal = 0; ordinal < archive.entryCount(); ordinal++) {
+      if (requested != null && !requested.contains(ordinal)) continue;
+      operation.checkpoint(OperationPhase.PREFLIGHT, OptionalLong.of(ordinal));
+      ArchiveEntry entry = archive.entry(ordinal);
+      if (entry.metadata().normalizedNameIdentity().isEmpty())
+        throw new IoContext(
+                request.source(),
+                Operation.EXTRACT,
+                OperationPhase.PREFLIGHT,
+                OptionalLong.of(ordinal))
+            .failure(FailureKind.POLICY, "extract.ineligible-name", null);
+      if (entry.metadata().decodedSize()
+          > request.resourceLimits().maxDecodedBytes() - decodedBytes)
+        throw context.limit(
+            "maxDecodedBytes",
+            request.resourceLimits().maxDecodedBytes(),
+            BigInteger.valueOf(decodedBytes)
+                .add(BigInteger.valueOf(entry.metadata().decodedSize()))
+                .toString());
+      decodedBytes += entry.metadata().decodedSize();
+      selected.add(entry);
+    }
+    Set<Long> validated = new TreeSet<>();
+    List<PublicationTransaction.Entry> entries = new ArrayList<>();
+    boolean sequential = selected.isEmpty() || selectedWorkers.workers() == 1;
+    // The opened archive's native budget admits one decoder. Stored entries still run freely.
+    Semaphore compressedDecoder = new Semaphore(1, true);
+    for (int index = 0; index < selected.size(); index++) {
+      ArchiveEntry entry = selected.get(index);
+      boolean last = index == selected.size() - 1;
+      // Both strategies locate every checkpoint, failure, and Artifact by the archive entry
+      // ordinal, which differs from the selection position for a sparse selection.
+      if (sequential) {
+        entries.add(
+            new PublicationTransaction.Entry(
+                entry.metadata().displayName(),
+                output -> {
+                  transfer(entry, output, operation, source.inspection().assessment(), validated);
+                  // Source cleanup must succeed before the last selected file can become visible.
+                  if (last) source.close();
+                },
+                entry.metadata().decodedSize(),
+                entry.metadata().ordinal()));
+      } else {
+        IoContext entryContext =
+            new IoContext(
+                request.source(),
+                Operation.EXTRACT,
+                OperationPhase.PROCESSING,
+                OptionalLong.of(entry.metadata().ordinal()));
+        entries.add(
+            new PublicationTransaction.Entry(
+                entry.metadata().displayName(),
+                output -> transferParallel(entry, output, compressedDecoder, entryContext),
+                entry.metadata().decodedSize(),
+                entry.metadata().ordinal()));
       }
     }
-    return operation.finish(artifacts);
+    if (selected.isEmpty()) source.close();
+    List<Artifact> artifacts =
+        sequential
+            ? PublicationTransaction.extractSequential(
+                request.destination(),
+                entries,
+                request.targetPolicy(),
+                request.resourceLimits(),
+                operation)
+            : PublicationTransaction.extractParallel(
+                request.destination(),
+                entries,
+                request.targetPolicy(),
+                request.resourceLimits(),
+                operation,
+                selectedWorkers,
+                archiveOrdinal -> {
+                  validated.add(archiveOrdinal);
+                  operation.latestAssessment(
+                      new ArchiveAssessment(
+                          source.inspection().assessment().disposition(),
+                          new ValidationExtent.Payloads(validated),
+                          source.inspection().assessment().diagnostics()));
+                },
+                () -> {
+                  try {
+                    source.close();
+                  } catch (ArchiveException failure) {
+                    throw failure;
+                  } catch (IOException failure) {
+                    throw new IoContext(
+                            request.source(),
+                            Operation.EXTRACT,
+                            OperationPhase.CLEANUP,
+                            OptionalLong.empty())
+                        .failure(FailureKind.SOURCE, "operation.source-io", failure);
+                  }
+                });
+    return new OperationSession.Published(artifacts);
   }
 
   /**
