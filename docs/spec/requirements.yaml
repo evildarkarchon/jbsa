@@ -1,6 +1,6 @@
 schema_version: 2
 specification:
-  version: 0.21.0
+  version: 0.21.1
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -2688,14 +2688,19 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
       - https://github.com/evildarkarchon/jbsa/issues/83
+      - https://github.com/evildarkarchon/jbsa/issues/81
     lifecycle_state: active
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
+      - https://github.com/evildarkarchon/jbsa/issues/83
+      - https://github.com/evildarkarchon/jbsa/issues/87
     test_evidence:
       - docs/development/interface-freeze.md
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelPackTest.java
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/ParallelExtractTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/ExtractOperationSemanticsTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/PublicationFaultsTest.java
   - id: JBSA-OPS-007
     owner:
       document: docs/spec/operation-semantics.md
@@ -2708,10 +2713,14 @@ requirements:
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
+      - https://github.com/evildarkarchon/jbsa/issues/82
+      - https://github.com/evildarkarchon/jbsa/issues/84
     test_evidence:
       - docs/development/interface-freeze.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
       - jbsa/src/test/java/io/github/evildarkarchon/jbsa/PackCharacterizationTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/ExtractOperationSemanticsTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/pack/PackPipelineTest.java
   - id: JBSA-OPS-008
     owner:
       document: docs/spec/operation-semantics.md
