@@ -67,8 +67,10 @@ public final class PublicationTransaction {
     List<String> names = new ArrayList<>(partCount);
     for (int index = 0; index < partCount; index++)
       names.add(splitPath(target, index + 1).getFileName().toString());
-    try (ExtractionPaths checked =
-        ExtractionPaths.preflight(target.getParent(), names, policy, context)) {
+    // Production filesystem actions: publication reads identities only through FileActions.
+    try (TargetPaths checked =
+        TargetPaths.preflightWith(
+            target.getParent(), names, policy, context, new FileActions()::inspect)) {
       // The output set is validated now; the publishing transaction rechecks it before staging.
     }
   }
@@ -367,6 +369,22 @@ public final class PublicationTransaction {
     void delete(Path path) throws IOException {
       Files.deleteIfExists(path);
     }
+
+    /**
+     * Reads a path's detached no-follow identity, as {@link PathIdentity#inspect} does. This is
+     * publication's only identity read, including its target containment's, so identity changes are
+     * injectable through the same seam as moves and deletions.
+     *
+     * <p>Parallel extraction calls this from private worker threads for their staged files, so an
+     * override must be thread-safe.
+     *
+     * @return the entry's snapshot, or null when it or a parent does not exist
+     * @throws IOException if the entry cannot be inspected
+     * @throws UnsupportedOperationException if the host cannot establish a stable identity
+     */
+    PathIdentity.Snapshot inspect(Path path) throws IOException {
+      return PathIdentity.inspect(path);
+    }
   }
 
   /**
@@ -393,7 +411,7 @@ public final class PublicationTransaction {
     private final OperationSession operationSession;
     private final Set<Path> retainedBackups = new HashSet<>();
     private Path staging;
-    private ExtractionPaths containment;
+    private TargetPaths containment;
     private Path stagedRoot;
     private boolean rootPublished;
     private boolean existingTree;
@@ -504,7 +522,7 @@ public final class PublicationTransaction {
         if (extraction != null) operationSession.advance(ProgressMetric.ENTRIES, names.size());
         checkpoint();
         if (!parts.isEmpty() || newRoot) {
-          containment.recheckRoot();
+          containment.recheckRoot(context());
           // A drive/share root has no parent; staging beside its planned files stays on that
           // volume.
           Path stagingParent =
@@ -556,7 +574,8 @@ public final class PublicationTransaction {
             operationSession.beginCommit(phase, OptionalLong.of(ordinal));
             commitInProgress = true;
             if (stagedRoot != null) {
-              containment.recheckRoot();
+              // Located at the root commit: the last part's ordinal, in PUBLISHING.
+              containment.recheckRoot(context());
               files.move(stagedRoot, destination);
               rootPublished = true;
               privateDirectories.forEach(
@@ -630,8 +649,11 @@ public final class PublicationTransaction {
       for (String name : names) planHeap = Math.addExact(planHeap, (long) name.length() * 12);
       // Pin handles plus one temporary inspection and its bounded UTF-16/native structures.
       credits.add(budget.reserve(planHeap, 128 * 1024, 2, 0));
+      // Containment reads identities through the fault seam too, so every publication identity
+      // read goes through FileActions.
       if (extraction != null) {
-        containment = ExtractionPaths.preflight(destination, names, policy, context());
+        containment =
+            TargetPaths.preflightWith(destination, names, policy, context(), files::inspect);
         existingTree = containment.existingRoot();
       }
       for (int index = 0; index < writers.size(); index++) {
@@ -644,11 +666,12 @@ public final class PublicationTransaction {
       }
       if (extraction == null)
         containment =
-            ExtractionPaths.preflight(
+            TargetPaths.preflightWith(
                 destination.getParent(),
                 parts.stream().map(part -> part.target.getFileName().toString()).toList(),
                 policy,
-                context());
+                context(),
+                files::inspect);
     }
 
     /**
@@ -681,7 +704,7 @@ public final class PublicationTransaction {
       }
       // Readback needs a closed write handle under Windows sharing rules, but must precede commit.
       part.writer.validate(part.staged);
-      part.stagedIdentity = PathIdentity.inspect(part.staged);
+      part.stagedIdentity = files.inspect(part.staged);
       return size;
     }
 
@@ -788,7 +811,8 @@ public final class PublicationTransaction {
         }
         // Readback and identity inspection happen after the write handle closes on Windows.
         part.writer.validate(part.staged);
-        StagedResult result = new StagedResult(size, PathIdentity.inspect(part.staged));
+        // On this worker thread too, identity reads go through the (thread-safe) fault seam.
+        StagedResult result = new StagedResult(size, files.inspect(part.staged));
         handleAndValidationClosed = true;
         return result;
       } catch (ArchiveException failure) {
@@ -867,7 +891,7 @@ public final class PublicationTransaction {
     private void publish(Part part) throws IOException {
       recheck(part, false);
       if (part.predecessor) {
-        part.backupIdentity = PathIdentity.inspect(part.target);
+        part.backupIdentity = files.inspect(part.target);
         part.backup = staging.resolve("backup-" + part.ordinal);
         ResourceBudget.Lease backupCredit = budget.reserve(0, 0, 0, Files.size(part.target));
         credits.add(backupCredit);
@@ -883,18 +907,15 @@ public final class PublicationTransaction {
       releaseStage(part);
     }
 
-    /** Keeps a containment failure at the actual publication boundary rather than preflight. */
+    /**
+     * Rechecks one part's containment at the current phase and ordinal, so a failure is located at
+     * the actual publication boundary rather than at preflight.
+     *
+     * @param parentsOnly whether to skip the target's own identity, as install after a backup does
+     */
     private void recheck(Part part, boolean parentsOnly) throws ArchiveException {
-      try {
-        if (parentsOnly) containment.recheckParents(part.target);
-        else containment.recheck(part.target);
-      } catch (ArchiveException failure) {
-        throw context()
-            .failure(
-                failure.kind(),
-                failure.primaryFailure().diagnosticIdentifier().orElse("destination.changed"),
-                failure.getCause());
-      }
+      if (parentsOnly) containment.recheckParents(part.target, context());
+      else containment.recheck(part.target, context());
     }
 
     /**
@@ -907,7 +928,7 @@ public final class PublicationTransaction {
         try {
           recheck(part, true);
           if (part.state == ArtifactState.PUBLISHED) {
-            var current = PathIdentity.inspect(part.target);
+            var current = files.inspect(part.target);
             if (!Objects.equals(current, part.stagedIdentity)) {
               part.state = current == null ? ArtifactState.MISSING : ArtifactState.UNCHANGED;
               throw context()
@@ -917,7 +938,7 @@ public final class PublicationTransaction {
             part.state = ArtifactState.MISSING;
           }
           if (part.backedUp) {
-            if (!Objects.equals(part.backupIdentity, PathIdentity.inspect(part.backup))) {
+            if (!Objects.equals(part.backupIdentity, files.inspect(part.backup))) {
               throw context().failure(FailureKind.DESTINATION, "destination.changed-backup", null);
             }
             files.move(part.backup, part.target);
@@ -975,7 +996,7 @@ public final class PublicationTransaction {
       for (Path path : missing.reversed()) {
         Files.createDirectory(path);
         createdDirectories.put(path, part.ordinal);
-        containment.createdDirectory(path);
+        containment.createdDirectory(path, context());
       }
     }
 
@@ -989,7 +1010,7 @@ public final class PublicationTransaction {
         if (removedDirectories.stream().anyMatch(part.target::startsWith)) continue;
         try {
           if (stagedRoot == null) recheck(part, true);
-          var current = PathIdentity.inspect(part.target);
+          var current = files.inspect(part.target);
           if (current == null) part.state = ArtifactState.MISSING;
           else if (part.state == ArtifactState.MISSING
               || (part.state == ArtifactState.PUBLISHED && !current.equals(part.stagedIdentity))

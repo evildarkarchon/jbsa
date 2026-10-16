@@ -487,28 +487,28 @@
       },
       "test_selectors": {
         "tes3": ["io.github.evildarkarchon.jbsa.Tes3ExtractTest#rejectsIneligibleNameBeforeDestinationEffects"],
-        "bsa-067": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
-        "bsa-068": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "bsa-067": ["io.github.evildarkarchon.jbsa.internal.io.TargetPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "bsa-068": ["io.github.evildarkarchon.jbsa.internal.io.TargetPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
         "bsa-069": [
-          "io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects",
+          "io.github.evildarkarchon.jbsa.internal.io.TargetPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects",
           "io.github.evildarkarchon.jbsa.verification.PublicMetadataContractIT#normalizedIdentityPreservesNonAsciiSpellingAndRejectsUnsafeOrUnmappableNames"
         ],
-        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
-        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
-        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
-        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.ExtractionPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"]
+        "sf-dx10-v2": ["io.github.evildarkarchon.jbsa.internal.io.TargetPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.TargetPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "sf-gnrl-v2": ["io.github.evildarkarchon.jbsa.internal.io.TargetPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.TargetPathsTest#rejectsRepresentativeUnsafeNamesBeforeDestinationEffects"]
       },
       "evidence_refs": {
         "bsa-069": [
-          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/ExtractionPathsTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/TargetPathsTest.java",
           "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicMetadataContractIT.java"
         ],
         "sf-dx10-v2": [
-          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/ExtractionPathsTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/TargetPathsTest.java",
           "docs/development/evidence/issue46-starfield-dds/qualification.json"
         ],
         "sf-dx10-v3-m3": [
-          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/ExtractionPathsTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/TargetPathsTest.java",
           "docs/development/evidence/issue46-starfield-dds/qualification.json"
         ]
       }
