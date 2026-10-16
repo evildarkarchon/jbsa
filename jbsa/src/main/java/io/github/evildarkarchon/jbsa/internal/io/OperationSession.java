@@ -242,6 +242,17 @@ public final class OperationSession {
     }
   }
 
+  /**
+   * Returns the progress phase the operation has entered, for locating a failure the coordinator
+   * raises itself. Only the coordinator thread changes the phase, so only it may rely on the
+   * answer.
+   *
+   * @return the current phase, or empty before {@link #begin} has entered PREFLIGHT
+   */
+  public Optional<OperationPhase> phase() {
+    return Optional.ofNullable(phase);
+  }
+
   /** Reports whether cleanup follows an accepted failure without invoking caller code. */
   public boolean failed() {
     synchronized (outcome) {
