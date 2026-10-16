@@ -162,7 +162,7 @@ public final class OperationSession {
     } catch (ArchiveException failure) {
       unwound(failure);
     } catch (IOException failure) {
-      accept(context.failure(FailureKind.SOURCE, "operation.source-io", failure));
+      accept(context.sourceFailure(failure));
     } catch (RuntimeException | AssertionError unexpected) {
       accept(
           located(context, phase().orElse(OperationPhase.PREFLIGHT))
@@ -190,10 +190,8 @@ public final class OperationSession {
     for (Resource resource : registered.reversed()) {
       try {
         resource.close();
-      } catch (ArchiveException failure) {
-        accept(failure);
       } catch (IOException failure) {
-        accept(cleanup.failure(FailureKind.SOURCE, "operation.source-io", failure));
+        accept(cleanup.sourceFailure(failure));
       } catch (RuntimeException | AssertionError unexpected) {
         accept(cleanup.failure(FailureKind.INTERNAL, "operation.internal-failure", unexpected));
       }

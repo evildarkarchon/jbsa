@@ -139,11 +139,9 @@ public final class ArchiveExtractor {
   private static void closeSource(OpenArchive source, Path path) throws ArchiveException {
     try {
       source.close();
-    } catch (ArchiveException failure) {
-      throw failure;
     } catch (IOException failure) {
       throw new IoContext(path, Operation.EXTRACT, OperationPhase.CLEANUP, OptionalLong.empty())
-          .failure(FailureKind.SOURCE, "operation.source-io", failure);
+          .sourceFailure(failure);
     }
   }
 
@@ -178,10 +176,8 @@ public final class ArchiveExtractor {
       EntryContent content;
       try {
         content = entry.openContent();
-      } catch (ArchiveException failure) {
-        throw failure;
       } catch (IOException failure) {
-        throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+        throw sourceContext.sourceFailure(failure);
       }
       try (SourceContent release = () -> closeContent(content, sourceContext)) {
         ByteBuffer window = ByteBuffer.allocate(65536);
@@ -191,10 +187,8 @@ public final class ArchiveExtractor {
           int count;
           try {
             count = content.read(window);
-          } catch (ArchiveException failure) {
-            throw failure;
           } catch (IOException failure) {
-            throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+            throw sourceContext.sourceFailure(failure);
           }
           if (count < 0) break;
           window.flip();
@@ -213,10 +207,8 @@ public final class ArchiveExtractor {
       throws ArchiveException {
     try {
       content.close();
-    } catch (ArchiveException failure) {
-      throw failure;
     } catch (IOException failure) {
-      throw sourceContext.failure(FailureKind.SOURCE, "operation.source-io", failure);
+      throw sourceContext.sourceFailure(failure);
     }
   }
 

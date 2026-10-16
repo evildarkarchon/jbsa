@@ -205,9 +205,7 @@ public final class TransformStage implements AutoCloseable {
   static ArchiveException failure(Throwable failure, IoContext processing) {
     if (failure instanceof VirtualMachineError || failure instanceof ThreadDeath)
       throw (Error) failure;
-    if (failure instanceof ArchiveException archive) return archive;
-    if (failure instanceof IOException io)
-      return processing.failure(FailureKind.SOURCE, "operation.source-io", io);
+    if (failure instanceof IOException io) return processing.sourceFailure(io);
     return processing.failure(FailureKind.INTERNAL, "operation.internal-failure", failure);
   }
 
@@ -319,10 +317,7 @@ public final class TransformStage implements AutoCloseable {
       return new PrivateResult(raw, encoded, budget.limits());
     } catch (IOException failure) {
       var failures = new FailureRetention(budget.limits(), Operation.PACK);
-      failures.accept(
-          failure instanceof ArchiveException archive
-              ? archive
-              : processing.failure(FailureKind.SOURCE, "operation.source-io", failure));
+      failures.accept(processing.sourceFailure(failure));
       if (encoded != null) {
         try {
           encoded.close();
@@ -384,10 +379,7 @@ public final class TransformStage implements AutoCloseable {
       return new PrivateResult(null, encoded, budget.limits());
     } catch (IOException failure) {
       var failures = new FailureRetention(budget.limits(), Operation.PACK);
-      failures.accept(
-          failure instanceof ArchiveException archive
-              ? archive
-              : processing.failure(FailureKind.SOURCE, "operation.source-io", failure));
+      failures.accept(processing.sourceFailure(failure));
       try {
         encoded.close();
       } catch (ArchiveException cleanup) {

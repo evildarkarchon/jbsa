@@ -989,7 +989,7 @@ public final class PackPipeline {
         // Closing worker results can fail after processing; keep both structured outcomes. The
         // close goes straight into the session and the first outcome is rethrown unchanged, since
         // it may be the session's own raised failure, which the template must not admit again.
-        run.operation.accept(structured(second, run.context));
+        run.operation.accept(run.context.sourceFailure(second));
       } else pending.addSuppressed(cleanup);
     }
     if (pending instanceof IOException checked) throw checked;
@@ -1141,13 +1141,6 @@ public final class PackPipeline {
             request.destination().toAbsolutePath().normalize(), number),
         output.size(),
         part.size());
-  }
-
-  /** Wraps an unstructured I/O failure as SOURCE {@code operation.source-io}. */
-  private static ArchiveException structured(IOException failure, IoContext context) {
-    return failure instanceof ArchiveException archive
-        ? archive
-        : context.failure(FailureKind.SOURCE, "operation.source-io", failure);
   }
 
   /**
