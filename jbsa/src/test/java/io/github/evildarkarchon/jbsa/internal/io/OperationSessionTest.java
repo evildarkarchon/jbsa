@@ -515,20 +515,30 @@ final class OperationSessionTest {
                             throw closing;
                           });
                       session.begin();
+                      ResourceBudget budget =
+                          ResourceBudget.forMutation(
+                              ResourceLimits.standard(), IoContext.of(root, Operation.EXTRACT));
+                      resources.register(budget::close);
+                      // The writer fails before publication's own source-close action can run,
+                      // so the registered close above is the first, late close of the source.
                       List<Artifact> artifacts =
-                          PublicationTransaction.extractSequential(
-                              root,
-                              List.of(
-                                  new PublicationTransaction.Entry(
-                                      "a",
-                                      output -> {
-                                        throw new IOException("write");
-                                      },
-                                      1,
-                                      0)),
-                              TargetPolicy.FAIL,
-                              ResourceLimits.standard(),
-                              session);
+                          PublicationTransaction.publish(
+                              session,
+                              budget,
+                              new PublicationTransaction.Plan.Extraction(
+                                  root,
+                                  List.of(
+                                      new PublicationTransaction.Entry(
+                                          "a",
+                                          output -> {
+                                            throw new IOException("write");
+                                          },
+                                          1,
+                                          0)),
+                                  TargetPolicy.FAIL,
+                                  new WorkerSelection.UpTo(1),
+                                  ordinal -> {},
+                                  PublicationTransaction.SourceClose.NONE));
                       return new OperationSession.Published(artifacts, List.of());
                     }));
 

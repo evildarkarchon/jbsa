@@ -42,7 +42,7 @@ final class PublicationFailuresTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(
                         output -> {
@@ -90,7 +90,7 @@ final class PublicationFailuresTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(bytes(7)),
                     TargetPolicy.REPLACE,
@@ -144,7 +144,7 @@ final class PublicationFailuresTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     first,
                     List.of(bytes(1), bytes(2)),
                     TargetPolicy.REPLACE,
@@ -200,11 +200,11 @@ final class PublicationFailuresTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.extract(
+                Publications.extract(
                     root,
                     List.of(
-                        new PublicationTransaction.Entry("first.txt", bytes(1)),
-                        new PublicationTransaction.Entry("second.txt", bytes(2))),
+                        new PublicationTransaction.Entry("first.txt", bytes(1), 1, 0),
+                        new PublicationTransaction.Entry("second.txt", bytes(2), 1, 1)),
                     TargetPolicy.REPLACE,
                     ResourceLimits.standard(),
                     OperationControl.standard(),
@@ -249,16 +249,18 @@ final class PublicationFailuresTest {
         assertThrows(
             ArchiveCancelledException.class,
             () ->
-                PublicationTransaction.extract(
+                Publications.extract(
                     root,
                     List.of(
-                        new PublicationTransaction.Entry("first.txt", bytes(1)),
+                        new PublicationTransaction.Entry("first.txt", bytes(1), 1, 0),
                         new PublicationTransaction.Entry(
                             "second.txt",
                             output -> {
                               secondWriter.set(true);
                               bytes(2).write(output);
-                            })),
+                            },
+                            1,
+                            1)),
                     TargetPolicy.REPLACE,
                     ResourceLimits.standard(),
                     new OperationControl(snapshot -> {}, cancelled::get),
@@ -316,7 +318,7 @@ final class PublicationFailuresTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(writer, writer),
                     TargetPolicy.FAIL,
@@ -344,7 +346,7 @@ final class PublicationFailuresTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(bytes(1)),
                     TargetPolicy.FAIL,
@@ -383,7 +385,7 @@ final class PublicationFailuresTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(
                         output -> {

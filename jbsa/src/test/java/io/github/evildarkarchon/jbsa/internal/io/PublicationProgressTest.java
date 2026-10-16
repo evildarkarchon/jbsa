@@ -25,7 +25,7 @@ class PublicationProgressTest {
   @Test
   void emptyArchiveSetCompletesEveryApplicablePair() throws Exception {
     var snapshots = new ArrayList<ProgressSnapshot>();
-    PublicationTransaction.archives(
+    Publications.archives(
         directory.resolve("empty.bsa"),
         List.of(),
         TargetPolicy.FAIL,
@@ -56,14 +56,16 @@ class PublicationProgressTest {
     Path root = Files.createDirectory(directory.resolve("existing"));
     var snapshots = new ArrayList<ProgressSnapshot>();
     var artifacts =
-        PublicationTransaction.extract(
+        Publications.extract(
             root,
             List.of(
                 new PublicationTransaction.Entry(
                     "file",
                     output -> {
                       output.write(0, ByteBuffer.wrap(new byte[] {1, 2, 3}));
-                    })),
+                    },
+                    3,
+                    0)),
             TargetPolicy.FAIL,
             ResourceLimits.standard(),
             new OperationControl(snapshots::add, () -> false));
@@ -96,7 +98,7 @@ class PublicationProgressTest {
         assertThrows(
             ArchiveCancelledException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     directory.resolve("cancelled"),
                     List.of(output -> output.write(0, ByteBuffer.wrap(new byte[] {1}))),
                     TargetPolicy.FAIL,
@@ -131,7 +133,7 @@ class PublicationProgressTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     directory.resolve("broken"),
                     List.of(
                         output -> {
@@ -157,7 +159,7 @@ class PublicationProgressTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(output -> output.write(0, ByteBuffer.wrap(new byte[] {4}))),
                     TargetPolicy.FAIL,
@@ -189,7 +191,7 @@ class PublicationProgressTest {
     Path target = directory.resolve("pack");
     var warning = warning(0);
     var report =
-        PublicationTransaction.archives(
+        Publications.archives(
             target,
             List.of(
                 output -> {
@@ -232,7 +234,7 @@ class PublicationProgressTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.archives(
+                Publications.archives(
                     target,
                     List.of(
                         output -> {
@@ -268,14 +270,16 @@ class PublicationProgressTest {
         assertThrows(
             ArchiveException.class,
             () ->
-                PublicationTransaction.extract(
+                Publications.extract(
                     root,
                     List.of(
                         new PublicationTransaction.Entry(
                             "first",
                             output -> {
                               output.write(0, ByteBuffer.wrap(new byte[] {1}));
-                            }),
+                            },
+                            1,
+                            0),
                         new PublicationTransaction.Entry(
                             "second",
                             output -> {
@@ -289,7 +293,9 @@ class PublicationProgressTest {
                                       packWarning.location(),
                                       packWarning.values(),
                                       packWarning.explanation()));
-                            })),
+                            },
+                            0,
+                            1)),
                     TargetPolicy.FAIL,
                     ResourceLimits.standard(),
                     session));
@@ -312,7 +318,7 @@ class PublicationProgressTest {
     var snapshots = new ArrayList<ProgressSnapshot>();
     Path target = directory.resolve("final");
     var artifacts =
-        PublicationTransaction.archives(
+        Publications.archives(
             target,
             List.of(output -> output.write(0, ByteBuffer.wrap(new byte[] {1}))),
             TargetPolicy.FAIL,
