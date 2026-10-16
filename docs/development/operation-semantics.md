@@ -42,7 +42,10 @@ which alone maps unexpected throwables, settles pre-publication failures with
 CLEANUP progress, closes the caller-owned resources the body registers (the pack
 resource budget, the stabilization spool, the open source archive, and the
 extraction budget) in reverse registration order, and finishes the operation
-exactly once.
+exactly once. Once the operation has failed, session methods stop their caller
+with the internal `OperationStopped` signal, which carries no evidence. Code
+between a session call and the template rethrows it unchanged, and every
+`ArchiveException` the template catches is admitted (ADR-0005).
 
 Pack writers call `StagedFile.completedEntry(decodedBytes)` once per final logical
 entry. Encoded framing, backpatches, compression, sharing, and replay never add

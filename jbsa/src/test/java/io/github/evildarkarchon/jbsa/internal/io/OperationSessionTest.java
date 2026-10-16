@@ -65,8 +65,9 @@ final class OperationSessionTest {
     assertNull(thrown.get());
     session.endCommit(false);
     assertThrows(
-        ArchiveCancelledException.class,
+        OperationStopped.class,
         () -> session.checkpoint(OperationPhase.PROCESSING, OptionalLong.of(1)));
+    assertInstanceOf(ArchiveCancelledException.class, outcome(session, Operation.PACK));
   }
 
   /** Cancellation arriving after the final commit cannot change the successful cleanup outcome. */
@@ -140,18 +141,19 @@ final class OperationSessionTest {
             Operation.PACK, limits, new OperationControl(snapshots::add, () -> false));
     discovery.begin();
     discovery.advance(ProgressMetric.ENTRIES, 1);
-    ArchiveException rejected =
-        assertThrows(ArchiveException.class, () -> discovery.advance(ProgressMetric.ENTRIES, 1));
+    assertThrows(OperationStopped.class, () -> discovery.advance(ProgressMetric.ENTRIES, 1));
+    assertEquals(1, snapshots.getLast().completed());
+    ArchiveException rejected = outcome(discovery, Operation.PACK);
     assertEquals(FailureKind.POLICY, rejected.kind());
     assertEquals("maxEntries", rejected.diagnostics().getFirst().values().get("field"));
     assertEquals("2", rejected.diagnostics().getFirst().values().get("observed"));
-    assertEquals(1, snapshots.getLast().completed());
 
     var processing = new OperationSession(Operation.PACK, limits, OperationControl.standard());
     processing.begin();
     processing.processing(false);
     processing.processedEntry(3);
-    rejected = assertThrows(ArchiveException.class, () -> processing.processedEntry(1));
+    assertThrows(OperationStopped.class, () -> processing.processedEntry(1));
+    rejected = outcome(processing, Operation.PACK);
     assertEquals("maxDecodedBytes", rejected.diagnostics().getFirst().values().get("field"));
     assertEquals("3", rejected.diagnostics().getFirst().values().get("ceiling"));
     assertEquals("4", rejected.diagnostics().getFirst().values().get("observed"));
@@ -205,7 +207,8 @@ final class OperationSessionTest {
       release.countDown();
       worker.get().join();
     }
-    ArchiveException result = assertInstanceOf(ArchiveException.class, thrown.get());
+    assertInstanceOf(OperationStopped.class, thrown.get());
+    ArchiveException result = outcome(session, Operation.PACK);
     assertEquals(FailureKind.SOURCE, result.kind());
     assertSame(cause, result.getCause());
   }
@@ -218,8 +221,8 @@ final class OperationSessionTest {
     session.begin();
     session.processing(false);
     session.processedEntry(Long.MAX_VALUE);
-    ArchiveException failure =
-        assertThrows(ArchiveException.class, () -> session.processedEntry(1));
+    assertThrows(OperationStopped.class, () -> session.processedEntry(1));
+    ArchiveException failure = outcome(session, Operation.PACK);
     assertEquals("9223372036854775808", failure.diagnostics().getFirst().values().get("observed"));
     assertEquals(FailureKind.POLICY, failure.kind());
   }
@@ -423,11 +426,11 @@ final class OperationSessionTest {
   }
 
   /**
-   * A failure the session raised itself is not admitted again when the body rethrows it, so the
-   * outcome holds one Primary Failure and no duplicate.
+   * The session's stop carries no failure of its own, so a body that lets it propagate leaves the
+   * outcome with one Primary Failure and no duplicate.
    */
   @Test
-  void sessionFailureRethrownByBodyIsRetainedOnce() {
+  void sessionStopPropagatedByBodyIsRetainedOnce() {
     var session =
         new OperationSession(
             Operation.EXTRACT,
@@ -453,12 +456,49 @@ final class OperationSessionTest {
   }
 
   /**
-   * A body that adds cleanup evidence while unwinding the session's raised failure accepts it into
-   * the session and rethrows the raised failure: the outcome keeps the raised failure once, with
-   * the cleanup failure as its only Secondary Failure.
+   * After the session stops the body, a new failure the body then throws is still admitted. No rule
+   * suppresses a failure because the session has already raised its own.
    */
   @Test
-  void cleanupBehindRethrownSessionFailureIsRetainedOnce() {
+  void newFailureThrownAfterTheSessionStopsIsAdmitted() {
+    var session =
+        new OperationSession(
+            Operation.EXTRACT,
+            ResourceLimits.standard(),
+            new OperationControl(s -> {}, () -> true));
+    Path source = Path.of("source").toAbsolutePath();
+    var context = IoContext.of(source, Operation.EXTRACT);
+    var later =
+        new IoContext(source, Operation.EXTRACT, OperationPhase.CLEANUP, OptionalLong.empty())
+            .failure(FailureKind.SOURCE, "operation.source-io", new IOException("late"));
+
+    var failure =
+        assertThrows(
+            ArchiveCancelledException.class,
+            () ->
+                session.run(
+                    context,
+                    resources -> {
+                      try {
+                        session.begin();
+                      } catch (IOException stopped) {
+                        throw later;
+                      }
+                      throw new AssertionError("begin must observe cancellation");
+                    }));
+
+    assertEquals(FailureKind.CANCELLED, failure.kind());
+    assertEquals(List.of(later.primaryFailure()), failure.secondaryFailures());
+    assertSettled(session);
+  }
+
+  /**
+   * A body that adds cleanup evidence while unwinding the session's stop accepts it into the
+   * session and rethrows the stop: the outcome keeps the stopping failure once, with the cleanup
+   * failure as its only Secondary Failure.
+   */
+  @Test
+  void cleanupBehindRethrownSessionStopIsRetainedOnce() {
     var session =
         new OperationSession(
             Operation.PACK,
@@ -485,9 +525,9 @@ final class OperationSessionTest {
                       session.completePhase();
                       try {
                         session.processing(false);
-                      } catch (ArchiveException raised) {
+                      } catch (OperationStopped stopped) {
                         session.accept(cleanup);
-                        throw raised;
+                        throw stopped;
                       }
                       throw new AssertionError("processing must raise the observer failure");
                     }));
@@ -587,6 +627,20 @@ final class OperationSessionTest {
         cleanup);
     assertFalse(Files.exists(root.resolve("a")));
     assertSettled(session);
+  }
+
+  /**
+   * Settles a session a test drove outside the template, through a template whose body publishes
+   * nothing, and returns the failure the session finishes with. The session's stop signal carries
+   * no evidence, so the settled outcome is where a test reads it.
+   */
+  private static ArchiveException outcome(OperationSession session, Operation operation) {
+    return assertThrows(
+        ArchiveException.class,
+        () ->
+            session.run(
+                IoContext.of(Path.of("archive.bsa").toAbsolutePath(), operation),
+                resources -> null));
   }
 
   /** Asserts the template already finished the session, which accepts exactly one finish. */

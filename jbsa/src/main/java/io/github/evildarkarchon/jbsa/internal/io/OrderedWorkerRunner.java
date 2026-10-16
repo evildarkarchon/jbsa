@@ -5,7 +5,6 @@ import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.WorkerSelection;
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -25,6 +24,10 @@ import java.util.function.IntToLongFunction;
  * <p>The coordinator alone submits and consumes work. Workers receive only a noninterrupting stop
  * checkpoint and a preadmitted resource lease; they cannot deliver progress or publish output.
  * Every result owns its credits until the coordinator closes its {@link Outcome}.
+ *
+ * <p>Closing the runner settles the failures of unconsumed work and of discarded results straight
+ * into the operation session, under the request's Diagnostic Policy, rather than folding them into
+ * an exception of its own.
  */
 public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoCloseable {
   private static final AtomicLong NEXT_OPERATION_ID = new AtomicLong();
@@ -34,6 +37,7 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
       ThreadLocal.withInitial(ArrayDeque::new);
 
   private final Thread coordinator = Thread.currentThread();
+  private final OperationSession session;
   private final ResourceBudget budget;
   private final IoContext context;
   private final IntToLongFunction locate;
@@ -53,24 +57,33 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
    * Snapshots the operation's worker limit and creates its private fixed platform pool. The plan
    * count has already been established in Logical Plan Order; no descriptors are created here.
    * Unexpected worker and cleanup failures are located at their plan position.
+   *
+   * @param session the operation's session, which takes the failures {@link #close} settles
    */
   public OrderedWorkerRunner(
-      WorkerSelection selection, int plannedCount, ResourceBudget budget, IoContext context) {
-    this(selection, plannedCount, budget, context, index -> index);
+      OperationSession session,
+      WorkerSelection selection,
+      int plannedCount,
+      ResourceBudget budget,
+      IoContext context) {
+    this(session, selection, plannedCount, budget, context, index -> index);
   }
 
   /**
    * Creates the runner with a caller-supplied failure location for each plan position.
    *
+   * @param session the operation's session, which takes the failures {@link #close} settles
    * @param locate maps a submitted plan position to the ordinal its unexpected worker and cleanup
    *     failures report, such as the archive entry ordinal of a sparse extraction selection
    */
   public OrderedWorkerRunner(
+      OperationSession session,
       WorkerSelection selection,
       int plannedCount,
       ResourceBudget budget,
       IoContext context,
       IntToLongFunction locate) {
+    this.session = Objects.requireNonNull(session, "session");
     Objects.requireNonNull(selection, "selection");
     if (plannedCount < 0) throw new IllegalArgumentException("plannedCount must be nonnegative");
     this.budget = Objects.requireNonNull(budget, "budget");
@@ -275,6 +288,13 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
   /**
    * Stops admission, drains unconsumed results, and joins all owned workers without interruption.
    * Consumed outcomes remain coordinator-owned and must be closed after their staged resources.
+   *
+   * <p>Each drained failure, of unconsumed work or of closing a discarded result, is accepted
+   * straight into the operation session, so none is lost when the caller is already unwinding
+   * another outcome and suppresses whatever closing throws.
+   *
+   * @throws OperationStopped once every worker has joined, if a drained failure was accepted
+   * @throws Error a fatal worker or cleanup error, which never reaches the session
    */
   @Override
   public void close() throws IOException {
@@ -283,18 +303,23 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
     closed = true;
     admissionStopped.set(true);
     workers.shutdown();
-    FailureRetention failures = new FailureRetention(budget.limits(), context.operation());
+    boolean accepted = false;
     while (!pending.isEmpty()) {
       Slot<R> slot = pending.removeFirst();
       Completion<R> completion = await(slot.ordinal, slot.future);
-      if (!forcedStop.get() && slot.ordinal <= earliestFailure.get() && completion.failure != null)
-        failures.accept(structured(slot.ordinal, completion.failure));
+      if (!forcedStop.get()
+          && slot.ordinal <= earliestFailure.get()
+          && completion.failure != null) {
+        session.accept(structured(slot.ordinal, completion.failure));
+        accepted = true;
+      }
       try {
         new Outcome<>(slot.ordinal, completion, slot.lease, true).close();
       } catch (VirtualMachineError | ThreadDeath fatal) {
         fatalFailure.compareAndSet(null, fatal);
       } catch (Throwable cleanup) {
-        failures.accept(cleanupFailure(slot.ordinal, cleanup));
+        session.accept(cleanupFailure(slot.ordinal, cleanup));
+        accepted = true;
       }
     }
     try {
@@ -316,12 +341,9 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
       }
     }
     Error fatal = fatalFailure.get();
-    ArchiveException settled = failures.finish(List.of());
-    if (fatal != null) {
-      if (settled != null) fatal.addSuppressed(settled);
-      throw fatal;
-    }
-    if (settled != null) throw settled;
+    if (fatal != null) throw fatal;
+    // The session holds what was drained; stop the caller as any other session failure does.
+    if (accepted) session.stopIfFailed();
   }
 
   /** Runs a worker without observer callbacks and records the earliest failing plan ordinal. */

@@ -145,6 +145,66 @@ final class PublicationPlanTest {
     assertTrue(Files.isDirectory(root));
   }
 
+  /**
+   * A worker failure still unconsumed when the session stops the coordinator is retained in the one
+   * outcome. The observer fails as entry 0's bytes are counted, which stops parallel staging while
+   * entry 1's worker has already failed; closing the workers settles that failure into the session
+   * rather than losing it behind the stop.
+   */
+  @Test
+  void workerFailureDrainedAfterTheSessionStopsIsRetained() {
+    Path root = directory.resolve("out");
+    var observer = new IllegalStateException("observer");
+    var plan =
+        new PublicationTransaction.Plan.Extraction(
+            root,
+            List.of(
+                new PublicationTransaction.Entry(
+                    "a", output -> output.write(0, ByteBuffer.wrap(new byte[] {1})), 1, 0),
+                new PublicationTransaction.Entry(
+                    "b",
+                    output -> {
+                      throw new IOException("write b");
+                    },
+                    1,
+                    1)),
+            TargetPolicy.FAIL,
+            new WorkerSelection.UpTo(4),
+            ordinal -> {},
+            PublicationTransaction.SourceClose.NONE);
+    var session =
+        new OperationSession(
+            Operation.EXTRACT,
+            ResourceLimits.standard(),
+            DiagnosticPolicy.standard(),
+            new OperationControl(
+                snapshot -> {
+                  if (snapshot.phase() == OperationPhase.PROCESSING && snapshot.completed() > 0)
+                    throw observer;
+                },
+                () -> false));
+
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                Publications.run(
+                    session,
+                    plan,
+                    ResourceLimits.standard(),
+                    new PublicationTransaction.FileActions()));
+
+    // Both observed failures are retained; the worker's, located at its entry ordinal, sorts first.
+    assertEquals(FailureKind.DESTINATION, failure.kind());
+    assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
+    assertEquals(java.util.OptionalLong.of(1), failure.primaryFailure().ordinal());
+    assertEquals(
+        List.of(FailureKind.OBSERVER),
+        failure.secondaryFailures().stream().map(Failure::kind).toList());
+    assertSame(observer, failure.secondaryFailures().getFirst().cause().orElseThrow());
+    assertFalse(Files.exists(root));
+  }
+
   /** A failure before the final commit leaves the source to its caller's registered close. */
   @Test
   void stagingFailureLeavesSourceCloseToItsOwner() {

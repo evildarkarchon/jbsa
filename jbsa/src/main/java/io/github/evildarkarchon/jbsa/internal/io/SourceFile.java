@@ -160,6 +160,9 @@ public final class SourceFile {
         throw context.failure(FailureKind.SOURCE, "source.length-mismatch", cause);
       }
       throw cause;
+    } catch (OperationStopped stopped) {
+      // A reader's session checkpoint stopped the pack; the session holds why.
+      throw stopped;
     } catch (IOException cause) {
       // PACK owns this read, so interruption is an operational source failure, never cancellation.
       throw context.failure(FailureKind.SOURCE, "operation.source-io", cause);

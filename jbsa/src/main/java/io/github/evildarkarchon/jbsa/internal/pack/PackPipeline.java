@@ -412,6 +412,7 @@ public final class PackPipeline {
     SpillBuffer stable = run.stable;
     TransformStage stage =
         new TransformStage(
+            run.operation,
             planned.stream().map(Planned::source).toList(),
             run.workers,
             run.budget,
@@ -430,7 +431,7 @@ public final class PackPipeline {
       if (stage.parallel()) stable.reserveSpillHandle();
       try (var coordinator = reserveCoordinator(planned, stage.parallel(), run.budget)) {
         for (int ordinal = 0; ordinal < planned.size(); ordinal++) {
-          try (TransformStage.Input staged = stage.next(run.operation)) {
+          try (TransformStage.Input staged = stage.next()) {
             Planned<K> entry = planned.get(ordinal);
             IoContext processing = processing(run.context, ordinal);
             OptionalLong location = processing.ordinal();
@@ -476,7 +477,7 @@ public final class PackPipeline {
     } catch (Throwable failure) {
       pending = failure;
     }
-    closeStage(stage, pending, run);
+    closeStage(stage, pending);
     return records;
   }
 
@@ -517,6 +518,7 @@ public final class PackPipeline {
     boolean chunked = admitted.chunkHeadBytes() > 0;
     TransformStage stage =
         new TransformStage(
+            run.operation,
             planned.stream().map(Planned::source).toList(),
             run.workers,
             run.budget,
@@ -543,7 +545,7 @@ public final class PackPipeline {
       try (var coordinator =
           reserveSetCoordinator(planned, stage.parallel(), chunked, run.budget)) {
         for (int ordinal = 0; ordinal < planned.size(); ordinal++) {
-          try (TransformStage.Input staged = stage.next(run.operation)) {
+          try (TransformStage.Input staged = stage.next()) {
             Planned<K> entry = planned.get(ordinal);
             IoContext processing = processing(run.context, ordinal);
             OptionalLong location = processing.ordinal();
@@ -613,7 +615,7 @@ public final class PackPipeline {
     } catch (Throwable failure) {
       pending = failure;
     }
-    closeStage(stage, pending, run);
+    closeStage(stage, pending);
     return sized;
   }
 
@@ -935,6 +937,7 @@ public final class PackPipeline {
     long next = layout.payloadStart();
     TransformStage stage =
         new TransformStage(
+            run.operation,
             part.stream().map(Planned::source).toList(),
             run.workers,
             run.budget,
@@ -944,7 +947,7 @@ public final class PackPipeline {
     Throwable pending = null;
     try {
       for (int index = 0; index < part.size(); index++) {
-        try (TransformStage.Input staged = stage.next(run.operation)) {
+        try (TransformStage.Input staged = stage.next()) {
           Planned<K> entry = part.get(index);
           IoContext processing = processing(run.context, firstOrdinal + index);
           Placed<K> result =
@@ -970,27 +973,23 @@ public final class PackPipeline {
     } catch (Throwable failure) {
       pending = failure;
     }
-    closeStage(stage, pending, run);
+    closeStage(stage, pending);
     for (Patch patch : admitted.tables(placed, layout))
       output.write(patch.position(), ByteBuffer.wrap(patch.bytes()));
   }
 
   /**
-   * Joins the transform stage's workers and rethrows the first outcome. When processing and the
-   * close both failed with structured outcomes, both are kept, the close as a Secondary Failure.
+   * Joins the transform stage's workers and rethrows the first outcome. Closing the stage settles
+   * the failures of unconsumed work and discarded results straight into the session, and then stops
+   * with {@link OperationStopped}; behind an earlier outcome that stop adds nothing, because the
+   * session already holds what it stopped for.
    */
-  private static void closeStage(TransformStage stage, Throwable pending, Run run)
-      throws IOException {
+  private static void closeStage(TransformStage stage, Throwable pending) throws IOException {
     try {
       stage.close();
     } catch (Throwable cleanup) {
       if (pending == null) pending = cleanup;
-      else if (pending instanceof IOException && cleanup instanceof IOException second) {
-        // Closing worker results can fail after processing; keep both structured outcomes. The
-        // close goes straight into the session and the first outcome is rethrown unchanged, since
-        // it may be the session's own raised failure, which the template must not admit again.
-        run.operation.accept(run.context.sourceFailure(second));
-      } else pending.addSuppressed(cleanup);
+      else if (!(cleanup instanceof OperationStopped)) pending.addSuppressed(cleanup);
     }
     if (pending instanceof IOException checked) throw checked;
     if (pending instanceof Error fatal) throw fatal;
@@ -1048,7 +1047,7 @@ public final class PackPipeline {
       Admitted.Sharing.Basis basis)
       throws IOException {
     SpillBuffer scratch = output.scratch();
-    ArchiveException primary = null;
+    IOException primary = null;
     try {
       MessageDigest digest = ContentSharing.sha256();
       byte[] frame = entry.frame();
@@ -1092,7 +1091,7 @@ public final class PackPipeline {
           scratch::read, 0, size, (offset, bytes) -> output.write(position + offset, bytes));
       sharing.add(key, position);
       return new Placed<>(entry, position, size);
-    } catch (ArchiveException failure) {
+    } catch (IOException failure) {
       primary = failure;
       throw failure;
     } finally {
@@ -1102,7 +1101,7 @@ public final class PackPipeline {
         if (primary == null) throw cleanup;
         // Keep cleanup as structured secondary evidence, including any exact residual path. It
         // goes straight into the session and the primary is rethrown unchanged, since the primary
-        // may be the session's own raised failure, which publication must not admit again.
+        // may be the session's stop signal, which carries no evidence to fold the cleanup into.
         run.operation.accept(cleanup);
         throw primary;
       }

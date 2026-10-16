@@ -22,6 +22,7 @@ import java.util.function.IntFunction;
  */
 public final class TransformStage implements AutoCloseable {
   private static final int WINDOW_BYTES = 65536;
+  private final OperationSession session;
   private final List<PackSources.Entry> sources;
   private final ResourceBudget budget;
   private final IoContext context;
@@ -36,24 +37,35 @@ public final class TransformStage implements AutoCloseable {
    * Captures a complete Logical Plan Order and an operation-start worker snapshot, preserving the
    * operation-wide ordinal when a writer processes one split part at a time. An explicit one-worker
    * request keeps the established direct source path.
+   *
+   * @param session the pack's session: {@link #next} observes cancellation through it, and closing
+   *     the stage settles the failures of unconsumed work into it
    */
   public TransformStage(
+      OperationSession session,
       List<PackSources.Entry> sources,
       WorkerSelection.UpTo selection,
       ResourceBudget budget,
       IoContext context,
       long firstOrdinal) {
-    this(sources, selection, budget, context, firstOrdinal, ignored -> null);
+    this(session, sources, selection, budget, context, firstOrdinal, ignored -> null);
   }
 
-  /** Configures optional independent transforms without changing ordered source consumption. */
+  /**
+   * Configures optional independent transforms without changing ordered source consumption.
+   *
+   * @param session the pack's session: {@link #next} observes cancellation through it, and closing
+   *     the stage settles the failures of unconsumed work into it
+   */
   public TransformStage(
+      OperationSession session,
       List<PackSources.Entry> sources,
       WorkerSelection.UpTo selection,
       ResourceBudget budget,
       IoContext context,
       long firstOrdinal,
       IntFunction<Encoding> encodings) {
+    this.session = java.util.Objects.requireNonNull(session, "session");
     this.sources = List.copyOf(sources);
     this.budget = budget;
     this.context = context;
@@ -79,7 +91,7 @@ public final class TransformStage implements AutoCloseable {
                     plannedBytes, budget.limits().maxScratchBytes())
             ? null
             : new OrderedWorkerRunner<>(
-                new WorkerSelection.UpTo(requested), sources.size(), budget, context);
+                session, new WorkerSelection.UpTo(requested), sources.size(), budget, context);
   }
 
   /** Reports whether this operation uses multiple workers for source stabilization. */
@@ -146,15 +158,14 @@ public final class TransformStage implements AutoCloseable {
   }
 
   /** Returns the next private raw result, or null for the direct single-worker source path. */
-  public Input next(OperationSession operation) throws IOException {
+  public Input next() throws IOException {
     if (closed) throw new IllegalStateException("Source pipeline is closed");
     if (nextConsumption >= sources.size()) throw new IllegalStateException("No source remains");
     if (runner == null) {
       nextConsumption++;
       return null;
     }
-    operation.checkpoint(
-        OperationPhase.PROCESSING, OptionalLong.of(firstOrdinal + nextConsumption));
+    session.checkpoint(OperationPhase.PROCESSING, OptionalLong.of(firstOrdinal + nextConsumption));
     // A full or credit-starved window is consumed before admission is retried. This prevents a
     // slow first ordinal from allowing unbounded queued and completed later source results.
     while (nextSubmission < sources.size()
@@ -175,7 +186,7 @@ public final class TransformStage implements AutoCloseable {
     OrderedWorkerRunner.Outcome<PrivateResult> outcome =
         runner.takeNext(
             () ->
-                operation.checkpoint(
+                session.checkpoint(
                     OperationPhase.PROCESSING, OptionalLong.of(firstOrdinal + nextConsumption)));
     nextConsumption++;
     if (outcome.failure() != null) {
@@ -186,7 +197,7 @@ public final class TransformStage implements AutoCloseable {
     if (outcome.skipped()) {
       outcome.close();
       // An accepted cancellation or earlier failure is the real outcome; report it if present.
-      operation.checkpoint(
+      session.checkpoint(
           OperationPhase.PROCESSING, OptionalLong.of(firstOrdinal + outcome.ordinal()));
       throw skipped(processing(outcome.ordinal()));
     }
@@ -314,9 +325,10 @@ public final class TransformStage implements AutoCloseable {
         }
         encoded.seal();
       }
-      return new PrivateResult(raw, encoded, budget.limits());
+      return new PrivateResult(raw, encoded);
     } catch (IOException failure) {
-      var failures = new FailureRetention(budget.limits(), Operation.PACK);
+      // A fold, not a retention: the session applies the policy and ceilings once accepted.
+      var failures = FailureRetention.folding(Operation.PACK);
       failures.accept(processing.sourceFailure(failure));
       if (encoded != null) {
         try {
@@ -376,9 +388,10 @@ public final class TransformStage implements AutoCloseable {
                   .encode(input, source.size(), encoded, checkpoint, lease, processing),
           processing);
       encoded.seal();
-      return new PrivateResult(null, encoded, budget.limits());
+      return new PrivateResult(null, encoded);
     } catch (IOException failure) {
-      var failures = new FailureRetention(budget.limits(), Operation.PACK);
+      // A fold, not a retention: the session applies the policy and ceilings once accepted.
+      var failures = FailureRetention.folding(Operation.PACK);
       failures.accept(processing.sourceFailure(failure));
       try {
         encoded.close();
@@ -401,12 +414,11 @@ public final class TransformStage implements AutoCloseable {
    * Owns the staged representations until the coordinator closes the ordered result. The raw spool
    * is null when the encoding streamed its source directly into the encoder.
    */
-  private record PrivateResult(SpillBuffer raw, SpillBuffer encoded, ResourceLimits limits)
-      implements AutoCloseable {
+  private record PrivateResult(SpillBuffer raw, SpillBuffer encoded) implements AutoCloseable {
     /** Settles both private spools even if the first cleanup fails. */
     @Override
     public void close() throws IOException {
-      var failures = new FailureRetention(limits, Operation.PACK);
+      var failures = FailureRetention.folding(Operation.PACK);
       if (encoded != null) {
         try {
           encoded.close();
