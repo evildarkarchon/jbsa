@@ -95,8 +95,14 @@ final class Codecs {
    * Returns the codec credits one part's readback charges, under the codecs this request admitted,
    * so readback charges the same rule, under the same provider, as the read. The reader opens one
    * entry at a time, so one codec is live at once: the credit is the largest decode cost of any
-   * declared codec, plus the decoded copy its reader holds of the part's largest source ({@link
-   * PayloadCodec#decodedCopyBytes}, which only a whole-block codec holds).
+   * declared codec, plus the decoded copy its reader holds of the part's largest whole block
+   * ({@link PayloadCodec#decodedCopyBytes}, which only a whole-block codec holds).
+   *
+   * <p>Each codec is costed for the declared block sizes, as the reader costs each decode call: the
+   * streaming codecs cost the same at any size, and raw LZ4 costs the part's largest actual block.
+   * Charging raw LZ4's dispatch-limit worst case instead put about 32 MiB on the portable
+   * provider's heap for any raw-LZ4 part, so readback failed whenever the heap ceiling was below
+   * that, however small the part (#102).
    *
    * @throws IllegalStateException when a declared codec was not admitted, which is a JBSA bug
    */
@@ -106,8 +112,11 @@ final class Codecs {
       AdmittedCodec found = admitted.get(codec);
       if (found == null)
         throw new IllegalStateException(codec + " is read back without being admitted");
-      AdmittedCodec.Cost decode = found.maxDecodeCost();
-      heap = Math.max(heap, decode.heapBytes() + codec.decodedCopyBytes(readback.largestSource()));
+      AdmittedCodec.Cost decode =
+          found.decodeCost(readback.largestStoredBlock(), readback.largestDecodedBlock());
+      heap =
+          Math.max(
+              heap, decode.heapBytes() + codec.decodedCopyBytes(readback.largestDecodedBlock()));
       nativeBytes = Math.max(nativeBytes, decode.nativeBytes());
     }
     return new AdmittedCodec.Cost(heap, nativeBytes);

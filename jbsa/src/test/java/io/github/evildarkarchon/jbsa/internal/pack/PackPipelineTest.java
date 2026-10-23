@@ -848,7 +848,7 @@ class PackPipelineTest {
         @Override
         public Readback readback(List<Planned<String>> part, Layout layout) {
           return readback
-              ? new Readback("memory.noncanonical-staged-output", 0, 0, 1, Set.of(), 0)
+              ? new Readback("memory.noncanonical-staged-output", 0, 0, 1, Set.of(), 0, 0)
               : null;
         }
 

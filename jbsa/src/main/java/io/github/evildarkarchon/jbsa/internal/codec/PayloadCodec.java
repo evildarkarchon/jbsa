@@ -35,7 +35,7 @@ public enum PayloadCodec {
    * charge, and like {@link #decodesWholeBlocks} it needs no admission.
    *
    * @param largestBlock the largest block one decode call produces: a General payload's decoded
-   *     size, a DDS texture's largest packed chunk, or a readback part's largest source
+   *     size, a DDS texture's largest packed chunk, or a readback part's largest raw block
    */
   public long decodedCopyBytes(long largestBlock) {
     return decodesWholeBlocks() ? largestBlock : 0;

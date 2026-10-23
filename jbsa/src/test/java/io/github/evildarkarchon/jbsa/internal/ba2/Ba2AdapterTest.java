@@ -324,9 +324,15 @@ class Ba2AdapterTest {
   /**
    * Readback is data and declares only family knowledge: the reader's own credits for the part
    * (per-entry state, eight bytes per metadata byte, one 64 KiB window and one handle), the
-   * INTERNAL nonconforming ID, the codec its reader decodes and the part's largest source. A part
-   * holding a raw-LZ4 entry decodes raw LZ4; every other part, including an all-stored part of a
-   * raw-LZ4 archive, declares zlib, the conservative codec readback has always charged.
+   * INTERNAL nonconforming ID, the codec its reader decodes, and the largest stored and decoded
+   * sizes of the raw blocks it decodes whole. A part whose records reference a raw-LZ4 owner
+   * decodes raw LZ4; every other part, including an all-stored part of a raw-LZ4 archive, declares
+   * zlib, the conservative codec readback has always charged, and no whole block.
+   *
+   * <p>A General raw block is one entry's owner: its stored size and the source it decodes to. An
+   * entry whose owner is stored, because sharing resolved it to a stored entry's identical bytes,
+   * is read as stored, so it contributes no block. The two maxima may come from different blocks
+   * (#102).
    *
    * <p>The pipeline costs that codec from the codecs pack admission yielded; {@code CodecsTest}
    * pins those credits, since the adapter declares no cost of its own.
@@ -337,12 +343,18 @@ class Ba2AdapterTest {
         admit(
             ArchiveFamily.FO4_GENERAL_BA2, encoding(1, false, false), PackOptions.Compression.ZLIB);
     var part = zlib.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
+    var zlibPart =
+        List.of(
+            part.get(0)
+                .segmented(part.get(0).key(), List.of(segment(10, 18, PayloadCodec.ZLIB, 0))),
+            part.get(1)
+                .segmented(part.get(1).key(), List.of(segment(700, 40, PayloadCodec.ZLIB, 1))));
     var layout = new Admitted.Layout(96, 120);
     long readerHeap = 512L * 2 + 8L * 120 + 65536;
-    Admitted.Readback zlibReadback = zlib.readback(part, layout);
+    Admitted.Readback zlibReadback = zlib.readback(zlibPart, layout);
     assertEquals(
         new Admitted.Readback(
-            "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.ZLIB), 700),
+            "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.ZLIB), 0, 0),
         zlibReadback);
 
     var raw =
@@ -350,11 +362,36 @@ class Ba2AdapterTest {
             ArchiveFamily.STARFIELD_GENERAL_BA2,
             encoding(3, false, true),
             PackOptions.Compression.LZ4_RAW);
-    var rawPart = raw.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
+    var planned =
+        raw.plan(
+            List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700), entry("Data/C.bin", 900)),
+            CONTEXT);
+    var rawPart =
+        List.of(
+            // Ten incompressible bytes grow to raw LZ4's 26-byte bound: the largest stored block.
+            planned
+                .get(0)
+                .segmented(planned.get(0).key(), List.of(segment(10, 26, PayloadCodec.LZ4_RAW, 0))),
+            // The largest decoded block compresses well.
+            planned
+                .get(1)
+                .segmented(
+                    planned.get(1).key(), List.of(segment(700, 20, PayloadCodec.LZ4_RAW, 1))),
+            // Shares a stored owner, so the reader copies it and decodes no block.
+            planned
+                .get(2)
+                .segmented(
+                    planned.get(2).key(), List.of(segment(900, 900, PayloadCodec.STORED, 2))));
     Admitted.Readback rawReadback = raw.readback(rawPart, layout);
     assertEquals(
         new Admitted.Readback(
-            "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.LZ4_RAW), 700),
+            "ba2.noncanonical-staged-output",
+            512L * 3 + 8L * 120 + 65536,
+            0,
+            1,
+            Set.of(PayloadCodec.LZ4_RAW),
+            26,
+            700),
         rawReadback);
 
     var storedRaw =
@@ -368,10 +405,49 @@ class Ba2AdapterTest {
                     PackOptions.Compression.STORED,
                     new NormalizedNameIdentity("data\\b.bin"),
                     PackOptions.Compression.STORED)));
-    var storedPart =
+    var stored =
         storedRaw.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
+    var storedPart =
+        List.of(
+            stored
+                .get(0)
+                .segmented(stored.get(0).key(), List.of(segment(10, 10, PayloadCodec.STORED, 0))),
+            stored
+                .get(1)
+                .segmented(
+                    stored.get(1).key(), List.of(segment(700, 700, PayloadCodec.STORED, 1))));
     Admitted.Readback storedReadback = storedRaw.readback(storedPart, layout);
     assertEquals(Set.of(PayloadCodec.ZLIB), storedReadback.decodes());
+    assertEquals(0, storedReadback.largestStoredBlock());
+    assertEquals(0, storedReadback.largestDecodedBlock());
+  }
+
+  /**
+   * A DX10 reader decodes each packed chunk as its own raw block, so the declaration names the
+   * largest chunk rather than the whole texture source (#102).
+   */
+  @Test
+  void ddsReadbackDeclaresTheLargestChunk() throws Exception {
+    var admitted =
+        admit(
+            ArchiveFamily.STARFIELD_DDS_BA2,
+            encoding(3, true, true),
+            PackOptions.Compression.FAMILY_DEFAULT);
+    int payload = 131072 + 32768 + 8192;
+    byte[] bc1 = bc1(512, 512, 3, payload);
+    var entry = admitted.plan(List.of(entry("Textures/B.dds", bc1.length)), CONTEXT).getFirst();
+    var chunks = admitted.chunk(entry, ByteBuffer.wrap(bc1, 0, 164).slice(), CONTEXT);
+    var sized =
+        entry.segmented(
+            chunks.key(),
+            List.of(
+                segment(131072, 100, PayloadCodec.LZ4_RAW, 0),
+                segment(40960, 41_000, PayloadCodec.LZ4_RAW, 1)));
+    var layout = admitted.layout(List.of(sized), CONTEXT);
+    Admitted.Readback readback = admitted.readback(List.of(sized), layout);
+    assertEquals(Set.of(PayloadCodec.LZ4_RAW), readback.decodes());
+    assertEquals(41_000, readback.largestStoredBlock());
+    assertEquals(131072, readback.largestDecodedBlock());
   }
 
   /** Admits a request for the family with the given global compression and no overrides. */

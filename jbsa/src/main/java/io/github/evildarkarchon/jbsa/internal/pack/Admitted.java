@@ -107,10 +107,11 @@ public interface Admitted<K> {
    * the credits it needs and the diagnostic for a nonconforming part.
    *
    * <p>It declares only family knowledge (ADR-0003): which Payload Codecs the reader decodes and
-   * the part's largest source, never a codec cost. The pipeline costs those codecs from the ones
-   * pack admission pinned, so the adapter never resolves a provider itself.
+   * the sizes of the largest block it decodes whole, never a codec cost. The pipeline costs those
+   * codecs from the ones pack admission pinned, so the adapter never resolves a provider itself.
    *
-   * @param part the part's entries, in output order, with their exact stored sizes
+   * @param part the part's entries, in output order, with their exact stored sizes and, for a
+   *     family that shares across the archive set, their resolved {@link Planned#segments()}
    * @param layout the value {@link #layout} returned for this part
    */
   default Readback readback(List<Planned<K>> part, Layout layout) {
@@ -359,8 +360,11 @@ public interface Admitted<K> {
    * @param nativeBytes the reader's peak native memory besides its codec
    * @param handles the file handles the reader holds
    * @param decodes the Payload Codecs the reader may decode while validating the part
-   * @param largestSource the part's largest entry source size, which bounds the decoded copy a
-   *     reader holds for a whole-block codec
+   * @param largestStoredBlock the largest stored size of any block the reader decodes whole ({@link
+   *     PayloadCodec#decodesWholeBlocks}); zero when it decodes none
+   * @param largestDecodedBlock the largest decoded size of any such block, which also bounds the
+   *     decoded copy the reader holds; zero when it decodes none. The two maxima may come from
+   *     different blocks, which can only overstate a cost that grows with both sizes.
    */
   record Readback(
       String nonconformingId,
@@ -368,12 +372,17 @@ public interface Admitted<K> {
       long nativeBytes,
       long handles,
       Set<PayloadCodec> decodes,
-      long largestSource) {
+      long largestStoredBlock,
+      long largestDecodedBlock) {
     /** Requires the identifier and codecs, copies the codecs, and rejects negative credits. */
     public Readback {
       Objects.requireNonNull(nonconformingId, "nonconformingId");
       decodes = Set.copyOf(decodes);
-      if (heapBytes < 0 || nativeBytes < 0 || handles < 0 || largestSource < 0)
+      if (heapBytes < 0
+          || nativeBytes < 0
+          || handles < 0
+          || largestStoredBlock < 0
+          || largestDecodedBlock < 0)
         throw new IllegalArgumentException("Negative readback credit");
     }
   }

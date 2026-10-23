@@ -94,19 +94,46 @@ final class RawLz4ExhaustionTest {
     assertOutcome("pack-small-block", SMALL_HEAP_MIB, false, "PROVIDER NATIVE", "OK");
   }
 
-  /** Portable readback declares the largest raw decode on the heap and exhausts the capacity. */
+  /**
+   * Portable readback charges the part's actual raw block, about twice its size on the heap plus
+   * the decoded copy, so a small block fits as it does natively. Until #102 readback charged a
+   * dispatch-limit decode (33,624,190 heap bytes) for any raw-LZ4 part, which no heap below about
+   * 135 MB could hold, so this scenario exhausted the 16 MiB ceiling.
+   */
   @Test
-  void smallBlockExhaustsReadbackUnderPortable() throws Exception {
+  void smallBlockReadbackFitsUnderPortable() throws Exception {
+    assertOutcome("pack-small-block", SMALL_HEAP_MIB, true, "PROVIDER PORTABLE", "OK");
+  }
+
+  /**
+   * A 6 MiB block's native readback holds only its decoded copy on the heap, and its working set in
+   * native memory, so the pack succeeds.
+   */
+  // Native LZ4 is qualified and loaded only on the Windows x64 baseline.
+  @EnabledOnOs(OS.WINDOWS)
+  @Test
+  void midBlockReadbackFitsUnderNative() throws Exception {
+    assertOutcome("pack-mid-block", SMALL_HEAP_MIB, false, "PROVIDER NATIVE", "OK");
+  }
+
+  /**
+   * Portable readback exhaustion, kept with a larger input since #102: a 6 MiB block encodes in
+   * about twice its size on the heap, which fits, but readback holds its stored and decoded block
+   * plus the decoded copy, about three times its size, which exhausts the capacity at the staged
+   * part. Before #102 the 1 MiB {@code pack-small-block} scenario pinned these lines.
+   */
+  @Test
+  void midBlockExhaustsReadbackUnderPortable() throws Exception {
     assertOutcome(
-        "pack-small-block",
+        "pack-mid-block",
         SMALL_HEAP_MIB,
         true,
         "PROVIDER PORTABLE",
         "FAILURE POLICY",
         "PRIMARY POLICY PROCESSING ordinal=0 id=io.resource-capacity"
-            + " [archive=- entry=0 name=- field=- span=- artifact=small.ba2]",
+            + " [archive=- entry=0 name=- field=- span=- artifact=mid.ba2]",
         "DIAGNOSTIC io.resource-capacity ERROR PACK PROCESSING"
-            + " [archive=- entry=0 name=- field=- span=- artifact=small.ba2] {}");
+            + " [archive=- entry=0 name=- field=- span=- artifact=mid.ba2] {}");
   }
 
   /**

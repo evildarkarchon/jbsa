@@ -62,9 +62,14 @@ public final class RawLz4ExhaustionProbe {
       // heap ceiling; the portable encoder already needs about twice the block on the heap.
       case "pack-dispatch-block" ->
           pack(generalRequest(root.resolve("large.ba2"), random(16 << 20)));
-      // A 1 MiB block fits either encoder. Portable readback declares raw LZ4's largest decode
-      // working set on the heap, which alone exceeds a 16 MiB heap ceiling.
+      // A 1 MiB block fits either encoder and either readback, which charges the block it holds.
+      // Until #102 portable readback declared a dispatch-limit decode on the heap, which alone
+      // exceeded a 16 MiB heap ceiling.
       case "pack-small-block" -> pack(generalRequest(root.resolve("small.ba2"), random(1 << 20)));
+      // A 6 MiB block: the portable encoder holds about twice it on the heap, which fits a 16 MiB
+      // ceiling, while portable readback holds about three times it (the stored and decoded block
+      // plus the reader's decoded copy), which does not. Native readback holds only the copy there.
+      case "pack-mid-block" -> pack(generalRequest(root.resolve("mid.ba2"), random(6 << 20)));
       case "read-general-limit" -> {
         Path archive = root.resolve("general.ba2");
         pack(generalRequest(archive, compressible(1000)));
