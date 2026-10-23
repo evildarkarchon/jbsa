@@ -43,36 +43,6 @@ public final class AdmittedCodec {
   /** The versioned BSA 0x69 profile auto-flushes one LZ4 block per source window of this size. */
   private static final long BSA_LZ4_BLOCK_BYTES = 65536;
 
-  /** Heap bookkeeping each LZ4 call or decoder holds besides its buffers. */
-  private static final long LZ4_BOOKKEEPING_BYTES = 4096;
-
-  /**
-   * The native raw encoder's explicit external HC state, which avoids an unaccounted provider
-   * allocation, plus the fixed 32-byte allowance the native adapter has always reserved with it.
-   */
-  private static final long NATIVE_RAW_HC_STATE_BYTES = 524288 + 32;
-
-  /**
-   * lz4-java's HC compressor allocates a fresh {@code int[32768]} hash table and {@code
-   * short[65536]} chain table on every call; this covers both arrays and their headers.
-   */
-  private static final long PORTABLE_HC_STATE_BYTES = 2 * 131072 + 4096;
-
-  /**
-   * Heap for one portable frame encode: bookkeeping, one input window, one block header, one
-   * worst-case block, and the HC tables.
-   */
-  static final long PORTABLE_FRAME_ENCODE_HEAP_BYTES =
-      LZ4_BOOKKEEPING_BYTES
-          + PortableLz4.WINDOW
-          + 4
-          + rawLz4Bound(PortableLz4.WINDOW)
-          + PORTABLE_HC_STATE_BYTES;
-
-  /** Heap for one portable frame decoder: bookkeeping plus a compressed and a decoded block. */
-  static final long PORTABLE_FRAME_DECODE_HEAP_BYTES =
-      LZ4_BOOKKEEPING_BYTES + 2L * PortableLz4.MAX_BLOCK;
-
   /**
    * The largest native memory one encode call of any codec under any provider can charge. With
    * {@link #MAX_DECODE_NATIVE_BYTES} it is the module fact the budgets' native ceilings derive
@@ -148,8 +118,9 @@ public final class AdmittedCodec {
 
   /**
    * Returns the codec as if admission had resolved {@code provider}, without preflight or pinning.
-   * Tests use it to cost and identify both providers in one process; the JDK-only codecs ignore the
-   * provider.
+   * This is the module's one package-private test factory (#92): tests use it to cost and identify
+   * both providers in one process, and reach a provider's LZ4 adapter through the result's {@link
+   * #adapter}. The JDK-only codecs ignore the provider.
    */
   static AdmittedCodec forProvider(PayloadCodec codec, Provider provider) {
     Objects.requireNonNull(provider, "provider");
@@ -436,7 +407,8 @@ public final class AdmittedCodec {
   /**
    * Returns one encode call's cost under an explicit provider. Every caller reserves exactly this
    * and lends the lease to the encoder, which never reserves for itself, so the published cost and
-   * the charge cannot drift apart (#96).
+   * the charge cannot drift apart (#96). Where an LZ4 working set lives, and how large its fixed
+   * state is, are the provider's own facts ({@link Provider#cost}).
    *
    * @param provider the provider that runs the call; ignored by stored and zlib
    */
@@ -444,16 +416,11 @@ public final class AdmittedCodec {
     return switch (codec) {
       case STORED -> new Cost(0, 0);
       case ZLIB -> new Cost(JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES);
-      case BSA_LZ4_FRAME ->
-          provider == Provider.NATIVE
-              ? new Cost(Lz4Frame.HEAP_BYTES, Lz4Frame.ENCODE_NATIVE_BYTES)
-              : new Cost(PORTABLE_FRAME_ENCODE_HEAP_BYTES, 0);
+      case BSA_LZ4_FRAME -> provider.cost(provider.frameEncodeBytes());
       case LZ4_RAW -> {
         // The whole source block and its worst-case output, plus the HC state, held at once.
         long working = Math.addExact(decodedSize, rawLz4Bound(decodedSize));
-        yield provider == Provider.NATIVE
-            ? new Cost(LZ4_BOOKKEEPING_BYTES, working + NATIVE_RAW_HC_STATE_BYTES)
-            : new Cost(LZ4_BOOKKEEPING_BYTES + working + PORTABLE_HC_STATE_BYTES, 0);
+        yield provider.cost(working + provider.rawHcStateBytes());
       }
     };
   }
@@ -469,16 +436,8 @@ public final class AdmittedCodec {
     return switch (codec) {
       case STORED -> new Cost(0, 0);
       case ZLIB -> new Cost(JdkZlib.DECODE_HEAP_BYTES, JdkZlib.DECODE_NATIVE_BYTES);
-      case BSA_LZ4_FRAME ->
-          provider == Provider.NATIVE
-              ? new Cost(Lz4Frame.HEAP_BYTES, Lz4Frame.DECODE_NATIVE_BYTES)
-              : new Cost(PORTABLE_FRAME_DECODE_HEAP_BYTES, 0);
-      case LZ4_RAW -> {
-        long working = Math.addExact(Math.addExact(storedSize, decodedSize), 16);
-        yield provider == Provider.NATIVE
-            ? new Cost(LZ4_BOOKKEEPING_BYTES, working)
-            : new Cost(LZ4_BOOKKEEPING_BYTES + working, 0);
-      }
+      case BSA_LZ4_FRAME -> provider.cost(provider.frameDecodeBytes());
+      case LZ4_RAW -> provider.cost(Math.addExact(Math.addExact(storedSize, decodedSize), 16));
     };
   }
 

@@ -23,9 +23,6 @@ import java.util.TreeMap;
  * <p>This class must stay free of LWJGL and lz4-java references; the adapters own them.
  */
 public final class Lz4Frame {
-  /** Native-provider heap bookkeeping per encoder or decoder. */
-  public static final long HEAP_BYTES = 4096;
-
   /** Native-provider memory for one encoder: its compression context and direct windows. */
   public static final long ENCODE_NATIVE_BYTES = 2 * 1024 * 1024 + 3 * 65536;
 
