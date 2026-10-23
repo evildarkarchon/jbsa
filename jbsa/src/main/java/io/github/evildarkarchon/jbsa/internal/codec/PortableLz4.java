@@ -96,10 +96,10 @@ final class PortableLz4 {
    * dispatch limits; the whole block, its worst-case output and the HC tables are reserved first.
    */
   static long rawEncode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context,
       int compressionLevel)
@@ -151,11 +151,11 @@ final class PortableLz4 {
    * beyond the declared size is ever produced.
    */
   static long rawDecode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -221,10 +221,10 @@ final class PortableLz4 {
    *     to reserve it here
    */
   static long encodeFrame(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       ResourceBudget.Lease admission,
       IoContext context,
@@ -302,7 +302,7 @@ final class PortableLz4 {
    * the decoder borrows its positional source and holds only heap state.
    */
   static FrameDecoder decoder(
-      JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context) {
+      ByteSource source, long storedSize, long decodedSize, IoContext context) {
     return new FrameDecoder(source, storedSize, decodedSize, context);
   }
 
@@ -311,11 +311,11 @@ final class PortableLz4 {
    * lengths. Decoded bytes beyond the declared size are detected without being published.
    */
   static long decodeFrame(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -338,7 +338,7 @@ final class PortableLz4 {
    * move between consumer threads; nothing is shared with any other decoder.
    */
   static final class FrameDecoder implements Lz4Frame.Decoder {
-    private final JdkZlib.ByteSource source;
+    private final ByteSource source;
     private final long storedSize, decodedSize;
     private final IoContext context;
     private final byte[] word = new byte[8];
@@ -350,8 +350,7 @@ final class PortableLz4 {
     private long supplied, decodedTotal;
     private int pendingOffset, pending;
 
-    private FrameDecoder(
-        JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context) {
+    private FrameDecoder(ByteSource source, long storedSize, long decodedSize, IoContext context) {
       this.source = source;
       this.storedSize = storedSize;
       this.decodedSize = decodedSize;
@@ -572,7 +571,7 @@ final class PortableLz4 {
   }
 
   /** Publishes one encoded or decoded window at a checked, wide positional offset. */
-  private static long emit(JdkZlib.ByteSink sink, long offset, ByteBuffer bytes, IoContext context)
+  private static long emit(ByteSink sink, long offset, ByteBuffer bytes, IoContext context)
       throws IOException {
     int count = bytes.remaining();
     if (count > 0) caller(() -> sink.write(offset, bytes), context);

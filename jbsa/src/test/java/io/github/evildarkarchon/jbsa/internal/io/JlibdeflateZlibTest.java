@@ -3,6 +3,8 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import java.nio.file.Path;
@@ -231,11 +233,11 @@ final class JlibdeflateZlibTest {
         ResourceLimits.standard(), CONTEXT, 256L * 1024 * 1024, 64L * 1024 * 1024, 0);
   }
 
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
-  private static JdkZlib.ByteSink sink(java.io.ByteArrayOutputStream output) {
+  private static ByteSink sink(java.io.ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];

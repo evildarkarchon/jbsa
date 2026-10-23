@@ -5,6 +5,9 @@ import com.fulcrumgenomics.jlibdeflate.LibdeflateCompressor;
 import com.fulcrumgenomics.jlibdeflate.LibdeflateDecompressor;
 import com.fulcrumgenomics.jlibdeflate.LibdeflateException;
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -165,10 +168,10 @@ final class JlibdeflateZlib {
    * the source and sink stay caller-owned.
    */
   static long encode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -229,11 +232,11 @@ final class JlibdeflateZlib {
    * output and trailing bytes, so the adapter uses the {@code Ex} form with a one-byte probe.
    */
   static long decode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -294,11 +297,11 @@ final class JlibdeflateZlib {
    * mismatch, or a provider fault is final and is never retried through JDK zlib.
    */
   static long dispatchDecode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -318,11 +321,11 @@ final class JlibdeflateZlib {
 
   /** Streams the baseline decoder in bounded windows under its own declared credits. */
   static long jdkDecode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {

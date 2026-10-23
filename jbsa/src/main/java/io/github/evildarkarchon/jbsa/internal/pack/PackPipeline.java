@@ -1,6 +1,8 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.*;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted.Layout;
@@ -436,13 +438,13 @@ public final class PackPipeline {
             Planned<K> entry = planned.get(ordinal);
             IoContext processing = processing(run.context, ordinal);
             OptionalLong location = processing.ordinal();
-            PayloadWindows.Checkpoint checkpoint =
+            Checkpoint checkpoint =
                 () -> run.operation.checkpoint(OperationPhase.PROCESSING, location);
             long offset = stable.size();
             byte[] frame = entry.frame();
             if (frame.length > 0) stable.write(offset, ByteBuffer.wrap(frame));
             long start = offset + frame.length;
-            PayloadWindows.Sink sink = (relative, bytes) -> stable.write(start + relative, bytes);
+            ByteSink sink = (relative, bytes) -> stable.write(start + relative, bytes);
             if (staged == null)
               PackSources.consume(
                   entry.source(),
@@ -550,12 +552,11 @@ public final class PackPipeline {
             Planned<K> entry = planned.get(ordinal);
             IoContext processing = processing(run.context, ordinal);
             OptionalLong location = processing.ordinal();
-            PayloadWindows.Checkpoint checkpoint =
+            Checkpoint checkpoint =
                 () -> run.operation.checkpoint(OperationPhase.PROCESSING, location);
             long size = entry.source().size();
             long rawOffset = stable.size();
-            PayloadWindows.Sink raw =
-                (relative, bytes) -> stable.write(rawOffset + relative, bytes);
+            ByteSink raw = (relative, bytes) -> stable.write(rawOffset + relative, bytes);
             if (staged == null)
               PackSources.consume(
                   entry.source(),
@@ -568,7 +569,7 @@ public final class PackPipeline {
             }
             // BA2 has always observed cancellation during sharing comparisons without an entry
             // ordinal; keeping that preserves the reported failure location.
-            PayloadWindows.Checkpoint comparison =
+            Checkpoint comparison =
                 () -> run.operation.checkpoint(OperationPhase.PROCESSING, OptionalLong.empty());
             var owner =
                 new OwnerResolver(
@@ -633,8 +634,8 @@ public final class PackPipeline {
       ContentSharing<SetOwner> index,
       List<SetOwner> owners,
       boolean sharing,
-      PayloadWindows.Checkpoint checkpoint,
-      PayloadWindows.Checkpoint comparison,
+      Checkpoint checkpoint,
+      Checkpoint comparison,
       ResourceBudget budget,
       ResourceBudget.Lease coordinator,
       IoContext processing) {
@@ -671,7 +672,7 @@ public final class PackPipeline {
       if (codec != PayloadCodec.STORED) {
         storedOffset = stable.size();
         long start = storedOffset;
-        PayloadWindows.Sink sink = (relative, bytes) -> stable.write(start + relative, bytes);
+        ByteSink sink = (relative, bytes) -> stable.write(start + relative, bytes);
         if (staged != null && staged.hasEncoded()) {
           try (ReadableByteChannel encoded = staged.encodedChannel()) {
             PayloadWindows.transfer(encoded, staged.encodedSize(), sink, checkpoint, processing);
@@ -697,8 +698,7 @@ public final class PackPipeline {
    * keeps the source and destination from overlapping during expansion. Input windows hold a whole
    * number of three-byte pixels, so each expands into exactly one output window.
    */
-  private static long expandBgr24(
-      SpillBuffer stable, long start, long size, PayloadWindows.Checkpoint checkpoint)
+  private static long expandBgr24(SpillBuffer stable, long start, long size, Checkpoint checkpoint)
       throws IOException {
     long normalized = stable.size();
     ByteBuffer input = ByteBuffer.allocate(49152);

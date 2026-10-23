@@ -361,12 +361,12 @@ final class PortableLz4Test {
   }
 
   /** Supplies exactly each requested bounded window. */
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
   /** Collects positional writes in order. */
-  private static JdkZlib.ByteSink sink(ByteArrayOutputStream output) {
+  private static ByteSink sink(ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];

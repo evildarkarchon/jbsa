@@ -24,27 +24,6 @@ public final class JdkZlib {
 
   private JdkZlib() {}
 
-  /** Borrows an exact bounded positional source without owning its lifetime. */
-  @FunctionalInterface
-  public interface ByteSource {
-    /** Fills the remaining window at a stream-relative position. */
-    void read(long offset, ByteBuffer bytes) throws IOException;
-  }
-
-  /** Borrows a positional sink for encoded bytes. */
-  @FunctionalInterface
-  public interface ByteSink {
-    /** Consumes one encoded window at a stream-relative position. */
-    void write(long offset, ByteBuffer bytes) throws IOException;
-  }
-
-  /** Gives the operation coordinator a cancellation boundary for each bounded codec step. */
-  @FunctionalInterface
-  public interface Checkpoint {
-    /** Checks operation cancellation without retaining codec state. */
-    void check() throws IOException;
-  }
-
   /**
    * Encodes exactly the declared source length at level 9, default strategy, without fallback. The
    * caller reserves ENCODE resource credits before invocation and owns source/sink cleanup.

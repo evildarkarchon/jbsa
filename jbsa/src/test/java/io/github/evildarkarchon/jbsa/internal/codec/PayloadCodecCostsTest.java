@@ -282,7 +282,7 @@ final class PayloadCodecCostsTest {
   @FunctionalInterface
   private interface Budgeted {
     /** Runs the call; credits it reserves must be released on return. */
-    void run(ResourceBudget budget, JdkZlib.ByteSink sink) throws Exception;
+    void run(ResourceBudget budget, ByteSink sink) throws Exception;
   }
 
   /** Creates a budget with exact heap and native ceilings and no handles. */
@@ -298,12 +298,12 @@ final class PayloadCodecCostsTest {
   }
 
   /** Supplies exactly each requested bounded window. */
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
   /** Collects positional writes in order. */
-  private static JdkZlib.ByteSink sink(ByteArrayOutputStream output) {
+  private static ByteSink sink(ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];

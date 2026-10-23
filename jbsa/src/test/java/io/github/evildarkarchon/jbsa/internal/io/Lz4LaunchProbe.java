@@ -2,6 +2,8 @@ package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
@@ -141,7 +143,7 @@ public final class Lz4LaunchProbe {
   }
 
   /** Supplies exactly each requested bounded window. */
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
@@ -161,6 +163,6 @@ public final class Lz4LaunchProbe {
   @FunctionalInterface
   private interface Encoder {
     /** Encodes into the sink. */
-    void encode(JdkZlib.ByteSink sink) throws Exception;
+    void encode(ByteSink sink) throws Exception;
   }
 }

@@ -3,6 +3,8 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
@@ -129,15 +131,15 @@ final class Codecs {
       PayloadCodec codec,
       ReadableByteChannel input,
       long decodedSize,
-      PayloadWindows.Sink sink,
-      PayloadWindows.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       ResourceBudget.Lease admission,
       IoContext processing)
       throws IOException {
     switch (codec) {
       case STORED -> PayloadWindows.transfer(input, decodedSize, sink, checkpoint, processing);
-      case ZLIB -> JdkZlib.encode(input, decodedSize, sink::write, checkpoint::check, processing);
+      case ZLIB -> JdkZlib.encode(input, decodedSize, sink, checkpoint, processing);
       case BSA_LZ4_FRAME -> {
         if (input == null)
           throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
@@ -151,8 +153,8 @@ final class Codecs {
               read[0] += bytes.position();
             },
             decodedSize,
-            sink::write,
-            checkpoint::check,
+            sink,
+            checkpoint,
             budget,
             admission,
             processing);
@@ -169,8 +171,8 @@ final class Codecs {
               readExact(input, bytes, checkpoint, processing);
             },
             decodedSize,
-            sink::write,
-            checkpoint::check,
+            sink,
+            checkpoint,
             budget,
             processing,
             LZ4_RAW_LEVEL);
@@ -181,10 +183,7 @@ final class Codecs {
 
   /** Fills one bounded codec window without letting a stalled generated channel spin forever. */
   private static void readExact(
-      ReadableByteChannel input,
-      ByteBuffer bytes,
-      PayloadWindows.Checkpoint checkpoint,
-      IoContext processing)
+      ReadableByteChannel input, ByteBuffer bytes, Checkpoint checkpoint, IoContext processing)
       throws IOException {
     int idle = 0;
     while (bytes.hasRemaining()) {
@@ -202,8 +201,7 @@ final class Codecs {
    * probe it could not notice a generated source that yields more bytes than it declared.
    */
   private static void requireEnd(
-      ReadableByteChannel input, PayloadWindows.Checkpoint checkpoint, IoContext processing)
-      throws IOException {
+      ReadableByteChannel input, Checkpoint checkpoint, IoContext processing) throws IOException {
     ByteBuffer probe = ByteBuffer.allocate(1);
     int idle = 0;
     while (true) {
