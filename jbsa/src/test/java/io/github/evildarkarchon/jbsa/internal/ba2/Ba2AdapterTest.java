@@ -323,8 +323,15 @@ class Ba2AdapterTest {
   }
 
   /**
-   * Readback is data: the reader's peak credits for the part and the INTERNAL nonconforming ID. A
-   * part holding a raw-LZ4 entry charges the raw decoder instead of zlib's.
+   * Readback is data and declares only family knowledge: the reader's own credits for the part
+   * (per-entry state, eight bytes per metadata byte, one 64 KiB window and one handle), the
+   * INTERNAL nonconforming ID, the codec its reader decodes and the part's largest source. A part
+   * holding a raw-LZ4 entry decodes raw LZ4; every other part, including an all-stored part of a
+   * raw-LZ4 archive, declares zlib, the conservative codec readback has always charged.
+   *
+   * <p>The pipeline costs that codec from the codecs pack admission yielded, so the credits it
+   * charges are the module's largest decode cost, plus the largest source for raw LZ4, whose reader
+   * holds each block's decoded copy.
    */
   @Test
   void declaresReadbackCreditsAndTheNonconformingId() throws Exception {
@@ -344,13 +351,13 @@ class Ba2AdapterTest {
             zlibCodec,
             PayloadCodec.LZ4_RAW,
             rawCodec);
+    long readerHeap = 512L * 2 + 8L * 120 + 65536;
+    Admitted.Readback zlibReadback = zlib.readback(part, layout);
     assertEquals(
         new Admitted.Readback(
-            "ba2.noncanonical-staged-output",
-            512L * 2 + 8L * 120 + 65536 + zlibCodec.maxDecodeCost().heapBytes(),
-            zlibCodec.maxDecodeCost().nativeBytes(),
-            1),
-        zlib.readback(part, layout, codecs));
+            "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.ZLIB), 700),
+        zlibReadback);
+    assertEquals(zlibCodec.maxDecodeCost(), zlibReadback.codecCost(codecs));
 
     var raw =
         admit(
@@ -358,14 +365,34 @@ class Ba2AdapterTest {
             encoding(3, false, true),
             PackOptions.Compression.LZ4_RAW);
     var rawPart = raw.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
+    Admitted.Readback rawReadback = raw.readback(rawPart, layout);
     assertEquals(
         new Admitted.Readback(
-            "ba2.noncanonical-staged-output",
-            // Raw block buffers are native under LWJGL and heap under the portable provider.
-            512L * 2 + 8L * 120 + 65536 + 700 + rawCodec.maxDecodeCost().heapBytes(),
-            rawCodec.maxDecodeCost().nativeBytes(),
-            1),
-        raw.readback(rawPart, layout, codecs));
+            "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.LZ4_RAW), 700),
+        rawReadback);
+    // Raw block buffers are native under LWJGL and heap under the portable provider; the decoded
+    // copy of the largest source is always heap.
+    assertEquals(
+        new AdmittedCodec.Cost(
+            700 + rawCodec.maxDecodeCost().heapBytes(), rawCodec.maxDecodeCost().nativeBytes()),
+        rawReadback.codecCost(codecs));
+
+    var storedRaw =
+        admit(
+            ArchiveFamily.STARFIELD_GENERAL_BA2,
+            encoding(3, false, true),
+            options(
+                PackOptions.Compression.LZ4_RAW,
+                Map.of(
+                    new NormalizedNameIdentity("data\\a.bin"),
+                    PackOptions.Compression.STORED,
+                    new NormalizedNameIdentity("data\\b.bin"),
+                    PackOptions.Compression.STORED)));
+    var storedPart =
+        storedRaw.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
+    Admitted.Readback storedReadback = storedRaw.readback(storedPart, layout);
+    assertEquals(Set.of(PayloadCodec.ZLIB), storedReadback.decodes());
+    assertEquals(zlibCodec.maxDecodeCost(), storedReadback.codecCost(codecs));
   }
 
   /** Admits a request for the family with the given global compression and no overrides. */

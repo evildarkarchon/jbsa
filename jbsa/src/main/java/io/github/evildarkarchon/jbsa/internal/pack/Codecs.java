@@ -5,9 +5,6 @@ import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
-import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
@@ -26,9 +23,6 @@ import java.util.Set;
  * working set. One conservative zlib bound serves every family (D3).
  */
 final class Codecs {
-  /** The raw LZ4 HC level Starfield BA2 output is qualified against. */
-  private static final int LZ4_RAW_LEVEL = 12;
-
   /** Every codec this request admitted, keyed by the codec an adapter names. */
   private final Map<PayloadCodec, AdmittedCodec> admitted;
 
@@ -175,14 +169,12 @@ final class Codecs {
     java.util.Objects.requireNonNull(admission, "admission");
     switch (codec.codec()) {
       case STORED -> PayloadWindows.transfer(input, decodedSize, sink, checkpoint, processing);
-      case ZLIB ->
-          JdkZlib.encode(codec, input, decodedSize, sink, checkpoint, admission, processing);
+      case ZLIB -> codec.encode(input, decodedSize, sink, checkpoint, admission, processing);
       case BSA_LZ4_FRAME -> {
         if (input == null)
           throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
         long[] read = {0};
-        Lz4Frame.encode(
-            codec,
+        codec.encode(
             (offset, bytes) -> {
               // The encoder reads its source once, front to back; anything else is a JBSA bug.
               if (offset != read[0])
@@ -203,12 +195,12 @@ final class Codecs {
         // The reservation keeps the order the self-reserving encoder had: dispatch admission
         // first, so an oversized block reports codec.dispatch-limit rather than the capacity
         // failure its cost would raise, then cancellation, then the charge.
-        Lz4Raw.admitEncode(decodedSize, processing);
+        AdmittedCodec.checkEncodeSize(codec.codec(), decodedSize, processing);
         checkpoint.check();
         Cost cost = cost(codec, decodedSize);
         try (var lease = budget.reserve(cost.heap(), cost.nativeBytes(), 0, 0)) {
-          Lz4Raw.encode(
-              codec,
+          // The admitted raw encoder runs at Starfield's qualified HC level 12.
+          codec.encode(
               (offset, bytes) -> {
                 // Raw LZ4 reads its whole block once from offset zero; anything else is a JBSA
                 // bug.
@@ -221,8 +213,7 @@ final class Codecs {
               sink,
               checkpoint,
               lease,
-              processing,
-              LZ4_RAW_LEVEL);
+              processing);
         }
         requireEnd(input, checkpoint, processing);
       }

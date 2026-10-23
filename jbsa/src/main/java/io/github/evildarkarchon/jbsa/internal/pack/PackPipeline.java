@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
@@ -308,7 +309,7 @@ public final class PackPipeline {
                   stream(admitted, part, layout, output, firstOrdinal, run, windows);
                   completed.add(archivePart(request, number, output, part));
                 },
-                admitted.readback(part, layout, run.codecs.all()),
+                admitted.readback(part, layout),
                 run));
         nextOrdinal += part.size();
       }
@@ -392,7 +393,7 @@ public final class PackPipeline {
                 replay.write(part, layout, output);
                 completed.add(archivePart(request, number, output, part));
               },
-              admitted.readback(part, layout, run.codecs.all()),
+              admitted.readback(part, layout),
               run));
     }
     // Progress already entered PROCESSING above, and the parts have consumed stabilization once
@@ -834,9 +835,15 @@ public final class PackPipeline {
   private static void readBack(Path staged, Admitted.Readback readback, Run run)
       throws IOException {
     PackRequest request = run.request;
+    // The adapter declares which codecs its reader decodes; their cost comes from the codecs this
+    // request admitted, so readback charges the same rule, under the same provider, as the read.
+    AdmittedCodec.Cost codec = readback.codecCost(run.codecs.all());
     try (var credits =
             run.budget.reserve(
-                readback.heapBytes(), readback.nativeBytes(), readback.handles(), 0);
+                readback.heapBytes() + codec.heapBytes(),
+                readback.nativeBytes() + codec.nativeBytes(),
+                readback.handles(),
+                0);
         var archive =
             ArchiveReaders.open(
                 staged,

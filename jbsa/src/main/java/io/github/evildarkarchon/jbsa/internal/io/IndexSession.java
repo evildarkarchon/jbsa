@@ -2,9 +2,7 @@ package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
-import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive.StoredEntry;
 import java.io.IOException;
@@ -268,7 +266,7 @@ public final class IndexSession {
     ExactIo.end(offset, streamSize, input.size(), context);
     // A raw block's wire and dispatch sizes are refused before its cost is charged, as the
     // self-reserving decoder did, so an oversized block reports its codec limit, not capacity.
-    if (codec == PayloadCodec.LZ4_RAW) Lz4Raw.admitDecode(streamSize, decodedSize, context);
+    AdmittedCodec.checkDecodeSize(codec, streamSize, decodedSize, context);
     // The codec is admitted when the prefix first needs it, so an LZ4 credit charges the provider
     // admission pins. Every codec's decode cost, raw LZ4's whole block included, joins the prefix
     // buffer in one reservation: the codecs never reserve, and one combined lease reaches the
@@ -279,54 +277,31 @@ public final class IndexSession {
       ByteBuffer prefix =
           ByteBuffer.allocate((int) Math.min(length, decodedSize))
               .order(java.nio.ByteOrder.LITTLE_ENDIAN);
-      switch (codec) {
-        case LZ4_RAW ->
-            Lz4Raw.decode(
-                admitted,
-                (relative, bytes) -> input.readExact(offset + relative, bytes),
-                streamSize,
-                decodedSize,
-                (relative, bytes) -> {
-                  if (relative < prefix.capacity()) {
-                    ByteBuffer available = bytes.slice();
-                    available.limit(
-                        (int) Math.min(available.remaining(), prefix.capacity() - relative));
-                    prefix.position(Math.toIntExact(relative));
-                    prefix.put(available);
-                  }
-                },
-                () -> {},
-                credit,
-                context);
-        case BSA_LZ4_FRAME -> {
-          try (var decoder =
-              Lz4Frame.decoder(
-                  admitted,
-                  (relative, bytes) -> input.readExact(offset + relative, bytes),
-                  streamSize,
-                  decodedSize,
-                  credit,
-                  context)) {
-            while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
-              // Only the bounded prefix is requested; complete validation belongs to content EOF.
-            }
+      ByteSource source = (relative, bytes) -> input.readExact(offset + relative, bytes);
+      if (codec.decodesWholeBlocks()) {
+        // A whole block decodes completely; only the bytes that land inside the prefix are kept.
+        admitted.decode(
+            source,
+            streamSize,
+            decodedSize,
+            (relative, bytes) -> {
+              if (relative < prefix.capacity()) {
+                ByteBuffer available = bytes.slice();
+                available.limit(
+                    (int) Math.min(available.remaining(), prefix.capacity() - relative));
+                prefix.position(Math.toIntExact(relative));
+                prefix.put(available);
+              }
+            },
+            () -> {},
+            credit,
+            context);
+      } else {
+        try (var decoder = admitted.decoder(source, streamSize, decodedSize, credit, context)) {
+          while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
+            // Only the bounded prefix is requested; complete validation belongs to content EOF.
           }
         }
-        case ZLIB -> {
-          try (var decoder =
-              JdkZlib.decoder(
-                  admitted,
-                  (relative, bytes) -> input.readExact(offset + relative, bytes),
-                  streamSize,
-                  decodedSize,
-                  credit,
-                  context)) {
-            while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
-              // Only the bounded prefix is requested; complete validation belongs to content EOF.
-            }
-          }
-        }
-        case STORED -> input.readExact(offset, prefix);
       }
       return prefix.flip();
     }

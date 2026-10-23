@@ -133,7 +133,7 @@ public final class Lz4Frame {
    * One content's sequential frame decoder. Its owner reserves the admitted codec's {@link
    * AdmittedCodec#decodeCost} before creating it and closes it exactly once.
    */
-  public interface Decoder extends AutoCloseable {
+  public interface Decoder extends PayloadDecoder {
     /**
      * Returns one bounded decoded window, or -1 after validating exact frame consumption.
      *

@@ -3,10 +3,8 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
-import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadDecoder;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
@@ -148,8 +146,15 @@ public final class OwnedArchive implements OpenArchive {
     }
   }
 
-  /** Charges whole General blocks but only the largest independently decoded DDS chunk. */
-  private static long rawLz4Heap(StoredEntry stored) {
+  /**
+   * Charges whole General blocks but only the largest independently decoded DDS chunk.
+   *
+   * <p>This is the cursor's own decoded copy of a whole-block codec's payload (raw LZ4), which it
+   * charges on top of the admitted codec's cost; a streaming codec's cursor holds no copy, so it
+   * charges nothing here.
+   */
+  private static long decodedCopyHeap(StoredEntry stored) {
+    if (!stored.codec().decodesWholeBlocks()) return 0;
     if (stored.header() == null) return stored.metadata().decodedSize();
     return stored.chunks().stream()
         .filter(chunk -> chunk.packedSize() != 0)
@@ -210,18 +215,22 @@ public final class OwnedArchive implements OpenArchive {
             // decoded copy. Each raw decode's working set is charged separately, by
             // decodeRawLz4 just before that call, never folded into this credit: here its
             // exhaustion would surface from openContent without the entry name, not from read().
+            // The credit is the admitted codec's cost plus the cursor's own decoded copy, each
+            // zero for the codecs it does not apply to.
             AdmittedCodec codec =
-                stored.codec() == PayloadCodec.LZ4_RAW
+                stored.codec().decodesWholeBlocks()
                     ? null
                     : AdmittedCodec.admit(
                         stored.codec(), "decode", contentContext(stored.metadata().ordinal()));
             AdmittedCodec.Cost cost =
                 codec == null
-                    ? new AdmittedCodec.Cost(rawLz4Heap(stored), 0)
+                    ? new AdmittedCodec.Cost(0, 0)
                     : codec.decodeCost(stored.streamSize(), stored.metadata().decodedSize());
             ResourceBudget.Lease credit;
             try {
-              credit = budget.reserve(512 + cost.heapBytes(), cost.nativeBytes(), 0, 0);
+              credit =
+                  budget.reserve(
+                      512 + decodedCopyHeap(stored) + cost.heapBytes(), cost.nativeBytes(), 0, 0);
             } catch (ArchiveException capacity) {
               // Query children own READ_CONTENT evidence; mutation children retain their operation.
               FailureRetention retention = new FailureRetention(limits, contentOperation());
@@ -276,7 +285,6 @@ public final class OwnedArchive implements OpenArchive {
       for (Content child : children) {
         child.open = false;
         if (child.decoder != null) child.decoder.close();
-        if (child.lz4Decoder != null) child.lz4Decoder.close();
         child.decodedRawLz4 = null;
         child.credit.close();
       }
@@ -297,11 +305,15 @@ public final class OwnedArchive implements OpenArchive {
     /** The entry's admitted codec, or null for raw LZ4, which is admitted per decode call. */
     private final AdmittedCodec codec;
 
-    private JdkZlib.Decoder decoder;
-    private Lz4Frame.Decoder lz4Decoder;
+    /**
+     * The live streaming decoder: an ordinary zlib or BSA frame payload's, created with the cursor,
+     * or the current DDS chunk's (zlib or stored), created under the lifetime lock and closed at
+     * the chunk's end.
+     */
+    private PayloadDecoder decoder;
+
     private ByteBuffer decodedRawLz4;
     private int chunkIndex;
-    private long chunkPosition;
     private final Object reads = new Object();
     private boolean open = true;
     private long position;
@@ -318,20 +330,11 @@ public final class OwnedArchive implements OpenArchive {
       this.stored = stored;
       this.credit = credit;
       this.codec = codec;
+      // Ordinary stored content keeps the copy loop in read(), whose completion shares close's
+      // linearization point; DDS entries create one decoder per chunk in readDds instead.
       decoder =
-          stored.codec() == PayloadCodec.ZLIB && stored.header() == null
-              ? JdkZlib.decoder(
-                  codec,
-                  (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
-                  stored.streamSize(),
-                  stored.metadata().decodedSize(),
-                  credit,
-                  contentContext(stored.metadata().ordinal()))
-              : null;
-      lz4Decoder =
-          stored.codec() == PayloadCodec.BSA_LZ4_FRAME
-              ? Lz4Frame.decoder(
-                  codec,
+          stored.header() == null && codec != null && codec.codec() != PayloadCodec.STORED
+              ? codec.decoder(
                   (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
                   stored.streamSize(),
                   stored.metadata().decodedSize(),
@@ -376,10 +379,7 @@ public final class OwnedArchive implements OpenArchive {
           if (decoder != null) {
             return publishRead(decoder.read(destination));
           }
-          if (lz4Decoder != null) {
-            return publishRead(lz4Decoder.read(destination));
-          }
-          if (stored.codec() == PayloadCodec.LZ4_RAW) {
+          if (stored.codec().decodesWholeBlocks()) {
             return publishRead(readRawLz4(destination));
           }
           int count =
@@ -455,6 +455,16 @@ public final class OwnedArchive implements OpenArchive {
         decodedRawLz4 =
             decodeRawLz4(stored.offset(), stored.streamSize(), stored.metadata().decodedSize());
       }
+      return copyDecoded(destination);
+    }
+
+    /**
+     * Serves the next bounded window of the decoded raw block into {@code destination}, which has
+     * room. Window copying is cursor logic, shared by General entries and DDS chunks.
+     *
+     * @return the bytes copied, or -1 once the decoded block is exhausted
+     */
+    private int copyDecoded(ByteBuffer destination) {
       if (!decodedRawLz4.hasRemaining()) return -1;
       int count = Math.min(destination.remaining(), decodedRawLz4.remaining());
       ByteBuffer window = decodedRawLz4.slice();
@@ -472,7 +482,7 @@ public final class OwnedArchive implements OpenArchive {
     private ByteBuffer decodeRawLz4(long offset, long streamSize, long decodedSize)
         throws IOException {
       IoContext payloadContext = contentContext(stored.metadata().ordinal());
-      Lz4Raw.admitDecode(streamSize, decodedSize, payloadContext);
+      AdmittedCodec.checkDecodeSize(stored.codec(), streamSize, decodedSize, payloadContext);
       ByteBuffer decoded = ByteBuffer.allocate(Math.toIntExact(decodedSize));
       Checkpoint interruption =
           () -> {
@@ -480,12 +490,11 @@ public final class OwnedArchive implements OpenArchive {
           };
       // Admission, then interruption, then the charge: the order the self-reserving decoder kept,
       // so a capability failure or an interrupt still wins over capacity exhaustion.
-      AdmittedCodec raw = AdmittedCodec.admit(PayloadCodec.LZ4_RAW, "decode", payloadContext);
+      AdmittedCodec raw = AdmittedCodec.admit(stored.codec(), "decode", payloadContext);
       interruption.check();
       AdmittedCodec.Cost cost = raw.decodeCost(streamSize, decodedSize);
       try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
-        Lz4Raw.decode(
-            raw,
+        raw.decode(
             (relative, bytes) -> input.readExact(Math.addExact(offset, relative), bytes),
             streamSize,
             decodedSize,
@@ -502,7 +511,11 @@ public final class OwnedArchive implements OpenArchive {
       return decoded.flip();
     }
 
-    /** Streams the generated envelope with one live zlib decoder or decoded raw-LZ4 chunk. */
+    /**
+     * Streams the generated envelope, then each chunk through the module's codec: a packed raw-LZ4
+     * chunk decodes whole into the cursor's copy, and a packed zlib or a stored chunk streams
+     * through one live decoder on the cursor's credit. Only one chunk's state is live at a time.
+     */
     private int readDds(ByteBuffer destination) throws IOException {
       if (!destination.hasRemaining()) return 0;
       if (position < stored.header().length) {
@@ -513,57 +526,41 @@ public final class OwnedArchive implements OpenArchive {
       }
       while (chunkIndex < stored.chunks().size()) {
         EntryMetadata.DdsChunk chunk = stored.chunks().get(chunkIndex);
-        if (chunk.packedSize() > 0) {
-          if (stored.codec() == PayloadCodec.LZ4_RAW) {
-            if (decodedRawLz4 == null)
-              decodedRawLz4 =
-                  decodeRawLz4(chunk.payloadOffset(), chunk.packedSize(), chunk.unpackedSize());
-            if (decodedRawLz4.hasRemaining()) {
-              int count = Math.min(destination.remaining(), decodedRawLz4.remaining());
-              ByteBuffer window = decodedRawLz4.slice();
-              window.limit(count);
-              destination.put(window);
-              decodedRawLz4.position(decodedRawLz4.position() + count);
-              return count;
-            }
-            decodedRawLz4 = null;
-          } else {
-            synchronized (lifetime) {
-              // Decoder creation shares close's lock so parent close cannot miss new native state.
-              if (!open || closed) throw new AsynchronousCloseException();
-              if (decoder == null)
-                decoder =
-                    JdkZlib.decoder(
-                        codec,
-                        (offset, bytes) ->
-                            input.readExact(Math.addExact(chunk.payloadOffset(), offset), bytes),
-                        chunk.packedSize(),
-                        chunk.unpackedSize(),
-                        credit,
-                        contentContext(stored.metadata().ordinal()));
-            }
-            int count = decoder.read(destination);
-            if (count >= 0) return count;
-            synchronized (lifetime) {
-              decoder.close();
-              decoder = null;
-            }
+        if (chunk.packedSize() > 0 && stored.codec().decodesWholeBlocks()) {
+          if (decodedRawLz4 == null)
+            decodedRawLz4 =
+                decodeRawLz4(chunk.payloadOffset(), chunk.packedSize(), chunk.unpackedSize());
+          int count = copyDecoded(destination);
+          if (count >= 0) return count;
+          decodedRawLz4 = null;
+        } else {
+          IoContext payloadContext = contentContext(stored.metadata().ordinal());
+          // A stored chunk holds its unpacked bytes verbatim, whatever the entry's codec.
+          AdmittedCodec chunkCodec =
+              chunk.packedSize() > 0
+                  ? codec
+                  : AdmittedCodec.admit(PayloadCodec.STORED, "decode", payloadContext);
+          synchronized (lifetime) {
+            // Decoder creation shares close's lock so parent close cannot miss new native state.
+            if (!open || closed) throw new AsynchronousCloseException();
+            if (decoder == null)
+              decoder =
+                  chunkCodec.decoder(
+                      (offset, bytes) ->
+                          input.readExact(Math.addExact(chunk.payloadOffset(), offset), bytes),
+                      chunk.packedSize(),
+                      chunk.unpackedSize(),
+                      credit,
+                      payloadContext);
           }
-        } else if (chunkPosition < chunk.unpackedSize()) {
-          int count =
-              (int)
-                  Math.min(
-                      Math.min(destination.remaining(), ExactIo.WINDOW_BYTES),
-                      chunk.unpackedSize() - chunkPosition);
-          ByteBuffer window = destination.slice();
-          window.limit(count);
-          input.readExact(Math.addExact(chunk.payloadOffset(), chunkPosition), window);
-          destination.position(destination.position() + count);
-          chunkPosition += count;
-          return count;
+          int count = decoder.read(destination);
+          if (count >= 0) return count;
+          synchronized (lifetime) {
+            decoder.close();
+            decoder = null;
+          }
         }
         chunkIndex++;
-        chunkPosition = 0;
       }
       return -1;
     }
@@ -636,7 +633,6 @@ public final class OwnedArchive implements OpenArchive {
         open = false;
         children.remove(this);
         if (decoder != null) decoder.close();
-        if (lz4Decoder != null) lz4Decoder.close();
         decodedRawLz4 = null;
         credit.close();
       }

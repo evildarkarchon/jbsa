@@ -147,7 +147,7 @@ public final class JdkZlib {
   }
 
   /** Per-content sequential stream; synchronized close cannot free native state during inflate. */
-  public static final class Decoder implements AutoCloseable {
+  public static final class Decoder implements PayloadDecoder {
     private final AdmittedCodec admitted;
     private final ByteSource source;
     private final long storedSize, decodedSize;
