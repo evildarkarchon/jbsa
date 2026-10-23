@@ -6,6 +6,7 @@ import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
@@ -22,14 +23,6 @@ import java.util.Set;
 
 /** Parent-owned input and eager payload index; no storage seam is exported through JPMS. */
 public final class OwnedArchive implements OpenArchive {
-  /** Complete internal codec identity for one ordinary payload span. */
-  public enum PayloadCodec {
-    STORED,
-    ZLIB,
-    LZ4_RAW,
-    LZ4_FRAME
-  }
-
   private final Object lifetime = new Object();
   private final ArchiveInput input;
   private final ResourceLimits limits;
@@ -219,13 +212,13 @@ public final class OwnedArchive implements OpenArchive {
                             case STORED -> 0;
                             case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
                             case LZ4_RAW -> rawLz4Heap(stored);
-                            case LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
+                            case BSA_LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
                           },
                       switch (stored.codec()) {
                         case STORED -> 0;
                         case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
                         case LZ4_RAW -> 0;
-                        case LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
+                        case BSA_LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
                       },
                       0,
                       0);
@@ -327,7 +320,7 @@ public final class OwnedArchive implements OpenArchive {
                   contentContext(stored.metadata().ordinal()))
               : null;
       lz4Decoder =
-          stored.codec() == PayloadCodec.LZ4_FRAME
+          stored.codec() == PayloadCodec.BSA_LZ4_FRAME
               ? BsaLz4Frame.decoder(
                   (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
                   stored.streamSize(),

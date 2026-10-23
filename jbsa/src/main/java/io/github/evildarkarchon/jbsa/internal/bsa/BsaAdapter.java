@@ -1,11 +1,11 @@
 package io.github.evildarkarchon.jbsa.internal.bsa;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveNames;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
-import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import io.github.evildarkarchon.jbsa.internal.pack.FamilyAdapter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -147,11 +147,11 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
      * by an entry override; 0x67 and 0x68 compress with JDK zlib.
      */
     @Override
-    public Set<Codec> requiredCodecs() {
+    public Set<PayloadCodec> requiredCodecs() {
       return version == 0x69
               && (options.compression() == familyCodec
                   || options.entryCompression().containsValue(familyCodec))
-          ? Set.of(Codec.BSA_LZ4_FRAME)
+          ? Set.of(PayloadCodec.BSA_LZ4_FRAME)
           : Set.of();
     }
 
@@ -192,7 +192,9 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
                     name,
                     BsaNames.hash(folder, false, version),
                     BsaNames.hash(name, true, version)),
-                compressed ? (version == 0x69 ? Codec.BSA_LZ4_FRAME : Codec.ZLIB) : Codec.STORED,
+                compressed
+                    ? (version == 0x69 ? PayloadCodec.BSA_LZ4_FRAME : PayloadCodec.ZLIB)
+                    : PayloadCodec.STORED,
                 frame));
       }
       planned.sort(OUTPUT_ORDER);
@@ -296,7 +298,7 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
         ByteBuffer records = little(1 + first.folder().length + 1 + 16 * group.size());
         records.put((byte) (first.folder().length + 1)).put(first.folder()).put((byte) 0);
         for (Placed<WireName> entry : group) {
-          boolean compressed = entry.planned().codec() != Codec.STORED;
+          boolean compressed = entry.planned().codec() != PayloadCodec.STORED;
           long size = entry.storedSize() | ((((flags & 4) != 0) ^ compressed) ? 0x40000000L : 0);
           records
               .putLong(entry.planned().key().nameHash())
@@ -327,7 +329,9 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
         retain |= classification == 5 || classification == 9;
       }
       return (version == 0x67 ? 0x603 : 3)
-          | (part.stream().anyMatch(entry -> entry.planned().codec() != Codec.STORED) ? 4 : 0)
+          | (part.stream().anyMatch(entry -> entry.planned().codec() != PayloadCodec.STORED)
+              ? 4
+              : 0)
           | ((fileFlags(part) & 1) != 0 ? 0x80 : 0)
           | (retain ? 0x10 : 0);
     }

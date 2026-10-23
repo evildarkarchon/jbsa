@@ -4,12 +4,12 @@ import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveNames;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
-import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import io.github.evildarkarchon.jbsa.internal.pack.FamilyAdapter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -173,8 +173,8 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
 
     /** Raw LZ4 is the one BA2 codec with a native provider to admit; zlib is JDK-only. */
     @Override
-    public Set<Codec> requiredCodecs() {
-      return rawLz4 ? Set.of(Codec.LZ4_RAW) : Set.of();
+    public Set<PayloadCodec> requiredCodecs() {
+      return rawLz4 ? Set.of(PayloadCodec.LZ4_RAW) : Set.of();
     }
 
     /** DDS adds bounded partition and header state beyond the shared source-entry allowance. */
@@ -243,7 +243,9 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
             new Planned<>(
                 source,
                 new Key(name, Ba2Names.identity(name), source.displayName().length(), null),
-                compressed ? (rawLz4 ? Codec.LZ4_RAW : Codec.ZLIB) : Codec.STORED,
+                compressed
+                    ? (rawLz4 ? PayloadCodec.LZ4_RAW : PayloadCodec.ZLIB)
+                    : PayloadCodec.STORED,
                 new byte[0]));
       }
       return planned;
@@ -341,7 +343,7 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
               .put((byte) 1)
               .putShort((short) 16)
               .putLong(placed.segmentOffsets().getFirst())
-              .putInt(owner.codec() != Codec.STORED ? (int) owner.storedSize() : 0)
+              .putInt(owner.codec() != PayloadCodec.STORED ? (int) owner.storedSize() : 0)
               .putInt((int) entry.source().size())
               .putInt(0xbaadf00d);
         } else {
@@ -397,7 +399,7 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
     @Override
     public Readback readback(List<Planned<Key>> part, Layout layout) {
       boolean validatesRawLz4 =
-          rawLz4 && part.stream().anyMatch(entry -> entry.codec() != Codec.STORED);
+          rawLz4 && part.stream().anyMatch(entry -> entry.codec() != PayloadCodec.STORED);
       // Raw LZ4's block buffers are native under the LWJGL provider and heap under the portable
       // one; pack preflight has already pinned which of the two the reader will use.
       Lz4Runtime.Provider provider = validatesRawLz4 ? Lz4Runtime.selected() : null;

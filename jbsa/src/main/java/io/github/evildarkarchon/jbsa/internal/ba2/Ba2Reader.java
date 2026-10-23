@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.ba2;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.*;
 import java.io.IOException;
@@ -254,7 +255,7 @@ public final class Ba2Reader {
               unpacked,
               stored,
               new EntryMetadata.GeneralBa2(prefix, offset, packed, unpacked, sentinel));
-      if (packed == 0) session.add(metadata, offset, stored, OwnedArchive.PayloadCodec.STORED);
+      if (packed == 0) session.add(metadata, offset, stored, PayloadCodec.STORED);
       else session.add(metadata, offset, packed, codec());
       return field + 36;
     }
@@ -479,8 +480,8 @@ public final class Ba2Reader {
   }
 
   /** Compressed payloads use raw LZ4 only under a version 3 method 3 header, and zlib otherwise. */
-  private OwnedArchive.PayloadCodec codec() {
-    return rawLz4 ? OwnedArchive.PayloadCodec.LZ4_RAW : OwnedArchive.PayloadCodec.ZLIB;
+  private PayloadCodec codec() {
+    return rawLz4 ? PayloadCodec.LZ4_RAW : PayloadCodec.ZLIB;
   }
 
   /** BA2 names use either separator on the wire; the display name always uses a backslash. */

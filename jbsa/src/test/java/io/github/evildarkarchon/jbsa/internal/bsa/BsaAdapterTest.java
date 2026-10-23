@@ -3,10 +3,10 @@ package io.github.evildarkarchon.jbsa.internal.bsa;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
-import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import io.github.evildarkarchon.jbsa.internal.pack.PackPipeline;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
@@ -82,11 +82,11 @@ class BsaAdapterTest {
     var planned =
         byName(embedded.plan(List.of(entry("x\\s.txt", 5), entry("x\\c.txt", 7)), CONTEXT));
     var stored = planned.get("x\\s.txt");
-    assertEquals(Codec.STORED, stored.codec());
+    assertEquals(PayloadCodec.STORED, stored.codec());
     assertArrayEquals(bytes(7, "x\\s.txt"), stored.frame());
     assertEquals(8 + 5, stored.storedSize());
     var compressed = planned.get("x\\c.txt");
-    assertEquals(Codec.ZLIB, compressed.codec());
+    assertEquals(PayloadCodec.ZLIB, compressed.codec());
     assertArrayEquals(concat(bytes(7, "x\\c.txt"), u32(7)), compressed.frame());
     assertEquals(Admitted.Planned.UNKNOWN_SIZE, compressed.storedSize());
 
@@ -106,7 +106,7 @@ class BsaAdapterTest {
   void sseCompressesWithTheBsaLz4Frame() throws Exception {
     var admitted = admitted(0x69, options(PackOptions.Compression.LZ4_FRAME, Map.of()));
     var entry = admitted.plan(List.of(entry("x\\c.txt", 7)), CONTEXT).getFirst();
-    assertEquals(Codec.BSA_LZ4_FRAME, entry.codec());
+    assertEquals(PayloadCodec.BSA_LZ4_FRAME, entry.codec());
     assertArrayEquals(u32(7), entry.frame());
   }
 
@@ -117,10 +117,10 @@ class BsaAdapterTest {
   @Test
   void declaresTheLz4FrameWithoutAdmittingIt() throws Exception {
     assertEquals(
-        Set.of(Codec.BSA_LZ4_FRAME),
+        Set.of(PayloadCodec.BSA_LZ4_FRAME),
         admitted(0x69, options(PackOptions.Compression.LZ4_FRAME, Map.of())).requiredCodecs());
     assertEquals(
-        Set.of(Codec.BSA_LZ4_FRAME),
+        Set.of(PayloadCodec.BSA_LZ4_FRAME),
         admitted(
                 0x69,
                 options(
@@ -260,7 +260,7 @@ class BsaAdapterTest {
     assertEquals(0x607, wire.getInt(12));
     for (int record = 0; record < 2; record++) {
       int size = wire.getInt(55 + record * 16 + 8);
-      boolean stored = placed.get(record).planned().codec() == Codec.STORED;
+      boolean stored = placed.get(record).planned().codec() == PayloadCodec.STORED;
       assertEquals(stored ? 0x4000_0009 : 9, size);
     }
 

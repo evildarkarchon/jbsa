@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.io.PublicationTransaction;
@@ -664,13 +665,13 @@ class PackPipelineTest {
             reader -> {
               throw new AssertionError("Splitting must not read payloads");
             });
-    return new Admitted.Planned<>(entry, name, Codec.STORED, new byte[0]);
+    return new Admitted.Planned<>(entry, name, PayloadCodec.STORED, new byte[0]);
   }
 
   /** A planned zlib entry, whose stored size stays unknown until stabilization. */
   private static Admitted.Planned<String> encoded(String name, long size) {
     var stored = planned(name, size);
-    return new Admitted.Planned<>(stored.source(), name, Codec.ZLIB, new byte[0]);
+    return new Admitted.Planned<>(stored.source(), name, PayloadCodec.ZLIB, new byte[0]);
   }
 
   /** Builds a request; the family and encoding are ignored by the memory adapter. */
@@ -858,7 +859,8 @@ class PackPipelineTest {
               throw context.failure(FailureKind.POLICY, "memory.bad-name", null);
             // Stands in for a programmer error inside an adapter, which no family rule describes.
             if (source.displayName().equals("boom")) throw new AssertionError("plan bug");
-            planned.add(new Planned<>(source, source.displayName(), Codec.STORED, new byte[0]));
+            planned.add(
+                new Planned<>(source, source.displayName(), PayloadCodec.STORED, new byte[0]));
           }
           Collections.reverse(planned);
           return planned;

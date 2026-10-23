@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -120,12 +121,12 @@ public final class TransformStage implements AutoCloseable {
    * costs, and an encoder that borrows the worker's admission. A stored codec needs no transform.
    *
    * @param retainsRaw whether the worker also keeps the raw spool for the caller
-   * @return the encoding, or null for {@link Codec#STORED}
+   * @return the encoding, or null for {@link PayloadCodec#STORED}
    * @throws ArithmeticException when the codec bound does not fit a signed long
    */
   public static Encoding encoding(
-      Codec codec, long decodedSize, boolean retainsRaw, ResourceBudget budget) {
-    if (codec == Codec.STORED) return null;
+      PayloadCodec codec, long decodedSize, boolean retainsRaw, ResourceBudget budget) {
+    if (codec == PayloadCodec.STORED) return null;
     Codecs.Cost cost = Codecs.cost(codec, decodedSize);
     return new Encoding(
         cost.bound(),
