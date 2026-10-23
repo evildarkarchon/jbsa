@@ -88,20 +88,19 @@ public final class Tes3Adapter implements FamilyAdapter<Tes3Adapter.WireName> {
       return 2_147_483_647L;
     }
 
+    /**
+     * Each part streams its stored payloads while it stages, sharing raw bytes per part, and splits
+     * charge the declared payload size.
+     */
     @Override
-    public Emission emission() {
-      return Emission.STREAMING;
+    public Emission<WireName> emission() {
+      return new Emission.Streamed<>();
     }
 
     /** The advisory estimate is the payload, a 200-byte allowance, and the name bytes. */
     @Override
     public SplitCost<WireName> splitCost() {
-      return new SplitCost<>(200, name -> name.bytes().length, PayloadCost.DECODED);
-    }
-
-    @Override
-    public Sharing sharing() {
-      return new Sharing(Sharing.Scope.PER_PART, Sharing.Basis.RAW);
+      return new SplitCost<>(200, name -> name.bytes().length);
     }
 
     /**

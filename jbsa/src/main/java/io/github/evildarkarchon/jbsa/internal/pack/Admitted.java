@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.ToLongFunction;
 
@@ -28,14 +29,14 @@ public interface Admitted<K> {
   /** Returns the split target of {@code PackOptions.Splitting.FamilyDefault}; 0 never splits. */
   long defaultSplitTarget();
 
-  /** Returns whether payloads stream into each part or are stabilized before splitting. */
-  Emission emission();
+  /**
+   * Returns how this family's payloads are produced relative to splitting. The case also fixes the
+   * family's Content Sharing scope and basis and the payload term of its split cost.
+   */
+  Emission<K> emission();
 
   /** Returns the declarative advisory cost that drives whole-entry split assignment. */
   SplitCost<K> splitCost();
-
-  /** Returns the family's intrinsic Content Sharing scope and comparison basis. */
-  Sharing sharing();
 
   /**
    * Returns every codec this request can select whose runtime capability must be admitted. The
@@ -67,38 +68,6 @@ public interface Admitted<K> {
    */
   default void checkStored(Planned<K> entry, IoContext processing) throws ArchiveException {
     // Most families have no stored-size rule beyond the per-part layout checks.
-  }
-
-  /**
-   * Returns the bounded per-entry working heap the pipeline reserves for each planned entry, right
-   * after {@link #plan}, and holds until the operation's budget closes. Most families need none.
-   */
-  default long entryReserveBytes() {
-    return 0;
-  }
-
-  /**
-   * Returns how many leading source bytes {@link #chunk} inspects, or 0 when this family never
-   * chunks. A chunking family defers its decoded-size charge to stabilization, because only the
-   * chunked envelope knows the decoded extent.
-   */
-  default int chunkHeadBytes() {
-    return 0;
-  }
-
-  /**
-   * Splits one stabilized source into independently shared and encoded payload slices, from its
-   * envelope head alone. Only called when {@link #chunkHeadBytes()} is positive; the pipeline
-   * performs the {@link Chunks#rewrite()} and every slice's I/O.
-   *
-   * @param entry the entry being stabilized, in output order
-   * @param head the first {@code min(chunkHeadBytes(), size)} source bytes, positioned at zero
-   * @param processing the entry's PROCESSING location for structured failures
-   * @throws ArchiveException when the envelope is malformed or cannot be preserved
-   */
-  default Chunks<K> chunk(Planned<K> entry, ByteBuffer head, IoContext processing)
-      throws ArchiveException {
-    throw new UnsupportedOperationException("This family does not chunk its payloads");
   }
 
   /**
@@ -137,59 +106,98 @@ public interface Admitted<K> {
    */
   List<Patch> tables(List<Placed<K>> part, Layout layout);
 
-  /** Whether each part's payloads are emitted while it stages or stabilized for the whole set. */
-  enum Emission {
-    /** Each part reads its sources while it stages; split cost cannot depend on encoded size. */
-    STREAMING,
-    /** Every payload is stabilized in plan order before splitting (versioned BSA and BA2). */
-    STABILIZED
-  }
+  /**
+   * How an Archive Family's payloads are produced relative to splitting: its Emission. Each case
+   * fixes the Content Sharing scope and comparison basis and the payload term of the split cost
+   * together, so no impossible combination of them can be declared.
+   *
+   * @param <K> the family's per-entry wire key
+   */
+  sealed interface Emission<K> {
+    /**
+     * Each part reads its sources while it stages (TES3). Identical payloads share within one
+     * Archive Part, compared on their raw bytes, and a split charges each entry's declared decoded
+     * size, because a streamed part cannot know an encoded size before it stages.
+     */
+    record Streamed<K>() implements Emission<K> {}
 
-  /** Which advisory payload extent a split charges for one entry. */
-  enum PayloadCost {
-    /** The declared source size. */
-    DECODED,
-    /** The stabilized record size, including framing. */
-    STORED,
-    /** The stabilized record size, charged only for the first owner within a part. */
-    UNIQUE_STORED
+    /**
+     * Every payload is stabilized into a complete stored record, in output order, before splitting
+     * (versioned BSA). Identical stored records, framing and the stored/compressed discriminator
+     * included, share within one Archive Part, and a split charges each record's exact stored size.
+     */
+    record PerPartRecords<K>() implements Emission<K> {}
+
+    /**
+     * Every payload is stabilized before splitting and resolved to Content Sharing owners decided
+     * once for the whole archive set on raw bytes (BA2). Each owner is emitted once per part, and a
+     * split charges an owner's stored size only at its first reference in a part.
+     *
+     * @param chunker how each source is sliced into independently shared payload chunks before its
+     *     owners are resolved; empty when every payload is one unsliced owner
+     */
+    record SetOwners<K>(Optional<Chunker<K>> chunker) implements Emission<K> {
+      /** Requires the chunker's presence to be stated. */
+      public SetOwners {
+        Objects.requireNonNull(chunker, "chunker");
+      }
+    }
   }
 
   /**
-   * Declarative whole-entry split cost: {@code fixed + nameCost(key) + payload}. Split cost is per
-   * family because it decides part membership, which Binary Conformance fixtures pin.
+   * How a set-wide owner family slices each stabilized source into independently shared and encoded
+   * payload chunks, from its envelope head alone. Only DX10 BA2 chunks today.
+   *
+   * <p>A chunking family defers its decoded-size charge to stabilization, because only the chunked
+   * envelope knows the decoded extent.
+   *
+   * @param headBytes how many leading source bytes {@link #chunk} inspects; positive
+   * @param entryReserveBytes the bounded per-entry working heap the pipeline reserves for each
+   *     planned entry, right after {@link Admitted#plan}, and holds until the operation's budget
+   *     closes
+   * @param function the pure chunking function {@link #chunk} applies
    */
-  record SplitCost<K>(long fixed, ToLongFunction<K> nameCost, PayloadCost payload) {
+  record Chunker<K>(int headBytes, long entryReserveBytes, ChunkFunction<K> function) {
+    /** Rejects a non-positive head, a negative reserve, or a missing function. */
+    public Chunker {
+      if (headBytes <= 0) throw new IllegalArgumentException("Non-positive chunk head");
+      if (entryReserveBytes < 0) throw new IllegalArgumentException("Negative entry reserve");
+      Objects.requireNonNull(function, "function");
+    }
+
+    /**
+     * Splits one stabilized source into payload slices, from its envelope head alone. The pipeline
+     * performs the {@link Chunks#rewrite()} and every slice's I/O.
+     *
+     * @param entry the entry being stabilized, in output order
+     * @param head the first {@code min(headBytes(), size)} source bytes, positioned at zero
+     * @param processing the entry's PROCESSING location for structured failures
+     * @throws ArchiveException when the envelope is malformed or cannot be preserved
+     */
+    public Chunks<K> chunk(Planned<K> entry, ByteBuffer head, IoContext processing)
+        throws ArchiveException {
+      return function.chunk(entry, head, processing);
+    }
+  }
+
+  /** The pure function behind {@link Chunker#chunk}; see that method for its contract. */
+  @FunctionalInterface
+  interface ChunkFunction<K> {
+    /** Returns the chunking of one stabilized source, as {@link Chunker#chunk} describes. */
+    Chunks<K> chunk(Planned<K> entry, ByteBuffer head, IoContext processing)
+        throws ArchiveException;
+  }
+
+  /**
+   * Declarative whole-entry split cost: {@code fixed + nameCost(key) + payload}, where the {@link
+   * Emission} case decides the payload term. Split cost is per family because it decides part
+   * membership, which Binary Conformance fixtures pin.
+   */
+  record SplitCost<K>(long fixed, ToLongFunction<K> nameCost) {
     /** Rejects a negative constant or a missing function before any split is planned. */
     public SplitCost {
       if (fixed < 0) throw new IllegalArgumentException("Negative split cost");
       Objects.requireNonNull(nameCost, "nameCost");
-      Objects.requireNonNull(payload, "payload");
-    }
-  }
-
-  /** The Content Sharing scope and basis intrinsic to an Archive Family. */
-  record Sharing(Scope scope, Basis basis) {
-    /** Requires both dimensions. */
-    public Sharing {
-      Objects.requireNonNull(scope, "scope");
-      Objects.requireNonNull(basis, "basis");
-    }
-
-    /** Where one stored copy may be referenced from. */
-    public enum Scope {
-      /** Identical payloads share within one Archive Part only. */
-      PER_PART,
-      /** Sharing owners are decided once for the whole archive set. */
-      ARCHIVE_SET
-    }
-
-    /** Which bytes establish equality. */
-    public enum Basis {
-      /** The decoded source bytes. */
-      RAW,
-      /** The complete stored record, including framing and the codec discriminator. */
-      STORED
     }
   }
 
@@ -256,7 +264,7 @@ public interface Admitted<K> {
      * Its stored size is the sum of the owners' stored sizes: the bytes the entry would occupy if
      * none of its segments were shared within a part.
      *
-     * @param resolved the key, possibly extended by {@link Admitted#chunk} with envelope metadata
+     * @param resolved the key, possibly extended by {@link Chunker#chunk} with envelope metadata
      * @param owners the entry's segments in payload order, one per chunk slice or one for the whole
      *     payload
      */

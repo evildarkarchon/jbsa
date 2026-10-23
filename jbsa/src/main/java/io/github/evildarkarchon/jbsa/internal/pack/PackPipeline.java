@@ -79,7 +79,8 @@ public final class PackPipeline {
     operation.begin();
     run.workers = WorkerLimits.snapshot(request.workerSelection());
     Admitted<K> admitted = adapter.admit(request, context);
-    validate(admitted);
+    Admitted.Emission<K> emission = admitted.emission();
+    Optional<Admitted.Chunker<K>> chunker = chunker(emission);
     // Capability admission is the last step of admit's rung: it runs before source planning, as
     // the family packers' own checks did, but here rather than in the pure adapter.
     run.codecs = Codecs.admit(admitted.requiredCodecs(), context);
@@ -88,53 +89,57 @@ public final class PackPipeline {
     List<Planned<K>> planned = admitted.plan(sources, context);
     // Each lease stays live until the budget closes: it covers per-entry state the family keeps
     // for the whole operation.
-    if (admitted.entryReserveBytes() > 0)
-      for (int index = 0; index < planned.size(); index++)
-        budget.reserve(admitted.entryReserveBytes(), 0, 0, 0);
+    long entryReserve = chunker.map(Admitted.Chunker::entryReserveBytes).orElse(0L);
+    if (entryReserve > 0)
+      for (int index = 0; index < planned.size(); index++) budget.reserve(entryReserve, 0, 0, 0);
     rejectUnmatchedOverrides(request, sources, context);
     if (planned.isEmpty())
       throw context.failure(
           FailureKind.POLICY, admitted.diagnosticPrefix() + ".empty-entry-set", null);
     // A chunking family's decoded extent is known only from each envelope, so stabilization
     // charges it instead, still in Logical Plan Order.
-    if (admitted.chunkHeadBytes() == 0) chargeDecoded(sources, request.resourceLimits(), context);
-    return switch (admitted.emission()) {
-      case STREAMING -> streamed(run, admitted, planned);
-      case STABILIZED -> stabilized(run, admitted, planned);
+    if (chunker.isEmpty()) chargeDecoded(sources, request.resourceLimits(), context);
+    return switch (emission) {
+      case Admitted.Emission.Streamed<K> streamed -> streamed(run, admitted, planned);
+      case Admitted.Emission.PerPartRecords<K> records ->
+          stabilized(run, admitted, emission, planned);
+      case Admitted.Emission.SetOwners<K> owners -> stabilized(run, admitted, emission, planned);
+    };
+  }
+
+  /** Returns the chunker a set-wide owner Emission declares; no other case chunks. */
+  private static <K> Optional<Admitted.Chunker<K>> chunker(Admitted.Emission<K> emission) {
+    return switch (emission) {
+      case Admitted.Emission.Streamed<K> streamed -> Optional.empty();
+      case Admitted.Emission.PerPartRecords<K> records -> Optional.empty();
+      case Admitted.Emission.SetOwners<K> owners -> owners.chunker();
     };
   }
 
   /**
-   * Rejects adapter declarations the pipeline cannot honor. A streamed part cannot know encoded
-   * sizes, other parts' owners, or chunk envelopes before it stages. A stabilized plan shares
-   * either complete stored records per part (versioned BSA) or raw bytes across the whole archive
-   * set (BA2); only set-wide owners give a first-owner split cost or a chunk slice an identity.
+   * Returns the payload term a split charges under an Emission: the declared size for a streamed
+   * part, which cannot know an encoded size before it stages; the exact stored record for per-part
+   * records; and an owner's stored size only at its first reference in a part for set-wide owners.
    */
-  private static void validate(Admitted<?> admitted) {
-    Admitted.Sharing sharing = admitted.sharing();
-    Admitted.PayloadCost payload = admitted.splitCost().payload();
-    switch (admitted.emission()) {
-      case STREAMING -> {
-        if (payload != Admitted.PayloadCost.DECODED
-            || sharing.scope() != Admitted.Sharing.Scope.PER_PART
-            || admitted.chunkHeadBytes() != 0)
-          throw new IllegalStateException(
-              "Streaming emission needs decoded costs, per-part sharing, and no chunking");
-      }
-      case STABILIZED -> {
-        boolean perPartStored =
-            sharing.scope() == Admitted.Sharing.Scope.PER_PART
-                && sharing.basis() == Admitted.Sharing.Basis.STORED
-                && payload != Admitted.PayloadCost.UNIQUE_STORED
-                && admitted.chunkHeadBytes() == 0;
-        boolean setRaw =
-            sharing.scope() == Admitted.Sharing.Scope.ARCHIVE_SET
-                && sharing.basis() == Admitted.Sharing.Basis.RAW;
-        if (!perPartStored && !setRaw)
-          throw new UnsupportedOperationException(
-              "Stabilized emission shares stored records per part or raw bytes set-wide");
-      }
-    }
+  private static PayloadCost payloadCost(Admitted.Emission<?> emission) {
+    return switch (emission) {
+      case Admitted.Emission.Streamed<?> streamed -> PayloadCost.DECODED;
+      case Admitted.Emission.PerPartRecords<?> records -> PayloadCost.STORED;
+      case Admitted.Emission.SetOwners<?> owners -> PayloadCost.UNIQUE_STORED;
+    };
+  }
+
+  /**
+   * Returns whether Content Sharing compares complete stored records under an Emission, framing and
+   * the stored/compressed discriminator included, rather than raw decoded bytes. Only per-part
+   * records share on the stored basis.
+   */
+  private static boolean storedBasis(Admitted.Emission<?> emission) {
+    return switch (emission) {
+      case Admitted.Emission.Streamed<?> streamed -> false;
+      case Admitted.Emission.PerPartRecords<?> records -> true;
+      case Admitted.Emission.SetOwners<?> owners -> false;
+    };
   }
 
   /** Rejects an entry-compression override whose identity no planned source carries. */
@@ -185,20 +190,21 @@ public final class PackPipeline {
       List<Planned<K>> planned, Admitted<K> admitted, PackOptions.Splitting splitting) {
     long target = target(admitted, splitting);
     Admitted.SplitCost<K> rule = admitted.splitCost();
+    PayloadCost payload = payloadCost(admitted.emission());
     List<List<Planned<K>>> parts = new ArrayList<>();
     List<Planned<K>> current = new ArrayList<>();
     Set<Integer> owners = new HashSet<>();
     long estimated = 0;
     for (Planned<K> entry : planned) {
       long overhead = Math.addExact(rule.fixed(), rule.nameCost().applyAsLong(entry.key()));
-      long cost = Math.addExact(overhead, payloadCost(entry, rule.payload(), owners));
+      long cost = Math.addExact(overhead, payloadCost(entry, payload, owners));
       if (target != 0 && !current.isEmpty() && cost > target - estimated) {
         parts.add(List.copyOf(current));
         current.clear();
         owners.clear();
         estimated = 0;
         // Owners the closed part already paid for are charged again in the new one.
-        cost = Math.addExact(overhead, payloadCost(entry, rule.payload(), owners));
+        cost = Math.addExact(overhead, payloadCost(entry, payload, owners));
       }
       current.add(entry);
       for (Admitted.Segment segment : entry.segments()) owners.add(segment.owner());
@@ -215,8 +221,7 @@ public final class PackPipeline {
    *
    * @param owners the segment owners the current part already references
    */
-  private static long payloadCost(
-      Planned<?> entry, Admitted.PayloadCost payload, Set<Integer> owners) {
+  private static long payloadCost(Planned<?> entry, PayloadCost payload, Set<Integer> owners) {
     return switch (payload) {
       case DECODED -> entry.source().size();
       case STORED -> knownStoredSize(entry);
@@ -256,8 +261,7 @@ public final class PackPipeline {
       boolean sharing,
       IoContext context)
       throws ArchiveException {
-    boolean shareable =
-        sharing && admitted.splitCost().payload() == Admitted.PayloadCost.UNIQUE_STORED;
+    boolean shareable = sharing && payloadCost(admitted.emission()) == PayloadCost.UNIQUE_STORED;
     if (!shareable
         && planned.stream().allMatch(entry -> entry.storedSize() != Planned.UNKNOWN_SIZE)) {
       List<List<Planned<K>>> parts = split(planned, admitted, splitting);
@@ -327,9 +331,15 @@ public final class PackPipeline {
    * Stabilizes every payload in output order before splitting, because the family's split cost and
    * layout depend on exact stored sizes. Stabilization is processing work, so progress enters
    * PROCESSING before the first source is read (Q10) and publication continues in that phase.
+   *
+   * @param emission the stabilized case, {@link Admitted.Emission.PerPartRecords} or {@link
+   *     Admitted.Emission.SetOwners}, which selects how records are stabilized and replayed
+   * @throws IllegalStateException for a {@link Admitted.Emission.Streamed} declaration, which never
+   *     stabilizes
    */
   private static <K> OperationSession.Published stabilized(
-      Run run, Admitted<K> admitted, List<Planned<K>> planned) throws IOException {
+      Run run, Admitted<K> admitted, Admitted.Emission<K> emission, List<Planned<K>> planned)
+      throws IOException {
     PackRequest request = run.request;
     PackOptions.Splitting splitting = request.options().splitting();
     boolean sharing = request.options().sharing();
@@ -353,26 +363,33 @@ public final class PackPipeline {
     List<Planned<K>> sized;
     Replay<K> replay;
     long replayHeap;
-    if (admitted.sharing().scope() == Admitted.Sharing.Scope.ARCHIVE_SET) {
-      List<SetOwner> owners = new ArrayList<>();
-      sized = stabilizeSet(run, admitted, planned, owners);
-      replay = (part, layout, output) -> emitOwners(admitted, part, layout, output, stable, owners);
-      // One replay window and one readback window, plus bounded record and header buffers.
-      replayHeap = 2L * PayloadWindows.WINDOW_BYTES + 1024;
-    } else {
-      List<Stable<K>> records = stabilize(run, admitted, planned);
-      // Parts hold the sized entries themselves, so identity locates each one's stabilized record.
-      Map<Planned<K>, Long> offsets = new IdentityHashMap<>();
-      sized = new ArrayList<>(records.size());
-      for (Stable<K> record : records) {
-        offsets.put(record.planned(), record.offset());
-        sized.add(record.planned());
+    switch (emission) {
+      case Admitted.Emission.Streamed<K> streamed ->
+          throw new IllegalStateException("Streamed emission never stabilizes");
+      case Admitted.Emission.SetOwners<K> setOwners -> {
+        List<SetOwner> owners = new ArrayList<>();
+        sized = stabilizeSet(run, admitted, setOwners.chunker(), planned, owners);
+        replay =
+            (part, layout, output) -> emitOwners(admitted, part, layout, output, stable, owners);
+        // One replay window and one readback window, plus bounded record and header buffers.
+        replayHeap = 2L * PayloadWindows.WINDOW_BYTES + 1024;
       }
-      replay =
-          (part, layout, output) ->
-              replay(admitted, part, offsets, layout, output, stable, sharing);
-      // Replay holds one window, or two while confirming a sharing candidate; reserve the peak.
-      replayHeap = (sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES;
+      case Admitted.Emission.PerPartRecords<K> perPart -> {
+        List<Stable<K>> records = stabilize(run, admitted, planned);
+        // Parts hold the sized entries themselves, so identity locates each one's stabilized
+        // record.
+        Map<Planned<K>, Long> offsets = new IdentityHashMap<>();
+        sized = new ArrayList<>(records.size());
+        for (Stable<K> record : records) {
+          offsets.put(record.planned(), record.offset());
+          sized.add(record.planned());
+        }
+        replay =
+            (part, layout, output) ->
+                replay(admitted, part, offsets, layout, output, stable, sharing);
+        // Replay holds one window, or two while confirming a sharing candidate; reserve the peak.
+        replayHeap = (sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES;
+      }
     }
     stable.seal();
     List<List<Planned<K>>> parts = split(sized, admitted, splitting);
@@ -513,15 +530,22 @@ public final class PackPipeline {
    * byte-identical raw owner in the set. Only a new owner is encoded, so sharing never depends on
    * the codec. A chunked entry's decoded size is charged here, in Logical Plan Order.
    *
+   * @param chunking the chunker the set-wide owner Emission declares, or empty when every payload
+   *     is one unsliced owner
    * @param owners receives every distinct owner in creation order; a segment's owner identity is
    *     its index here
    * @return the entries, each resolved to its segments
    */
   private static <K> List<Planned<K>> stabilizeSet(
-      Run run, Admitted<K> admitted, List<Planned<K>> planned, List<SetOwner> owners)
+      Run run,
+      Admitted<K> admitted,
+      Optional<Admitted.Chunker<K>> chunking,
+      List<Planned<K>> planned,
+      List<SetOwner> owners)
       throws IOException {
     SpillBuffer stable = run.stable;
-    boolean chunked = admitted.chunkHeadBytes() > 0;
+    Admitted.Chunker<K> chunker = chunking.orElse(null);
+    boolean chunked = chunker != null;
     TransformStage stage =
         new TransformStage(
             run.operation,
@@ -590,10 +614,9 @@ public final class PackPipeline {
             K key = entry.key();
             long chargedDecoded = -1;
             if (chunked) {
-              ByteBuffer head =
-                  ByteBuffer.allocate((int) Math.min(admitted.chunkHeadBytes(), size));
+              ByteBuffer head = ByteBuffer.allocate((int) Math.min(chunker.headBytes(), size));
               stable.read(rawOffset, head);
-              Admitted.Chunks<K> chunks = admitted.chunk(entry, head.flip(), processing);
+              Admitted.Chunks<K> chunks = chunker.chunk(entry, head.flip(), processing);
               run.budget.metadata(chunks.metadataBytes());
               long payload = rawOffset + chunks.payloadStart();
               if (chunks.rewrite() == Admitted.Rewrite.BGR24_TO_BGRA32)
@@ -951,6 +974,7 @@ public final class PackPipeline {
       throws IOException {
     // Per-part scope: a streamed part can reference only copies already staged in this file.
     ContentSharing<Long> sharing = new ContentSharing<>();
+    boolean storedBasis = storedBasis(admitted.emission());
     List<Placed<K>> placed = new ArrayList<>(part.size());
     long next = layout.payloadStart();
     TransformStage stage =
@@ -971,15 +995,7 @@ public final class PackPipeline {
           Placed<K> result =
               run.request.options().sharing()
                   ? placeShared(
-                      entry,
-                      staged,
-                      next,
-                      output,
-                      sharing,
-                      processing,
-                      run,
-                      windows,
-                      admitted.sharing().basis())
+                      entry, staged, next, output, sharing, processing, run, windows, storedBasis)
                   : place(entry, staged, next, output, processing, run, windows);
           // Shared copies always lie before `next`; only a zero-length match can equal it, and
           // advancing by its zero size is a no-op, so equality identifies a fresh placement.
@@ -1052,6 +1068,8 @@ public final class PackPipeline {
   /**
    * Stabilizes one record in part-owned scratch while digesting it, then either references the
    * earliest byte-identical copy in this part or replays it at the next payload position.
+   *
+   * @param storedBasis whether sharing compares complete stored records rather than raw bytes
    */
   private static <K> Placed<K> placeShared(
       Planned<K> entry,
@@ -1062,7 +1080,7 @@ public final class PackPipeline {
       IoContext processing,
       Run run,
       ResourceBudget.Lease windows,
-      Admitted.Sharing.Basis basis)
+      boolean storedBasis)
       throws IOException {
     SpillBuffer scratch = output.scratch();
     IOException primary = null;
@@ -1072,7 +1090,7 @@ public final class PackPipeline {
       if (frame.length > 0) {
         scratch.write(0, ByteBuffer.wrap(frame));
         // A raw basis compares decoded bytes only; the frame is part of a stored record.
-        if (basis == Admitted.Sharing.Basis.STORED) digest.update(frame);
+        if (storedBasis) digest.update(frame);
       }
       consume(
           entry.source(),
@@ -1095,9 +1113,7 @@ public final class PackPipeline {
       long size = scratch.size();
       String key =
           ContentSharing.key(
-              size,
-              digest.digest(),
-              basis == Admitted.Sharing.Basis.STORED && entry.codec() != PayloadCodec.STORED);
+              size, digest.digest(), storedBasis && entry.codec() != PayloadCodec.STORED);
       Long match =
           sharing.find(
               key,
@@ -1152,6 +1168,19 @@ public final class PackPipeline {
             request.destination().toAbsolutePath().normalize(), number),
         output.size(),
         part.size());
+  }
+
+  /**
+   * Which advisory payload extent a split charges for one entry. The {@link Admitted.Emission} case
+   * implies it, so no adapter declares it.
+   */
+  enum PayloadCost {
+    /** The declared source size. */
+    DECODED,
+    /** The stabilized record size, including framing. */
+    STORED,
+    /** The stabilized record size, charged only for the first owner within a part. */
+    UNIQUE_STORED
   }
 
   /**

@@ -118,9 +118,13 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
       return 2_147_483_647L;
     }
 
+    /**
+     * Sharing compares complete stored records per part: the embedded name and decoded-size prefix
+     * are part of the record, and the compressed discriminator separates stored from compressed.
+     */
     @Override
-    public Emission emission() {
-      return Emission.STABILIZED;
+    public Emission<WireName> emission() {
+      return new Emission.PerPartRecords<>();
     }
 
     /**
@@ -129,17 +133,7 @@ public final class BsaAdapter implements FamilyAdapter<BsaAdapter.WireName> {
      */
     @Override
     public SplitCost<WireName> splitCost() {
-      return new SplitCost<>(
-          200, name -> name.folder().length + 1L + name.name().length, PayloadCost.STORED);
-    }
-
-    /**
-     * Sharing compares complete stored records per part: the embedded name and decoded-size prefix
-     * are part of the record, and the compressed discriminator separates stored from compressed.
-     */
-    @Override
-    public Sharing sharing() {
-      return new Sharing(Sharing.Scope.PER_PART, Sharing.Basis.STORED);
+      return new SplitCost<>(200, name -> name.folder().length + 1L + name.name().length);
     }
 
     /**

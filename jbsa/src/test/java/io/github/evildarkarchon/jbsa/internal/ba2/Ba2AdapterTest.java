@@ -137,16 +137,11 @@ class Ba2AdapterTest {
     assertEquals(Ba2Names.identity(key.name()), key.identity());
 
     assertEquals(0, admitted.defaultSplitTarget());
-    assertEquals(Admitted.Emission.STABILIZED, admitted.emission());
-    assertEquals(
-        new Admitted.Sharing(Admitted.Sharing.Scope.ARCHIVE_SET, Admitted.Sharing.Basis.RAW),
-        admitted.sharing());
+    // A General archive shares set-wide raw owners and never chunks.
+    assertEquals(new Admitted.Emission.SetOwners<>(Optional.empty()), admitted.emission());
     var cost = admitted.splitCost();
     assertEquals(200, cost.fixed());
     assertEquals("Data/C.bin".length(), cost.nameCost().applyAsLong(key));
-    assertEquals(Admitted.PayloadCost.UNIQUE_STORED, cost.payload());
-    assertEquals(0, admitted.entryReserveBytes());
-    assertEquals(0, admitted.chunkHeadBytes());
     assertEquals("ba2", admitted.diagnosticPrefix());
 
     var dds =
@@ -154,8 +149,10 @@ class Ba2AdapterTest {
             ArchiveFamily.STARFIELD_DDS_BA2,
             encoding(3, true, true),
             PackOptions.Compression.FAMILY_DEFAULT);
-    assertEquals(2048, dds.entryReserveBytes());
-    assertEquals(164, dds.chunkHeadBytes());
+    // DX10 chunks each texture from the largest DDS envelope header, with a per-entry reserve.
+    var chunker = chunker(dds);
+    assertEquals(164, chunker.headBytes());
+    assertEquals(2048, chunker.entryReserveBytes());
     assertEquals(
         PayloadCodec.LZ4_RAW,
         dds.plan(List.of(entry("Textures/A.dds", 200)), CONTEXT).getFirst().codec());
@@ -175,7 +172,7 @@ class Ba2AdapterTest {
         admit(ArchiveFamily.FO4_DDS_BA2, encoding(1, true, false), PackOptions.Compression.ZLIB);
     byte[] bgr = bgr24(1, 1);
     var entry = admitted.plan(List.of(entry("Textures/A.dds", bgr.length)), CONTEXT).getFirst();
-    var chunks = admitted.chunk(entry, ByteBuffer.wrap(bgr, 0, 128).slice(), CONTEXT);
+    var chunks = chunker(admitted).chunk(entry, ByteBuffer.wrap(bgr, 0, 128).slice(), CONTEXT);
     assertEquals(Admitted.Rewrite.BGR24_TO_BGRA32, chunks.rewrite());
     assertEquals(128, chunks.payloadStart());
     assertEquals(List.of(new Admitted.Slice(0, 4)), chunks.slices());
@@ -197,7 +194,7 @@ class Ba2AdapterTest {
     int payload = 131072 + 32768 + 8192;
     byte[] bc1 = bc1(512, 512, 3, payload);
     var entry = admitted.plan(List.of(entry("Textures/B.dds", bc1.length)), CONTEXT).getFirst();
-    var chunks = admitted.chunk(entry, ByteBuffer.wrap(bc1, 0, 164).slice(), CONTEXT);
+    var chunks = chunker(admitted).chunk(entry, ByteBuffer.wrap(bc1, 0, 164).slice(), CONTEXT);
     assertEquals(Admitted.Rewrite.NONE, chunks.rewrite());
     assertEquals(128, chunks.payloadStart());
     assertEquals(
@@ -285,7 +282,7 @@ class Ba2AdapterTest {
     int payload = 131072 + 32768 + 8192;
     byte[] bc1 = bc1(512, 512, 3, payload);
     var entry = admitted.plan(List.of(entry("Textures/B.dds", bc1.length)), CONTEXT).getFirst();
-    var chunks = admitted.chunk(entry, ByteBuffer.wrap(bc1, 0, 164).slice(), CONTEXT);
+    var chunks = chunker(admitted).chunk(entry, ByteBuffer.wrap(bc1, 0, 164).slice(), CONTEXT);
     var sized =
         entry.segmented(
             chunks.key(),
@@ -436,7 +433,7 @@ class Ba2AdapterTest {
     int payload = 131072 + 32768 + 8192;
     byte[] bc1 = bc1(512, 512, 3, payload);
     var entry = admitted.plan(List.of(entry("Textures/B.dds", bc1.length)), CONTEXT).getFirst();
-    var chunks = admitted.chunk(entry, ByteBuffer.wrap(bc1, 0, 164).slice(), CONTEXT);
+    var chunks = chunker(admitted).chunk(entry, ByteBuffer.wrap(bc1, 0, 164).slice(), CONTEXT);
     var sized =
         entry.segmented(
             chunks.key(),
@@ -461,6 +458,16 @@ class Ba2AdapterTest {
   private static Admitted<Ba2Adapter.Key> admit(
       ArchiveFamily family, ArchiveEncoding encoding, PackOptions options) throws ArchiveException {
     return Ba2Adapter.INSTANCE.admit(request(family, encoding, options), CONTEXT);
+  }
+
+  /**
+   * Returns the DX10 chunker a set-wide owner Emission declares, failing the test when the plan
+   * declares another Emission or no chunker.
+   */
+  private static Admitted.Chunker<Ba2Adapter.Key> chunker(Admitted<Ba2Adapter.Key> admitted) {
+    if (admitted.emission() instanceof Admitted.Emission.SetOwners<Ba2Adapter.Key> owners)
+      return owners.chunker().orElseThrow(() -> new AssertionError("DX10 declares a chunker"));
+    return fail("BA2 declares set-wide owners, not " + admitted.emission());
   }
 
   /** A standard request replacing only its family, encoding, and options. */
