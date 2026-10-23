@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.ResourceLimits;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -22,27 +23,32 @@ public final class ResourceBudget implements AutoCloseable {
   private long metadataBytes;
   private boolean closed;
 
-  /** Creates bounded owned-input and decoder capacities without changing public semantic limits. */
+  /**
+   * Creates bounded owned-input and decoder capacities without changing public semantic limits. The
+   * native ceiling admits the largest single decode call any codec makes.
+   */
   public ResourceBudget(ResourceLimits limits, IoContext context) {
     this(
         limits,
         context,
         Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
-        Math.max(Lz4Frame.DECODE_NATIVE_BYTES, Lz4Raw.DECODE_NATIVE_BYTES),
+        AdmittedCodec.MAX_DECODE_NATIVE_BYTES,
         1);
   }
 
   /**
    * Creates bounded mutation admission with room for sixteen paired source/spill handles in
    * addition to staging and publication handles. The shared budget still limits each operation;
-   * higher requested worker counts wait for credits instead of raising this internal ceiling.
+   * higher requested worker counts wait for credits instead of raising this internal ceiling. A
+   * mutation both encodes and decodes, so its native ceiling admits the largest single call in
+   * either direction; worker concurrency follows from it, so it must stay exactly that fact.
    */
   public static ResourceBudget forMutation(ResourceLimits limits, IoContext context) {
     return new ResourceBudget(
         limits,
         context,
         Math.min(256L * 1024 * 1024, Runtime.getRuntime().maxMemory() / 4),
-        Math.max(Lz4Frame.DECODE_NATIVE_BYTES, Lz4Raw.ENCODE_NATIVE_BYTES),
+        Math.max(AdmittedCodec.MAX_ENCODE_NATIVE_BYTES, AdmittedCodec.MAX_DECODE_NATIVE_BYTES),
         36);
   }
 
@@ -53,8 +59,12 @@ public final class ResourceBudget implements AutoCloseable {
 
   /**
    * Uses explicit capacities for deterministic admission tests; every ceiling must be nonnegative.
+   *
+   * <p>Public only so the codec unit tests in {@code internal.codec} can reach it after the codecs
+   * left this package (#94); production code still uses the two capacity-deriving factories above.
+   * The package is not exported, so this widens nothing outside the module.
    */
-  ResourceBudget(
+  public ResourceBudget(
       ResourceLimits limits,
       IoContext context,
       long heapCeiling,

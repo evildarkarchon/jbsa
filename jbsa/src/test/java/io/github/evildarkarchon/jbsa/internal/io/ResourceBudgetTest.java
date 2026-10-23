@@ -45,14 +45,13 @@ final class ResourceBudgetTest {
   @Test
   void mutationCapacityRemainsBoundedAndReleasesWithTheOperation() throws Exception {
     try (ResourceBudget budget = ResourceBudget.forMutation(ResourceLimits.standard(), CONTEXT)) {
-      try (ResourceBudget.Lease owners =
-          budget.reserve(64 * 1024, Lz4Raw.ENCODE_NATIVE_BYTES, 36, 0)) {
+      // 34 144 561 is one native raw-LZ4 encode at the dispatch limit, the largest single call.
+      try (ResourceBudget.Lease owners = budget.reserve(64 * 1024, 34_144_561, 36, 0)) {
         assertNotNull(owners);
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 0, 1, 0));
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
       }
-      try (ResourceBudget.Lease returned =
-          budget.reserve(64 * 1024, Lz4Raw.ENCODE_NATIVE_BYTES, 36, 0)) {
+      try (ResourceBudget.Lease returned = budget.reserve(64 * 1024, 34_144_561, 36, 0)) {
         assertNotNull(returned);
       }
     }
@@ -225,14 +224,14 @@ final class ResourceBudgetTest {
   @Test
   void defaultCapacityAdmitsOneHandleAndBoundedDecoderState() throws Exception {
     try (ResourceBudget budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT)) {
-      assertThrows(
-          ArchiveException.class, () -> budget.reserve(0, Lz4Raw.DECODE_NATIVE_BYTES + 1, 0, 0));
-      try (ResourceBudget.Lease input = budget.reserve(512, Lz4Raw.DECODE_NATIVE_BYTES, 1, 0)) {
+      // 33 620 257 is one native raw-LZ4 decode at the dispatch limit, the largest single call.
+      assertThrows(ArchiveException.class, () -> budget.reserve(0, 33_620_257 + 1, 0, 0));
+      try (ResourceBudget.Lease input = budget.reserve(512, 33_620_257, 1, 0)) {
         assertNotNull(input);
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 0, 1, 0));
         assertThrows(ArchiveException.class, () -> budget.reserve(0, 1, 0, 0));
       }
-      try (ResourceBudget.Lease returned = budget.reserve(512, Lz4Raw.DECODE_NATIVE_BYTES, 1, 0)) {
+      try (ResourceBudget.Lease returned = budget.reserve(512, 33_620_257, 1, 0)) {
         assertNotNull(returned);
       }
     }

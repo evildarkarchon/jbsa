@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -153,7 +154,7 @@ final class OwnedArchiveValidationTest {
                   new EntryMetadata.Tes3(0, 0, 0, 0)),
               0,
               1,
-              OwnedArchive.PayloadCodec.STORED);
+              PayloadCodec.STORED);
           return new ArchiveInspection(
               new ArchiveDetection(
                   DetectionStatus.SUPPORTED_FAMILY,

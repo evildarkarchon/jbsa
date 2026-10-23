@@ -1,11 +1,11 @@
 package io.github.evildarkarchon.jbsa.internal.tes3;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveNames;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
-import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import io.github.evildarkarchon.jbsa.internal.pack.FamilyAdapter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -116,7 +116,7 @@ public final class Tes3Adapter implements FamilyAdapter<Tes3Adapter.WireName> {
         checkU32(source.size(), context);
         planned.add(
             new Planned<>(
-                source, new WireName(source.name(), source.hash()), Codec.STORED, NO_FRAME));
+                source, new WireName(source.name(), source.hash()), PayloadCodec.STORED, NO_FRAME));
       }
       planned.sort(OUTPUT_ORDER);
       return planned;

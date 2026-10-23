@@ -1,7 +1,9 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -24,31 +26,32 @@ import net.jpountz.xxhash.XXHashFactory;
  * therefore writes and parses the LZ4 frame container itself and hands each block to the safe block
  * codec.
  *
- * <p>Every method allocates only heap, reserved against the caller's budget before allocation, and
- * keeps all codec state per call or per decoder, so concurrent calls never share mutable state.
+ * <p>Every method allocates only heap, which the caller reserved before the call and lends as a
+ * lease, and keeps all codec state per call or per decoder, so concurrent calls never share mutable
+ * state.
+ *
+ * <p>It is the only production class that references lz4-java, and only through its {@code Safe}
+ * holder and method bodies, so loading this adapter class does not load lz4-java.
  */
-final class PortableLz4 {
+final class PortableLz4 implements Lz4Adapter {
+  /** The one instance {@link Lz4Adapter#of} returns; creating it touches no lz4-java class. */
+  static final PortableLz4 ADAPTER = new PortableLz4();
+
   /** The frame magic number, little-endian on the wire. */
   private static final int MAGIC = 0x184D2204;
 
-  /** The frame window the encoder reads and flushes as one block, matching the native profile. */
-  private static final int WINDOW = 65536;
-
-  /** The largest block any valid frame may declare (block-maximum identifier 7). */
-  private static final int MAX_BLOCK = 4 * 1024 * 1024;
+  /**
+   * The frame window the encoder reads and flushes as one block, matching the native profile.
+   * Package-private, and a compile-time constant, so {@link AdmittedCodec}'s frame cost can name it
+   * without loading this class.
+   */
+  static final int WINDOW = 65536;
 
   /**
-   * lz4-java's HC compressor allocates a fresh {@code int[32768]} hash table and {@code
-   * short[65536]} chain table on every call; this covers both arrays and their headers.
+   * The largest block any valid frame may declare (block-maximum identifier 7). Package-private for
+   * the same reason as {@link #WINDOW}.
    */
-  private static final long HC_STATE_BYTES = 2 * 131072 + 4096;
-
-  /** Heap for one frame encode: bookkeeping, one input window, and one worst-case block. */
-  static final long FRAME_ENCODE_HEAP_BYTES =
-      4096 + WINDOW + 4 + WINDOW + WINDOW / 255 + 16 + HC_STATE_BYTES;
-
-  /** Heap for one frame decoder: bookkeeping plus a compressed and a decoded maximum block. */
-  static final long FRAME_DECODE_HEAP_BYTES = 4096 + 2L * MAX_BLOCK;
+  static final int MAX_BLOCK = 4 * 1024 * 1024;
 
   private PortableLz4() {}
 
@@ -69,141 +72,134 @@ final class PortableLz4 {
    *
    * @throws LinkageError if lz4-java is absent or cannot initialize
    */
-  static void admit() {
+  @Override
+  public void admit() {
     // Touching one field runs the holder's static initializer exactly once.
     java.util.Objects.requireNonNull(Safe.DECOMPRESSOR);
   }
 
-  /** Returns the heap one raw encode of {@code decodedSize} bytes reserves. */
-  static long rawEncodeHeapBytes(long decodedSize) {
-    return 4096 + decodedSize + rawBound(decodedSize) + HC_STATE_BYTES;
-  }
-
-  /** Returns the heap one raw decode reserves for its whole stored and decoded block. */
-  static long rawDecodeHeapBytes(long storedSize, long decodedSize) {
-    return 4096 + storedSize + decodedSize + 16;
-  }
-
-  /** Returns the upstream {@code LZ4_compressBound}, which lz4-java also uses. */
-  private static long rawBound(long size) {
-    return size + size / 255 + 16;
-  }
-
   /**
    * Encodes one admitted raw HC block without splitting. The caller has already checked the
-   * dispatch limits; the whole block, its worst-case output and the HC tables are reserved first.
+   * dispatch limits and reserved the whole block, its worst-case output and the HC tables, at
+   * exactly the portable raw-LZ4 encode cost {@link AdmittedCodec} publishes.
+   *
+   * @param lease the caller's reservation of that cost, borrowed and never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
-  static long rawEncode(
-      JdkZlib.ByteSource source,
+  @Override
+  public long encodeRaw(
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
-      ResourceBudget budget,
+      ByteSink sink,
+      Checkpoint checkpoint,
+      ResourceBudget.Lease lease,
       IoContext context,
       int compressionLevel)
       throws IOException {
+    java.util.Objects.requireNonNull(lease, "lease");
     caller(checkpoint::check, context);
-    try (var lease = budget.reserve(rawEncodeHeapBytes(decodedSize), 0, 0, 0)) {
-      int size = (int) decodedSize;
-      byte[] input = new byte[size];
-      byte[] output = new byte[(int) rawBound(decodedSize)];
-      ByteBuffer window = ByteBuffer.wrap(input);
-      caller(() -> source.read(0, window), context);
-      if (window.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
-      caller(checkpoint::check, context);
-      int count;
-      try {
-        LZ4Compressor compressor = Safe.LZ4.highCompressor(compressionLevel);
-        count = compressor.compress(input, 0, size, output, 0, output.length);
-      } catch (RuntimeException | LinkageError | AssertionError cause) {
-        throw failure(
-            FailureKind.INTERNAL,
-            "codec.provider-fault",
-            "raw-lz4",
-            "encode",
-            decodedSize,
-            -1,
-            cause,
-            context);
-      }
-      if (count <= 0)
-        throw failure(
-            FailureKind.INTERNAL,
-            "codec.compression-failed",
-            "raw-lz4",
-            "encode",
-            decodedSize,
-            -1,
-            null,
-            context);
-      caller(checkpoint::check, context);
-      caller(() -> sink.write(0, ByteBuffer.wrap(output, 0, count)), context);
-      return count;
+    int size = (int) decodedSize;
+    byte[] input = new byte[size];
+    byte[] output = new byte[(int) AdmittedCodec.rawLz4Bound(decodedSize)];
+    ByteBuffer window = ByteBuffer.wrap(input);
+    caller(() -> source.read(0, window), context);
+    if (window.hasRemaining())
+      throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+    caller(checkpoint::check, context);
+    int count;
+    try {
+      LZ4Compressor compressor = Safe.LZ4.highCompressor(compressionLevel);
+      count = compressor.compress(input, 0, size, output, 0, output.length);
+    } catch (RuntimeException | LinkageError | AssertionError cause) {
+      throw failure(
+          FailureKind.INTERNAL,
+          "codec.provider-fault",
+          "raw-lz4",
+          "encode",
+          decodedSize,
+          -1,
+          cause,
+          context);
     }
+    if (count <= 0)
+      throw failure(
+          FailureKind.INTERNAL,
+          "codec.compression-failed",
+          "raw-lz4",
+          "encode",
+          decodedSize,
+          -1,
+          null,
+          context);
+    caller(checkpoint::check, context);
+    caller(() -> sink.write(0, ByteBuffer.wrap(output, 0, count)), context);
+    return count;
   }
 
   /**
-   * Decodes one complete raw block through the safe decompressor after reserving both buffers.
-   * Output that would exceed {@code decodedSize} is rejected by the decompressor itself, so nothing
-   * beyond the declared size is ever produced.
+   * Decodes one complete raw block through the safe decompressor, on the caller's reservation of
+   * both buffers at the portable raw-LZ4 decode cost. Output that would exceed {@code decodedSize}
+   * is rejected by the decompressor itself, so nothing beyond the declared size is ever produced.
+   *
+   * @param lease the caller's reservation of that cost, borrowed and never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
-  static long rawDecode(
-      JdkZlib.ByteSource source,
+  @Override
+  public long decodeRaw(
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
-      ResourceBudget budget,
+      ByteSink sink,
+      Checkpoint checkpoint,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
+    java.util.Objects.requireNonNull(lease, "lease");
     caller(checkpoint::check, context);
-    try (var lease = budget.reserve(rawDecodeHeapBytes(storedSize, decodedSize), 0, 0, 0)) {
-      byte[] input = new byte[(int) storedSize];
-      byte[] output = new byte[(int) decodedSize];
-      ByteBuffer window = ByteBuffer.wrap(input);
-      caller(() -> source.read(0, window), context);
-      if (window.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
-      caller(checkpoint::check, context);
-      int count;
-      try {
-        count = Safe.DECOMPRESSOR.decompress(input, 0, input.length, output, 0, output.length);
-      } catch (LZ4Exception malformed) {
-        throw failure(
-            FailureKind.FORMAT,
-            "codec.invalid-data",
-            "raw-lz4",
-            "decode",
-            decodedSize,
-            -1,
-            malformed,
-            context);
-      } catch (RuntimeException | LinkageError | AssertionError cause) {
-        throw failure(
-            FailureKind.INTERNAL,
-            "codec.provider-fault",
-            "raw-lz4",
-            "decode",
-            decodedSize,
-            -1,
-            cause,
-            context);
-      }
-      if (count != decodedSize)
-        throw failure(
-            FailureKind.FORMAT,
-            "codec.size-mismatch",
-            "raw-lz4",
-            "decode",
-            decodedSize,
-            count,
-            null,
-            context);
-      caller(checkpoint::check, context);
-      caller(() -> sink.write(0, ByteBuffer.wrap(output, 0, count)), context);
-      return count;
+    byte[] input = new byte[(int) storedSize];
+    byte[] output = new byte[(int) decodedSize];
+    ByteBuffer window = ByteBuffer.wrap(input);
+    caller(() -> source.read(0, window), context);
+    if (window.hasRemaining())
+      throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+    caller(checkpoint::check, context);
+    int count;
+    try {
+      count = Safe.DECOMPRESSOR.decompress(input, 0, input.length, output, 0, output.length);
+    } catch (LZ4Exception malformed) {
+      throw failure(
+          FailureKind.FORMAT,
+          "codec.invalid-data",
+          "raw-lz4",
+          "decode",
+          decodedSize,
+          -1,
+          malformed,
+          context);
+    } catch (RuntimeException | LinkageError | AssertionError cause) {
+      throw failure(
+          FailureKind.INTERNAL,
+          "codec.provider-fault",
+          "raw-lz4",
+          "decode",
+          decodedSize,
+          -1,
+          cause,
+          context);
     }
+    if (count != decodedSize)
+      throw failure(
+          FailureKind.FORMAT,
+          "codec.size-mismatch",
+          "raw-lz4",
+          "decode",
+          decodedSize,
+          count,
+          null,
+          context);
+    caller(checkpoint::check, context);
+    caller(() -> sink.write(0, ByteBuffer.wrap(output, 0, count)), context);
+    return count;
   }
 
   /**
@@ -215,20 +211,23 @@ final class PortableLz4 {
    * lz4-java's block compressor has no dictionary input, and JBSA-CODEC-013 claims no
    * cross-provider byte identity.
    *
-   * @param admission a worker lease that already covers {@link #FRAME_ENCODE_HEAP_BYTES}, or null
-   *     to reserve it here
+   * @param lease the caller's lease covering the frame encode cost under this provider, whose
+   *     working set is {@link Lz4Runtime.Provider#frameEncodeBytes} on the heap, borrowed and never
+   *     closed here
+   * @throws NullPointerException when {@code lease} is null
    */
-  static long encodeFrame(
-      JdkZlib.ByteSource source,
+  @Override
+  public long encodeFrame(
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
-      ResourceBudget budget,
-      ResourceBudget.Lease admission,
+      ByteSink sink,
+      Checkpoint checkpoint,
+      ResourceBudget.Lease lease,
       IoContext context,
       boolean bsaProfile)
       throws IOException {
-    try (var lease = admission == null ? budget.reserve(FRAME_ENCODE_HEAP_BYTES, 0, 0, 0) : null) {
+    java.util.Objects.requireNonNull(lease, "lease");
+    try {
       LZ4Compressor compressor = Safe.LZ4.highCompressor(bsaProfile ? 12 : 9);
       StreamingXXHash32 contentHash = bsaProfile ? null : Safe.XXHASH.newStreamingHash32(0);
       byte[] input = new byte[WINDOW];
@@ -296,39 +295,22 @@ final class PortableLz4 {
   }
 
   /**
-   * Creates an incremental frame decoder. The caller has reserved {@link #FRAME_DECODE_HEAP_BYTES};
-   * the decoder borrows its positional source and holds only heap state.
+   * Creates an incremental frame decoder. The caller has reserved the frame decode cost under this
+   * provider, whose working set is {@link Lz4Runtime.Provider#frameDecodeBytes} on the heap; the
+   * decoder borrows its positional source and that lease, and holds only heap state.
+   *
+   * @param lease the caller's reservation, which outlives the decoder and is never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
-  static FrameDecoder decoder(
-      JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context) {
-    return new FrameDecoder(source, storedSize, decodedSize, context);
-  }
-
-  /**
-   * Decodes one ordinary frame to a positional sink, requiring exact compressed and decoded
-   * lengths. Decoded bytes beyond the declared size are detected without being published.
-   */
-  static long decodeFrame(
-      JdkZlib.ByteSource source,
+  @Override
+  public Lz4Frame.Decoder frameDecoder(
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
-      ResourceBudget budget,
-      IoContext context)
-      throws IOException {
-    try (var lease = budget.reserve(FRAME_DECODE_HEAP_BYTES + WINDOW, 0, 0, 0);
-        var decoder = decoder(source, storedSize, decodedSize, context)) {
-      ByteBuffer window = ByteBuffer.allocate(WINDOW);
-      long produced = 0;
-      while (true) {
-        caller(checkpoint::check, context);
-        window.clear();
-        int count = decoder.read(window);
-        if (count < 0) return produced;
-        produced = emit(sink, produced, window.flip(), context);
-      }
-    }
+      ResourceBudget.Lease lease,
+      IoContext context) {
+    java.util.Objects.requireNonNull(lease, "lease");
+    return new FrameDecoder(source, storedSize, decodedSize, context);
   }
 
   /**
@@ -336,7 +318,7 @@ final class PortableLz4 {
    * move between consumer threads; nothing is shared with any other decoder.
    */
   static final class FrameDecoder implements Lz4Frame.Decoder {
-    private final JdkZlib.ByteSource source;
+    private final ByteSource source;
     private final long storedSize, decodedSize;
     private final IoContext context;
     private final byte[] word = new byte[8];
@@ -348,8 +330,7 @@ final class PortableLz4 {
     private long supplied, decodedTotal;
     private int pendingOffset, pending;
 
-    private FrameDecoder(
-        JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context) {
+    private FrameDecoder(ByteSource source, long storedSize, long decodedSize, IoContext context) {
       this.source = source;
       this.storedSize = storedSize;
       this.decodedSize = decodedSize;
@@ -570,7 +551,7 @@ final class PortableLz4 {
   }
 
   /** Publishes one encoded or decoded window at a checked, wide positional offset. */
-  private static long emit(JdkZlib.ByteSink sink, long offset, ByteBuffer bytes, IoContext context)
+  private static long emit(ByteSink sink, long offset, ByteBuffer bytes, IoContext context)
       throws IOException {
     int count = bytes.remaining();
     if (count > 0) caller(() -> sink.write(offset, bytes), context);

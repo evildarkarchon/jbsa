@@ -3,14 +3,11 @@ package io.github.evildarkarchon.jbsa.internal.ba2;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
-import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
-import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -82,14 +79,14 @@ class Ba2AdapterTest {
   @Test
   void declaresRawLz4WithoutAdmittingIt() throws Exception {
     assertEquals(
-        Set.of(Codec.LZ4_RAW),
+        Set.of(PayloadCodec.LZ4_RAW),
         admit(
                 ArchiveFamily.STARFIELD_GENERAL_BA2,
                 encoding(3, false, true),
                 PackOptions.Compression.LZ4_RAW)
             .requiredCodecs());
     assertEquals(
-        Set.of(Codec.LZ4_RAW),
+        Set.of(PayloadCodec.LZ4_RAW),
         admit(
                 ArchiveFamily.STARFIELD_DDS_BA2,
                 encoding(3, true, true),
@@ -128,7 +125,9 @@ class Ba2AdapterTest {
     assertEquals(
         List.of("Data/C.bin", "Data/b.bin"),
         planned.stream().map(entry -> entry.source().displayName()).toList());
-    assertEquals(List.of(Codec.STORED, Codec.ZLIB), planned.stream().map(e -> e.codec()).toList());
+    assertEquals(
+        List.of(PayloadCodec.STORED, PayloadCodec.ZLIB),
+        planned.stream().map(e -> e.codec()).toList());
     // A stored record's size is predictable before stabilization; an encoded one is not.
     assertEquals(3, planned.get(0).storedSize());
     assertEquals(Admitted.Planned.UNKNOWN_SIZE, planned.get(1).storedSize());
@@ -158,7 +157,8 @@ class Ba2AdapterTest {
     assertEquals(2048, dds.entryReserveBytes());
     assertEquals(164, dds.chunkHeadBytes());
     assertEquals(
-        Codec.LZ4_RAW, dds.plan(List.of(entry("Textures/A.dds", 200)), CONTEXT).getFirst().codec());
+        PayloadCodec.LZ4_RAW,
+        dds.plan(List.of(entry("Textures/A.dds", 200)), CONTEXT).getFirst().codec());
     var nonDds =
         assertThrows(
             ArchiveException.class, () -> dds.plan(List.of(entry("Textures/A.png", 1)), CONTEXT));
@@ -221,9 +221,18 @@ class Ba2AdapterTest {
             List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 10), entry("Data/C.bin", 5)),
             CONTEXT);
     // A and B share owner 0 (6 stored bytes); C is its own stored owner.
-    var a = planned.get(0).segmented(planned.get(0).key(), List.of(segment(10, 6, Codec.ZLIB, 0)));
-    var b = planned.get(1).segmented(planned.get(1).key(), List.of(segment(10, 6, Codec.ZLIB, 0)));
-    var c = planned.get(2).segmented(planned.get(2).key(), List.of(segment(5, 5, Codec.STORED, 1)));
+    var a =
+        planned
+            .get(0)
+            .segmented(planned.get(0).key(), List.of(segment(10, 6, PayloadCodec.ZLIB, 0)));
+    var b =
+        planned
+            .get(1)
+            .segmented(planned.get(1).key(), List.of(segment(10, 6, PayloadCodec.ZLIB, 0)));
+    var c =
+        planned
+            .get(2)
+            .segmented(planned.get(2).key(), List.of(segment(5, 5, PayloadCodec.STORED, 1)));
     var part = List.of(a, b, c);
     var layout = admitted.layout(part, CONTEXT);
     long names = 3 * (2 + "Data/A.bin".length());
@@ -280,7 +289,9 @@ class Ba2AdapterTest {
     var sized =
         entry.segmented(
             chunks.key(),
-            List.of(segment(131072, 100, Codec.LZ4_RAW, 0), segment(40960, 50, Codec.LZ4_RAW, 1)));
+            List.of(
+                segment(131072, 100, PayloadCodec.LZ4_RAW, 0),
+                segment(40960, 50, PayloadCodec.LZ4_RAW, 1)));
     var layout = admitted.layout(List.of(sized), CONTEXT);
     long record = 24 + 2 * 24;
     assertEquals(36 + record, layout.payloadStart());
@@ -311,8 +322,14 @@ class Ba2AdapterTest {
   }
 
   /**
-   * Readback is data: the reader's peak credits for the part and the INTERNAL nonconforming ID. A
-   * part holding a raw-LZ4 entry charges the raw decoder instead of zlib's.
+   * Readback is data and declares only family knowledge: the reader's own credits for the part
+   * (per-entry state, eight bytes per metadata byte, one 64 KiB window and one handle), the
+   * INTERNAL nonconforming ID, the codec its reader decodes and the part's largest source. A part
+   * holding a raw-LZ4 entry decodes raw LZ4; every other part, including an all-stored part of a
+   * raw-LZ4 archive, declares zlib, the conservative codec readback has always charged.
+   *
+   * <p>The pipeline costs that codec from the codecs pack admission yielded; {@code CodecsTest}
+   * pins those credits, since the adapter declares no cost of its own.
    */
   @Test
   void declaresReadbackCreditsAndTheNonconformingId() throws Exception {
@@ -321,13 +338,12 @@ class Ba2AdapterTest {
             ArchiveFamily.FO4_GENERAL_BA2, encoding(1, false, false), PackOptions.Compression.ZLIB);
     var part = zlib.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
     var layout = new Admitted.Layout(96, 120);
+    long readerHeap = 512L * 2 + 8L * 120 + 65536;
+    Admitted.Readback zlibReadback = zlib.readback(part, layout);
     assertEquals(
         new Admitted.Readback(
-            "ba2.noncanonical-staged-output",
-            512L * 2 + 8L * 120 + 65536 + JdkZlib.DECODE_HEAP_BYTES,
-            JdkZlib.DECODE_NATIVE_BYTES,
-            1),
-        zlib.readback(part, layout));
+            "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.ZLIB), 700),
+        zlibReadback);
 
     var raw =
         admit(
@@ -335,19 +351,27 @@ class Ba2AdapterTest {
             encoding(3, false, true),
             PackOptions.Compression.LZ4_RAW);
     var rawPart = raw.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
+    Admitted.Readback rawReadback = raw.readback(rawPart, layout);
     assertEquals(
         new Admitted.Readback(
-            "ba2.noncanonical-staged-output",
-            // Raw block buffers are native under LWJGL and heap under the portable provider.
-            512L * 2
-                + 8L * 120
-                + 65536
-                + 4096
-                + 700
-                + Lz4Raw.maxDecodeHeapBytes(Lz4Runtime.selected()),
-            Lz4Raw.maxDecodeNativeBytes(Lz4Runtime.selected()),
-            1),
-        raw.readback(rawPart, layout));
+            "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.LZ4_RAW), 700),
+        rawReadback);
+
+    var storedRaw =
+        admit(
+            ArchiveFamily.STARFIELD_GENERAL_BA2,
+            encoding(3, false, true),
+            options(
+                PackOptions.Compression.LZ4_RAW,
+                Map.of(
+                    new NormalizedNameIdentity("data\\a.bin"),
+                    PackOptions.Compression.STORED,
+                    new NormalizedNameIdentity("data\\b.bin"),
+                    PackOptions.Compression.STORED)));
+    var storedPart =
+        storedRaw.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
+    Admitted.Readback storedReadback = storedRaw.readback(storedPart, layout);
+    assertEquals(Set.of(PayloadCodec.ZLIB), storedReadback.decodes());
   }
 
   /** Admits a request for the family with the given global compression and no overrides. */
@@ -425,7 +449,7 @@ class Ba2AdapterTest {
   }
 
   /** One resolved archive-set owner. */
-  private static Admitted.Segment segment(long raw, long stored, Codec codec, int owner) {
+  private static Admitted.Segment segment(long raw, long stored, PayloadCodec codec, int owner) {
     return new Admitted.Segment(raw, stored, codec, owner);
   }
 

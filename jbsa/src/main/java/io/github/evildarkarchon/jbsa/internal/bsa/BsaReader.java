@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.bsa;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -210,10 +211,8 @@ public final class BsaReader {
                   contentSize - (compressed ? 4 : 0),
                   decodedSize,
                   compressed
-                      ? version == 0x69
-                          ? OwnedArchive.PayloadCodec.LZ4_FRAME
-                          : OwnedArchive.PayloadCodec.ZLIB
-                      : OwnedArchive.PayloadCodec.STORED,
+                      ? version == 0x69 ? PayloadCodec.BSA_LZ4_FRAME : PayloadCodec.ZLIB
+                      : PayloadCodec.STORED,
                   128);
           if (dds.remaining() == 128
               && dds.getInt(0) == 0x20534444
@@ -251,10 +250,8 @@ public final class BsaReader {
               metadata,
               contentOffset + 4,
               contentSize - 4,
-              version == 0x69
-                  ? OwnedArchive.PayloadCodec.LZ4_FRAME
-                  : OwnedArchive.PayloadCodec.ZLIB);
-        else session.add(metadata, contentOffset, contentSize, OwnedArchive.PayloadCodec.STORED);
+              version == 0x69 ? PayloadCodec.BSA_LZ4_FRAME : PayloadCodec.ZLIB);
+        else session.add(metadata, contentOffset, contentSize, PayloadCodec.STORED);
       }
     }
     if (ordinal != count

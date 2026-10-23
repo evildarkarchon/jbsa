@@ -3,8 +3,17 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -207,7 +216,7 @@ final class Lz4Qualification {
     for (boolean encoding : new boolean[] {true, false}) {
       IOException cancelled = new IOException("qualification cancellation");
       int[] checks = {0};
-      JdkZlib.Checkpoint checkpoint =
+      Checkpoint checkpoint =
           () -> {
             if (++checks[0] == 3) throw cancelled;
           };
@@ -297,12 +306,12 @@ final class Lz4Qualification {
     }
   }
 
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
   /** Uses bounded positional output copying, whose cost is included in measured adapter time. */
-  private static JdkZlib.ByteSink sink(ByteArrayOutputStream output) {
+  private static ByteSink sink(ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];
@@ -311,37 +320,73 @@ final class Lz4Qualification {
     };
   }
 
-  /** Dispatches only to the release-pinned raw or frame profile under test. */
-  private static void encode(
-      String codec,
-      byte[] data,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoints,
-      ResourceBudget budget)
-      throws IOException {
-    if (codec.equals("raw-lz4"))
-      Lz4Raw.encode(source(data), data.length, sink, checkpoints, budget, CONTEXT);
-    else Lz4Frame.encode(source(data), data.length, sink, checkpoints, budget, CONTEXT);
+  /** Returns the admitted codec that publishes the cost of the profile under test. */
+  private static AdmittedCodec admitted(String codec, String direction) throws ArchiveException {
+    return AdmittedCodec.admit(
+        codec.equals("raw-lz4") ? PayloadCodec.LZ4_RAW : PayloadCodec.BSA_LZ4_FRAME,
+        direction,
+        CONTEXT);
   }
 
-  /** Dispatches exact on-wire and logical sizes to the release-pinned decoder under test. */
+  /**
+   * Dispatches only to the release-pinned raw or qualification-only general frame profile under
+   * test, as its caller: the admitted codec's encode cost is reserved from {@code budget} first and
+   * lent to the encoder.
+   */
+  private static void encode(
+      String codec, byte[] data, ByteSink sink, Checkpoint checkpoints, ResourceBudget budget)
+      throws IOException {
+    AdmittedCodec admitted = admitted(codec, "encode");
+    AdmittedCodec.Cost cost = admitted.encodeCost(data.length);
+    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
+      if (codec.equals("raw-lz4"))
+        Lz4Raw.encode(admitted, source(data), data.length, sink, checkpoints, lease, CONTEXT);
+      else Lz4Frame.encodeGeneral(source(data), data.length, sink, checkpoints, lease, CONTEXT);
+    }
+  }
+
+  /**
+   * Dispatches exact on-wire and logical sizes to the release-pinned decoder under test, as its
+   * caller: the admitted codec's decode cost is reserved from {@code budget} first and lent. A
+   * frame drains through the admitted decoder one 64 KiB window at a time, observing the checkpoint
+   * before each window as a streaming reader would.
+   */
   private static void decode(
       String codec,
       byte[] frame,
       long size,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoints,
+      ByteSink sink,
+      Checkpoint checkpoints,
       ResourceBudget budget)
       throws IOException {
-    if (codec.equals("raw-lz4"))
-      Lz4Raw.decode(source(frame), frame.length, size, sink, checkpoints, budget, CONTEXT);
-    else Lz4Frame.decode(source(frame), frame.length, size, sink, checkpoints, budget, CONTEXT);
+    AdmittedCodec admitted = admitted(codec, "decode");
+    AdmittedCodec.Cost cost = admitted.decodeCost(frame.length, size);
+    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
+      if (codec.equals("raw-lz4")) {
+        Lz4Raw.decode(
+            admitted, source(frame), frame.length, size, sink, checkpoints, lease, CONTEXT);
+        return;
+      }
+      try (var decoder =
+          Lz4Frame.decoder(admitted, source(frame), frame.length, size, lease, CONTEXT)) {
+        ByteBuffer window = ByteBuffer.allocate(65536);
+        long produced = 0;
+        while (true) {
+          checkpoints.check();
+          if (decoder.read(window.clear()) < 0) return;
+          window.flip();
+          int count = window.remaining();
+          sink.write(produced, window);
+          produced += count;
+        }
+      }
+    }
   }
 
   /**
    * Measures observed cancellation checkpoint gaps, conservatively including Java I/O and pauses.
    */
-  private static final class Checkpoints implements JdkZlib.Checkpoint {
+  private static final class Checkpoints implements Checkpoint {
     private long previous;
     private long maxGap;
 

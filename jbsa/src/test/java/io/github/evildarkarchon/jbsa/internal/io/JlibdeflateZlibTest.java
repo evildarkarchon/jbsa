@@ -3,6 +3,12 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
@@ -142,7 +148,13 @@ final class JlibdeflateZlibTest {
                             CONTEXT));
             assertEquals(FailureKind.FORMAT, error.primaryFailure().kind());
             assertEquals("codec.invalid-data", error.diagnostics().getFirst().identifier());
-            assertEquals(JdkZlib.PROFILE, error.diagnostics().getFirst().values().get("profile"));
+            // The JDK fallback names the pinned LZ4 provider set's profile, as every zlib failure.
+            String profile =
+                switch (Lz4Runtime.selected()) {
+                  case NATIVE -> "jbsa-lz4-v1";
+                  case PORTABLE -> "jbsa-lz4-portable-v1";
+                };
+            assertEquals(profile, error.diagnostics().getFirst().values().get("profile"));
           }
         });
   }
@@ -209,12 +221,17 @@ final class JlibdeflateZlibTest {
   /** Produces baseline JDK level-9 bytes through the production streaming adapter. */
   private static byte[] jdkEncode(byte[] data) throws Exception {
     var encoded = new java.io.ByteArrayOutputStream();
-    JdkZlib.encode(
-        java.nio.channels.Channels.newChannel(new java.io.ByteArrayInputStream(data)),
-        data.length,
-        sink(encoded),
-        () -> {},
-        CONTEXT);
+    try (ResourceBudget budget = budget();
+        var lease = budget.reserve(JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES, 0, 0)) {
+      JdkZlib.encode(
+          AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
+          java.nio.channels.Channels.newChannel(new java.io.ByteArrayInputStream(data)),
+          data.length,
+          sink(encoded),
+          () -> {},
+          lease,
+          CONTEXT);
+    }
     return encoded.toByteArray();
   }
 
@@ -223,11 +240,11 @@ final class JlibdeflateZlibTest {
         ResourceLimits.standard(), CONTEXT, 256L * 1024 * 1024, 64L * 1024 * 1024, 0);
   }
 
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
-  private static JdkZlib.ByteSink sink(java.io.ByteArrayOutputStream output) {
+  private static ByteSink sink(java.io.ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];

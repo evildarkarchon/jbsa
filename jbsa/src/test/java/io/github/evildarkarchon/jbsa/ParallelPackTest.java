@@ -912,7 +912,8 @@ class ParallelPackTest {
           || !entry.getKey().getName().startsWith("jbsa-pack-")
           || !entry.getKey().getName().contains("-worker-")) continue;
       String stack = java.util.Arrays.toString(entry.getValue());
-      if (stack.contains("Lz4Frame.encode")) observedStack.set(stack);
+      // Either adapter's frame encoder (NativeLz4 or PortableLz4) is the frame doing the work.
+      if (stack.contains("Lz4.encodeFrame")) observedStack.set(stack);
       for (StackTraceElement frame : entry.getValue())
         // The native provider compresses in LWJGL's LZ4F binding, the portable one in lz4-java.
         if ((frame.getClassName().startsWith("org.lwjgl.util.lz4.")

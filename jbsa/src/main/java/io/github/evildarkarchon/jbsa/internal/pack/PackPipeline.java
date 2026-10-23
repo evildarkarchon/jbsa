@@ -1,6 +1,10 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.*;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted.Layout;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted.Patch;
@@ -77,7 +81,7 @@ public final class PackPipeline {
     validate(admitted);
     // Capability admission is the last step of admit's rung: it runs before source planning, as
     // the family packers' own checks did, but here rather than in the pure adapter.
-    for (Codec codec : admitted.requiredCodecs()) Codecs.preflight(codec, context);
+    run.codecs = Codecs.admit(admitted.requiredCodecs(), context);
     List<PackSources.Entry> sources =
         PackSources.plan(request, operation, budget, admitted.nameCharset());
     List<Planned<K>> planned = admitted.plan(sources, context);
@@ -289,7 +293,8 @@ public final class PackPipeline {
         request.resourceLimits(),
         run.context);
     // D8: admit the coordinator windows and codec working set before any writer allocates them.
-    try (var windows = reserveWindows(planned, request.options().sharing(), run.budget)) {
+    try (var windows =
+        reserveWindows(planned, request.options().sharing(), run.codecs, run.budget)) {
       var writers = new ArrayList<PublicationTransaction.Writer>();
       var completed = new ArrayList<OperationReport.ArchivePart>();
       long nextOrdinal = 0;
@@ -422,31 +427,32 @@ public final class PackPipeline {
               Planned<K> entry = planned.get(ordinal);
               // Stored records keep the raw spool; encoded ones need only the encoder's output.
               return TransformStage.encoding(
-                  entry.codec(), entry.source().size(), false, run.budget);
+                  run.codecs.admitted(entry.codec()), entry.source().size(), false, run.budget);
             });
     List<Stable<K>> records = new ArrayList<>(planned.size());
     Throwable pending = null;
     try {
       // Worker handle leases must not starve the coordinator's ordered stable spool.
       if (stage.parallel()) stable.reserveSpillHandle();
-      try (var coordinator = reserveCoordinator(planned, stage.parallel(), run.budget)) {
+      try (var coordinator =
+          reserveCoordinator(planned, stage.parallel(), run.codecs, run.budget)) {
         for (int ordinal = 0; ordinal < planned.size(); ordinal++) {
           try (TransformStage.Input staged = stage.next()) {
             Planned<K> entry = planned.get(ordinal);
             IoContext processing = processing(run.context, ordinal);
             OptionalLong location = processing.ordinal();
-            PayloadWindows.Checkpoint checkpoint =
+            Checkpoint checkpoint =
                 () -> run.operation.checkpoint(OperationPhase.PROCESSING, location);
             long offset = stable.size();
             byte[] frame = entry.frame();
             if (frame.length > 0) stable.write(offset, ByteBuffer.wrap(frame));
             long start = offset + frame.length;
-            PayloadWindows.Sink sink = (relative, bytes) -> stable.write(start + relative, bytes);
+            ByteSink sink = (relative, bytes) -> stable.write(start + relative, bytes);
             if (staged == null)
               PackSources.consume(
                   entry.source(),
                   input ->
-                      Codecs.encode(
+                      run.codecs.encode(
                           entry.codec(),
                           input,
                           entry.source().size(),
@@ -487,16 +493,15 @@ public final class PackPipeline {
    * is live, so the peak is the larger of the window and the heaviest codec.
    */
   private static ResourceBudget.Lease reserveCoordinator(
-      List<? extends Planned<?>> planned, boolean parallel, ResourceBudget budget)
+      List<? extends Planned<?>> planned, boolean parallel, Codecs codecs, ResourceBudget budget)
       throws ArchiveException {
     long heap = PayloadWindows.WINDOW_BYTES;
     long nativeBytes = 0;
-    if (!parallel)
-      for (Planned<?> entry : planned) {
-        Codecs.Cost cost = Codecs.cost(entry.codec(), entry.source().size());
-        heap = Math.max(heap, cost.heap());
-        nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
-      }
+    if (!parallel) {
+      AdmittedCodec.Cost encoder = codecs.largestPrecharge(planned);
+      heap = Math.max(heap, encoder.heapBytes());
+      nativeBytes = encoder.nativeBytes();
+    }
     return budget.reserve(heap, nativeBytes, 0, 0);
   }
 
@@ -531,7 +536,7 @@ public final class PackPipeline {
               if (chunked || !Codecs.workerEncodes(entry.codec())) return null;
               // Raw bytes stay staged: sharing is decided on them before the owner is encoded.
               return TransformStage.encoding(
-                  entry.codec(), entry.source().size(), true, run.budget);
+                  run.codecs.admitted(entry.codec()), entry.source().size(), true, run.budget);
             });
     boolean sharing = run.request.options().sharing();
     ContentSharing<SetOwner> index = new ContentSharing<>();
@@ -543,18 +548,17 @@ public final class PackPipeline {
       // Worker handle leases must not starve the coordinator's ordered stable spool.
       if (stage.parallel()) stable.reserveSpillHandle();
       try (var coordinator =
-          reserveSetCoordinator(planned, stage.parallel(), chunked, run.budget)) {
+          reserveSetCoordinator(planned, stage.parallel(), chunked, run.codecs, run.budget)) {
         for (int ordinal = 0; ordinal < planned.size(); ordinal++) {
           try (TransformStage.Input staged = stage.next()) {
             Planned<K> entry = planned.get(ordinal);
             IoContext processing = processing(run.context, ordinal);
             OptionalLong location = processing.ordinal();
-            PayloadWindows.Checkpoint checkpoint =
+            Checkpoint checkpoint =
                 () -> run.operation.checkpoint(OperationPhase.PROCESSING, location);
             long size = entry.source().size();
             long rawOffset = stable.size();
-            PayloadWindows.Sink raw =
-                (relative, bytes) -> stable.write(rawOffset + relative, bytes);
+            ByteSink raw = (relative, bytes) -> stable.write(rawOffset + relative, bytes);
             if (staged == null)
               PackSources.consume(
                   entry.source(),
@@ -567,7 +571,7 @@ public final class PackPipeline {
             }
             // BA2 has always observed cancellation during sharing comparisons without an entry
             // ordinal; keeping that preserves the reported failure location.
-            PayloadWindows.Checkpoint comparison =
+            Checkpoint comparison =
                 () -> run.operation.checkpoint(OperationPhase.PROCESSING, OptionalLong.empty());
             var owner =
                 new OwnerResolver(
@@ -577,6 +581,7 @@ public final class PackPipeline {
                     sharing,
                     checkpoint,
                     comparison,
+                    run.codecs,
                     run.budget,
                     coordinator,
                     processing);
@@ -621,8 +626,8 @@ public final class PackPipeline {
 
   /**
    * Resolves raw payload ranges of one entry to archive-set Content Sharing owners, encoding a new
-   * owner into the stable spool. The spool, index, owner list, budget, and coordinator lease are
-   * run-wide; only the checkpoints and the PROCESSING location belong to the entry.
+   * owner into the stable spool. The spool, index, owner list, codec map, budget, and coordinator
+   * lease are run-wide; only the checkpoints and the PROCESSING location belong to the entry.
    *
    * @param checkpoint observes cancellation at the entry's ordinal while transferring or encoding
    * @param comparison observes cancellation while digesting and comparing sharing candidates
@@ -632,8 +637,9 @@ public final class PackPipeline {
       ContentSharing<SetOwner> index,
       List<SetOwner> owners,
       boolean sharing,
-      PayloadWindows.Checkpoint checkpoint,
-      PayloadWindows.Checkpoint comparison,
+      Checkpoint checkpoint,
+      Checkpoint comparison,
+      Codecs codecs,
       ResourceBudget budget,
       ResourceBudget.Lease coordinator,
       IoContext processing) {
@@ -644,7 +650,8 @@ public final class PackPipeline {
      *
      * @param staged the entry's worker result, or null when the coordinator must encode
      */
-    Admitted.Segment resolve(long rawStart, long rawSize, Codec codec, TransformStage.Input staged)
+    Admitted.Segment resolve(
+        long rawStart, long rawSize, PayloadCodec codec, TransformStage.Input staged)
         throws IOException {
       String key = null;
       if (sharing) {
@@ -666,10 +673,10 @@ public final class PackPipeline {
       }
       long storedOffset = rawStart;
       long storedSize = rawSize;
-      if (codec != Codec.STORED) {
+      if (codec != PayloadCodec.STORED) {
         storedOffset = stable.size();
         long start = storedOffset;
-        PayloadWindows.Sink sink = (relative, bytes) -> stable.write(start + relative, bytes);
+        ByteSink sink = (relative, bytes) -> stable.write(start + relative, bytes);
         if (staged != null && staged.hasEncoded()) {
           try (ReadableByteChannel encoded = staged.encodedChannel()) {
             PayloadWindows.transfer(encoded, staged.encodedSize(), sink, checkpoint, processing);
@@ -677,7 +684,7 @@ public final class PackPipeline {
         } else {
           try (ReadableByteChannel input =
               PayloadWindows.channel(stable::read, rawStart, rawSize)) {
-            Codecs.encode(codec, input, rawSize, sink, checkpoint, budget, coordinator, processing);
+            codecs.encode(codec, input, rawSize, sink, checkpoint, budget, coordinator, processing);
           }
         }
         storedSize = stable.size() - storedOffset;
@@ -695,8 +702,7 @@ public final class PackPipeline {
    * keeps the source and destination from overlapping during expansion. Input windows hold a whole
    * number of three-byte pixels, so each expands into exactly one output window.
    */
-  private static long expandBgr24(
-      SpillBuffer stable, long start, long size, PayloadWindows.Checkpoint checkpoint)
+  private static long expandBgr24(SpillBuffer stable, long start, long size, Checkpoint checkpoint)
       throws IOException {
     long normalized = stable.size();
     ByteBuffer input = ByteBuffer.allocate(49152);
@@ -724,20 +730,27 @@ public final class PackPipeline {
    * it also encodes, the encoder's heap joins a two-window comparison peak instead.
    */
   private static ResourceBudget.Lease reserveSetCoordinator(
-      List<? extends Planned<?>> planned, boolean parallel, boolean chunked, ResourceBudget budget)
+      List<? extends Planned<?>> planned,
+      boolean parallel,
+      boolean chunked,
+      Codecs codecs,
+      ResourceBudget budget)
       throws ArchiveException {
-    long heap = 3L * PayloadWindows.WINDOW_BYTES;
-    long nativeBytes = 0;
-    for (Planned<?> entry : planned) {
-      boolean coordinatorEncodes =
-          entry.codec() != Codec.STORED
-              && (chunked || !parallel || !Codecs.workerEncodes(entry.codec()));
-      if (!coordinatorEncodes) continue;
-      Codecs.Cost cost = Codecs.cost(entry.codec(), entry.source().size());
-      heap = Math.max(heap, cost.heap() + 2L * PayloadWindows.WINDOW_BYTES);
-      nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
-    }
-    return budget.reserve(heap, nativeBytes, 0, 0);
+    // Only the entries the coordinator encodes itself; a worker's encoding is admitted by its own
+    // lease, and a stored entry needs no encoder.
+    AdmittedCodec.Cost encoder =
+        codecs.largestPrecharge(
+            planned.stream()
+                .filter(
+                    entry ->
+                        entry.codec() != PayloadCodec.STORED
+                            && (chunked || !parallel || !Codecs.workerEncodes(entry.codec())))
+                .toList());
+    long heap =
+        Math.max(
+            3L * PayloadWindows.WINDOW_BYTES,
+            encoder.heapBytes() + 2L * PayloadWindows.WINDOW_BYTES);
+    return budget.reserve(heap, encoder.nativeBytes(), 0, 0);
   }
 
   /**
@@ -820,9 +833,15 @@ public final class PackPipeline {
   private static void readBack(Path staged, Admitted.Readback readback, Run run)
       throws IOException {
     PackRequest request = run.request;
+    // The adapter declares which codecs its reader decodes; their cost comes from the codecs this
+    // request admitted, so readback charges the same rule, under the same provider, as the read.
+    AdmittedCodec.Cost codec = run.codecs.readbackCost(readback);
     try (var credits =
             run.budget.reserve(
-                readback.heapBytes(), readback.nativeBytes(), readback.handles(), 0);
+                readback.heapBytes() + codec.heapBytes(),
+                readback.nativeBytes() + codec.nativeBytes(),
+                readback.handles(),
+                0);
         var archive =
             ArchiveReaders.open(
                 staged,
@@ -873,7 +892,7 @@ public final class PackPipeline {
             ContentSharing.key(
                 size,
                 PayloadWindows.digest(stable::read, source, size, output::checkpoint),
-                entry.codec() != Codec.STORED);
+                entry.codec() != PayloadCodec.STORED);
         owner =
             index.find(
                 key,
@@ -905,17 +924,14 @@ public final class PackPipeline {
    * sharing candidate, otherwise one transfer window) plus the largest codec working set.
    */
   private static ResourceBudget.Lease reserveWindows(
-      List<? extends Planned<?>> planned, boolean sharing, ResourceBudget budget)
+      List<? extends Planned<?>> planned, boolean sharing, Codecs codecs, ResourceBudget budget)
       throws ArchiveException {
-    long heap = 0;
-    long nativeBytes = 0;
-    for (Planned<?> entry : planned) {
-      Codecs.Cost cost = Codecs.cost(entry.codec(), entry.source().size());
-      heap = Math.max(heap, cost.heap());
-      nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
-    }
+    AdmittedCodec.Cost encoder = codecs.largestPrecharge(planned);
     return budget.reserve(
-        (sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES + heap, nativeBytes, 0, 0);
+        (sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES + encoder.heapBytes(),
+        encoder.nativeBytes(),
+        0,
+        0);
   }
 
   /**
@@ -1015,7 +1031,7 @@ public final class PackPipeline {
         entry.source(),
         staged,
         input ->
-            Codecs.encode(
+            run.codecs.encode(
                 entry.codec(),
                 input,
                 entry.source().size(),
@@ -1060,7 +1076,7 @@ public final class PackPipeline {
           entry.source(),
           staged,
           input ->
-              Codecs.encode(
+              run.codecs.encode(
                   entry.codec(),
                   input,
                   entry.source().size(),
@@ -1079,7 +1095,7 @@ public final class PackPipeline {
           ContentSharing.key(
               size,
               digest.digest(),
-              basis == Admitted.Sharing.Basis.STORED && entry.codec() != Codec.STORED);
+              basis == Admitted.Sharing.Basis.STORED && entry.codec() != PayloadCodec.STORED);
       Long match =
           sharing.find(
               key,
@@ -1160,7 +1176,8 @@ public final class PackPipeline {
    * @param storedSize the stored length every part emits once
    * @param codec the encoding its stored bytes use
    */
-  private record SetOwner(int id, long rawOffset, long storedOffset, long storedSize, Codec codec) {
+  private record SetOwner(
+      int id, long rawOffset, long storedOffset, long storedSize, PayloadCodec codec) {
     /** Returns a segment of {@code rawSize} raw bytes that this owner stores. */
     Admitted.Segment segment(long rawSize) {
       return new Admitted.Segment(rawSize, storedSize, codec, id);
@@ -1186,6 +1203,12 @@ public final class PackPipeline {
     final ResourceBudget budget;
     final OperationSession.Resources resources;
     WorkerSelection.UpTo workers;
+
+    /**
+     * Every codec the request admitted, set once by the requiredCodecs step right after {@code
+     * admit}. Costs, encoders and readback declarations all take their codec from here.
+     */
+    Codecs codecs;
 
     /**
      * The stabilized emission's ordered spool, closed by the publication plan's source-close action

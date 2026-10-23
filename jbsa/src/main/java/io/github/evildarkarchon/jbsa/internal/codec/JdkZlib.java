@@ -1,6 +1,8 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -9,7 +11,6 @@ import java.util.zip.*;
 
 /** Release-pinned RFC 1950 streaming adapter; every call owns independent bounded codec state. */
 public final class JdkZlib {
-  public static final String PROFILE = Lz4Runtime.PROFILE;
   public static final long ENCODE_HEAP_BYTES = 132096;
   public static final long ENCODE_NATIVE_BYTES = 524288;
   public static final long DECODE_HEAP_BYTES = 66560;
@@ -18,38 +19,25 @@ public final class JdkZlib {
 
   private JdkZlib() {}
 
-  /** Borrows an exact bounded positional source without owning its lifetime. */
-  @FunctionalInterface
-  public interface ByteSource {
-    /** Fills the remaining window at a stream-relative position. */
-    void read(long offset, ByteBuffer bytes) throws IOException;
-  }
-
-  /** Borrows a positional sink for encoded bytes. */
-  @FunctionalInterface
-  public interface ByteSink {
-    /** Consumes one encoded window at a stream-relative position. */
-    void write(long offset, ByteBuffer bytes) throws IOException;
-  }
-
-  /** Gives the operation coordinator a cancellation boundary for each bounded codec step. */
-  @FunctionalInterface
-  public interface Checkpoint {
-    /** Checks operation cancellation without retaining codec state. */
-    void check() throws IOException;
-  }
-
   /**
    * Encodes exactly the declared source length at level 9, default strategy, without fallback. The
    * caller reserves ENCODE resource credits before invocation and owns source/sink cleanup.
+   *
+   * @param admitted the admitted zlib codec, whose profile identity a codec failure carries
+   * @param lease the caller's reservation of those credits, borrowed and never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
   public static long encode(
+      AdmittedCodec admitted,
       ReadableByteChannel source,
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
+    Objects.requireNonNull(lease, "lease");
+    requireZlib(admitted);
     if (source == null) throw context.failure(FailureKind.SOURCE, "source.invalid-channel", null);
     byte[] input = new byte[WINDOW];
     byte[] output = new byte[WINDOW];
@@ -96,6 +84,7 @@ public final class JdkZlib {
           written = Math.addExact(written, count);
         } else if (!codec.needsInput() && !codec.finished()) {
           throw failure(
+              admitted,
               context,
               FailureKind.INTERNAL,
               "codec.compression-failed",
@@ -108,16 +97,35 @@ public final class JdkZlib {
       return written;
     } catch (RuntimeException cause) {
       throw failure(
-          context, FailureKind.INTERNAL, "codec.provider-fault", "encode", decodedSize, -1, cause);
+          admitted,
+          context,
+          FailureKind.INTERNAL,
+          "codec.provider-fault",
+          "encode",
+          decodedSize,
+          -1,
+          cause);
     }
   }
 
   /**
    * Creates a decoder after its owner reserves DECODE resource credits; close releases zlib state.
+   *
+   * @param admitted the admitted zlib codec, whose profile identity a codec failure carries
+   * @param lease the owner's reservation of those credits, which outlives the decoder and is never
+   *     closed here
+   * @throws NullPointerException when {@code lease} is null
    */
   public static Decoder decoder(
-      ByteSource source, long storedSize, long decodedSize, IoContext context) {
-    return new Decoder(source, storedSize, decodedSize, context);
+      AdmittedCodec admitted,
+      ByteSource source,
+      long storedSize,
+      long decodedSize,
+      ResourceBudget.Lease lease,
+      IoContext context) {
+    Objects.requireNonNull(lease, "lease");
+    requireZlib(admitted);
+    return new Decoder(admitted, source, storedSize, decodedSize, context);
   }
 
   /** Keeps user channels and operation callbacks outside provider-fault classification. */
@@ -139,7 +147,8 @@ public final class JdkZlib {
   }
 
   /** Per-content sequential stream; synchronized close cannot free native state during inflate. */
-  public static final class Decoder implements AutoCloseable {
+  public static final class Decoder implements PayloadDecoder {
+    private final AdmittedCodec admitted;
     private final ByteSource source;
     private final long storedSize, decodedSize;
     private final IoContext context;
@@ -148,7 +157,13 @@ public final class JdkZlib {
     private long supplied, produced;
     private boolean closed;
 
-    private Decoder(ByteSource source, long storedSize, long decodedSize, IoContext context) {
+    private Decoder(
+        AdmittedCodec admitted,
+        ByteSource source,
+        long storedSize,
+        long decodedSize,
+        IoContext context) {
+      this.admitted = admitted;
       this.source = source;
       this.storedSize = storedSize;
       this.decodedSize = decodedSize;
@@ -206,6 +221,7 @@ public final class JdkZlib {
         throw invalid("codec.invalid-data", cause);
       } catch (RuntimeException cause) {
         throw failure(
+            admitted,
             context,
             FailureKind.INTERNAL,
             "codec.provider-fault",
@@ -219,7 +235,14 @@ public final class JdkZlib {
     /** Creates stable format evidence without including a provider message in public values. */
     private ArchiveException invalid(String identifier, Throwable cause) {
       return failure(
-          context, FailureKind.FORMAT, identifier, "decode", decodedSize, produced, cause);
+          admitted,
+          context,
+          FailureKind.FORMAT,
+          identifier,
+          "decode",
+          decodedSize,
+          produced,
+          cause);
     }
 
     /** Releases native state exactly once, including abandoned content and parent closure. */
@@ -232,8 +255,19 @@ public final class JdkZlib {
     }
   }
 
-  /** Adds codec direction, profile and exact size evidence to the owning archive location. */
+  /** Rejects a codec admission that is not zlib's, before any codec state exists. */
+  private static void requireZlib(AdmittedCodec admitted) {
+    if (admitted.codec() != PayloadCodec.ZLIB)
+      throw new IllegalArgumentException("zlib needs the admitted zlib codec");
+  }
+
+  /**
+   * Adds codec direction, profile and exact size evidence to the owning archive location. The
+   * profile is the admitted codec's: the pinned LZ4 provider set's, which asking for pins if
+   * nothing has yet.
+   */
   private static ArchiveException failure(
+      AdmittedCodec admitted,
       IoContext context,
       FailureKind kind,
       String identifier,
@@ -246,7 +280,9 @@ public final class JdkZlib {
     var values = new TreeMap<String, String>();
     values.put("codec", "zlib");
     values.put("direction", direction);
-    values.put("profile", PROFILE);
+    // Asked for only on this failure path, so successful zlib never touches the LZ4 runtime
+    // (Lz4LaunchTest's zlib-only launch); AdmittedCodec.profile() explains the lazy pin.
+    values.put("profile", admitted.profile());
     values.put("expected", Long.toString(expected));
     if (actual >= 0) values.put("actual", Long.toString(actual));
     return new ArchiveException(

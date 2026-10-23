@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import java.nio.ByteBuffer;
@@ -41,7 +42,7 @@ public interface Admitted<K> {
    * pipeline checks each one immediately after {@link FamilyAdapter#admit}, before source planning,
    * so the adapter itself never loads a native provider and stays pure on every platform.
    */
-  default Set<Codec> requiredCodecs() {
+  default Set<PayloadCodec> requiredCodecs() {
     return Set.of();
   }
 
@@ -104,6 +105,10 @@ public interface Admitted<K> {
    * Returns how to validate one staged part after its handle closes, or null when the family does
    * not read its output back. The pipeline performs the reopen and full decode; this only states
    * the credits it needs and the diagnostic for a nonconforming part.
+   *
+   * <p>It declares only family knowledge (ADR-0003): which Payload Codecs the reader decodes and
+   * the part's largest source, never a codec cost. The pipeline costs those codecs from the ones
+   * pack admission pinned, so the adapter never resolves a provider itself.
    *
    * @param part the part's entries, in output order, with their exact stored sizes
    * @param layout the value {@link #layout} returned for this part
@@ -203,7 +208,7 @@ public interface Admitted<K> {
   record Planned<K>(
       PackSources.Entry source,
       K key,
-      Codec codec,
+      PayloadCodec codec,
       byte[] frame,
       long storedSize,
       List<Segment> segments) {
@@ -221,7 +226,8 @@ public interface Admitted<K> {
     }
 
     /** An entry whose payload is one unsegmented record of a known or unknown stored size. */
-    public Planned(PackSources.Entry source, K key, Codec codec, byte[] frame, long storedSize) {
+    public Planned(
+        PackSources.Entry source, K key, PayloadCodec codec, byte[] frame, long storedSize) {
       this(source, key, codec, frame, storedSize, List.of());
     }
 
@@ -229,13 +235,13 @@ public interface Admitted<K> {
      * Predicts the stored size from the codec: a stored record is exactly its frame plus the
      * declared source size, while an encoded one stays {@link #UNKNOWN_SIZE} until stabilized.
      */
-    public Planned(PackSources.Entry source, K key, Codec codec, byte[] frame) {
+    public Planned(PackSources.Entry source, K key, PayloadCodec codec, byte[] frame) {
       this(
           source,
           key,
           codec,
           frame,
-          codec == Codec.STORED ? Math.addExact(frame.length, source.size()) : UNKNOWN_SIZE);
+          codec == PayloadCodec.STORED ? Math.addExact(frame.length, source.size()) : UNKNOWN_SIZE);
     }
 
     /** Returns this entry with the exact stored size stabilization measured. */
@@ -269,7 +275,7 @@ public interface Admitted<K> {
    *     between a stored entry and a compressed one
    * @param owner the owner's archive-set identity; equal identities are emitted once per part
    */
-  record Segment(long rawSize, long storedSize, Codec codec, int owner) {
+  record Segment(long rawSize, long storedSize, PayloadCodec codec, int owner) {
     /** Rejects negative extents and a missing codec. */
     public Segment {
       if (rawSize < 0 || storedSize < 0 || owner < 0)
@@ -344,19 +350,30 @@ public interface Admitted<K> {
   }
 
   /**
-   * How the pipeline validates one staged part: it admits these credits against the operation
-   * budget, reopens the part, requires a CONFORMING assessment, and decodes every entry.
+   * How the pipeline validates one staged part: it admits these credits, plus the declared codecs'
+   * cost ({@link Codecs#readbackCost}), against the operation budget, reopens the part, requires a
+   * CONFORMING assessment, and decodes every entry.
    *
    * @param nonconformingId the INTERNAL diagnostic for a part that reopens as nonconforming
-   * @param heapBytes the reader's peak heap, including one 64 KiB decode window
-   * @param nativeBytes the reader's peak native memory
+   * @param heapBytes the reader's peak heap besides its codec, including one 64 KiB decode window
+   * @param nativeBytes the reader's peak native memory besides its codec
    * @param handles the file handles the reader holds
+   * @param decodes the Payload Codecs the reader may decode while validating the part
+   * @param largestSource the part's largest entry source size, which bounds the decoded copy a
+   *     reader holds for a whole-block codec
    */
-  record Readback(String nonconformingId, long heapBytes, long nativeBytes, long handles) {
-    /** Requires the identifier and rejects negative credits. */
+  record Readback(
+      String nonconformingId,
+      long heapBytes,
+      long nativeBytes,
+      long handles,
+      Set<PayloadCodec> decodes,
+      long largestSource) {
+    /** Requires the identifier and codecs, copies the codecs, and rejects negative credits. */
     public Readback {
       Objects.requireNonNull(nonconformingId, "nonconformingId");
-      if (heapBytes < 0 || nativeBytes < 0 || handles < 0)
+      decodes = Set.copyOf(decodes);
+      if (heapBytes < 0 || nativeBytes < 0 || handles < 0 || largestSource < 0)
         throw new IllegalArgumentException("Negative readback credit");
     }
   }

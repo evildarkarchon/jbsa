@@ -2,8 +2,7 @@ package io.github.evildarkarchon.jbsa;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.github.evildarkarchon.jbsa.internal.io.BsaLz4Frame;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -321,9 +320,10 @@ final class Bsa69PackTest {
       assertEquals(identifier, failure.primaryFailure().diagnosticIdentifier().orElseThrow());
       // The profile names the provider that decoded: native on Windows x64, portable elsewhere.
       assertEquals(
-          Lz4Runtime.selected() == Lz4Runtime.Provider.NATIVE
-              ? BsaLz4Frame.PROFILE
-              : BsaLz4Frame.PORTABLE_PROFILE,
+          switch (Lz4Runtime.selected()) {
+            case NATIVE -> "jbsa-bsa-069-lz4-v1";
+            case PORTABLE -> "jbsa-bsa-069-lz4-portable-v1";
+          },
           failure.diagnostics().getFirst().values().get("profile"));
     }
   }

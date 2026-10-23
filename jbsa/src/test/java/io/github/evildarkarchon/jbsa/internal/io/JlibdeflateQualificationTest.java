@@ -3,6 +3,13 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,6 +38,13 @@ import org.junit.jupiter.api.io.TempDir;
 @EnabledIfSystemProperty(named = "jbsa.zlib.qualification", matches = "true")
 @TestMethodOrder(MethodOrderer.MethodName.class)
 final class JlibdeflateQualificationTest {
+  /**
+   * The packaged release codec profile ({@code META-INF/jbsa-codec-profile.json}) that describes
+   * zlib, which this lane's evidence names. It is the native LZ4 profile id; the baseline adapter
+   * used to publish it as {@code JdkZlib.PROFILE}.
+   */
+  private static final String BASELINE_PROFILE = Lz4Runtime.PROFILE;
+
   private static final IoContext CONTEXT =
       IoContext.of(Path.of("qualification.bin"), Operation.OPEN);
   private static final String[] CORPORA = {
@@ -310,7 +324,7 @@ final class JlibdeflateQualificationTest {
           for (int round = 0; round < WARMUPS + REPETITIONS; round++) {
             var encodeClock = new Checkpoints();
             int[] encodedLength = {0};
-            JdkZlib.ByteSink encodeSink =
+            ByteSink encodeSink =
                 (offset, bytes) -> {
                   int count = bytes.remaining();
                   bytes.get(encodedBuffer, Math.toIntExact(offset), count);
@@ -323,7 +337,14 @@ final class JlibdeflateQualificationTest {
               if (provider.equals(JDK)) {
                 try (var lease =
                     budget.reserve(JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES, 0, 0)) {
-                  JdkZlib.encode(channel, size, encodeSink, encodeClock, CONTEXT);
+                  JdkZlib.encode(
+                      AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
+                      channel,
+                      size,
+                      encodeSink,
+                      encodeClock,
+                      lease,
+                      CONTEXT);
                 }
               } else {
                 JlibdeflateZlib.encode(
@@ -337,7 +358,7 @@ final class JlibdeflateQualificationTest {
             else assertArrayEquals(first, encoded, provider + " repeatable bytes");
 
             var decodeClock = new Checkpoints();
-            JdkZlib.ByteSink decodeSink =
+            ByteSink decodeSink =
                 (offset, bytes) ->
                     bytes.get(decodedBuffer, Math.toIntExact(offset), bytes.remaining());
             Arrays.fill(decodedBuffer, (byte) 0);
@@ -645,7 +666,7 @@ final class JlibdeflateQualificationTest {
     assertTrue(
         new String(profile, StandardCharsets.UTF_8).contains("\"jlibdeflate\":\"not-promoted\""));
     rows.append("baseline_profile\t")
-        .append(JdkZlib.PROFILE)
+        .append(BASELINE_PROFILE)
         .append(' ')
         .append(digest)
         .append('\n');
@@ -680,7 +701,7 @@ final class JlibdeflateQualificationTest {
             .append(Runtime.getRuntime().maxMemory())
             .append('\n')
             .append("baseline_profile=")
-            .append(JdkZlib.PROFILE)
+            .append(BASELINE_PROFILE)
             .append('\n')
             .append("baseline_profile_sha256=")
             .append(digest)
@@ -737,7 +758,7 @@ final class JlibdeflateQualificationTest {
       for (boolean encoding : new boolean[] {true, false}) {
         IOException cancelled = new IOException("qualification cancellation");
         int[] checks = {0};
-        JdkZlib.Checkpoint checkpoint =
+        Checkpoint checkpoint =
             () -> {
               if (++checks[0] == cancelAt) throw cancelled;
             };
@@ -815,12 +836,17 @@ final class JlibdeflateQualificationTest {
 
   private static byte[] jdkEncode(byte[] data) throws IOException {
     var encoded = new ByteArrayOutputStream();
-    JdkZlib.encode(
-        Channels.newChannel(new ByteArrayInputStream(data)),
-        data.length,
-        sink(encoded),
-        () -> {},
-        CONTEXT);
+    try (ResourceBudget budget = budget();
+        var lease = budget.reserve(JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES, 0, 0)) {
+      JdkZlib.encode(
+          AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
+          Channels.newChannel(new ByteArrayInputStream(data)),
+          data.length,
+          sink(encoded),
+          () -> {},
+          lease,
+          CONTEXT);
+    }
     return encoded.toByteArray();
   }
 
@@ -834,11 +860,7 @@ final class JlibdeflateQualificationTest {
 
   /** Drives the production streaming decoder through the same loop the candidate dispatch uses. */
   private static void jdkDecodeInto(
-      byte[] stored,
-      long size,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
-      ResourceBudget budget)
+      byte[] stored, long size, ByteSink sink, Checkpoint checkpoint, ResourceBudget budget)
       throws IOException {
     JlibdeflateZlib.jdkDecode(
         source(stored), stored.length, size, sink, checkpoint, budget, CONTEXT);
@@ -865,11 +887,11 @@ final class JlibdeflateQualificationTest {
     return new ResourceBudget(ResourceLimits.standard(), CONTEXT, 256L << 20, 64L << 20, 0);
   }
 
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
-  private static JdkZlib.ByteSink sink(ByteArrayOutputStream output) {
+  private static ByteSink sink(ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];
@@ -911,7 +933,7 @@ final class JlibdeflateQualificationTest {
   }
 
   /** Records the largest elapsed time between observations, including callbacks and pauses. */
-  private static final class Checkpoints implements JdkZlib.Checkpoint {
+  private static final class Checkpoints implements Checkpoint {
     private long previous;
     private long maxGap;
 
