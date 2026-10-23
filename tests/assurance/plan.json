@@ -363,7 +363,7 @@
         "bsa-068": ["io.github.evildarkarchon.jbsa.BsaReaderTest#rejectsChecksumTrailingTruncationAndDecodedSizeMismatch"],
         "bsa-069": [
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#rejectsMalformedLz4FramesAtContentEof",
-          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#rejectsCorruptionTruncationTrailingFramesAndWrongOutputSize"
+          "io.github.evildarkarchon.jbsa.internal.codec.Lz4FrameTest#rejectsCorruptionTruncationTrailingFramesAndWrongOutputSize"
         ],
         "fo4-gnrl-v1": ["io.github.evildarkarchon.jbsa.verification.Ba2ConformanceIT#rejectsIndependentMalformedPayloads"],
         "fo4-dx10-v1": ["io.github.evildarkarchon.jbsa.verification.Fallout4V1DdsBa2ConformanceIT#rejectsForeignVersionOneDecodeFraming"],
@@ -377,7 +377,7 @@
         "fo4-dx10-v1": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/Fallout4V1DdsBa2ConformanceIT.java"],
         "bsa-069": [
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
-          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4FrameTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/Lz4FrameTest.java",
           "jbsa/src/main/resources/META-INF/jbsa-bsa-069-lz4-profile.json"
         ],
         "sf-dx10-v2": [
@@ -715,13 +715,13 @@
       },
       "test_selectors": {
         "bsa-069": [
-          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#refusesUnadmittedMemoryBeforeReadingOrWriting",
-          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#streamsUpstreamFourMegabyteBlocksThroughSmallOutputWindows"
+          "io.github.evildarkarchon.jbsa.internal.codec.Lz4FrameTest#refusesUnadmittedMemoryBeforeReadingOrWriting",
+          "io.github.evildarkarchon.jbsa.internal.codec.Lz4FrameTest#streamsUpstreamFourMegabyteBlocksThroughSmallOutputWindows"
         ]
       },
       "evidence_refs": {
         "bsa-069": [
-          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4FrameTest.java",
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/Lz4FrameTest.java",
           "jbsa/src/main/resources/META-INF/jbsa-bsa-069-lz4-profile.json"
         ]
       }
@@ -737,14 +737,14 @@
       "test_selectors": {
         "bsa-069": [
           "io.github.evildarkarchon.jbsa.Bsa69PackTest#cancelsLz4BeforePublication",
-          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#releasesDecoderCreditsAfterCancellationAndPreservesCallbackFailure",
-          "io.github.evildarkarchon.jbsa.internal.io.Lz4FrameTest#returnsCreditsAfterCancellationAndChecksBetweenWindows"
+          "io.github.evildarkarchon.jbsa.internal.codec.Lz4FrameTest#releasesDecoderCreditsAfterCancellationAndPreservesCallbackFailure",
+          "io.github.evildarkarchon.jbsa.internal.codec.Lz4FrameTest#returnsCreditsAfterCancellationAndChecksBetweenWindows"
         ]
       },
       "evidence_refs": {
         "bsa-069": [
           "jbsa/src/test/java/io/github/evildarkarchon/jbsa/Bsa69PackTest.java",
-          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4FrameTest.java"
+          "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/Lz4FrameTest.java"
         ]
       }
     },
@@ -1009,11 +1009,11 @@
       },
       "test_selectors": {
         "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.verification.StarfieldDdsBa2ConformanceIT#rejectsUnsupportedMethodInvalidRawLz4AndResourceLimits"],
-        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#rejectsOversizedUnsplittableBlocksBeforeEffects", "io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#rejectsInvalidBlocksAndSizeMismatch", "io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts"]
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.codec.Lz4RawTest#rejectsOversizedUnsplittableBlocksBeforeEffects", "io.github.evildarkarchon.jbsa.internal.codec.Lz4RawTest#rejectsInvalidBlocksAndSizeMismatch", "io.github.evildarkarchon.jbsa.internal.io.Lz4LaunchTest#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts"]
       },
       "evidence_refs": {
         "sf-dx10-v3-m3": ["jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/StarfieldDdsBa2ConformanceIT.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"],
-        "sf-gnrl-v3-m3": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4RawTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java", "jbsa/src/main/resources/META-INF/jbsa-starfield-general-lz4-profile.json", "docs/development/evidence/issue45-qualification/results.txt"]
+        "sf-gnrl-v3-m3": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/Lz4RawTest.java", "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java", "jbsa/src/main/resources/META-INF/jbsa-starfield-general-lz4-profile.json", "docs/development/evidence/issue45-qualification/results.txt"]
       }
     },
     {
@@ -1026,11 +1026,11 @@
         "sf-gnrl-v3-m3": ["JBSA-CODEC-010", "JBSA-SCHED-010"]
       },
       "test_selectors": {
-        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#normalizesCallbackFaultsAndReturnsCreditOnCancellation"],
-        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.io.Lz4RawTest#normalizesCallbackFaultsAndReturnsCreditOnCancellation"]
+        "sf-dx10-v3-m3": ["io.github.evildarkarchon.jbsa.internal.codec.Lz4RawTest#normalizesCallbackFaultsAndReturnsCreditOnCancellation"],
+        "sf-gnrl-v3-m3": ["io.github.evildarkarchon.jbsa.internal.codec.Lz4RawTest#normalizesCallbackFaultsAndReturnsCreditOnCancellation"]
       },
       "evidence_refs": {
-        "sf-dx10-v3-m3": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4RawTest.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
+        "sf-dx10-v3-m3": ["jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/Lz4RawTest.java", "docs/development/evidence/issue46-starfield-dds/qualification.json"]
       }
     },
     {

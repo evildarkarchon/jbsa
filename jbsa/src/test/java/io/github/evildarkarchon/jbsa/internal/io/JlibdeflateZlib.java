@@ -5,6 +5,7 @@ import com.fulcrumgenomics.jlibdeflate.LibdeflateCompressor;
 import com.fulcrumgenomics.jlibdeflate.LibdeflateDecompressor;
 import com.fulcrumgenomics.jlibdeflate.LibdeflateException;
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;

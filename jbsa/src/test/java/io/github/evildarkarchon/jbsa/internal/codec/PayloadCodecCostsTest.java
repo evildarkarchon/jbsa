@@ -1,9 +1,11 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import io.github.evildarkarchon.jbsa.internal.pack.TransformStage;
 import java.io.ByteArrayOutputStream;

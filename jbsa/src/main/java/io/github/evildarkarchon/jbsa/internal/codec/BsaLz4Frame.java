@@ -1,7 +1,9 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

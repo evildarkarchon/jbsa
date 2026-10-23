@@ -1,6 +1,11 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive.StoredEntry;
 import java.io.IOException;

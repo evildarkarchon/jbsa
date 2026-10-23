@@ -3,6 +3,10 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

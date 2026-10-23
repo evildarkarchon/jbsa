@@ -1,9 +1,11 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import static org.lwjgl.util.lz4.LZ4Frame.*;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.ByteBuffer;

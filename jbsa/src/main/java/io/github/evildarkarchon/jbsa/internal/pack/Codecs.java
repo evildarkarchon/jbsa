@@ -2,12 +2,12 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
-import io.github.evildarkarchon.jbsa.internal.io.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
-import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Frame;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;

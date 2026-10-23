@@ -1,6 +1,7 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;

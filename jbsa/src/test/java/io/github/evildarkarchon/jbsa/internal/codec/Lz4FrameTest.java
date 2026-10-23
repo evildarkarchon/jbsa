@@ -1,8 +1,10 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
