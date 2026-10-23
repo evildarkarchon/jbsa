@@ -40,10 +40,13 @@ public final class BsaLz4Frame {
   }
 
   /**
-   * Encodes one exact level-12 independent-block frame, reserving its own codec credit, and binds
-   * failures to this profile.
+   * Encodes one exact level-12 independent-block frame on the caller's codec reservation, and binds
+   * failures to this profile. The caller releases that lease after the result has settled; this
+   * method neither charges nor closes it.
    *
    * @param admitted the admitted BSA frame codec, whose provider runs the call
+   * @param lease a lease already covering {@code admitted}'s encode cost
+   * @throws NullPointerException when {@code lease} is null
    */
   public static long encode(
       AdmittedCodec admitted,
@@ -51,39 +54,13 @@ public final class BsaLz4Frame {
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
+    java.util.Objects.requireNonNull(lease, "lease");
     Provider provider = provider(admitted);
     try {
-      return Lz4Frame.encode(
-          provider, source, decodedSize, sink, checkpoint, budget, null, context, true);
-    } catch (ArchiveException failure) {
-      throw reprofile(failure, admitted.profile());
-    }
-  }
-
-  /**
-   * Borrows a worker's full codec reservation while retaining the BSA profile diagnostics.
-   *
-   * @param admitted the admitted BSA frame codec, whose provider runs the call
-   * @param admission a lease already covering {@code admitted}'s encode cost
-   */
-  public static long encodePrecharged(
-      AdmittedCodec admitted,
-      ByteSource source,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget budget,
-      ResourceBudget.Lease admission,
-      IoContext context)
-      throws IOException {
-    java.util.Objects.requireNonNull(admission, "admission");
-    Provider provider = provider(admitted);
-    try {
-      return Lz4Frame.encode(
-          provider, source, decodedSize, sink, checkpoint, budget, admission, context, true);
+      return Lz4Frame.encode(provider, source, decodedSize, sink, checkpoint, lease, context, true);
     } catch (ArchiveException failure) {
       throw reprofile(failure, admitted.profile());
     }
@@ -93,18 +70,24 @@ public final class BsaLz4Frame {
    * Creates a lazy decoder whose later content failures retain the BSA profile identity.
    *
    * @param admitted the admitted BSA frame codec, whose provider runs the decoder
+   * @param lease the owner's reservation of {@code admitted}'s decode cost, which outlives the
+   *     decoder and is never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
   public static Decoder decoder(
       AdmittedCodec admitted,
       ByteSource source,
       long storedSize,
       long decodedSize,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws ArchiveException {
+    java.util.Objects.requireNonNull(lease, "lease");
     Provider provider = provider(admitted);
     try {
       return new Decoder(
-          Lz4Frame.decoder(provider, source, storedSize, decodedSize, context), admitted.profile());
+          Lz4Frame.decoder(provider, source, storedSize, decodedSize, lease, context),
+          admitted.profile());
     } catch (ArchiveException failure) {
       throw reprofile(failure, admitted.profile());
     }

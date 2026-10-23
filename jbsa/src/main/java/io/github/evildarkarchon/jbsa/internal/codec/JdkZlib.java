@@ -2,6 +2,7 @@ package io.github.evildarkarchon.jbsa.internal.codec;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -23,6 +24,8 @@ public final class JdkZlib {
    * caller reserves ENCODE resource credits before invocation and owns source/sink cleanup.
    *
    * @param admitted the admitted zlib codec, whose profile identity a codec failure carries
+   * @param lease the caller's reservation of those credits, borrowed and never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
   public static long encode(
       AdmittedCodec admitted,
@@ -30,8 +33,10 @@ public final class JdkZlib {
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
+    Objects.requireNonNull(lease, "lease");
     requireZlib(admitted);
     if (source == null) throw context.failure(FailureKind.SOURCE, "source.invalid-channel", null);
     byte[] input = new byte[WINDOW];
@@ -107,13 +112,18 @@ public final class JdkZlib {
    * Creates a decoder after its owner reserves DECODE resource credits; close releases zlib state.
    *
    * @param admitted the admitted zlib codec, whose profile identity a codec failure carries
+   * @param lease the owner's reservation of those credits, which outlives the decoder and is never
+   *     closed here
+   * @throws NullPointerException when {@code lease} is null
    */
   public static Decoder decoder(
       AdmittedCodec admitted,
       ByteSource source,
       long storedSize,
       long decodedSize,
+      ResourceBudget.Lease lease,
       IoContext context) {
+    Objects.requireNonNull(lease, "lease");
     requireZlib(admitted);
     return new Decoder(admitted, source, storedSize, decodedSize, context);
   }

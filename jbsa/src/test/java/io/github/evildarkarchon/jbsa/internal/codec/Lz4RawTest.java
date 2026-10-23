@@ -23,10 +23,15 @@ final class Lz4RawTest {
    */
   private static final long CEILING = 40_000_000;
 
-  /** Borrowed callback faults retain operation identity and every admitted credit is returned. */
+  /**
+   * Borrowed callback faults retain operation identity, and the encoder leaves credit to its
+   * caller: on failure or cancellation it neither releases the caller's lease nor holds any credit
+   * of its own, so once the caller closes its lease every credit is returned.
+   */
   @Test
   void normalizesCallbackFaultsAndReturnsCreditOnCancellation() throws Exception {
     try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
+      var lease = budget.reserve(CEILING, CEILING, 0, 0);
       var failure =
           assertThrows(
               ArchiveException.class,
@@ -38,7 +43,7 @@ final class Lz4RawTest {
                       1,
                       (offset, bytes) -> fail("destination touched"),
                       () -> {},
-                      budget,
+                      lease,
                       CONTEXT));
       assertEquals("operation.internal-failure", failure.diagnostics().getFirst().identifier());
       var cancelled = new java.io.IOException("cancelled");
@@ -55,8 +60,11 @@ final class Lz4RawTest {
                       () -> {
                         if (checkpoints.incrementAndGet() == 3) throw cancelled;
                       },
-                      budget,
+                      lease,
                       CONTEXT)));
+      // The borrowed lease is still the caller's: the budget stays full until it closes.
+      assertThrows(ArchiveException.class, () -> budget.reserve(1, 0, 0, 0));
+      lease.close();
       try (var all = budget.reserve(CEILING, CEILING, 0, 0)) {
         assertNotNull(all);
       }
@@ -73,8 +81,10 @@ final class Lz4RawTest {
       byte[] original = new byte[size];
       new java.util.Random(43).nextBytes(original);
       byte[] previous = null;
+      // The whole budget is lent, so any reservation the codec made of its own would fail.
       try (var budget =
-          new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
+              new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0);
+          var lease = budget.reserve(CEILING, CEILING, 0, 0)) {
         for (int repeat = 0; repeat < 2; repeat++) {
           var encoded = new java.io.ByteArrayOutputStream();
           Lz4Raw.encode(
@@ -86,7 +96,7 @@ final class Lz4RawTest {
                 encoded.write(chunk);
               },
               () -> {},
-              budget,
+              lease,
               CONTEXT);
           byte[] block = encoded.toByteArray();
           if (previous != null) assertArrayEquals(previous, block);
@@ -98,7 +108,7 @@ final class Lz4RawTest {
               size,
               (offset, bytes) -> decoded.put(bytes),
               () -> {},
-              budget,
+              lease,
               CONTEXT);
           assertArrayEquals(original, decoded.array());
         }
@@ -111,14 +121,15 @@ final class Lz4RawTest {
   void decodesIndependentLiteralBlock() throws Exception {
     byte[] encoded = HexFormat.of().parseHex("5068656c6c6f");
     ByteBuffer output = ByteBuffer.allocate(5);
-    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0)) {
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0);
+        var lease = budget.reserve(CEILING, CEILING, 0, 0)) {
       Lz4Raw.decode(
           (offset, bytes) -> bytes.put(encoded, (int) offset, bytes.remaining()),
           encoded.length,
           5,
           (offset, bytes) -> output.put(bytes),
           () -> {},
-          budget,
+          lease,
           CONTEXT);
     }
     assertArrayEquals(new byte[] {104, 101, 108, 108, 111}, output.array());
@@ -126,8 +137,9 @@ final class Lz4RawTest {
 
   /** Admission failures must leave both callbacks untouched, including long-to-int overflow. */
   @Test
-  void rejectsOversizedUnsplittableBlocksBeforeEffects() {
-    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT)) {
+  void rejectsOversizedUnsplittableBlocksBeforeEffects() throws Exception {
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT);
+        var lease = budget.reserve(0, 0, 0, 0)) {
       for (long size : new long[] {-1, 16777217L, 0x7E000001L, Long.MAX_VALUE}) {
         var failure =
             assertThrows(
@@ -138,7 +150,7 @@ final class Lz4RawTest {
                         size,
                         (offset, bytes) -> fail("destination touched"),
                         () -> {},
-                        budget,
+                        lease,
                         CONTEXT));
         assertEquals(FailureKind.POLICY, failure.primaryFailure().kind());
       }
@@ -147,9 +159,10 @@ final class Lz4RawTest {
 
   /** Malformed matches and declared-size mismatch must never reach the destination. */
   @Test
-  void rejectsInvalidBlocksAndSizeMismatch() {
+  void rejectsInvalidBlocksAndSizeMismatch() throws Exception {
     for (byte[] encoded : new byte[][] {new byte[0], {0, 0, 0}, {16, 65}}) {
-      try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT)) {
+      try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT);
+          var lease = budget.reserve(0, 0, 0, 0)) {
         var failure =
             assertThrows(
                 ArchiveException.class,
@@ -160,7 +173,7 @@ final class Lz4RawTest {
                         5,
                         (offset, bytes) -> fail("destination touched"),
                         () -> {},
-                        budget,
+                        lease,
                         CONTEXT));
         assertEquals(FailureKind.FORMAT, failure.primaryFailure().kind());
       }

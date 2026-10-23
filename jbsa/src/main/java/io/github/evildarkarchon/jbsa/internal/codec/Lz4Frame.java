@@ -34,70 +34,64 @@ public final class Lz4Frame {
   private Lz4Frame() {}
 
   /**
-   * Encodes an exact positional source in bounded windows. Callbacks are borrowed synchronously;
-   * all memory credits and native state are released on success, failure, or cancellation.
+   * Encodes an exact positional source in bounded windows, on the caller's reservation of {@link
+   * AdmittedCodec#encodeCost} for the pinned provider. Callbacks are borrowed synchronously; all
+   * native state is released on success, failure, or cancellation, and the lease stays the caller's
+   * to close.
+   *
+   * @throws NullPointerException when {@code lease} is null
    */
   public static long encode(
       ByteSource source,
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
-    return encode(source, decodedSize, sink, checkpoint, budget, null, context, false);
+    return encode(source, decodedSize, sink, checkpoint, lease, context, false);
   }
 
-  /** Encodes one frame with the exact versioned-BSA 0x69 profile. */
+  /**
+   * Encodes one frame with the exact versioned-BSA 0x69 profile, on the caller's reservation of its
+   * encode cost.
+   *
+   * @throws NullPointerException when {@code lease} is null
+   */
   public static long encodeBsa(
       ByteSource source,
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
-    return encode(source, decodedSize, sink, checkpoint, budget, null, context, true);
+    return encode(source, decodedSize, sink, checkpoint, lease, context, true);
   }
 
-  /**
-   * Encodes a BSA frame while borrowing a worker admission that already covers this codec's {@link
-   * AdmittedCodec#encodeCost} for the pinned provider. The caller releases that lease after the
-   * private result has settled; this method does not charge or close it again.
-   */
-  public static long encodeBsaPrecharged(
-      ByteSource source,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget budget,
-      ResourceBudget.Lease admission,
-      IoContext context)
-      throws IOException {
-    java.util.Objects.requireNonNull(admission, "admission");
-    return encode(source, decodedSize, sink, checkpoint, budget, admission, context, true);
-  }
-
-  /** Runs one admitted encoder invocation, borrowing a worker lease when one was precharged. */
+  /** Runs one encoder invocation through the pinned provider on the caller's lease. */
   private static long encode(
       ByteSource source,
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
-      ResourceBudget.Lease admission,
+      ResourceBudget.Lease lease,
       IoContext context,
       boolean bsaProfile)
       throws IOException {
+    java.util.Objects.requireNonNull(lease, "lease");
     if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
     Provider provider = Lz4Runtime.preflight("lz4-frame", "encode", context);
-    return encode(
-        provider, source, decodedSize, sink, checkpoint, budget, admission, context, bsaProfile);
+    return encode(provider, source, decodedSize, sink, checkpoint, lease, context, bsaProfile);
   }
 
   /**
    * Encodes through an explicit provider. Production code reaches this only with the pinned
    * provider; tests use it to exercise both providers in one process.
+   *
+   * @param lease the caller's reservation of the provider's encode cost; the encoder borrows it and
+   *     never reserves or closes credit itself
+   * @throws NullPointerException when {@code lease} is null
    */
   static long encode(
       Provider provider,
@@ -105,18 +99,16 @@ public final class Lz4Frame {
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
-      ResourceBudget.Lease admission,
+      ResourceBudget.Lease lease,
       IoContext context,
       boolean bsaProfile)
       throws IOException {
+    java.util.Objects.requireNonNull(lease, "lease");
     if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
     if (provider == Provider.PORTABLE)
       return PortableLz4.encodeFrame(
-          source, decodedSize, sink, checkpoint, budget, admission, context, bsaProfile);
-    try (var lease =
-            admission == null ? budget.reserve(HEAP_BYTES, ENCODE_NATIVE_BYTES, 0, 0) : null;
-        var state = new State(true, context)) {
+          source, decodedSize, sink, checkpoint, lease, context, bsaProfile);
+    try (var state = new State(true, context)) {
       var preferences = state.preferences;
       preferences.compressionLevel(bsaProfile ? 12 : 9).autoFlush(true);
       if (bsaProfile) {
@@ -175,25 +167,46 @@ public final class Lz4Frame {
 
   /**
    * Creates an incremental decoder after its owner reserves the declared decode resources. The
-   * decoder borrows its positional source and releases native state when closed.
+   * decoder borrows its positional source and the owner's lease, and releases native state when
+   * closed.
+   *
+   * @param lease the owner's reservation of {@link AdmittedCodec#decodeCost}, which outlives the
+   *     decoder and is never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
   public static Decoder decoder(
-      ByteSource source, long storedSize, long decodedSize, IoContext context)
+      ByteSource source,
+      long storedSize,
+      long decodedSize,
+      ResourceBudget.Lease lease,
+      IoContext context)
       throws ArchiveException {
+    java.util.Objects.requireNonNull(lease, "lease");
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
     Provider provider = Lz4Runtime.preflight("lz4-frame", "decode", context);
-    return decoder(provider, source, storedSize, decodedSize, context);
+    return decoder(provider, source, storedSize, decodedSize, lease, context);
   }
 
-  /** Creates a decoder through an explicit provider; tests use it to cross-decode providers. */
+  /**
+   * Creates a decoder through an explicit provider; tests use it to cross-decode providers.
+   *
+   * @param lease the owner's reservation of the provider's decode cost, borrowed
+   * @throws NullPointerException when {@code lease} is null
+   */
   static Decoder decoder(
-      Provider provider, ByteSource source, long storedSize, long decodedSize, IoContext context)
+      Provider provider,
+      ByteSource source,
+      long storedSize,
+      long decodedSize,
+      ResourceBudget.Lease lease,
+      IoContext context)
       throws ArchiveException {
+    java.util.Objects.requireNonNull(lease, "lease");
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
     return provider == Provider.PORTABLE
-        ? PortableLz4.decoder(source, storedSize, decodedSize, context)
+        ? PortableLz4.decoder(source, storedSize, decodedSize, lease, context)
         : new NativeDecoder(source, storedSize, decodedSize, context);
   }
 
@@ -327,6 +340,10 @@ public final class Lz4Frame {
   /**
    * Decodes one ordinary frame, requiring exact compressed and decoded lengths. Native calls and
    * output publication are bounded; excess decoded bytes are detected without publishing them.
+   *
+   * @param lease the caller's reservation of {@link AdmittedCodec#decodeCost} for the pinned
+   *     provider, plus one 64 KiB heap output window under the portable provider; borrowed
+   * @throws NullPointerException when {@code lease} is null
    */
   public static long decode(
       ByteSource source,
@@ -334,16 +351,22 @@ public final class Lz4Frame {
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
+    java.util.Objects.requireNonNull(lease, "lease");
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
     Provider provider = Lz4Runtime.preflight("lz4-frame", "decode", context);
-    return decode(provider, source, storedSize, decodedSize, sink, checkpoint, budget, context);
+    return decode(provider, source, storedSize, decodedSize, sink, checkpoint, lease, context);
   }
 
-  /** Decodes one ordinary frame through an explicit provider, as {@link #decode} does. */
+  /**
+   * Decodes one ordinary frame through an explicit provider, as {@link #decode} does.
+   *
+   * @param lease the caller's reservation, sized as {@link #decode} documents; borrowed
+   * @throws NullPointerException when {@code lease} is null
+   */
   static long decode(
       Provider provider,
       ByteSource source,
@@ -351,16 +374,16 @@ public final class Lz4Frame {
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
+    java.util.Objects.requireNonNull(lease, "lease");
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
     if (provider == Provider.PORTABLE)
       return PortableLz4.decodeFrame(
-          source, storedSize, decodedSize, sink, checkpoint, budget, context);
-    try (var lease = budget.reserve(HEAP_BYTES, DECODE_NATIVE_BYTES, 0, 0);
-        var state = new State(false, context)) {
+          source, storedSize, decodedSize, sink, checkpoint, lease, context);
+    try (var state = new State(false, context)) {
       long supplied = 0, produced = 0;
       state.input.limit(0);
       while (true) {

@@ -338,6 +338,7 @@ final class JlibdeflateZlib {
                 source,
                 storedSize,
                 decodedSize,
+                lease,
                 context)) {
       ByteBuffer window = ByteBuffer.allocate(65536);
       long written = 0;

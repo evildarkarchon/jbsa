@@ -7,6 +7,7 @@ import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import org.lwjgl.util.lz4.LZ4;
 import org.lwjgl.util.lz4.LZ4HC;
 
@@ -23,41 +24,55 @@ public final class Lz4Raw {
 
   /**
    * Encodes one admitted raw HC block at the shared level 9 without fallback or splitting. The
-   * complete source, worst-case output and HC state are reserved before allocation; callbacks
-   * remain caller-owned.
+   * caller has reserved the admitted codec's encode cost (the complete source, worst-case output
+   * and HC state) before the call; callbacks remain caller-owned.
+   *
+   * @param lease the caller's reservation of that cost, borrowed and never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
   public static long encode(
       ByteSource source,
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
-    return encode(source, decodedSize, sink, checkpoint, budget, context, 9);
+    Objects.requireNonNull(lease, "lease");
+    return encode(source, decodedSize, sink, checkpoint, lease, context, 9);
   }
 
-  /** Encodes one admitted raw HC block at the family-qualified compression level. */
+  /**
+   * Encodes one admitted raw HC block at the family-qualified compression level, on the caller's
+   * reservation of its encode cost.
+   *
+   * @param lease the caller's reservation of that cost, borrowed and never closed here
+   * @throws NullPointerException when {@code lease} is null
+   */
   public static long encode(
       ByteSource source,
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context,
       int compressionLevel)
       throws IOException {
+    Objects.requireNonNull(lease, "lease");
     if (compressionLevel < 1 || compressionLevel > 12)
       throw new IllegalArgumentException("Raw LZ4 HC level must be between 1 and 12");
     checkSize(decodedSize, DISPATCH_LIMIT, context);
     Provider provider = Lz4Runtime.preflight("raw-lz4", "encode", context);
     return encode(
-        provider, source, decodedSize, sink, checkpoint, budget, context, compressionLevel);
+        provider, source, decodedSize, sink, checkpoint, lease, context, compressionLevel);
   }
 
   /**
    * Encodes through an explicit provider after the caller's size admission. Production code reaches
    * this only with the pinned provider; tests use it to exercise both providers.
+   *
+   * @param lease the caller's reservation of the provider's encode cost, borrowed
+   * @throws NullPointerException when {@code lease} is null
    */
   static long encode(
       Provider provider,
@@ -65,23 +80,21 @@ public final class Lz4Raw {
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context,
       int compressionLevel)
       throws IOException {
+    Objects.requireNonNull(lease, "lease");
     if (compressionLevel < 1 || compressionLevel > 12)
       throw new IllegalArgumentException("Raw LZ4 HC level must be between 1 and 12");
     checkSize(decodedSize, DISPATCH_LIMIT, context);
     if (provider == Provider.PORTABLE)
       return PortableLz4.rawEncode(
-          source, decodedSize, sink, checkpoint, budget, context, compressionLevel);
+          source, decodedSize, sink, checkpoint, lease, context, compressionLevel);
     long bound = AdmittedCodec.rawLz4Bound(decodedSize);
-    AdmittedCodec.Cost cost =
-        AdmittedCodec.encodeCost(PayloadCodec.LZ4_RAW, Provider.NATIVE, decodedSize);
     caller(checkpoint::check, context);
     // Explicit external HC state avoids an unaccounted provider allocation inside compression.
-    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
-        Arena arena = Arena.ofConfined()) {
+    try (Arena arena = Arena.ofConfined()) {
       ByteBuffer input =
           arena.allocate(Math.max(1, decodedSize), 8).asByteBuffer().limit((int) decodedSize);
       ByteBuffer output = arena.allocate(bound, 8).asByteBuffer();
@@ -126,8 +139,12 @@ public final class Lz4Raw {
   }
 
   /**
-   * Decodes one complete raw block after reserving its entire memory cost. Source and sink are
-   * borrowed; the caller supplies a wire-bounded block and owns destination publication.
+   * Decodes one complete raw block on the caller's reservation of its entire memory cost, the
+   * admitted codec's decode cost. Source and sink are borrowed; the caller supplies a wire-bounded
+   * block and owns destination publication.
+   *
+   * @param lease the caller's reservation of that cost, borrowed and never closed here
+   * @throws NullPointerException when {@code lease} is null
    */
   public static long decode(
       ByteSource source,
@@ -135,15 +152,21 @@ public final class Lz4Raw {
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
+    Objects.requireNonNull(lease, "lease");
     admitDecode(storedSize, decodedSize, context);
     Provider provider = Lz4Runtime.preflight("raw-lz4", "decode", context);
-    return decode(provider, source, storedSize, decodedSize, sink, checkpoint, budget, context);
+    return decode(provider, source, storedSize, decodedSize, sink, checkpoint, lease, context);
   }
 
-  /** Decodes one admitted raw block through an explicit provider, as the public overload does. */
+  /**
+   * Decodes one admitted raw block through an explicit provider, as the public overload does.
+   *
+   * @param lease the caller's reservation of the provider's decode cost, borrowed
+   * @throws NullPointerException when {@code lease} is null
+   */
   static long decode(
       Provider provider,
       ByteSource source,
@@ -151,18 +174,16 @@ public final class Lz4Raw {
       long decodedSize,
       ByteSink sink,
       Checkpoint checkpoint,
-      ResourceBudget budget,
+      ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
+    Objects.requireNonNull(lease, "lease");
     admitDecode(storedSize, decodedSize, context);
     if (provider == Provider.PORTABLE)
       return PortableLz4.rawDecode(
-          source, storedSize, decodedSize, sink, checkpoint, budget, context);
-    AdmittedCodec.Cost cost =
-        AdmittedCodec.decodeCost(PayloadCodec.LZ4_RAW, Provider.NATIVE, storedSize, decodedSize);
+          source, storedSize, decodedSize, sink, checkpoint, lease, context);
     caller(checkpoint::check, context);
-    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
-        Arena arena = Arena.ofConfined()) {
+    try (Arena arena = Arena.ofConfined()) {
       ByteBuffer input =
           arena.allocate(Math.max(1, storedSize)).asByteBuffer().limit((int) storedSize);
       ByteBuffer output =
@@ -202,6 +223,17 @@ public final class Lz4Raw {
       caller(() -> sink.write(0, output.limit(count)), context);
       return count;
     }
+  }
+
+  /**
+   * Rejects a raw block above the provider or qualified dispatch limit before its caller reserves
+   * the encode cost. A refused block must report {@code codec.dispatch-limit}, not the capacity
+   * failure its oversized cost would otherwise raise first.
+   *
+   * @throws ArchiveException POLICY {@code codec.size-limit} or {@code codec.dispatch-limit}
+   */
+  public static void admitEncode(long decodedSize, IoContext context) throws ArchiveException {
+    checkSize(decodedSize, DISPATCH_LIMIT, context);
   }
 
   /** Rejects raw-block wire and dispatch sizes before any decoder allocation or output effect. */

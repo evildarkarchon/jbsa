@@ -3,12 +3,14 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -317,16 +319,33 @@ final class Lz4Qualification {
     };
   }
 
-  /** Dispatches only to the release-pinned raw or frame profile under test. */
+  /** Returns the admitted codec that publishes the cost of the profile under test. */
+  private static AdmittedCodec admitted(String codec, String direction) throws ArchiveException {
+    return AdmittedCodec.admit(
+        codec.equals("raw-lz4") ? PayloadCodec.LZ4_RAW : PayloadCodec.BSA_LZ4_FRAME,
+        direction,
+        CONTEXT);
+  }
+
+  /**
+   * Dispatches only to the release-pinned raw or frame profile under test, as its caller: the
+   * admitted codec's encode cost is reserved from {@code budget} first and lent to the encoder.
+   */
   private static void encode(
       String codec, byte[] data, ByteSink sink, Checkpoint checkpoints, ResourceBudget budget)
       throws IOException {
-    if (codec.equals("raw-lz4"))
-      Lz4Raw.encode(source(data), data.length, sink, checkpoints, budget, CONTEXT);
-    else Lz4Frame.encode(source(data), data.length, sink, checkpoints, budget, CONTEXT);
+    AdmittedCodec.Cost cost = admitted(codec, "encode").encodeCost(data.length);
+    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
+      if (codec.equals("raw-lz4"))
+        Lz4Raw.encode(source(data), data.length, sink, checkpoints, lease, CONTEXT);
+      else Lz4Frame.encode(source(data), data.length, sink, checkpoints, lease, CONTEXT);
+    }
   }
 
-  /** Dispatches exact on-wire and logical sizes to the release-pinned decoder under test. */
+  /**
+   * Dispatches exact on-wire and logical sizes to the release-pinned decoder under test, as its
+   * caller: the admitted codec's decode cost is reserved from {@code budget} first and lent.
+   */
   private static void decode(
       String codec,
       byte[] frame,
@@ -335,9 +354,12 @@ final class Lz4Qualification {
       Checkpoint checkpoints,
       ResourceBudget budget)
       throws IOException {
-    if (codec.equals("raw-lz4"))
-      Lz4Raw.decode(source(frame), frame.length, size, sink, checkpoints, budget, CONTEXT);
-    else Lz4Frame.decode(source(frame), frame.length, size, sink, checkpoints, budget, CONTEXT);
+    AdmittedCodec.Cost cost = admitted(codec, "decode").decodeCost(frame.length, size);
+    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
+      if (codec.equals("raw-lz4"))
+        Lz4Raw.decode(source(frame), frame.length, size, sink, checkpoints, lease, CONTEXT);
+      else Lz4Frame.decode(source(frame), frame.length, size, sink, checkpoints, lease, CONTEXT);
+    }
   }
 
   /**

@@ -343,6 +343,7 @@ final class JlibdeflateQualificationTest {
                       size,
                       encodeSink,
                       encodeClock,
+                      lease,
                       CONTEXT);
                 }
               } else {
@@ -835,13 +836,17 @@ final class JlibdeflateQualificationTest {
 
   private static byte[] jdkEncode(byte[] data) throws IOException {
     var encoded = new ByteArrayOutputStream();
-    JdkZlib.encode(
-        AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
-        Channels.newChannel(new ByteArrayInputStream(data)),
-        data.length,
-        sink(encoded),
-        () -> {},
-        CONTEXT);
+    try (ResourceBudget budget = budget();
+        var lease = budget.reserve(JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES, 0, 0)) {
+      JdkZlib.encode(
+          AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
+          Channels.newChannel(new ByteArrayInputStream(data)),
+          data.length,
+          sink(encoded),
+          () -> {},
+          lease,
+          CONTEXT);
+    }
     return encoded.toByteArray();
   }
 
