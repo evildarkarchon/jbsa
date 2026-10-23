@@ -51,7 +51,7 @@ import org.junit.jupiter.params.provider.EnumSource;
  * of its own.
  */
 final class PayloadCodecTest {
-  private static final IoContext CONTEXT = IoContext.of(Path.of("costs.bin"), Operation.OPEN);
+  private static final IoContext CONTEXT = IoContext.source(Path.of("costs.bin"), Operation.OPEN);
 
   /** The small, window-sized and maximum-dispatch-sized payloads every row is recorded for. */
   private static final int SMALL = 5, WINDOW = 65_536, DISPATCH = 16_777_216;

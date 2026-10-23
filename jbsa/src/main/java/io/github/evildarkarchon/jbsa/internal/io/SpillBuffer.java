@@ -108,10 +108,9 @@ public final class SpillBuffer implements AutoCloseable {
    */
   public void write(long offset, ByteBuffer source) throws IOException {
     ensureOpen();
-    if (sealed) throw scratchContext().failure(FailureKind.DESTINATION, "io.sealed-scratch", null);
+    if (sealed) throw scratchContext().roleFailure("io.sealed-scratch", null);
     long end = checkedEnd(offset, source.remaining(), Long.MAX_VALUE);
-    if (offset > size)
-      throw scratchContext().failure(FailureKind.DESTINATION, "io.invalid-output-span", null);
+    if (offset > size) throw scratchContext().roleFailure("io.invalid-output-span", null);
     if (borrowedLease) {
       if (end > reservedScratch)
         throw scratchContext().failure(FailureKind.POLICY, "io.resource-capacity", null);
@@ -141,8 +140,7 @@ public final class SpillBuffer implements AutoCloseable {
         ExactIo.read(channel, size, offset, destination, scratchContext());
       } catch (IOException cause) {
         // Scratch is owned output even when a replay operation happens to be reading it.
-        throw abort(
-            scratchContext().failure(FailureKind.DESTINATION, "operation.destination-io", cause));
+        throw abort(scratchContext().ioFailure(cause));
       }
     }
   }
@@ -209,28 +207,27 @@ public final class SpillBuffer implements AutoCloseable {
               LinkOption.NOFOLLOW_LINKS);
       ExactIo.write(channel, 0, memory.duplicate().limit(Math.toIntExact(size)), scratchContext());
     } catch (IOException cause) {
-      throw scratchContext().failure(FailureKind.DESTINATION, "operation.destination-io", cause);
+      throw scratchContext().structure(cause);
     }
   }
 
-  /** Uses the exact owned path for scratch diagnostics instead of the source archive location. */
+  /**
+   * Locates scratch diagnostics at the exact owned path, as a destination whatever side the
+   * caller's context is on: scratch is data the operation creates, even while it reads it back.
+   */
   private IoContext scratchContext() {
-    return new IoContext(
-        scratchPath == null ? scratchParent : scratchPath,
-        context.operation(),
-        context.phase(),
-        context.ordinal());
+    return IoContext.destination(
+            scratchPath == null ? scratchParent : scratchPath, context.operation())
+        .at(context.phase(), context.ordinal());
   }
 
-  /** Cleanup errors retain provider causes while recording the semantic cleanup phase. */
+  /**
+   * Cleanup errors retain provider causes while recording the semantic cleanup phase. Closing a
+   * channel or deleting a file raises only provider faults, and this primitive's close throws only
+   * structured failures, so it creates the role failure itself; the raw tripwire backs that.
+   */
   private ArchiveException cleanupFailure(IOException cause) {
-    IoContext cleanup =
-        new IoContext(
-            scratchPath == null ? scratchParent : scratchPath,
-            context.operation(),
-            OperationPhase.CLEANUP,
-            context.ordinal());
-    return cleanup.failure(FailureKind.DESTINATION, "operation.destination-io", cause);
+    return scratchContext().at(OperationPhase.CLEANUP).ioFailure(cause);
   }
 
   /**
@@ -239,9 +236,7 @@ public final class SpillBuffer implements AutoCloseable {
    */
   private ArchiveException abort(IOException cause) {
     ArchiveException primary =
-        cause instanceof ArchiveException failure
-            ? failure
-            : scratchContext().failure(FailureKind.DESTINATION, "operation.destination-io", cause);
+        cause instanceof ArchiveException failure ? failure : scratchContext().ioFailure(cause);
     FailureRetention failures = new FailureRetention(budget.limits(), context.operation());
     failures.accept(primary);
     try {
@@ -257,7 +252,7 @@ public final class SpillBuffer implements AutoCloseable {
     try {
       return ExactIo.end(offset, length, extent, context);
     } catch (ArchiveException cause) {
-      throw scratchContext().failure(FailureKind.DESTINATION, "io.invalid-output-span", cause);
+      throw scratchContext().roleFailure("io.invalid-output-span", cause);
     }
   }
 

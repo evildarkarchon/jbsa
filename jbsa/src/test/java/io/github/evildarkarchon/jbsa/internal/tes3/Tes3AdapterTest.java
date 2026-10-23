@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 /** Pure input-to-output tests of the TES3 adapter; nothing here performs I/O. */
 class Tes3AdapterTest {
   private static final Path TARGET = Path.of("unused.bsa").toAbsolutePath();
-  private static final IoContext CONTEXT = IoContext.of(TARGET, Operation.PACK);
+  private static final IoContext CONTEXT = IoContext.destination(TARGET, Operation.PACK);
 
   /** Hash order is the low word, then the high word, then canonical name bytes unsigned. */
   @Test
@@ -189,9 +189,10 @@ class Tes3AdapterTest {
         name.getBytes(StandardCharsets.ISO_8859_1),
         hash,
         size,
-        reader -> {
+        (reader, processing) -> {
           throw new AssertionError("Adapters must not read payloads");
-        });
+        },
+        IoContext.generated(name, Operation.PACK));
   }
 
   /** Serializes little-endian u32 words. */

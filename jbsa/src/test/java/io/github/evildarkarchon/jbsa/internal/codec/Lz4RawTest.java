@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
  * x64, portable lz4-java elsewhere.
  */
 final class Lz4RawTest {
-  private static final IoContext CONTEXT = IoContext.of(Path.of("raw.ba2"), Operation.OPEN);
+  private static final IoContext CONTEXT = IoContext.source(Path.of("raw.ba2"), Operation.OPEN);
 
   /**
    * Covers one 16 MiB block under either provider: native buffers under LWJGL, or the same buffers

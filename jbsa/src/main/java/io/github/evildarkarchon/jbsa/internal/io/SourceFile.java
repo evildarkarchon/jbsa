@@ -45,8 +45,9 @@ public final class SourceFile {
    * Plans a regular loose input without following its final path component.
    *
    * @throws ArchiveException with SOURCE for invalid input or CAPABILITY for unavailable identity
+   * @throws IOException only a stop signal, which the structuring entry hands back unchanged
    */
-  public static SourceFile plan(Path path) throws ArchiveException {
+  public static SourceFile plan(Path path) throws IOException {
     return plan(path, SourceFile::nativeAttributes);
   }
 
@@ -63,7 +64,7 @@ public final class SourceFile {
     attributes = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
     PathIdentity.Snapshot after = PathIdentity.inspect(path);
     if (before == null || !before.equals(after))
-      throw IoContext.of(path, Operation.PACK).failure(FailureKind.SOURCE, "source.changed", null);
+      throw IoContext.source(path, Operation.PACK).roleFailure("source.changed", null);
     return new NativeAttributes(attributes, before);
   }
 
@@ -117,10 +118,10 @@ public final class SourceFile {
   }
 
   /** Supplies an internal no-follow identity provider for deterministic validation fault tests. */
-  static SourceFile plan(Path path, AttributeReader attributeReader) throws ArchiveException {
+  static SourceFile plan(Path path, AttributeReader attributeReader) throws IOException {
     Objects.requireNonNull(attributeReader, "attributeReader");
     Path absolute = Objects.requireNonNull(path, "path").toAbsolutePath().normalize();
-    IoContext context = IoContext.of(absolute, Operation.PACK);
+    IoContext context = IoContext.source(absolute, Operation.PACK);
     return new SourceFile(
         absolute, attributes(absolute, context, attributeReader), context, attributeReader);
   }
@@ -144,7 +145,7 @@ public final class SourceFile {
       // Rechecking under the denial closes the metadata-check/open race without following links.
       revalidate();
       if (input.size() != size) {
-        throw context.failure(FailureKind.SOURCE, "source.changed", null);
+        throw context.roleFailure("source.changed", null);
       }
       T result = reader.read(input);
       revalidate();
@@ -157,25 +158,23 @@ public final class SourceFile {
           && (identifier.equals("io.invalid-span")
               || identifier.equals("io.span-overflow")
               || identifier.equals("io.unexpected-eof"))) {
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", cause);
+        throw context.roleFailure("source.length-mismatch", cause);
       }
       throw cause;
-    } catch (OperationStopped stopped) {
-      // A reader's session checkpoint stopped the pack; the session holds why.
-      throw stopped;
     } catch (IOException cause) {
       // PACK owns this read, so interruption is an operational source failure, never cancellation.
-      throw context.failure(FailureKind.SOURCE, "operation.source-io", cause);
+      // A reader's session checkpoint stop comes back unchanged from the entry.
+      throw context.structure(cause);
     }
   }
 
   /** Rejects replacement, size changes, or modified content before admitting the next phase. */
-  private void revalidate() throws ArchiveException {
+  private void revalidate() throws IOException {
     BasicFileAttributes current = attributes(path, context, attributeReader);
     if (!fileKey.equals(current.fileKey())
         || size != current.size()
         || !lastModified.equals(current.lastModifiedTime())) {
-      throw context.failure(FailureKind.SOURCE, "source.changed", null);
+      throw context.roleFailure("source.changed", null);
     }
   }
 
@@ -183,17 +182,20 @@ public final class SourceFile {
    * Obtains no-follow classification and a stable identity, preserving provider detail as cause.
    */
   private static BasicFileAttributes attributes(
-      Path path, IoContext context, AttributeReader attributeReader) throws ArchiveException {
+      Path path, IoContext context, AttributeReader attributeReader) throws IOException {
     BasicFileAttributes attributes;
     try {
       attributes = attributeReader.read(path);
     } catch (UnsupportedOperationException cause) {
       throw context.failure(FailureKind.CAPABILITY, "source.identity-unavailable", cause);
-    } catch (IOException | SecurityException cause) {
-      throw context.failure(FailureKind.SOURCE, "source.attributes", cause);
+    } catch (SecurityException cause) {
+      throw context.roleFailure("source.attributes", cause);
+    } catch (IOException cause) {
+      // A structured identity check, such as a source changed while it was read, keeps its own.
+      throw context.structure(cause, "source.attributes");
     }
     if (attributes.isSymbolicLink() || attributes.isOther() || !attributes.isRegularFile()) {
-      throw context.failure(FailureKind.SOURCE, "source.not-regular", null);
+      throw context.roleFailure("source.not-regular", null);
     }
     if (attributes.fileKey() == null) {
       throw context.failure(FailureKind.CAPABILITY, "source.identity-unavailable", null);

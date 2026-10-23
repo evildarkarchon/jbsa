@@ -66,19 +66,20 @@ public final class OwnedArchive implements OpenArchive {
   public static OpenArchive load(
       Path path, ResourceLimits limits, Operation operation, IndexLoader loader)
       throws IOException {
-    return load(ArchiveInput.open(path, operation), limits, IoContext.of(path, operation), loader);
+    IoContext source = IoContext.source(path, operation);
+    return load(ArchiveInput.open(source), limits, source, loader);
   }
 
-  /** Applies a mutation's warning policy before retained structural evidence can be truncated. */
+  /**
+   * Applies a mutation's warning policy before retained structural evidence can be truncated.
+   *
+   * @param location the archive's path, with the role every failure of this archive reports: a
+   *     source, or a destination when the operation reads back its own staged output
+   */
   public static OpenArchive load(
-      Path path,
-      ResourceLimits limits,
-      Operation operation,
-      DiagnosticPolicy policy,
-      IndexLoader loader)
+      IoContext location, ResourceLimits limits, DiagnosticPolicy policy, IndexLoader loader)
       throws IOException {
-    return load(
-        ArchiveInput.open(path, operation), limits, IoContext.of(path, operation), policy, loader);
+    return load(ArchiveInput.open(location), limits, location, policy, loader);
   }
 
   /** Adopts an input for internal format integration and deterministic fault-injection tests. */
@@ -103,33 +104,31 @@ public final class OwnedArchive implements OpenArchive {
       ArchiveInspection inspection = session.complete(Objects.requireNonNull(loader.load(session)));
       return new OwnedArchive(input, limits, context, budget, inspection, session.entries());
     } catch (IOException | RuntimeException | Error cause) {
-      FailureRetention failures = new FailureRetention(limits, context.operation());
-      if (cause instanceof ArchiveException failure) {
-        failures.accept(failure);
-      } else if (cause instanceof IOException failure) {
-        failures.accept(context.failure(FailureKind.SOURCE, "operation.source-io", failure));
-      }
+      // The input closes before the failure is handed over, so even a rethrown stop releases it.
+      IOException closing = null;
       try {
         input.close();
       } catch (IOException cleanup) {
-        if (failures.failed()) {
-          failures.accept(
-              cleanup instanceof ArchiveException failure
-                  ? failure
-                  : new IoContext(
-                          context.path(),
-                          context.operation(),
-                          OperationPhase.CLEANUP,
-                          context.ordinal())
-                      .failure(FailureKind.SOURCE, "operation.source-io", cleanup));
-        } else {
-          // Unchecked VM/programmer failures have no structured operation outcome to own cleanup.
-          cause.addSuppressed(cleanup);
-        }
+        closing = cleanup;
       }
       budget.close();
-      if (failures.failed()) throw failures.finish(List.of());
-      throw cause;
+      if (!(cause instanceof IOException failure)) {
+        // Unchecked VM/programmer failures have no structured operation outcome to own cleanup.
+        if (closing != null) cause.addSuppressed(closing);
+        throw cause;
+      }
+      // Its own bounded fold (ADR-0005): the archive is a primitive with a standalone contract.
+      FailureRetention failures = new FailureRetention(limits, context.operation());
+      ArchiveException primary;
+      try {
+        primary = context.structure(failure);
+      } catch (StopSignal stop) {
+        if (closing != null) stop.addSuppressed(closing);
+        throw stop;
+      }
+      failures.accept(primary);
+      if (closing != null) failures.accept(context.at(OperationPhase.CLEANUP).structure(closing));
+      throw failures.finish(List.of());
     }
   }
 
@@ -291,7 +290,12 @@ public final class OwnedArchive implements OpenArchive {
   /** Creates the consumer-thread operation location for payload and per-channel policy failures. */
   private IoContext contentContext(long ordinal) {
     return new IoContext(
-        context.path(), contentOperation(), OperationPhase.PROCESSING, OptionalLong.of(ordinal));
+        context.role(),
+        context.path(),
+        context.entryName(),
+        contentOperation(),
+        OperationPhase.PROCESSING,
+        OptionalLong.of(ordinal));
   }
 
   /**
@@ -641,15 +645,21 @@ public final class OwnedArchive implements OpenArchive {
       return retention.finish(List.of());
     }
 
-    /** Adds the selected entry while preserving the encoded field, span, and artifact evidence. */
+    /**
+     * Adds the selected entry while preserving the encoded field and span evidence. The archive's
+     * path fills the slot its role selects, so a read of the operation's own staged output keeps
+     * the original archive slot and names the staged part as its artifact.
+     */
     private DiagnosticLocation payloadLocation(DiagnosticLocation original) {
+      boolean source = context.role() == IoContext.Role.SOURCE;
+      // Unlike IoContext.location, the original record's own slot on the other side survives.
       return new DiagnosticLocation(
-          Optional.of(context.path()),
+          source ? context.path() : original.archive(),
           OptionalLong.of(stored.metadata().ordinal()),
           Optional.of(stored.metadata().displayName()),
           original.field(),
           original.byteSpan(),
-          original.artifact());
+          source ? original.artifact() : context.path());
     }
 
     /**

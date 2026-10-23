@@ -230,7 +230,7 @@ class PackPipelineTest {
    */
   @Test
   void knownPartCountCoversOnlyCertainParts() throws Exception {
-    var context = IoContext.of(Path.of("x").toAbsolutePath(), Operation.PACK);
+    var context = IoContext.destination(Path.of("x").toAbsolutePath(), Operation.PACK);
     var stored = List.of(planned("a", 3), planned("b", 3), planned("c", 1));
     var cheap = new MemoryEncoder(4, false, new ArrayList<>(), 0).admit(null, context);
     assertEquals(
@@ -650,7 +650,7 @@ class PackPipelineTest {
       throws ArchiveException {
     var admitted =
         new MemoryEncoder(familyDefault)
-            .admit(null, IoContext.of(Path.of("x").toAbsolutePath(), Operation.PACK));
+            .admit(null, IoContext.destination(Path.of("x").toAbsolutePath(), Operation.PACK));
     return PackPipeline.split(planned, admitted, splitting).stream().map(List::size).toList();
   }
 
@@ -663,9 +663,10 @@ class PackPipelineTest {
             name.getBytes(StandardCharsets.US_ASCII),
             0,
             size,
-            reader -> {
+            (reader, processing) -> {
               throw new AssertionError("Splitting must not read payloads");
-            });
+            },
+            IoContext.generated(name, Operation.PACK));
     return new Admitted.Planned<>(entry, name, PayloadCodec.STORED, new byte[0]);
   }
 

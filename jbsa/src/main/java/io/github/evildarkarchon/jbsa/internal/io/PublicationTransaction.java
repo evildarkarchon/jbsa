@@ -54,7 +54,7 @@ public final class PublicationTransaction {
       TargetPolicy policy,
       ResourceLimits limits,
       IoContext context)
-      throws ArchiveException {
+      throws IOException {
     Path target = Objects.requireNonNull(destination, "destination").toAbsolutePath().normalize();
     Objects.requireNonNull(policy, "policy");
     Objects.requireNonNull(limits, "limits");
@@ -321,7 +321,7 @@ public final class PublicationTransaction {
         if (position < 0) throw new ArithmeticException("Negative position");
         end = Math.addExact(position, bytes.remaining());
       } catch (ArithmeticException cause) {
-        throw context.failure(FailureKind.DESTINATION, "io.invalid-output-span", cause);
+        throw context.roleFailure("io.invalid-output-span", cause);
       }
       reserveForWrite(end);
       while (bytes.hasRemaining()) {
@@ -342,6 +342,7 @@ public final class PublicationTransaction {
 
     /**
      * Borrows an exact staged range for byte-confirmed sharing; never exposes the backing handle.
+     * The range is the operation's own staged output, so a read fault is DESTINATION (ADR-0006).
      */
     public void read(long position, ByteBuffer bytes) throws IOException {
       owner.checkpoint();
@@ -679,11 +680,8 @@ public final class PublicationTransaction {
       } catch (OperationStopped stopped) {
         // A signal, not a failure: the session already holds what stopped publication.
         if (commitInProgress && stagedRoot == null) rollback();
-      } catch (IOException | UnsupportedOperationException | SecurityException cause) {
+      } catch (IOException | RuntimeException | AssertionError cause) {
         accept(cause);
-        if (commitInProgress && stagedRoot == null) rollback();
-      } catch (RuntimeException | AssertionError cause) {
-        accept(context().failure(FailureKind.INTERNAL, "operation.internal-failure", cause));
         if (commitInProgress && stagedRoot == null) rollback();
       } finally {
         // Failures located from here on are CLEANUP failures. The session itself enters CLEANUP
@@ -808,7 +806,7 @@ public final class PublicationTransaction {
               parts.size(),
               budget,
               context(),
-              index -> parts.get(index).ordinal)) {
+              index -> processing(parts.get(index)))) {
         int nextToSubmit = 0;
         int nextToConsume = 0;
         while (nextToSubmit < parts.size() || runner.hasPending()) {
@@ -835,7 +833,8 @@ public final class PublicationTransaction {
           Part part = parts.get(outcome.ordinal());
           ordinal = part.ordinal;
           if (outcome.failure() != null) {
-            acceptWorkerFailure(part, outcome.failure());
+            // Located at the part, where publication now is: PROCESSING at its archive ordinal.
+            accept(outcome.failure());
             outcome.close();
             runner.stop();
             continue;
@@ -879,12 +878,7 @@ public final class PublicationTransaction {
     private StagedResult stageWorker(
         Part part, OrderedWorkerRunner.Checkpoint stop, ResourceBudget.Lease lease, long extent)
         throws IOException {
-      IoContext location =
-          new IoContext(
-              destination,
-              Operation.EXTRACT,
-              OperationPhase.PROCESSING,
-              OptionalLong.of(part.ordinal));
+      IoContext location = processing(part);
       boolean handleAndValidationClosed = false;
       try {
         long size;
@@ -906,37 +900,19 @@ public final class PublicationTransaction {
         StagedResult result = new StagedResult(size, files.inspect(part.staged));
         handleAndValidationClosed = true;
         return result;
-      } catch (ArchiveException failure) {
-        throw failure;
       } catch (IOException failure) {
-        throw location.failure(FailureKind.DESTINATION, "operation.destination-io", failure);
+        // A worker stop, including one from the copy loop's own checkpoint, is rethrown unchanged.
+        throw location.structure(failure);
       } finally {
         // Keep the credit on an uncertain close or validation failure until worker settlement.
         if (handleAndValidationClosed) lease.releaseHandles(1);
       }
     }
 
-    /**
-     * Preserves worker failure semantics while locating unexpected faults at their plan ordinal.
-     */
-    private void acceptWorkerFailure(Part part, Throwable cause) {
-      if (cause instanceof VirtualMachineError fatal) throw fatal;
-      if (cause instanceof ThreadDeath fatal) throw fatal;
-      IoContext location =
-          new IoContext(
-              destination,
-              Operation.EXTRACT,
-              OperationPhase.PROCESSING,
-              OptionalLong.of(part.ordinal));
-      accept(
-          cause instanceof ArchiveException failure
-              ? failure
-              : location.failure(
-                  cause instanceof IOException ? FailureKind.DESTINATION : FailureKind.INTERNAL,
-                  cause instanceof IOException
-                      ? "operation.destination-io"
-                      : "operation.internal-failure",
-                  cause));
+    /** Returns the PROCESSING location of one part's stage, which is a destination. */
+    private IoContext processing(Part part) {
+      return IoContext.destination(destination, operation)
+          .at(OperationPhase.PROCESSING, OptionalLong.of(part.ordinal));
     }
 
     /** Commits one existing-tree leaf after its ordered stage and progress have settled. */
@@ -1004,7 +980,7 @@ public final class PublicationTransaction {
      *
      * @param parentsOnly whether to skip the target's own identity, as install after a backup does
      */
-    private void recheck(Part part, boolean parentsOnly) throws ArchiveException {
+    private void recheck(Part part, boolean parentsOnly) throws IOException {
       if (parentsOnly) containment.recheckParents(part.target, context());
       else containment.recheck(part.target, context());
     }
@@ -1022,15 +998,14 @@ public final class PublicationTransaction {
             var current = files.inspect(part.target);
             if (!Objects.equals(current, part.stagedIdentity)) {
               part.state = current == null ? ArtifactState.MISSING : ArtifactState.UNCHANGED;
-              throw context()
-                  .failure(FailureKind.DESTINATION, "destination.changed-during-rollback", null);
+              throw context().roleFailure("destination.changed-during-rollback", null);
             }
             files.delete(part.target);
             part.state = ArtifactState.MISSING;
           }
           if (part.backedUp) {
             if (!Objects.equals(part.backupIdentity, files.inspect(part.backup))) {
-              throw context().failure(FailureKind.DESTINATION, "destination.changed-backup", null);
+              throw context().roleFailure("destination.changed-backup", null);
             }
             files.move(part.backup, part.target);
             owned.remove(part.backup);
@@ -1132,72 +1107,39 @@ public final class PublicationTransaction {
 
     /**
      * Accepts a newly observed publication failure into the session. Cleanup never displaces an
-     * accepted primary failure or exceeds secondary retention.
+     * accepted primary failure or exceeds secondary retention. A stop signal admits nothing, and an
+     * error other than an assertion propagates.
      */
     private void accept(Throwable cause) {
-      operationSession.accept(structured(cause));
+      try {
+        operationSession.accept(structured(cause));
+      } catch (StopSignal stopped) {
+        // A signal, not a failure: whatever stopped this work already holds its evidence.
+      }
     }
 
     /**
-     * Structures a publication failure: a non-archive throwable becomes {@code
-     * operation.destination-io} at the current location, and a resource-limit failure raised in
-     * another phase is relocated to the current phase and ordinal.
+     * Structures a publication failure at the current location through the entry. A missing
+     * filesystem capability is CAPABILITY and a denied access is the destination's I/O failure. A
+     * resource-limit failure the shared budget raised at its own phase is moved to the current
+     * phase, ordinal and location.
+     *
+     * @throws StopSignal the cause itself, when it is a stop
      */
-    private ArchiveException structured(Throwable cause) {
-      ArchiveException failure =
-          cause instanceof ArchiveException archive
-              ? archive
-              : context()
-                  .failure(
-                      cause instanceof UnsupportedOperationException
-                              || cause instanceof AtomicMoveNotSupportedException
-                          ? FailureKind.CAPABILITY
-                          : FailureKind.DESTINATION,
-                      "operation.destination-io",
-                      cause);
+    private ArchiveException structured(Throwable cause) throws StopSignal {
+      ArchiveException failure;
+      if (cause instanceof UnsupportedOperationException
+          || cause instanceof AtomicMoveNotSupportedException)
+        failure = context().failure(FailureKind.CAPABILITY, "operation.destination-io", cause);
+      // The entry would read a denied access as INTERNAL; it is the destination's I/O failure.
+      else if (cause instanceof SecurityException denied) failure = context().ioFailure(denied);
+      else failure = context().structure(cause);
       String identifier = failure.primaryFailure().diagnosticIdentifier().orElse("");
       if ((identifier.equals("operation.resource-limit")
               || identifier.equals("io.resource-capacity"))
           && failure.primaryFailure().phase() != phase) {
         // The shared budget owns credits, while the admission site owns the current phase/ordinal.
-        var location =
-            new DiagnosticLocation(
-                Optional.empty(),
-                OptionalLong.of(ordinal),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(context().path()));
-        var previous = failure.primaryFailure();
-        var primary =
-            new Failure(
-                previous.kind(),
-                phase,
-                OptionalLong.of(ordinal),
-                previous.diagnosticIdentifier(),
-                Optional.of(location),
-                previous.cause());
-        List<Diagnostic> diagnostics =
-            failure.diagnostics().stream()
-                .map(
-                    diagnostic ->
-                        new Diagnostic(
-                            diagnostic.identifier(),
-                            diagnostic.severity(),
-                            diagnostic.operation(),
-                            phase,
-                            location,
-                            diagnostic.values(),
-                            diagnostic.explanation()))
-                .toList();
-        failure =
-            new ArchiveException(
-                failure.getMessage(),
-                primary,
-                diagnostics,
-                failure.artifacts(),
-                failure.assessment(),
-                failure.secondaryFailures());
+        failure = context().relocated(failure);
       }
       return failure;
     }
@@ -1227,9 +1169,12 @@ public final class PublicationTransaction {
       return List.copyOf(result);
     }
 
-    /** Supplies stable phase and ordinal evidence without provider exception text. */
+    /**
+     * Supplies stable phase and ordinal evidence without provider exception text. Everything
+     * publication touches, including its staging and readback, is a destination.
+     */
     private IoContext context() {
-      return new IoContext(destination, operation, phase, OptionalLong.of(ordinal));
+      return IoContext.destination(destination, operation).at(phase, OptionalLong.of(ordinal));
     }
   }
 

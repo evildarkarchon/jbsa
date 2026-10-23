@@ -100,12 +100,10 @@ public final class ArchiveValidation {
             DiagnosticSeverity.WARNING,
             context.operation(),
             context.phase(),
-            new DiagnosticLocation(
-                Optional.of(context.path()),
+            context.location(
                 OptionalLong.of(entry.ordinal()),
                 Optional.of(entry.displayName()),
                 Optional.ofNullable(segment),
-                Optional.empty(),
                 Optional.empty()),
             values,
             Optional.empty()));

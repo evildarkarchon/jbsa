@@ -2,9 +2,12 @@ package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
+import io.github.evildarkarchon.jbsa.OperationPhase;
 import io.github.evildarkarchon.jbsa.WorkerSelection;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -16,7 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.IntToLongFunction;
+import java.util.function.IntFunction;
 
 /**
  * Operation-owned fixed platform workers beneath one synchronous, ordered coordinator.
@@ -28,6 +31,11 @@ import java.util.function.IntToLongFunction;
  * <p>Closing the runner settles the failures of unconsumed work and of discarded results straight
  * into the operation session, under the request's Diagnostic Policy, rather than folding them into
  * an exception of its own.
+ *
+ * <p>A stopped worker throws {@link WorkerStopped}, which is never a failure. Cleanup failures its
+ * catch site attached to that stop are this runner's to settle (ADR-0006): they are accepted into
+ * the session in plan order, whether the stopped outcome is drained by {@link #close} or consumed
+ * as skipped and closed by the coordinator.
  */
 public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoCloseable {
   private static final AtomicLong NEXT_OPERATION_ID = new AtomicLong();
@@ -40,7 +48,7 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
   private final OperationSession session;
   private final ResourceBudget budget;
   private final IoContext context;
-  private final IntToLongFunction locate;
+  private final IntFunction<IoContext> locate;
   private final ExecutorService workers;
   private final int capacity;
   private final ArrayDeque<Slot<R>> pending = new ArrayDeque<>();
@@ -56,25 +64,12 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
   /**
    * Snapshots the operation's worker limit and creates its private fixed platform pool. The plan
    * count has already been established in Logical Plan Order; no descriptors are created here.
-   * Unexpected worker and cleanup failures are located at their plan position.
    *
    * @param session the operation's session, which takes the failures {@link #close} settles
-   */
-  public OrderedWorkerRunner(
-      OperationSession session,
-      WorkerSelection selection,
-      int plannedCount,
-      ResourceBudget budget,
-      IoContext context) {
-    this(session, selection, plannedCount, budget, context, index -> index);
-  }
-
-  /**
-   * Creates the runner with a caller-supplied failure location for each plan position.
-   *
-   * @param session the operation's session, which takes the failures {@link #close} settles
-   * @param locate maps a submitted plan position to the ordinal its unexpected worker and cleanup
-   *     failures report, such as the archive entry ordinal of a sparse extraction selection
+   * @param context the operation-level location of an admission failure
+   * @param locate maps a submitted plan position to the PROCESSING location its unstructured worker
+   *     and cleanup failures are structured at: its side, its path, and its ordinal, such as the
+   *     archive entry ordinal of a sparse extraction selection
    */
   public OrderedWorkerRunner(
       OperationSession session,
@@ -82,7 +77,7 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
       int plannedCount,
       ResourceBudget budget,
       IoContext context,
-      IntToLongFunction locate) {
+      IntFunction<IoContext> locate) {
     this.session = Objects.requireNonNull(session, "session");
     Objects.requireNonNull(selection, "selection");
     if (plannedCount < 0) throw new IllegalArgumentException("plannedCount must be nonnegative");
@@ -275,7 +270,7 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
     pending.removeFirst();
     nextConsumed++;
     boolean skip = forcedStop.get() || slot.ordinal > earliestFailure.get();
-    return new Outcome<>(slot.ordinal, completion, slot.lease, skip);
+    return new Outcome<>(slot.ordinal, completion, slot.lease, skip, session);
   }
 
   /** Explicitly stops admission and asks every running item to stop at its next checkpoint. */
@@ -310,16 +305,14 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
       if (!forcedStop.get()
           && slot.ordinal <= earliestFailure.get()
           && completion.failure != null) {
-        session.accept(structured(slot.ordinal, completion.failure));
-        accepted = true;
+        accepted |= settle(locate.apply(slot.ordinal), completion.failure);
       }
+      // A stopped worker's cleanup evidence goes in first, then the discarded result's own.
+      accepted |= !completion.stopCleanup.isEmpty();
       try {
-        new Outcome<>(slot.ordinal, completion, slot.lease, true).close();
-      } catch (VirtualMachineError | ThreadDeath fatal) {
-        fatalFailure.compareAndSet(null, fatal);
+        new Outcome<>(slot.ordinal, completion, slot.lease, true, session).close();
       } catch (Throwable cleanup) {
-        session.accept(cleanupFailure(slot.ordinal, cleanup));
-        accepted = true;
+        accepted |= settle(locate.apply(slot.ordinal).at(OperationPhase.CLEANUP), cleanup);
       }
     }
     try {
@@ -346,29 +339,55 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
     if (accepted) session.stopIfFailed();
   }
 
+  /**
+   * Structures one drained failure at its location and accepts it into the session. A fatal or
+   * other propagating error is kept for {@link #close} to throw once every worker has joined.
+   *
+   * @return whether a failure was accepted
+   */
+  private boolean settle(IoContext location, Throwable failure) {
+    try {
+      session.accept(location.structure(failure));
+      return true;
+    } catch (StopSignal stopped) {
+      // A signal, not a failure: a stop carries no evidence of its own.
+      return false;
+    } catch (Error propagating) {
+      fatalFailure.compareAndSet(null, propagating);
+      return false;
+    }
+  }
+
   /** Runs a worker without observer callbacks and records the earliest failing plan ordinal. */
   private Completion<R> execute(int ordinal, ResourceBudget.Lease lease, Worker<R> work) {
     Checkpoint checkpoint = () -> checkStop(ordinal);
     try {
       checkpoint.check();
       R result = Objects.requireNonNull(work.run(checkpoint, lease), "worker result");
-      return new Completion<>(result, null, false);
-    } catch (StoppedWork ignored) {
+      return new Completion<>(result, null, false, List.of());
+    } catch (WorkerStopped stopped) {
       // Later results are discarded after failure or explicit stop, with no new public failure.
-      return new Completion<>(null, null, true);
+      // The cleanup evidence the worker attached to its stop is still this runner's to settle.
+      List<ArchiveException> cleanup = new ArrayList<>();
+      for (Throwable suppressed : stopped.getSuppressed())
+        if (suppressed instanceof ArchiveException failure) cleanup.add(failure);
+      return new Completion<>(null, null, true, List.copyOf(cleanup));
     } catch (VirtualMachineError | ThreadDeath fatal) {
       fatalFailure.compareAndSet(null, fatal);
       markFailure(ordinal);
-      return new Completion<>(null, fatal, false);
+      return new Completion<>(null, fatal, false, List.of());
     } catch (Throwable failure) {
       markFailure(ordinal);
-      return new Completion<>(null, failure, false);
+      return new Completion<>(null, failure, false, List.of());
     }
   }
 
-  /** Keeps earlier work alive so a later failure cannot hide an earlier Primary Failure. */
-  private void checkStop(int ordinal) throws StoppedWork {
-    if (forcedStop.get() || ordinal > earliestFailure.get()) throw new StoppedWork();
+  /**
+   * Keeps earlier work alive so a later failure cannot hide an earlier Primary Failure. Each stop
+   * throws a fresh signal, so the cleanup a worker attaches to it belongs to that work alone.
+   */
+  private void checkStop(int ordinal) throws WorkerStopped {
+    if (forcedStop.get() || ordinal > earliestFailure.get()) throw new WorkerStopped();
   }
 
   /** Atomically lowers the failure candidate before any later task can be admitted. */
@@ -419,33 +438,7 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
     if (failure instanceof VirtualMachineError || failure instanceof ThreadDeath)
       fatalFailure.compareAndSet(null, (Error) failure);
     markFailure(ordinal);
-    return new Completion<>(null, failure, false);
-  }
-
-  /** Gives cleanup and unexpected worker exceptions a stable operation-owned failure location. */
-  private ArchiveException structured(int ordinal, Throwable failure) {
-    if (failure instanceof ArchiveException archive) return archive;
-    IoContext location =
-        new IoContext(
-            context.path(),
-            context.operation(),
-            io.github.evildarkarchon.jbsa.OperationPhase.PROCESSING,
-            java.util.OptionalLong.of(locate.applyAsLong(ordinal)));
-    return failure instanceof IOException
-        ? location.failure(FailureKind.SOURCE, "operation.source-io", failure)
-        : location.failure(FailureKind.INTERNAL, "operation.internal-failure", failure);
-  }
-
-  /** Locates a discarded result's cleanup fault after all processing outcomes. */
-  private ArchiveException cleanupFailure(int ordinal, Throwable failure) {
-    if (failure instanceof ArchiveException archive) return archive;
-    IoContext location =
-        new IoContext(
-            context.path(),
-            context.operation(),
-            io.github.evildarkarchon.jbsa.OperationPhase.CLEANUP,
-            java.util.OptionalLong.of(locate.applyAsLong(ordinal)));
-    return location.failure(FailureKind.DESTINATION, "operation.destination-io", failure);
+    return new Completion<>(null, failure, false, List.of());
   }
 
   /** Enforces the synchronous caller-thread coordinator contract without a library lock. */
@@ -463,16 +456,13 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
   private record Slot<R extends AutoCloseable>(
       int ordinal, ResourceBudget.Lease lease, Future<Completion<R>> future) {}
 
-  /** Worker-published private state; no observer or destination effect crosses this boundary. */
-  private record Completion<R extends AutoCloseable>(
-      R result, Throwable failure, boolean stopped) {}
-
   /**
-   * Internal checked checkpoint signal that codecs propagate without classifying a provider fault.
+   * Worker-published private state; no observer or destination effect crosses this boundary.
+   *
+   * @param stopCleanup the cleanup failures a stopped worker attached to its stop, in close order
    */
-  private static final class StoppedWork extends IOException {
-    private static final long serialVersionUID = 1L;
-  }
+  private record Completion<R extends AutoCloseable>(
+      R result, Throwable failure, boolean stopped, List<ArchiveException> stopCleanup) {}
 
   /** One ordered result; closing it releases the result before its admission credits. */
   public static final class Outcome<R extends AutoCloseable> implements AutoCloseable {
@@ -480,15 +470,25 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
     private final Completion<R> completion;
     private final ResourceBudget.Lease lease;
     private final boolean skipped;
+    private final OperationSession session;
     private boolean closed;
 
-    /** Adopts a completed worker result and its resource lease on the coordinator thread. */
+    /**
+     * Adopts a completed worker result and its resource lease on the coordinator thread.
+     *
+     * @param session takes a stopped worker's cleanup evidence when this outcome closes
+     */
     private Outcome(
-        int ordinal, Completion<R> completion, ResourceBudget.Lease lease, boolean skipped) {
+        int ordinal,
+        Completion<R> completion,
+        ResourceBudget.Lease lease,
+        boolean skipped,
+        OperationSession session) {
       this.ordinal = ordinal;
       this.completion = completion;
       this.lease = lease;
       this.skipped = skipped || completion.stopped;
+      this.session = session;
     }
 
     /** Returns the assigned Logical Plan Order ordinal. */
@@ -511,11 +511,16 @@ public final class OrderedWorkerRunner<R extends AutoCloseable> implements AutoC
       return skipped;
     }
 
-    /** Closes any produced private result before releasing its preadmitted credits. */
+    /**
+     * Settles a stopped worker's cleanup evidence into the session, then closes any produced
+     * private result before releasing its preadmitted credits.
+     */
     @Override
     public void close() throws IOException {
       if (closed) return;
       closed = true;
+      // The session's normal selection decides Primary vs Secondary; workers never call it.
+      completion.stopCleanup.forEach(session::accept);
       try {
         if (completion.result != null) completion.result.close();
       } catch (IOException failure) {

@@ -46,7 +46,7 @@ final class JlibdeflateQualificationTest {
   private static final String BASELINE_PROFILE = Lz4Runtime.PROFILE;
 
   private static final IoContext CONTEXT =
-      IoContext.of(Path.of("qualification.bin"), Operation.OPEN);
+      IoContext.source(Path.of("qualification.bin"), Operation.OPEN);
   private static final String[] CORPORA = {
     "repeated-251", "text-seed52", "float-mesh-seed52", "mixed-seed52", "random-seed52"
   };

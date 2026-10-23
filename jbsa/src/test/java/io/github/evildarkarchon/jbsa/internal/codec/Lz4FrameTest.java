@@ -26,7 +26,7 @@ import org.junit.jupiter.api.condition.OS;
  * through the admitted BSA frame codec's decoder, which reads any independent or linked frame.
  */
 final class Lz4FrameTest {
-  private static final IoContext CONTEXT = IoContext.of(Path.of("frame.bin"), Operation.OPEN);
+  private static final IoContext CONTEXT = IoContext.source(Path.of("frame.bin"), Operation.OPEN);
 
   /** Covers either provider: the portable decoder's two 4 MiB blocks or native direct memory. */
   private static final long HEAP_CEILING = 16L * 1024 * 1024;

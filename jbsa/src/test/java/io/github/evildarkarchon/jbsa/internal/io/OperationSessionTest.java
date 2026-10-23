@@ -81,7 +81,7 @@ final class OperationSessionTest {
             new OperationControl(snapshot -> {}, cancelled::get));
     OperationReport report =
         session.run(
-            IoContext.of(Path.of("archive.bsa").toAbsolutePath(), Operation.PACK),
+            IoContext.destination(Path.of("archive.bsa").toAbsolutePath(), Operation.PACK),
             resources -> {
               session.begin();
               session.beginCommit(OperationPhase.PUBLISHING, OptionalLong.of(0));
@@ -115,9 +115,12 @@ final class OperationSessionTest {
             InternalError.class,
             () ->
                 session.run(
-                    IoContext.of(Path.of("archive.bsa").toAbsolutePath(), Operation.PACK),
+                    IoContext.destination(Path.of("archive.bsa").toAbsolutePath(), Operation.PACK),
                     resources -> {
-                      resources.register(() -> released.set(true));
+                      resources.register(
+                          () -> released.set(true),
+                          IoContext.destination(
+                              Path.of("archive.bsa").toAbsolutePath(), Operation.PACK));
                       session.begin();
                       beforeCleanup.set(callbacks.get());
                       return new OperationSession.Published(List.of());
@@ -197,12 +200,9 @@ final class OperationSessionTest {
     try {
       assertTrue(entered.await(10, TimeUnit.SECONDS));
       session.accept(
-          new IoContext(
-                  java.nio.file.Path.of("source"),
-                  Operation.PACK,
-                  OperationPhase.PROCESSING,
-                  OptionalLong.of(0))
-              .failure(FailureKind.SOURCE, "source.failed", cause));
+          IoContext.source(java.nio.file.Path.of("source"), Operation.PACK)
+              .at(OperationPhase.PROCESSING, OptionalLong.of(0))
+              .roleFailure("source.failed", cause));
     } finally {
       release.countDown();
       worker.get().join();
@@ -267,11 +267,13 @@ final class OperationSessionTest {
 
     OperationReport report =
         session.run(
-            IoContext.of(target, Operation.PACK),
+            IoContext.destination(target, Operation.PACK),
             resources -> {
-              resources.register(() -> closed.add("first"));
+              resources.register(
+                  () -> closed.add("first"), IoContext.destination(target, Operation.PACK));
               session.begin();
-              resources.register(() -> closed.add("second"));
+              resources.register(
+                  () -> closed.add("second"), IoContext.destination(target, Operation.PACK));
               return new OperationSession.Published(List.of(artifact), List.of(part));
             });
 
@@ -300,7 +302,7 @@ final class OperationSessionTest {
             ResourceLimits.standard(),
             new OperationControl(snapshots::add, () -> false));
     Path target = Path.of("archive.bsa").toAbsolutePath();
-    var context = IoContext.of(target, Operation.PACK);
+    var context = IoContext.destination(target, Operation.PACK);
     var closing = new IOException("close");
 
     var failure =
@@ -313,7 +315,8 @@ final class OperationSessionTest {
                       resources.register(
                           () -> {
                             throw closing;
-                          });
+                          },
+                          IoContext.source(target, Operation.PACK));
                       session.begin();
                       throw context.failure(FailureKind.POLICY, "fixture.rejected", null);
                     }));
@@ -325,12 +328,16 @@ final class OperationSessionTest {
     assertEquals(FailureKind.SOURCE, secondary.kind());
     assertEquals(OperationPhase.CLEANUP, secondary.phase());
     assertEquals(Optional.of("operation.source-io"), secondary.diagnosticIdentifier());
+    assertEquals(Optional.of(target), secondary.location().orElseThrow().archive());
     assertSame(closing, secondary.cause().orElseThrow());
     assertEquals(zeroCleanup(Operation.PACK), snapshots);
     assertSettled(session);
   }
 
-  /** A resource that fails to close after a successful body is the one outcome's failure. */
+  /**
+   * A resource that fails to close after a successful body is the one outcome's failure, located at
+   * the role and path the resource was registered with (ADR-0006).
+   */
   @Test
   void closeFailureAfterSuccessfulBodySettlesOnce() {
     var snapshots = new ArrayList<ProgressSnapshot>();
@@ -347,17 +354,23 @@ final class OperationSessionTest {
             ArchiveException.class,
             () ->
                 session.run(
-                    IoContext.of(target, Operation.PACK),
+                    IoContext.destination(target, Operation.PACK),
                     resources -> {
                       resources.register(
                           () -> {
                             throw new IOException("close");
-                          });
+                          },
+                          IoContext.destination(target, Operation.PACK));
                       session.begin();
                       return new OperationSession.Published(List.of(artifact), List.of());
                     }));
 
-    assertEquals(FailureKind.SOURCE, failure.kind());
+    assertEquals(FailureKind.DESTINATION, failure.kind());
+    assertEquals(
+        Optional.of("operation.destination-io"), failure.primaryFailure().diagnosticIdentifier());
+    var location = failure.primaryFailure().location().orElseThrow();
+    assertEquals(Optional.of(target), location.artifact());
+    assertEquals(Optional.empty(), location.archive());
     assertEquals(OperationPhase.CLEANUP, failure.primaryFailure().phase());
     assertEquals(List.of(), failure.secondaryFailures());
     assertEquals(List.of(artifact), failure.artifacts());
@@ -390,7 +403,7 @@ final class OperationSessionTest {
               ArchiveException.class,
               () ->
                   session.run(
-                      IoContext.of(Path.of("source").toAbsolutePath(), operation),
+                      IoContext.destination(Path.of("source").toAbsolutePath(), operation),
                       resources -> {
                         session.begin();
                         session.completePhase();
@@ -426,6 +439,66 @@ final class OperationSessionTest {
   }
 
   /**
+   * ADR-0006: every catch site structures its own I/O faults, so a raw {@link IOException} reaching
+   * the template is a JBSA bug. It ends as INTERNAL at the interrupted phase, never as a SOURCE or
+   * DESTINATION fault the template would have to guess the side of.
+   */
+  @Test
+  void rawIoFailureEscapingTheBodyIsInternal() {
+    var session =
+        new OperationSession(
+            Operation.PACK, ResourceLimits.standard(), OperationControl.standard());
+    var raw = new IOException("unstructured");
+
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                session.run(
+                    IoContext.destination(Path.of("archive.bsa").toAbsolutePath(), Operation.PACK),
+                    resources -> {
+                      session.begin();
+                      session.completePhase();
+                      session.processing(false);
+                      throw raw;
+                    }));
+
+    assertEquals(FailureKind.INTERNAL, failure.kind());
+    assertEquals(
+        Optional.of("operation.internal-failure"), failure.primaryFailure().diagnosticIdentifier());
+    assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
+    assertSame(raw, failure.primaryFailure().cause().orElseThrow());
+    assertSettled(session);
+  }
+
+  /**
+   * A worker's stop belongs to its runner. If one ever leaked to the template, the operation still
+   * finishes, as INTERNAL without the stop as its cause, instead of escaping unsettled.
+   */
+  @Test
+  void leakedWorkerStopEndsInternalAndStillSettles() {
+    var session =
+        new OperationSession(
+            Operation.PACK, ResourceLimits.standard(), OperationControl.standard());
+
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                session.run(
+                    IoContext.destination(Path.of("archive.bsa").toAbsolutePath(), Operation.PACK),
+                    resources -> {
+                      session.begin();
+                      throw new WorkerStopped();
+                    }));
+
+    assertEquals(FailureKind.INTERNAL, failure.kind());
+    assertEquals(OperationPhase.PREFLIGHT, failure.primaryFailure().phase());
+    assertEquals(Optional.empty(), failure.primaryFailure().cause());
+    assertSettled(session);
+  }
+
+  /**
    * The session's stop carries no failure of its own, so a body that lets it propagate leaves the
    * outcome with one Primary Failure and no duplicate.
    */
@@ -443,7 +516,7 @@ final class OperationSessionTest {
             ArchiveCancelledException.class,
             () ->
                 session.run(
-                    IoContext.of(source, Operation.EXTRACT),
+                    IoContext.source(source, Operation.EXTRACT),
                     resources -> {
                       session.begin();
                       throw new AssertionError("begin must observe cancellation");
@@ -467,10 +540,11 @@ final class OperationSessionTest {
             ResourceLimits.standard(),
             new OperationControl(s -> {}, () -> true));
     Path source = Path.of("source").toAbsolutePath();
-    var context = IoContext.of(source, Operation.EXTRACT);
+    var context = IoContext.source(source, Operation.EXTRACT);
     var later =
-        new IoContext(source, Operation.EXTRACT, OperationPhase.CLEANUP, OptionalLong.empty())
-            .failure(FailureKind.SOURCE, "operation.source-io", new IOException("late"));
+        context
+            .at(OperationPhase.CLEANUP, OptionalLong.empty())
+            .roleFailure("operation.source-io", new IOException("late"));
 
     var failure =
         assertThrows(
@@ -511,15 +585,16 @@ final class OperationSessionTest {
                 () -> false));
     Path target = Path.of("archive.bsa").toAbsolutePath();
     var cleanup =
-        new IoContext(target, Operation.PACK, OperationPhase.CLEANUP, OptionalLong.of(0))
-            .failure(FailureKind.SOURCE, "operation.source-io", new IOException("close"));
+        IoContext.source(target, Operation.PACK)
+            .at(OperationPhase.CLEANUP, OptionalLong.of(0))
+            .roleFailure("operation.source-io", new IOException("close"));
 
     var failure =
         assertThrows(
             ArchiveException.class,
             () ->
                 session.run(
-                    IoContext.of(target, Operation.PACK),
+                    IoContext.destination(target, Operation.PACK),
                     resources -> {
                       session.begin();
                       session.completePhase();
@@ -565,17 +640,18 @@ final class OperationSessionTest {
             ArchiveException.class,
             () ->
                 session.run(
-                    IoContext.of(source, Operation.EXTRACT),
+                    IoContext.source(source, Operation.EXTRACT),
                     resources -> {
                       resources.register(
                           () -> {
                             throw closing;
-                          });
+                          },
+                          IoContext.source(source, Operation.EXTRACT));
                       session.begin();
+                      IoContext budgetContext = IoContext.destination(root, Operation.EXTRACT);
                       ResourceBudget budget =
-                          ResourceBudget.forMutation(
-                              ResourceLimits.standard(), IoContext.of(root, Operation.EXTRACT));
-                      resources.register(budget::close);
+                          ResourceBudget.forMutation(ResourceLimits.standard(), budgetContext);
+                      resources.register(budget::close, budgetContext);
                       // The writer fails before publication's own source-close action can run,
                       // so the registered close above is the first, late close of the source.
                       List<Artifact> artifacts =
@@ -639,7 +715,7 @@ final class OperationSessionTest {
         ArchiveException.class,
         () ->
             session.run(
-                IoContext.of(Path.of("archive.bsa").toAbsolutePath(), operation),
+                IoContext.destination(Path.of("archive.bsa").toAbsolutePath(), operation),
                 resources -> null));
   }
 

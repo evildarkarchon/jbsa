@@ -3,7 +3,9 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
+import io.github.evildarkarchon.jbsa.DiagnosticPolicy;
 import io.github.evildarkarchon.jbsa.FailureKind;
+import io.github.evildarkarchon.jbsa.OpenOptions;
 import io.github.evildarkarchon.jbsa.Operation;
 import io.github.evildarkarchon.jbsa.OperationPhase;
 import java.io.IOException;
@@ -17,16 +19,23 @@ import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalLong;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Fault-injected qualification of the agreed exact-I/O boundary without archive-format fixtures.
  */
 final class ExactIoTest {
   private static final IoContext CONTEXT =
-      new IoContext(
-          Path.of("archive.bin"), Operation.OPEN, OperationPhase.PREFLIGHT, OptionalLong.of(7));
+      IoContext.source(Path.of("archive.bin"), Operation.OPEN)
+          .at(OperationPhase.PREFLIGHT, OptionalLong.of(7));
+
+  /** The same place as a destination, as every production write and staged readback is. */
+  private static final IoContext OUTPUT =
+      IoContext.destination(Path.of("archive.bin"), Operation.OPEN)
+          .at(OperationPhase.PREFLIGHT, OptionalLong.of(7));
 
   /** Positive short reads and intermittent zero progress fill only the caller's remaining slice. */
   @Test
@@ -126,7 +135,7 @@ final class ExactIoTest {
         ArchiveException invalid =
             assertThrows(
                 ArchiveException.class,
-                () -> ExactIo.write(channel, offset, ByteBuffer.allocate(2), CONTEXT));
+                () -> ExactIo.write(channel, offset, ByteBuffer.allocate(2), OUTPUT));
         assertEquals(FailureKind.DESTINATION, invalid.kind());
         assertEquals(
             "io.invalid-output-span",
@@ -157,38 +166,94 @@ final class ExactIoTest {
     }
   }
 
-  /** Provider messages change only retained causes, never public diagnostic facts or locations. */
+  /**
+   * Provider messages change only retained causes, never public diagnostic facts or locations. The
+   * location's role, not the direction of the I/O, decides both the Failure Kind and the slot the
+   * path fills (ADR-0006): a source in {@code archive}, a destination in {@code artifact}.
+   */
   @Test
   void keepsSourceAndDestinationFailuresIndependentOfProviderText() throws Exception {
-    for (boolean write : new boolean[] {false, true}) {
-      ArchiveException previous = null;
-      for (String message : List.of("device failed", "Accès refusé: provider-specific detail")) {
-        try (ControlledChannel channel = new ControlledChannel(new byte[1])) {
-          IOException provider = new IOException(message);
-          channel.failure = provider;
-          ArchiveException failure =
-              assertThrows(
-                  ArchiveException.class, () -> transfer(channel, ByteBuffer.allocate(1), write));
-          assertSame(provider, failure.getCause());
-          assertSame(provider, failure.primaryFailure().cause().orElseThrow());
-          assertEquals(write ? FailureKind.DESTINATION : FailureKind.SOURCE, failure.kind());
-          assertEquals(
-              write ? "operation.destination-io" : "operation.source-io",
-              failure.primaryFailure().diagnosticIdentifier().orElseThrow());
-          assertEquals(OptionalLong.of(7), failure.primaryFailure().ordinal());
-          var location = failure.primaryFailure().location().orElseThrow();
-          assertEquals(
-              CONTEXT.path(), (write ? location.artifact() : location.archive()).orElseThrow());
-          assertTrue((write ? location.archive() : location.artifact()).isEmpty());
-          if (previous != null) {
-            assertEquals(previous.diagnostics(), failure.diagnostics());
-            assertEquals(previous.primaryFailure().location(), failure.primaryFailure().location());
-            assertEquals(previous.getMessage(), failure.getMessage());
+    for (IoContext context : List.of(CONTEXT, OUTPUT)) {
+      boolean destination = context == OUTPUT;
+      for (boolean write : new boolean[] {false, true}) {
+        ArchiveException previous = null;
+        for (String message : List.of("device failed", "Accès refusé: provider-specific detail")) {
+          try (ControlledChannel channel = new ControlledChannel(new byte[1])) {
+            IOException provider = new IOException(message);
+            channel.failure = provider;
+            ArchiveException failure =
+                assertThrows(
+                    ArchiveException.class,
+                    () -> transfer(channel, ByteBuffer.allocate(1), write, context));
+            assertSame(provider, failure.getCause());
+            assertSame(provider, failure.primaryFailure().cause().orElseThrow());
+            assertEquals(
+                destination ? FailureKind.DESTINATION : FailureKind.SOURCE, failure.kind());
+            assertEquals(
+                destination ? "operation.destination-io" : "operation.source-io",
+                failure.primaryFailure().diagnosticIdentifier().orElseThrow());
+            assertEquals(OptionalLong.of(7), failure.primaryFailure().ordinal());
+            var location = failure.primaryFailure().location().orElseThrow();
+            assertEquals(context.path(), destination ? location.artifact() : location.archive());
+            assertTrue((destination ? location.archive() : location.artifact()).isEmpty());
+            if (previous != null) {
+              assertEquals(previous.diagnostics(), failure.diagnostics());
+              assertEquals(
+                  previous.primaryFailure().location(), failure.primaryFailure().location());
+              assertEquals(previous.getMessage(), failure.getMessage());
+            }
+            previous = failure;
           }
-          previous = failure;
         }
       }
     }
+  }
+
+  /**
+   * A read of the operation's own staged output is a destination read: pack readback opens its
+   * staged part at a destination, so a read fault there is DESTINATION at the part's artifact.
+   */
+  @Test
+  void readbackFaultOnAStagedPartIsDestination() throws Exception {
+    Path staged = Path.of("staged-part.ba2").toAbsolutePath();
+    IoContext readback = IoContext.destination(staged, Operation.PACK);
+    try (ControlledChannel channel = new ControlledChannel(new byte[4])) {
+      IOException provider = new IOException("staged read");
+      try (ArchiveInput input = new ArchiveInput(channel, readback)) {
+        channel.failure = provider;
+        ArchiveException failure =
+            assertThrows(ArchiveException.class, () -> input.readExact(0, ByteBuffer.allocate(4)));
+        assertEquals(FailureKind.DESTINATION, failure.kind());
+        assertEquals(
+            Optional.of("operation.destination-io"),
+            failure.primaryFailure().diagnosticIdentifier());
+        assertSame(provider, failure.getCause());
+        var location = failure.primaryFailure().location().orElseThrow();
+        assertEquals(Optional.of(staged), location.artifact());
+        assertEquals(Optional.empty(), location.archive());
+        channel.failure = null;
+      }
+    }
+  }
+
+  /** Opening a staged part that cannot be read back reports the same destination fault. */
+  @Test
+  void readbackOpenFaultOnAStagedPartIsDestination(@TempDir Path directory) {
+    Path staged = directory.resolve("missing-part.ba2");
+    ArchiveException failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                ArchiveReaders.open(
+                    IoContext.destination(staged, Operation.PACK),
+                    OpenOptions.standard(),
+                    DiagnosticPolicy.standard()));
+    assertEquals(FailureKind.DESTINATION, failure.kind());
+    assertEquals(
+        Optional.of("operation.destination-io"), failure.primaryFailure().diagnosticIdentifier());
+    var location = failure.primaryFailure().location().orElseThrow();
+    assertEquals(Optional.of(staged), location.artifact());
+    assertEquals(Optional.empty(), location.archive());
   }
 
   /** Content reads preserve lifetime identity; output writes preserve it as a destination cause. */
@@ -215,11 +280,21 @@ final class ExactIoTest {
     }
   }
 
-  /** Exercises identical error scenarios through either exact-transfer direction. */
+  /**
+   * Exercises identical error scenarios through either exact-transfer direction, reading a source
+   * and writing a destination as production does.
+   */
   private static void transfer(ControlledChannel channel, ByteBuffer buffer, boolean write)
       throws IOException {
-    if (write) ExactIo.write(channel, 0, buffer, CONTEXT);
-    else ExactIo.read(channel, buffer.remaining(), 0, buffer, CONTEXT);
+    transfer(channel, buffer, write, write ? OUTPUT : CONTEXT);
+  }
+
+  /** Exercises either exact-transfer direction at a chosen location. */
+  private static void transfer(
+      ControlledChannel channel, ByteBuffer buffer, boolean write, IoContext context)
+      throws IOException {
+    if (write) ExactIo.write(channel, 0, buffer, context);
+    else ExactIo.read(channel, buffer.remaining(), 0, buffer, context);
   }
 
   /**

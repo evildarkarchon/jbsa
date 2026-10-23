@@ -44,7 +44,7 @@ final class PublicationPlanTest {
             });
     var report =
         operation.run(
-            IoContext.of(destination, Operation.PACK),
+            IoContext.destination(destination, Operation.PACK),
             resources -> {
               if (processingEntered) {
                 // A stabilizing pack enters PROCESSING itself before any part plan exists (Q10).
@@ -67,7 +67,7 @@ final class PublicationPlanTest {
     var closes = new AtomicInteger();
     var operation = session(Operation.PACK);
     operation.run(
-        IoContext.of(destination, Operation.PACK),
+        IoContext.destination(destination, Operation.PACK),
         resources ->
             new OperationSession.Published(
                 PublicationTransaction.publish(
@@ -308,7 +308,7 @@ final class PublicationPlanTest {
   /** A pack-shaped mutation budget, located at the destination with no ordinal. */
   private static ResourceBudget budget(Path destination) {
     return ResourceBudget.forMutation(
-        ResourceLimits.standard(), IoContext.of(destination, Operation.PACK));
+        ResourceLimits.standard(), IoContext.destination(destination, Operation.PACK));
   }
 
   /** Writes one byte and then counts the completed stage; workers may run it concurrently. */

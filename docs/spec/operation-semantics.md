@@ -95,8 +95,8 @@ Kinds, classified by caller recovery rather than provider exception type:
 | `UNSUPPORTED` | recognized family, version, subtype, direction, or other semantics outside JBSA support |
 | `CAPABILITY` | supported semantics unavailable because of platform, native-access, or required-provider capability |
 | `POLICY` | Resource Limit, extraction safety, destination-collision policy, or Diagnostic Policy rejection |
-| `SOURCE` | pack-source shape, I/O, mutation, or inconsistent regenerated content |
-| `DESTINATION` | destination creation, write, publication, rollback, or cleanup failure |
+| `SOURCE` | Operation Source shape, I/O, mutation, or inconsistent regenerated content |
+| `DESTINATION` | destination creation, write, publication, rollback, or cleanup failure, including reads of the operation's own staged output |
 | `OBSERVER` | a Progress Snapshot observer threw |
 | `INTERNAL` | a JBSA invariant failed or a provider failed unexpectedly |
 | `CANCELLED` | Cooperative Cancellation was accepted before the applicable Publication Commit |
@@ -111,7 +111,7 @@ and otherwise at the operation. Its structured values **MUST** include the
 Resource Limit field name, configured ceiling, and observed value using
 unsigned decimal integers for the numeric values.
 
-_Source decisions: [accepted Failure Kind taxonomy](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted resource-bound execution](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
+_Source decisions: [accepted Failure Kind taxonomy](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted resource-bound execution](https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855), [accepted `0.10.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183); Operation Source and staged-output read classification by maintainer decision in specification `0.22.0` ([#104](https://github.com/evildarkarchon/jbsa/issues/104))._
 
 ## JBSA-OPS-005
 
@@ -119,7 +119,10 @@ A Conformance Diagnostic **MUST** expose a stable string identifier, `WARNING`
 or `ERROR` severity, operation, stable phase, structured location, and
 canonically represented and ordered string values. Its structured location
 **MUST** identify the applicable archive, entry ordinal or name, field, byte
-span, or filesystem artifact. An optional English explanation **MUST NOT** be
+span, or filesystem artifact. A location **MUST** name an Operation Source in its
+archive field and an Operation Destination in its artifact field, whatever the
+Failure Kind; a generated pack source, which has no path, is located by its
+entry ordinal and name alone. An optional English explanation **MUST NOT** be
 part of conformance comparison.
 
 Successful domain values and Operation Reports **MUST** retain their warnings.
@@ -151,7 +154,7 @@ Publication Commit. For existing-tree extraction, a rejection discovered after
 earlier per-file commits **MAY** retain those files and **MUST** report their
 Artifact States.
 
-_Source decisions: [accepted diagnostic and warning-policy contract](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183)._
+_Source decisions: [accepted diagnostic and warning-policy contract](https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777), [accepted `0.12.0` review clarifications](https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183); source and destination location fields by maintainer decision in specification `0.22.0` ([#104](https://github.com/evildarkarchon/jbsa/issues/104))._
 
 ## JBSA-OPS-006
 

@@ -4,7 +4,6 @@ import io.github.evildarkarchon.jbsa.*;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.LockSupport;
@@ -23,7 +22,7 @@ public final class ArchiveExtractor {
     OperationSession operation =
         new OperationSession(
             Operation.EXTRACT, request.resourceLimits(), request.diagnosticPolicy(), control);
-    IoContext context = IoContext.of(request.source(), Operation.EXTRACT);
+    IoContext context = IoContext.source(request.source(), Operation.EXTRACT);
     return operation.run(context, resources -> extract(request, operation, context, resources));
   }
 
@@ -47,7 +46,7 @@ public final class ArchiveExtractor {
     OpenArchive archive =
         ArchiveReaders.open(
             request.source(), request.openOptions(), Operation.EXTRACT, request.diagnosticPolicy());
-    resources.register(archive::close);
+    resources.register(archive::close, context);
     operation.assessment(archive.inspection().assessment());
     OpenArchive source = archive;
     Set<Long> requested =
@@ -63,11 +62,8 @@ public final class ArchiveExtractor {
       operation.checkpoint(OperationPhase.PREFLIGHT, OptionalLong.of(ordinal));
       ArchiveEntry entry = archive.entry(ordinal);
       if (entry.metadata().normalizedNameIdentity().isEmpty())
-        throw new IoContext(
-                request.source(),
-                Operation.EXTRACT,
-                OperationPhase.PREFLIGHT,
-                OptionalLong.of(ordinal))
+        throw context
+            .at(OperationPhase.PREFLIGHT, OptionalLong.of(ordinal))
             .failure(FailureKind.POLICY, "extract.ineligible-name", null);
       if (entry.metadata().decodedSize()
           > request.resourceLimits().maxDecodedBytes() - decodedBytes)
@@ -88,11 +84,7 @@ public final class ArchiveExtractor {
       // Every checkpoint, failure, and Artifact is located by the archive entry ordinal, which
       // differs from the selection position for a sparse selection.
       IoContext entryContext =
-          new IoContext(
-              request.source(),
-              Operation.EXTRACT,
-              OperationPhase.PROCESSING,
-              OptionalLong.of(entry.metadata().ordinal()));
+          context.at(OperationPhase.PROCESSING, OptionalLong.of(entry.metadata().ordinal()));
       entries.add(
           new PublicationTransaction.Entry(
               entry.metadata().displayName(),
@@ -115,33 +107,30 @@ public final class ArchiveExtractor {
                       source.inspection().assessment().diagnostics()));
             },
             // Source cleanup must succeed before the last selected file can become visible.
-            () -> closeSource(source, request.source()));
+            () -> closeSource(source, context));
     // Plan-level evidence, the budget's PREFLIGHT location among it, is located at the first
     // selected entry's archive ordinal, or 0 for an empty selection (JBSA-OPS-006).
-    ResourceBudget budget =
-        ResourceBudget.forMutation(
-            request.resourceLimits(),
-            new IoContext(
-                request.destination().toAbsolutePath().normalize(),
-                Operation.EXTRACT,
-                OperationPhase.PREFLIGHT,
-                OptionalLong.of(plan.planOrdinal())));
-    resources.register(budget::close);
+    IoContext budgetContext =
+        IoContext.destination(request.destination().toAbsolutePath().normalize(), Operation.EXTRACT)
+            .at(OperationPhase.PREFLIGHT, OptionalLong.of(plan.planOrdinal()));
+    ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), budgetContext);
+    resources.register(budget::close, budgetContext);
     return new OperationSession.Published(PublicationTransaction.publish(operation, budget, plan));
   }
 
   /**
    * The extraction's source-close action, which publication runs once before its final commit.
    *
+   * @param context the source archive's location
    * @throws ArchiveException SOURCE {@code operation.source-io} at CLEANUP, with no ordinal, when
    *     the archive cannot close; a structured close failure keeps its own location
+   * @throws IOException only a stop signal, which the structuring entry hands back unchanged
    */
-  private static void closeSource(OpenArchive source, Path path) throws ArchiveException {
+  private static void closeSource(OpenArchive source, IoContext context) throws IOException {
     try {
       source.close();
     } catch (IOException failure) {
-      throw new IoContext(path, Operation.EXTRACT, OperationPhase.CLEANUP, OptionalLong.empty())
-          .sourceFailure(failure);
+      throw context.at(OperationPhase.CLEANUP, OptionalLong.empty()).structure(failure);
     }
   }
 
@@ -154,7 +143,8 @@ public final class ArchiveExtractor {
    *
    * <p>Every unstructured failure to open, read, or close the entry's source content is SOURCE
    * {@code operation.source-io} at the entry's archive ordinal, in both strategies. Failures from
-   * the staged output, including a worker stop, pass through unchanged.
+   * the staged output and a stop at the copy loop's checkpoint pass through unchanged, so the stage
+   * hands a stop to its runner rather than reporting it as a destination fault.
    *
    * @param sourceContext PROCESSING at the entry's archive entry ordinal
    */
@@ -177,7 +167,7 @@ public final class ArchiveExtractor {
       try {
         content = entry.openContent();
       } catch (IOException failure) {
-        throw sourceContext.sourceFailure(failure);
+        throw sourceContext.structure(failure);
       }
       try (SourceContent release = () -> closeContent(content, sourceContext)) {
         ByteBuffer window = ByteBuffer.allocate(65536);
@@ -188,7 +178,7 @@ public final class ArchiveExtractor {
           try {
             count = content.read(window);
           } catch (IOException failure) {
-            throw sourceContext.sourceFailure(failure);
+            throw sourceContext.structure(failure);
           }
           if (count < 0) break;
           window.flip();
@@ -204,11 +194,11 @@ public final class ArchiveExtractor {
 
   /** Closes one entry's source content, structuring an unstructured close failure as SOURCE. */
   private static void closeContent(EntryContent content, IoContext sourceContext)
-      throws ArchiveException {
+      throws IOException {
     try {
       content.close();
     } catch (IOException failure) {
-      throw sourceContext.sourceFailure(failure);
+      throw sourceContext.structure(failure);
     }
   }
 
@@ -217,7 +207,7 @@ public final class ArchiveExtractor {
   private interface SourceContent extends AutoCloseable {
     /** Closes the content, reporting an unstructured failure as SOURCE. */
     @Override
-    void close() throws ArchiveException;
+    void close() throws IOException;
   }
 
   /** Identifies payloads that may reserve the opened archive's sole native decoder capacity. */

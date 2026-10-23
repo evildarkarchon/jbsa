@@ -18,7 +18,8 @@ import org.junit.jupiter.api.Test;
  * native behavior stays in the explicit {@code JlibdeflateQualificationTest} lane.
  */
 final class JlibdeflateZlibTest {
-  private static final IoContext CONTEXT = IoContext.of(Path.of("candidate.bin"), Operation.OPEN);
+  private static final IoContext CONTEXT =
+      IoContext.source(Path.of("candidate.bin"), Operation.OPEN);
 
   /** Matches libdeflate 1.25's per-5000-byte block allowance plus the RFC 1950 envelope. */
   @Test

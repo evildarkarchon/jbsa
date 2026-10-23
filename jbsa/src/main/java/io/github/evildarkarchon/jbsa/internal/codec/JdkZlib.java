@@ -38,7 +38,7 @@ public final class JdkZlib {
       throws IOException {
     Objects.requireNonNull(lease, "lease");
     requireZlib(admitted);
-    if (source == null) throw context.failure(FailureKind.SOURCE, "source.invalid-channel", null);
+    if (source == null) throw context.roleFailure("source.invalid-channel", null);
     byte[] input = new byte[WINDOW];
     byte[] output = new byte[WINDOW];
     try (Deflater codec = new Deflater(9, false)) {
@@ -58,16 +58,15 @@ public final class JdkZlib {
           int count =
               invokeCaller(() -> source.read(ByteBuffer.wrap(input, 0, sourceWindow)), context);
           if (count < 0) {
-            if (read != decodedSize)
-              throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+            if (read != decodedSize) throw context.roleFailure("source.length-mismatch", null);
             codec.finish();
           } else if (count == 0) {
-            if (++idle > 16) throw context.failure(FailureKind.SOURCE, "io.no-progress", null);
+            if (++idle > 16) throw context.roleFailure("io.no-progress", null);
             continue;
           } else {
             idle = 0;
             if (count > decodedSize - read)
-              throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+              throw context.roleFailure("source.length-mismatch", null);
             read += count;
             codec.setInput(input, 0, count);
           }

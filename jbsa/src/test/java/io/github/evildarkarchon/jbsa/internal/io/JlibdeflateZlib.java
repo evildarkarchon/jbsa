@@ -186,8 +186,7 @@ final class JlibdeflateZlib {
       byte[] output = new byte[(int) bound];
       ByteBuffer window = ByteBuffer.wrap(input);
       caller(() -> source.read(0, window), context);
-      if (window.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (window.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
       caller(checkpoint::check, context);
       int count;
       try (var compressor = new LibdeflateCompressor(LEVEL)) {
@@ -251,8 +250,7 @@ final class JlibdeflateZlib {
       byte[] output = new byte[(int) decodedSize + 1];
       ByteBuffer window = ByteBuffer.wrap(input);
       caller(() -> source.read(0, window), context);
-      if (window.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (window.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
       caller(checkpoint::check, context);
       DecompressionResult result;
       try (var decompressor = new LibdeflateDecompressor()) {

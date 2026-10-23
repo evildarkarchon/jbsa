@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalLong;
 import java.util.function.IntFunction;
@@ -19,8 +20,9 @@ import java.util.function.IntFunction;
  * stabilization path: it replaced the former ParallelSources and BsaTransformedSources.
  *
  * <p>Every non-successful worker outcome maps the same way for every family: a skipped outcome is
- * INTERNAL (D1), an unstructured {@link IOException} is SOURCE {@code operation.source-io}, and any
- * other non-fatal throwable, including a non-fatal {@link Error}, is INTERNAL (D2).
+ * INTERNAL (D1), and a worker failure goes through {@link IoContext}'s structuring entry at the
+ * entry's PROCESSING location, which is the source it reads (D2, ADR-0006). A stopped worker's
+ * spool cleanup rides on its stop to the runner, which settles it into the session.
  */
 public final class TransformStage implements AutoCloseable {
   private static final int WINDOW_BYTES = 65536;
@@ -30,6 +32,7 @@ public final class TransformStage implements AutoCloseable {
   private final IoContext context;
   private final long firstOrdinal;
   private final IntFunction<Encoding> encodings;
+  private final Path scratchParent;
   private final OrderedWorkerRunner<PrivateResult> runner;
   private int nextSubmission;
   private int nextConsumption;
@@ -58,6 +61,7 @@ public final class TransformStage implements AutoCloseable {
    *
    * @param session the pack's session: {@link #next} observes cancellation through it, and closing
    *     the stage settles the failures of unconsumed work into it
+   * @param context the pack's destination-side location, where a worker admission failure reports
    */
   public TransformStage(
       OperationSession session,
@@ -67,7 +71,32 @@ public final class TransformStage implements AutoCloseable {
       IoContext context,
       long firstOrdinal,
       IntFunction<Encoding> encodings) {
+    this(
+        session,
+        sources,
+        selection,
+        budget,
+        context,
+        firstOrdinal,
+        encodings,
+        Path.of(System.getProperty("java.io.tmpdir")));
+  }
+
+  /**
+   * Places the workers' private spools under a chosen scratch parent, so a test can observe and
+   * fault their spill files.
+   */
+  TransformStage(
+      OperationSession session,
+      List<PackSources.Entry> sources,
+      WorkerSelection.UpTo selection,
+      ResourceBudget budget,
+      IoContext context,
+      long firstOrdinal,
+      IntFunction<Encoding> encodings,
+      Path scratchParent) {
     this.session = java.util.Objects.requireNonNull(session, "session");
+    this.scratchParent = java.util.Objects.requireNonNull(scratchParent, "scratchParent");
     this.sources = List.copyOf(sources);
     this.budget = budget;
     this.context = context;
@@ -93,7 +122,12 @@ public final class TransformStage implements AutoCloseable {
                     plannedBytes, budget.limits().maxScratchBytes())
             ? null
             : new OrderedWorkerRunner<>(
-                session, new WorkerSelection.UpTo(requested), sources.size(), budget, context);
+                session,
+                new WorkerSelection.UpTo(requested),
+                sources.size(),
+                budget,
+                context,
+                this::processing);
   }
 
   /** Reports whether this operation uses multiple workers for source stabilization. */
@@ -195,7 +229,8 @@ public final class TransformStage implements AutoCloseable {
     nextConsumption++;
     if (outcome.failure() != null) {
       try (outcome) {
-        throw failure(outcome.failure(), processing(outcome.ordinal()));
+        // A non-assertion Error propagates from the entry, which matches the template.
+        throw processing(outcome.ordinal()).structure(outcome.failure());
       }
     }
     if (outcome.skipped()) {
@@ -206,22 +241,6 @@ public final class TransformStage implements AutoCloseable {
       throw skipped(processing(outcome.ordinal()));
     }
     return new Input(outcome.result(), outcome);
-  }
-
-  /**
-   * Maps a worker failure (D2). A structured failure keeps its evidence, an unstructured I/O
-   * failure is SOURCE {@code operation.source-io}, and every other non-fatal throwable, including a
-   * non-fatal {@link Error}, is INTERNAL {@code operation.internal-failure}.
-   *
-   * @param processing the failing entry's PROCESSING location
-   * @return the structured failure for the caller to throw
-   * @throws Error a virtual machine error or thread death, which is never wrapped
-   */
-  static ArchiveException failure(Throwable failure, IoContext processing) {
-    if (failure instanceof VirtualMachineError || failure instanceof ThreadDeath)
-      throw (Error) failure;
-    if (failure instanceof IOException io) return processing.sourceFailure(io);
-    return processing.failure(FailureKind.INTERNAL, "operation.internal-failure", failure);
   }
 
   /**
@@ -258,13 +277,12 @@ public final class TransformStage implements AutoCloseable {
     if (runner != null) runner.close();
   }
 
-  /** Returns a processing location whose ordinal is independent of worker completion order. */
+  /**
+   * Returns a processing location at the entry's source, whose ordinal is independent of worker
+   * completion order.
+   */
   private IoContext processing(int ordinal) {
-    return new IoContext(
-        context.path(),
-        Operation.PACK,
-        OperationPhase.PROCESSING,
-        OptionalLong.of(firstOrdinal + ordinal));
+    return sources.get(ordinal).processing(firstOrdinal + ordinal);
   }
 
   /**
@@ -280,12 +298,7 @@ public final class TransformStage implements AutoCloseable {
     if (encoding != null && !encoding.retainsRaw())
       return encodeSource(source, processing, encoding, checkpoint, lease);
     SpillBuffer raw =
-        SpillBuffer.openPrecharged(
-            Path.of(System.getProperty("java.io.tmpdir")),
-            budget,
-            processing,
-            lease,
-            source.size());
+        SpillBuffer.openPrecharged(scratchParent, budget, processing, lease, source.size());
     SpillBuffer encoded = null;
     try {
       PackSources.consume(
@@ -301,68 +314,54 @@ public final class TransformStage implements AutoCloseable {
               int count = input.read(window);
               if (count < 0) break;
               if (count == 0) {
-                if (++idle > 16)
-                  throw processing.failure(FailureKind.SOURCE, "io.no-progress", null);
+                if (++idle > 16) throw processing.roleFailure("io.no-progress", null);
                 continue;
               }
               idle = 0;
               if (count > source.size() - position)
-                throw processing.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+                throw processing.roleFailure("source.length-mismatch", null);
               raw.write(position, window.flip());
               position += count;
             }
             if (position != source.size())
-              throw processing.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+              throw processing.roleFailure("source.length-mismatch", null);
           },
           processing);
       raw.seal();
       if (encoding != null) {
         encoded =
             SpillBuffer.openPrecharged(
-                Path.of(System.getProperty("java.io.tmpdir")),
-                budget,
-                processing,
-                lease,
-                encoding.outputBound());
+                scratchParent, budget, processing, lease, encoding.outputBound());
         try (ReadableByteChannel input = channel(raw)) {
           encoding.encoder().encode(input, source.size(), encoded, checkpoint, lease, processing);
         }
         encoded.seal();
       }
       return new PrivateResult(raw, encoded);
-    } catch (IOException failure) {
-      // A fold, not a retention: the session applies the policy and ceilings once accepted.
-      var failures = FailureRetention.folding(Operation.PACK);
-      failures.accept(processing.sourceFailure(failure));
-      if (encoded != null) {
-        try {
-          encoded.close();
-        } catch (ArchiveException cleanup) {
-          failures.accept(cleanup);
-        }
-      }
-      try {
-        raw.close();
-      } catch (ArchiveException cleanup) {
-        failures.accept(cleanup);
-      }
-      throw failures.finish(List.of());
-    } catch (RuntimeException | Error failure) {
-      // Even an unexpected caller/provider failure cannot strand private spool ownership.
-      if (encoded != null) {
-        try {
-          encoded.close();
-        } catch (ArchiveException cleanup) {
-          failure.addSuppressed(cleanup);
-        }
-      }
-      try {
-        raw.close();
-      } catch (ArchiveException cleanup) {
-        failure.addSuppressed(cleanup);
-      }
-      throw failure;
+    } catch (IOException | RuntimeException | Error failure) {
+      // Even a stop or an unexpected failure cannot strand private spool ownership: close both
+      // spools first, then hand everything over, so a residual path is never lost (ADR-0006).
+      throw processing.settle(failure, close(encoded, raw));
     }
+  }
+
+  /**
+   * Closes a worker's private spools, the encoded one first, and returns each structured cleanup
+   * failure, including any exact residual path, in close order.
+   *
+   * @param spools the spools to close; a null entry was never opened
+   */
+  private static List<ArchiveException> close(SpillBuffer... spools) {
+    List<ArchiveException> cleanup = new ArrayList<>(spools.length);
+    for (SpillBuffer spool : spools) {
+      if (spool == null) continue;
+      try {
+        spool.close();
+      } catch (ArchiveException failure) {
+        cleanup.add(failure);
+      }
+    }
+    return cleanup;
   }
 
   /**
@@ -378,11 +377,7 @@ public final class TransformStage implements AutoCloseable {
       throws IOException {
     SpillBuffer encoded =
         SpillBuffer.openPrecharged(
-            Path.of(System.getProperty("java.io.tmpdir")),
-            budget,
-            processing,
-            lease,
-            encoding.outputBound());
+            scratchParent, budget, processing, lease, encoding.outputBound());
     try {
       PackSources.consume(
           source,
@@ -393,24 +388,9 @@ public final class TransformStage implements AutoCloseable {
           processing);
       encoded.seal();
       return new PrivateResult(null, encoded);
-    } catch (IOException failure) {
-      // A fold, not a retention: the session applies the policy and ceilings once accepted.
-      var failures = FailureRetention.folding(Operation.PACK);
-      failures.accept(processing.sourceFailure(failure));
-      try {
-        encoded.close();
-      } catch (ArchiveException cleanup) {
-        failures.accept(cleanup);
-      }
-      throw failures.finish(List.of());
-    } catch (RuntimeException | Error failure) {
-      // Even an unexpected caller/provider failure cannot strand private spool ownership.
-      try {
-        encoded.close();
-      } catch (ArchiveException cleanup) {
-        failure.addSuppressed(cleanup);
-      }
-      throw failure;
+    } catch (IOException | RuntimeException | Error failure) {
+      // Even a stop or an unexpected failure cannot strand private spool ownership.
+      throw processing.settle(failure, close(encoded));
     }
   }
 

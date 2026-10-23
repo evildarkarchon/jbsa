@@ -321,7 +321,7 @@ final class SourceFileTest {
   /**
    * Supplies a known identity only to test internal validation, not to qualify Windows identity.
    */
-  private static SourceFile knownPlan(Path source) throws ArchiveException {
+  private static SourceFile knownPlan(Path source) throws IOException {
     return SourceFile.plan(source, path -> attributes(path, "known-file"));
   }
 

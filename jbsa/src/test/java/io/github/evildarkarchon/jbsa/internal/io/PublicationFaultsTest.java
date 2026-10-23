@@ -641,13 +641,13 @@ final class PublicationFaultsTest {
       PublicationTransaction.FileActions files)
       throws ArchiveException {
     var operation = session(Operation.PACK);
-    IoContext context = IoContext.of(destination, Operation.PACK);
+    IoContext context = IoContext.destination(destination, Operation.PACK);
     var plan = PublicationTransaction.Plan.ArchiveSet.streamed(destination, writers, policy);
     return operation.run(
         context,
         resources -> {
           ResourceBudget budget = ResourceBudget.forMutation(limits(), context);
-          resources.register(budget::close);
+          resources.register(budget::close, context);
           operation.begin();
           for (int index = 0; index < writers.size(); index++) budget.reserve(1024, 0, 0, 0);
           budget.metadata(64);
@@ -667,18 +667,18 @@ final class PublicationFaultsTest {
       AtomicInteger spoolCloses)
       throws ArchiveException {
     var operation = session(Operation.PACK);
-    IoContext context = IoContext.of(destination, Operation.PACK);
+    IoContext context = IoContext.destination(destination, Operation.PACK);
     return operation.run(
         context,
         resources -> {
           ResourceBudget budget = ResourceBudget.forMutation(ResourceLimits.standard(), context);
-          resources.register(budget::close);
+          resources.register(budget::close, context);
           operation.begin();
           // Stabilization is processing work, entered before any part plan exists (Q10).
           operation.completePhase();
           operation.processing(false);
           SpillBuffer stable = SpillBuffer.open(scratch, budget, context);
-          resources.register(stable::close);
+          resources.register(stable::close, IoContext.destination(scratch, Operation.PACK));
           var plan =
               PublicationTransaction.Plan.ArchiveSet.stabilized(
                   destination,

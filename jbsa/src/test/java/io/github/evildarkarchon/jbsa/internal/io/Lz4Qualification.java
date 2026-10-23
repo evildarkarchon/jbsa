@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
  */
 final class Lz4Qualification {
   private static final IoContext CONTEXT =
-      IoContext.of(Path.of("qualification.bin"), Operation.OPEN);
+      IoContext.source(Path.of("qualification.bin"), Operation.OPEN);
   private static final long NATIVE_CEILING = 40L * 1024 * 1024;
   private final StringBuilder rows =
       new StringBuilder(

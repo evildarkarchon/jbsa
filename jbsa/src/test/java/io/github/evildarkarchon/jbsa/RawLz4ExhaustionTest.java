@@ -81,9 +81,9 @@ final class RawLz4ExhaustionTest {
         "PROVIDER PORTABLE",
         "FAILURE POLICY",
         "PRIMARY POLICY PREFLIGHT ordinal=- id=io.resource-capacity"
-            + " [archive=large.ba2 entry=- name=- field=- span=- artifact=-]",
+            + " [archive=- entry=- name=- field=- span=- artifact=large.ba2]",
         "DIAGNOSTIC io.resource-capacity ERROR PACK PREFLIGHT"
-            + " [archive=large.ba2 entry=- name=- field=- span=- artifact=-] {}");
+            + " [archive=- entry=- name=- field=- span=- artifact=large.ba2] {}");
   }
 
   /** A small block's native readback declares only the source on the heap, so the pack succeeds. */
@@ -175,9 +175,9 @@ final class RawLz4ExhaustionTest {
       "PROVIDER " + provider,
       "FAILURE POLICY",
       "PRIMARY POLICY PREFLIGHT ordinal=- id=operation.resource-limit"
-          + " [archive=scratch.ba2 entry=- name=- field=- span=- artifact=-]",
+          + " [archive=- entry=- name=- field=- span=- artifact=scratch.ba2]",
       "DIAGNOSTIC operation.resource-limit ERROR PACK PREFLIGHT"
-          + " [archive=scratch.ba2 entry=- name=- field=- span=- artifact=-]"
+          + " [archive=- entry=- name=- field=- span=- artifact=scratch.ba2]"
           + " {ceiling=1000,field=maxScratchBytes,observed=1020}"
     };
   }

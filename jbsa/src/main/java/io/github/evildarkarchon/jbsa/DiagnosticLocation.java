@@ -8,12 +8,18 @@ import java.util.OptionalLong;
 /**
  * Structured evidence location; absent members identify an operation-wide diagnostic.
  *
- * @param archive source archive when applicable
+ * <p>A path is placed by its side of the operation, whatever the Failure Kind: an Operation Source
+ * goes in {@code archive}, an Operation Destination in {@code artifact}. A generated pack source
+ * has no path, so it is located by its entry ordinal and name alone.
+ *
+ * @param archive the Operation Source the operation read, when applicable: a source archive, or a
+ *     pack source file
  * @param entryOrdinal decoded archive-order entry ordinal
  * @param entryName complete display name when applicable
  * @param field format field or offending name segment when applicable
  * @param byteSpan encoded byte span when applicable
- * @param artifact affected filesystem artifact when applicable
+ * @param artifact the affected Operation Destination artifact, when applicable, including staged
+ *     and scratch data the operation reads back
  */
 public record DiagnosticLocation(
     Optional<Path> archive,

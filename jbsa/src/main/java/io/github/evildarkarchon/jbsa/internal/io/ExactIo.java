@@ -41,7 +41,11 @@ public final class ExactIo {
     }
   }
 
-  /** Fills the caller's remaining buffer through bounded windows or reports FORMAT/SOURCE. */
+  /**
+   * Fills the caller's remaining buffer through bounded windows, or reports FORMAT or the context's
+   * role failure. A read of the operation's own staged output is located at a destination, so its
+   * I/O fault is DESTINATION.
+   */
   public static void read(
       FileChannel channel, long extent, long offset, ByteBuffer destination, IoContext context)
       throws IOException {
@@ -49,13 +53,13 @@ public final class ExactIo {
     transfer(channel, offset, destination, false, context);
   }
 
-  /** Writes every remaining byte positionally, including backpatches, or reports DESTINATION. */
+  /** Writes every remaining byte positionally, including backpatches, or reports a role failure. */
   public static void write(FileChannel channel, long offset, ByteBuffer source, IoContext context)
       throws IOException {
     try {
       end(offset, source.remaining(), Long.MAX_VALUE, context);
     } catch (ArchiveException cause) {
-      throw context.failure(FailureKind.DESTINATION, "io.invalid-output-span", cause);
+      throw context.roleFailure("io.invalid-output-span", cause);
     }
     transfer(channel, offset, source, true, context);
   }
@@ -73,27 +77,18 @@ public final class ExactIo {
         count = write ? channel.write(window, offset) : channel.read(window, offset);
       } catch (ClosedChannelException cause) {
         // Child callers need the original channel-lifetime exception, not an operation diagnostic.
-        if (write) {
-          throw context.failure(FailureKind.DESTINATION, "operation.destination-io", cause);
-        }
+        if (write) throw context.structure(cause);
         throw cause;
       } catch (IOException cause) {
-        throw context.failure(
-            write ? FailureKind.DESTINATION : FailureKind.SOURCE,
-            write ? "operation.destination-io" : "operation.source-io",
-            cause);
+        throw context.structure(cause);
       }
       if (count < 0) {
-        throw context.failure(
-            write ? FailureKind.DESTINATION : FailureKind.FORMAT,
-            write ? "io.short-write" : "io.unexpected-eof",
-            null);
+        throw write
+            ? context.roleFailure("io.short-write", null)
+            : context.failure(FailureKind.FORMAT, "io.unexpected-eof", null);
       }
       if (count == 0) {
-        if (++zeros == MAX_ZERO_PROGRESS) {
-          throw context.failure(
-              write ? FailureKind.DESTINATION : FailureKind.SOURCE, "io.no-progress", null);
-        }
+        if (++zeros == MAX_ZERO_PROGRESS) throw context.roleFailure("io.no-progress", null);
       } else {
         zeros = 0;
         offset = Math.addExact(offset, count);
