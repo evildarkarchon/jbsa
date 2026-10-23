@@ -21,7 +21,7 @@ import java.util.Objects;
 import java.util.OptionalLong;
 
 /**
- * Stabilization for the {@link Admitted.Emission.PerPartRecords} emission (versioned BSA): each
+ * Stabilization for the {@link Admitted.Emission.PerPartRecords} Emission (versioned BSA): each
  * payload becomes one complete framed stored record in the stable spool, and each part replays its
  * records with per-part Content Sharing on those stored records.
  *
@@ -56,7 +56,7 @@ record PerPartRecordStabilizer<K>(Admitted<K> admitted) implements StabilizedEmi
   /** Replay holds one window, or two while confirming a sharing candidate; reserve the peak. */
   @Override
   public long replayHeap(boolean sharing) {
-    return (sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES;
+    return PayloadWindows.perPartSharingHeap(sharing);
   }
 
   /**

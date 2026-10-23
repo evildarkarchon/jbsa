@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The {@link Admitted.Emission.Streamed} emission (TES3): each part reads its sources while it
+ * The {@link Admitted.Emission.Streamed} Emission (TES3): each part reads its sources while it
  * stages, after every part's layout and the complete target set were admitted during preflight.
  * Content Sharing is per part, on the raw bytes of stored, unframed payloads.
  */
@@ -104,7 +104,7 @@ final class StreamedEmitter {
    */
   private static ResourceBudget.Lease reserveWindows(boolean sharing, ResourceBudget budget)
       throws ArchiveException {
-    return budget.reserve((sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES, 0, 0, 0);
+    return budget.reserve(PayloadWindows.perPartSharingHeap(sharing), 0, 0, 0);
   }
 
   /**
