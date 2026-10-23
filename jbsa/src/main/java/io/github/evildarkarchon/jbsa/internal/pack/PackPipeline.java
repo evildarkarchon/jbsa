@@ -129,19 +129,6 @@ public final class PackPipeline {
     };
   }
 
-  /**
-   * Returns whether Content Sharing compares complete stored records under an Emission, framing and
-   * the stored/compressed discriminator included, rather than raw decoded bytes. Only per-part
-   * records share on the stored basis.
-   */
-  private static boolean storedBasis(Admitted.Emission<?> emission) {
-    return switch (emission) {
-      case Admitted.Emission.Streamed<?> streamed -> false;
-      case Admitted.Emission.PerPartRecords<?> records -> true;
-      case Admitted.Emission.SetOwners<?> owners -> false;
-    };
-  }
-
   /** Rejects an entry-compression override whose identity no planned source carries. */
   private static void rejectUnmatchedOverrides(
       PackRequest request, List<PackSources.Entry> sources, IoContext context)
@@ -279,10 +266,15 @@ public final class PackPipeline {
 
   /**
    * Streams each part: its payloads are read while it stages, after every part's layout and the
-   * complete target set were admitted during preflight.
+   * complete target set were admitted during preflight. Every planned entry must be stored and
+   * unframed, which is checked once before splitting.
+   *
+   * @throws IllegalStateException when the adapter planned a compressed or framed entry, which the
+   *     operation template reports as INTERNAL {@code operation.internal-failure}
    */
   private static <K> OperationSession.Published streamed(
       Run run, Admitted<K> admitted, List<Planned<K>> planned) throws IOException {
+    requireStoredUnframed(planned);
     PackRequest request = run.request;
     List<List<Planned<K>>> parts = split(planned, admitted, request.options().splitting());
     List<Layout> layouts = new ArrayList<>(parts.size());
@@ -297,9 +289,8 @@ public final class PackPipeline {
         request.targetPolicy(),
         request.resourceLimits(),
         run.context);
-    // D8: admit the coordinator windows and codec working set before any writer allocates them.
-    try (var windows =
-        reserveWindows(planned, request.options().sharing(), run.codecs, run.budget)) {
+    // D8: admit the coordinator windows before any writer allocates them.
+    try (var windows = reserveWindows(request.options().sharing(), run.budget)) {
       var writers = new ArrayList<PublicationTransaction.Writer>();
       var completed = new ArrayList<OperationReport.ArchivePart>();
       long nextOrdinal = 0;
@@ -324,6 +315,25 @@ public final class PackPipeline {
               request.destination(), writers, request.targetPolicy());
       return new OperationSession.Published(
           PublicationTransaction.publish(run.operation, run.budget, plan), completed);
+    }
+  }
+
+  /**
+   * Rejects a streamed plan holding anything but stored, unframed payloads. Streamed placement
+   * neither writes frames nor encodes, and no Content Sharing rule is defined for a compressed
+   * streamed entry, so such a plan is a JBSA bug. It is checked before any source is read.
+   *
+   * @throws IllegalStateException for the first entry with a codec other than {@link
+   *     PayloadCodec#STORED} or a non-empty frame
+   */
+  private static void requireStoredUnframed(List<? extends Planned<?>> planned) {
+    for (Planned<?> entry : planned) {
+      if (entry.codec() != PayloadCodec.STORED)
+        throw new IllegalStateException(
+            "Streamed emission planned " + entry.codec() + " for " + entry.source().displayName());
+      if (entry.frame().length > 0)
+        throw new IllegalStateException(
+            "Streamed emission planned a frame for " + entry.source().displayName());
     }
   }
 
@@ -945,18 +955,13 @@ public final class PackPipeline {
   }
 
   /**
-   * Reserves the peak coordinator windows a streamed part holds at once (two while comparing a
-   * sharing candidate, otherwise one transfer window) plus the largest codec working set.
+   * Reserves the peak coordinator windows a streamed part holds at once: two while comparing a
+   * sharing candidate, otherwise one transfer window. Streamed payloads are stored, and the stored
+   * codec's encode cost is zero, so no encoder working set is added.
    */
-  private static ResourceBudget.Lease reserveWindows(
-      List<? extends Planned<?>> planned, boolean sharing, Codecs codecs, ResourceBudget budget)
+  private static ResourceBudget.Lease reserveWindows(boolean sharing, ResourceBudget budget)
       throws ArchiveException {
-    AdmittedCodec.Cost encoder = codecs.largestPrecharge(planned);
-    return budget.reserve(
-        (sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES + encoder.heapBytes(),
-        encoder.nativeBytes(),
-        0,
-        0);
+    return budget.reserve((sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES, 0, 0, 0);
   }
 
   /**
@@ -974,7 +979,6 @@ public final class PackPipeline {
       throws IOException {
     // Per-part scope: a streamed part can reference only copies already staged in this file.
     ContentSharing<Long> sharing = new ContentSharing<>();
-    boolean storedBasis = storedBasis(admitted.emission());
     List<Placed<K>> placed = new ArrayList<>(part.size());
     long next = layout.payloadStart();
     TransformStage stage =
@@ -994,8 +998,7 @@ public final class PackPipeline {
           IoContext processing = entry.source().processing(firstOrdinal + index);
           Placed<K> result =
               run.request.options().sharing()
-                  ? placeShared(
-                      entry, staged, next, output, sharing, processing, run, windows, storedBasis)
+                  ? placeShared(entry, staged, next, output, sharing, processing, run, windows)
                   : place(entry, staged, next, output, processing, run, windows);
           // Shared copies always lie before `next`; only a zero-length match can equal it, and
           // advancing by its zero size is a no-op, so equality identifies a fresh placement.
@@ -1031,7 +1034,11 @@ public final class PackPipeline {
     if (pending != null) throw new AssertionError(pending);
   }
 
-  /** Writes one unshared stored record directly at the next payload position. */
+  /**
+   * Writes one unshared stored payload directly at the next payload position. The bytes still pass
+   * through the codec map's stored path, so its declared-length and end checks fail exactly as
+   * before.
+   */
   private static <K> Placed<K> place(
       Planned<K> entry,
       TransformStage.Input staged,
@@ -1041,35 +1048,31 @@ public final class PackPipeline {
       Run run,
       ResourceBudget.Lease windows)
       throws IOException {
-    byte[] frame = entry.frame();
-    if (frame.length > 0) output.write(position, ByteBuffer.wrap(frame));
-    long start = position + frame.length;
     long[] extent = {0};
     consume(
         entry.source(),
         staged,
         input ->
             run.codecs.encode(
-                entry.codec(),
+                PayloadCodec.STORED,
                 input,
                 entry.source().size(),
                 (offset, bytes) -> {
                   extent[0] = Math.max(extent[0], offset + bytes.remaining());
-                  output.write(start + offset, bytes);
+                  output.write(position + offset, bytes);
                 },
                 output::checkpoint,
                 run.budget,
                 windows,
                 processing),
         processing);
-    return new Placed<>(entry, position, frame.length + extent[0]);
+    return new Placed<>(entry, position, extent[0]);
   }
 
   /**
-   * Stabilizes one record in part-owned scratch while digesting it, then either references the
-   * earliest byte-identical copy in this part or replays it at the next payload position.
-   *
-   * @param storedBasis whether sharing compares complete stored records rather than raw bytes
+   * Copies one stored payload into part-owned scratch while digesting its raw bytes, then either
+   * references the earliest byte-identical copy in this part or replays it at the next payload
+   * position. A streamed payload is stored and unframed, so its raw bytes are its stored record.
    */
   private static <K> Placed<K> placeShared(
       Planned<K> entry,
@@ -1079,30 +1082,24 @@ public final class PackPipeline {
       ContentSharing<Long> sharing,
       IoContext processing,
       Run run,
-      ResourceBudget.Lease windows,
-      boolean storedBasis)
+      ResourceBudget.Lease windows)
       throws IOException {
     SpillBuffer scratch = output.scratch();
     IOException primary = null;
     try {
       MessageDigest digest = ContentSharing.sha256();
-      byte[] frame = entry.frame();
-      if (frame.length > 0) {
-        scratch.write(0, ByteBuffer.wrap(frame));
-        // A raw basis compares decoded bytes only; the frame is part of a stored record.
-        if (storedBasis) digest.update(frame);
-      }
+      // The stored path keeps the declared-length and end checks the transfer has always had.
       consume(
           entry.source(),
           staged,
           input ->
               run.codecs.encode(
-                  entry.codec(),
+                  PayloadCodec.STORED,
                   input,
                   entry.source().size(),
                   (offset, bytes) -> {
                     digest.update(bytes.duplicate());
-                    scratch.write(frame.length + offset, bytes);
+                    scratch.write(offset, bytes);
                   },
                   output::checkpoint,
                   run.budget,
@@ -1111,9 +1108,8 @@ public final class PackPipeline {
           processing);
       scratch.seal();
       long size = scratch.size();
-      String key =
-          ContentSharing.key(
-              size, digest.digest(), storedBasis && entry.codec() != PayloadCodec.STORED);
+      // Every streamed copy is stored, so no stored/compressed discriminator is needed.
+      String key = ContentSharing.key(size, digest.digest(), false);
       Long match =
           sharing.find(
               key,

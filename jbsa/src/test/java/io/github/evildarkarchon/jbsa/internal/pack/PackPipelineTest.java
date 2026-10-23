@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Drives {@link PackPipeline} directly through the test-only {@link MemoryEncoder} adapter, so the
@@ -202,6 +204,53 @@ class PackPipelineTest {
         snapshots);
     assertEquals(0, opens.get());
     assertFalse(Files.exists(request.destination()), "an output was left");
+  }
+
+  /**
+   * Streamed emission carries stored, unframed payloads only. A streamed plan holding a compressed
+   * ({@code .z}) or framed ({@code .f}) entry is a programmer error caught once, before splitting
+   * and before any source is read: INTERNAL at PREFLIGHT, then zero CLEANUP progress, and no part
+   * is published. The stored entry {@code b} comes first in output order, so a check made while
+   * staging would already have read it.
+   */
+  @ParameterizedTest
+  @ValueSource(strings = {"a.z", "a.f"})
+  void streamedPlanOfANonStoredOrFramedEntryFailsFastAsInternal(String unsupported)
+      throws IOException {
+    var snapshots = new ArrayList<ProgressSnapshot>();
+    var request =
+        request(
+            temporary.resolve("streamed.mem"),
+            options(1, true, Map.of()),
+            limits(10),
+            1,
+            source(unsupported, 2),
+            source("b", 2));
+
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                PackPipeline.pack(
+                    request,
+                    new OperationControl(snapshots::add, () -> false),
+                    new MemoryEncoder(0)));
+
+    assertInternal(failure, OperationPhase.PREFLIGHT);
+    assertInstanceOf(IllegalStateException.class, failure.primaryFailure().cause().orElseThrow());
+    assertEquals(
+        List.of(
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 0, OptionalLong.empty()),
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 1, OptionalLong.empty()),
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 2, OptionalLong.empty()),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, OptionalLong.empty()),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, OptionalLong.of(0))),
+        snapshots);
+    assertEquals(0, opens.get(), "a source was read");
+    // The one-byte target would split each entry into its own part; neither part may exist.
+    try (var left = Files.list(temporary)) {
+      assertEquals(List.of(), left.toList(), "a part was published");
+    }
   }
 
   /** The three Splitting arms, driven by the adapter's declarative split cost. */
@@ -1154,6 +1203,8 @@ class PackPipelineTest {
    * size, and an 8-byte NUL-padded name; payloads follow. Output order reverses Logical Plan Order,
    * so tests can tell the two apart, and the name "bad" breaks its only per-entry rule. The name
    * "boom" makes {@code plan} throw an {@link AssertionError}, standing in for a programmer error.
+   * Under streamed emission, a name ending in {@code .z} is planned zlib-encoded and one ending in
+   * {@code .f} is planned with a one-byte frame, both of which streamed emission rejects.
    *
    * @param defaultSplitTarget the FamilyDefault split target
    * @param refuse whether admission fails with UNSUPPORTED {@code memory.admit-refused}
@@ -1287,6 +1338,12 @@ class PackPipelineTest {
                       name,
                       name.endsWith(".z") ? PayloadCodec.ZLIB : PayloadCodec.STORED,
                       new byte[] {(byte) name.length()}));
+            // A streamed plan of a compressed or framed entry stands in for an adapter bug: streamed
+            // emission carries stored, unframed payloads only.
+            else if (strategy == Strategy.STREAMED && name.endsWith(".z"))
+              planned.add(new Planned<>(source, name, PayloadCodec.ZLIB, new byte[0]));
+            else if (strategy == Strategy.STREAMED && name.endsWith(".f"))
+              planned.add(new Planned<>(source, name, PayloadCodec.STORED, new byte[] {1}));
             else planned.add(new Planned<>(source, name, PayloadCodec.STORED, new byte[0]));
           }
           Collections.reverse(planned);

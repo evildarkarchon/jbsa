@@ -118,6 +118,12 @@ public interface Admitted<K> {
      * Each part reads its sources while it stages (TES3). Identical payloads share within one
      * Archive Part, compared on their raw bytes, and a split charges each entry's declared decoded
      * size, because a streamed part cannot know an encoded size before it stages.
+     *
+     * <p>It carries stored, unframed payloads only: every {@link Planned} entry must use {@link
+     * PayloadCodec#STORED} with an empty frame, and the pipeline rejects any other plan as a JBSA
+     * bug before splitting. Raw-byte sharing is defined only because a stored, unframed payload's
+     * raw bytes are its stored record. A streamed family that compresses or frames its payloads
+     * would need its own Content Sharing rule designed first.
      */
     record Streamed<K>() implements Emission<K> {}
 
