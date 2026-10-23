@@ -225,18 +225,6 @@ public final class AdmittedCodec {
   }
 
   /**
-   * Refuses a raw block above the provider or dispatch limit before its caller reserves the encode
-   * cost, so a refused block reports {@code codec.dispatch-limit}, not the capacity failure its
-   * oversized cost would otherwise raise first. Every other codec accepts any size here.
-   *
-   * @throws ArchiveException POLICY {@code codec.size-limit} or {@code codec.dispatch-limit}
-   */
-  public static void checkEncodeSize(PayloadCodec codec, long decodedSize, IoContext context)
-      throws ArchiveException {
-    if (codec == PayloadCodec.LZ4_RAW) Lz4Raw.admitEncode(decodedSize, context);
-  }
-
-  /**
    * Encodes exactly {@code decodedSize} bytes pulled from a channel, which only zlib does: it reads
    * the channel itself and detects a short or long source. The caller has reserved {@link
    * #encodeCost} and lends the lease; source and sink stay the caller's.
@@ -324,14 +312,14 @@ public final class AdmittedCodec {
 
   /**
    * Decodes one complete block, which only raw LZ4 does, publishing it to {@code sink} in order.
-   * The caller has refused oversized blocks through {@link #checkDecodeSize}, reserved {@link
-   * #decodeCost} for this call, and holds the decoded copy itself.
+   * The caller has refused oversized blocks through {@link #checkDecodeSize}, the block's only size
+   * check, reserved {@link #decodeCost} for this call, and holds the decoded copy itself.
    *
    * @param lease the caller's reservation of this call's cost, borrowed and never closed here
    * @return the decoded length, always {@code decodedSize}
    * @throws NullPointerException when {@code lease} is null
    * @throws IllegalArgumentException for every codec that streams through {@link #decoder}
-   * @throws IOException a structured size-limit, codec, source, or sink failure
+   * @throws IOException a structured codec, source, or sink failure
    */
   public long decode(
       ByteSource source,

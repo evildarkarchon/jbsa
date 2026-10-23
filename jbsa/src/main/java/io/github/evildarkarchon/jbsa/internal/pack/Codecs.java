@@ -5,14 +5,17 @@ import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
+import io.github.evildarkarchon.jbsa.internal.pack.Admitted.Planned;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,7 +23,7 @@ import java.util.Set;
  * The pipeline's private codec map. It is the only place that invokes a payload encoder. Stored,
  * zlib, the versioned BSA LZ4 frame, and Starfield raw LZ4 are routed here, each through the {@link
  * AdmittedCodec} the request admitted once, which owns its worst-case output bound and heap/native
- * working set. One conservative zlib bound serves every family (D3).
+ * working set. One conservative zlib bound, {@link AdmittedCodec#bound}, serves every family (D3).
  */
 final class Codecs {
   /** Every codec this request admitted, keyed by the codec an adapter names. */
@@ -29,15 +32,6 @@ final class Codecs {
   private Codecs(Map<PayloadCodec, AdmittedCodec> admitted) {
     this.admitted = admitted;
   }
-
-  /**
-   * One encoding's admission costs.
-   *
-   * @param bound the worst-case encoded size
-   * @param heap heap the encoder allocates beyond the caller's own transfer window
-   * @param nativeBytes native memory the encoder allocates
-   */
-  record Cost(long bound, long heap, long nativeBytes) {}
 
   /**
    * Admits every codec a request can select before any source is planned. Stored and zlib need only
@@ -74,32 +68,50 @@ final class Codecs {
     return found;
   }
 
-  /** Returns every admitted codec, for declarations such as readback that cost a decode. */
-  Map<PayloadCodec, AdmittedCodec> all() {
-    return admitted;
+  /**
+   * Returns the largest encode cost the coordinator's all-or-nothing reservation must cover for
+   * {@code entries}: the largest heap and the largest native cost of any entry whose codec it
+   * precharges. The coordinator runs one encoder at a time, so the reservation covers the heaviest
+   * one, not their sum; the two maxima may come from different entries. Entries the coordinator
+   * does not encode must be filtered out by the caller.
+   *
+   * @return the largest costs, or zero when no entry is precharged
+   */
+  AdmittedCodec.Cost largestPrecharge(List<? extends Planned<?>> entries) {
+    long heap = 0;
+    long nativeBytes = 0;
+    for (Planned<?> entry : entries) {
+      // Raw LZ4 is coordinator-encoded but reserved per call by encode, kept apart from this
+      // reservation so its exhaustion outcomes stay where they were (#96); a codec encode
+      // reserves per call must not be charged here a second time.
+      if (!coordinatorPrecharges(entry.codec())) continue;
+      AdmittedCodec.Cost cost = admitted(entry.codec()).encodeCost(entry.source().size());
+      heap = Math.max(heap, cost.heapBytes());
+      nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
+    }
+    return new AdmittedCodec.Cost(heap, nativeBytes);
   }
 
   /**
-   * Returns the admission costs of encoding {@code decodedSize} bytes with an admitted codec.
+   * Returns the codec credits one part's readback charges, under the codecs this request admitted,
+   * so readback charges the same rule, under the same provider, as the read. The reader opens one
+   * entry at a time, so one codec is live at once: the credit is the largest decode cost of any
+   * declared codec, plus the decoded copy its reader holds of the part's largest source ({@link
+   * PayloadCodec#decodedCopyBytes}, which only a whole-block codec holds).
    *
-   * @throws ArithmeticException when the bound does not fit a signed long
+   * @throws IllegalStateException when a declared codec was not admitted, which is a JBSA bug
    */
-  Cost cost(PayloadCodec codec, long decodedSize) {
-    return cost(admitted(codec), decodedSize);
-  }
-
-  /**
-   * Returns the admission costs of encoding {@code decodedSize} bytes with {@code codec}: its bound
-   * and encode cost, both owned by the admitted codec.
-   *
-   * @throws ArithmeticException when the bound does not fit a signed long
-   */
-  static Cost cost(AdmittedCodec codec, long decodedSize) {
-    long bound = codec.bound(decodedSize);
-    // Raw LZ4's real cost is its whole block, output bound and HC state; encode reserves it per
-    // call on the coordinator (see coordinatorPrecharges), never the codec itself.
-    AdmittedCodec.Cost encode = codec.encodeCost(decodedSize);
-    return new Cost(bound, encode.heapBytes(), encode.nativeBytes());
+  AdmittedCodec.Cost readbackCost(Admitted.Readback readback) {
+    long heap = 0, nativeBytes = 0;
+    for (PayloadCodec codec : readback.decodes()) {
+      AdmittedCodec found = admitted.get(codec);
+      if (found == null)
+        throw new IllegalStateException(codec + " is read back without being admitted");
+      AdmittedCodec.Cost decode = found.maxDecodeCost();
+      heap = Math.max(heap, decode.heapBytes() + codec.decodedCopyBytes(readback.largestSource()));
+      nativeBytes = Math.max(nativeBytes, decode.nativeBytes());
+    }
+    return new AdmittedCodec.Cost(heap, nativeBytes);
   }
 
   /**
@@ -113,15 +125,16 @@ final class Codecs {
   }
 
   /**
-   * Returns whether the coordinator's all-or-nothing reservation covers this codec's {@link #cost}.
-   * Raw LZ4 is the exception: {@link #encode} reserves its cost separately, per call, just before
-   * the encoder runs. Folding it into the up-front reservation would change reported outcomes. That
-   * reservation is costed from the whole source, so an oversized raw block, or a DX10 texture whose
-   * chunks are each encoded separately, would fail {@code io.resource-capacity} up front instead of
-   * {@code codec.dispatch-limit} at its entry, or instead of succeeding chunk by chunk; and a raw
-   * exhaustion would preempt failures of entries stabilized before it.
+   * Returns whether the coordinator's all-or-nothing reservation covers this codec's encode cost
+   * ({@link #largestPrecharge}). Raw LZ4 is the exception: {@link #encode} reserves its cost
+   * separately, per call, just before the encoder runs. Folding it into the up-front reservation
+   * would change reported outcomes. That reservation is costed from the whole source, so an
+   * oversized raw block, or a DX10 texture whose chunks are each encoded separately, would fail
+   * {@code io.resource-capacity} up front instead of {@code codec.dispatch-limit} at its entry, or
+   * instead of succeeding chunk by chunk; and a raw exhaustion would preempt failures of entries
+   * stabilized before it.
    */
-  static boolean coordinatorPrecharges(PayloadCodec codec) {
+  private static boolean coordinatorPrecharges(PayloadCodec codec) {
     return codec != PayloadCodec.LZ4_RAW;
   }
 
@@ -150,9 +163,9 @@ final class Codecs {
    *
    * @param codec the admitted codec, whose provider and profile identity the encoder uses
    * @param budget the operation budget raw LZ4's per-call reservation draws on
-   * @param admission a reservation already covering {@link #cost}'s heap and native bytes, which
-   *     the encoder borrows; for raw LZ4 it covers none of them, because this method reserves raw
-   *     LZ4's cost against {@code budget} for the call (see {@link #coordinatorPrecharges})
+   * @param admission a reservation already covering the codec's encode cost, which the encoder
+   *     borrows; for raw LZ4 it covers none of it, because this method reserves raw LZ4's cost
+   *     against {@code budget} for the call (see {@link #coordinatorPrecharges})
    * @throws IOException a structured source-length, stall, codec, or sink failure
    * @throws NullPointerException when {@code admission} is null
    */
@@ -195,10 +208,10 @@ final class Codecs {
         // The reservation keeps the order the self-reserving encoder had: dispatch admission
         // first, so an oversized block reports codec.dispatch-limit rather than the capacity
         // failure its cost would raise, then cancellation, then the charge.
-        AdmittedCodec.checkEncodeSize(codec.codec(), decodedSize, processing);
+        Lz4Raw.admitEncode(decodedSize, processing);
         checkpoint.check();
-        Cost cost = cost(codec, decodedSize);
-        try (var lease = budget.reserve(cost.heap(), cost.nativeBytes(), 0, 0)) {
+        AdmittedCodec.Cost cost = codec.encodeCost(decodedSize);
+        try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
           // The admitted raw encoder runs at Starfield's qualified HC level 12.
           codec.encode(
               (offset, bytes) -> {

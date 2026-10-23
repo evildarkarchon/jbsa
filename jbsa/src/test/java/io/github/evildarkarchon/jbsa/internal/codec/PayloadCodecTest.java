@@ -444,16 +444,13 @@ final class PayloadCodecTest {
     assertSizeRefused(
         "codec.size-limit",
         () -> AdmittedCodec.checkDecodeSize(PayloadCodec.LZ4_RAW, -1, 1, CONTEXT));
-    assertSizeRefused(
-        "codec.dispatch-limit",
-        () -> AdmittedCodec.checkEncodeSize(PayloadCodec.LZ4_RAW, DISPATCH + 1L, CONTEXT));
+    // The pack codec map refuses a raw source through the raw profile's own encode admission.
+    assertSizeRefused("codec.dispatch-limit", () -> Lz4Raw.admitEncode(DISPATCH + 1L, CONTEXT));
     AdmittedCodec.checkDecodeSize(PayloadCodec.LZ4_RAW, bound, DISPATCH, CONTEXT);
-    AdmittedCodec.checkEncodeSize(PayloadCodec.LZ4_RAW, DISPATCH, CONTEXT);
+    Lz4Raw.admitEncode(DISPATCH, CONTEXT);
     for (PayloadCodec codec : PayloadCodec.values())
-      if (codec != PayloadCodec.LZ4_RAW) {
+      if (codec != PayloadCodec.LZ4_RAW)
         AdmittedCodec.checkDecodeSize(codec, Long.MAX_VALUE, Long.MAX_VALUE, CONTEXT);
-        AdmittedCodec.checkEncodeSize(codec, Long.MAX_VALUE, CONTEXT);
-      }
   }
 
   /** Asserts a POLICY size refusal with the given identifier. */
