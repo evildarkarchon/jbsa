@@ -24,6 +24,14 @@ _Avoid_: Volume, chunk, split file
 Identical payloads within a pack referencing one stored copy instead of repeating it. Its scope (one Archive Part or the whole archive set) and its comparison key are intrinsic to the Archive Family, because they determine output bytes. A digest only shortlists candidates; sharing always requires exact byte equality.
 _Avoid_: Deduplication, compression
 
+**Payload Codec**:
+The wire encoding of one stored entry payload: stored, zlib, the BSA LZ4 frame, or raw LZ4. Which Payload Codecs an entry may use is fixed by its Archive Family; which provider performs the encoding is fixed by the Codec Profile, never by the caller.
+_Avoid_: Compression type, codec provider
+
+**Codec Profile**:
+An immutable, qualified set of codec providers, parameters, size-dispatch rules and native configuration, named by an opaque identifier that diagnostics may reference. A process pins one Codec Profile, so evidence from every Payload Codec it runs names that same profile; a change to any part is a newly qualified profile, never an edit.
+_Avoid_: LZ4 profile, codec settings
+
 **Tolerated Noncanonical Archive**:
 A Bethesda Archive whose structure is noncanonical but remains bounded, unambiguous, and safely decodable. It produces a stable diagnostic and is never a valid encoder output.
 _Avoid_: Malformed-but-valid archive, lenient archive
