@@ -6,8 +6,10 @@ import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -123,6 +125,79 @@ final class OwnedArchiveTest {
     assertSame(detached, archive.inspection());
     assertTrue(second.assessment().isPresent());
     Files.delete(path);
+  }
+
+  /**
+   * A reader admits each Payload Codec once, when it first needs it, not once per call (#92, user
+   * story 9): the index session across repeated payload prefixes, and the archive across every raw
+   * chunk of a DX10 texture and every cursor opened on it.
+   */
+  @Test
+  void admitsEachCodecOncePerSessionAndArchive() throws Exception {
+    // One literal-only raw LZ4 block that decodes to "hello"; every chunk points at it.
+    byte[] block = HexFormat.of().parseHex("5068656c6c6f");
+    Path path = Files.write(directory.resolve("raw.bin"), block);
+    byte[] header = {68, 68, 83, 32};
+    int chunkCount = 8;
+    List<EntryMetadata.DdsChunk> chunks =
+        java.util.Collections.nCopies(chunkCount, new EntryMetadata.DdsChunk(0, 6, 5, 0, 0, 0));
+    long decoded = header.length + 5L * chunkCount;
+    var detection =
+        BethesdaArchives.standard()
+            .detect(Files.write(directory.resolve("selector"), new byte[] {0, 1, 0, 0}));
+    var inspection =
+        new ArchiveInspection(
+            detection,
+            new ArchiveMetadata.Tes3(1, 0, 0),
+            new ArchiveAssessment(
+                ArchiveDisposition.CONFORMING, new ValidationExtent.Structure(), List.of()));
+    int[] sessionAdmissions = {-1};
+    try (OpenArchive archive =
+        OwnedArchive.load(
+            path,
+            ResourceLimits.standard(),
+            Operation.OPEN,
+            session -> {
+              for (int call = 0; call < 3; call++)
+                assertEquals(
+                    ByteBuffer.wrap("hello".getBytes(StandardCharsets.US_ASCII)),
+                    session.readPayloadPrefix(0, 6, 5, PayloadCodec.LZ4_RAW, 5));
+              sessionAdmissions[0] = session.codecAdmissions();
+              session.declareEntries(1);
+              session.addDds(
+                  new EntryMetadata(
+                      ArchiveFamily.TES3_BSA,
+                      ArchiveEncoding.tes3(),
+                      0,
+                      "a",
+                      Optional.empty(),
+                      Map.of(),
+                      decoded,
+                      6,
+                      new EntryMetadata.Tes3(0, 0, 0, 0)),
+                  header,
+                  chunks,
+                  PayloadCodec.LZ4_RAW);
+              return inspection;
+            })) {
+      assertEquals(1, sessionAdmissions[0]);
+      byte[] expected = ("DDS " + "hello".repeat(chunkCount)).getBytes(StandardCharsets.US_ASCII);
+      for (int cursor = 0; cursor < 2; cursor++)
+        try (EntryContent content = archive.entry(0).openContent()) {
+          assertArrayEquals(expected, readAll(content, (int) decoded));
+        }
+      assertEquals(1, ((OwnedArchive) archive).codecAdmissions());
+    }
+    Files.delete(path);
+  }
+
+  /** Reads a cursor to EOF through small windows, so every chunk is served separately. */
+  private static byte[] readAll(EntryContent content, int size) throws Exception {
+    ByteBuffer all = ByteBuffer.allocate(size);
+    ByteBuffer window = ByteBuffer.allocate(3);
+    while (content.read(window.clear()) >= 0) all.put(window.flip());
+    assertFalse(all.hasRemaining(), "short read");
+    return all.array();
   }
 
   /**
