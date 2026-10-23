@@ -5,7 +5,6 @@ import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
@@ -208,7 +207,7 @@ final class Codecs {
         // The reservation keeps the order the self-reserving encoder had: dispatch admission
         // first, so an oversized block reports codec.dispatch-limit rather than the capacity
         // failure its cost would raise, then cancellation, then the charge.
-        Lz4Raw.admitEncode(decodedSize, processing);
+        AdmittedCodec.checkRawEncodeSize(decodedSize, processing);
         checkpoint.check();
         AdmittedCodec.Cost cost = codec.encodeCost(decodedSize);
         try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {

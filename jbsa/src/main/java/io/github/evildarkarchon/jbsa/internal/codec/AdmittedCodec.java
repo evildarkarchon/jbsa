@@ -196,6 +196,19 @@ public final class AdmittedCodec {
   }
 
   /**
+   * Refuses a raw LZ4 source above the provider or dispatch limit. The pack codec map calls it only
+   * for raw LZ4, before it reserves the encode cost, so a refused block reports {@code
+   * codec.dispatch-limit}, not the capacity failure its oversized cost would otherwise raise first.
+   * It names no codec because only raw LZ4 has an unsplittable encode limit.
+   *
+   * @throws ArchiveException POLICY {@code codec.size-limit} or {@code codec.dispatch-limit}
+   */
+  public static void checkRawEncodeSize(long decodedSize, IoContext context)
+      throws ArchiveException {
+    Lz4Raw.admitEncode(decodedSize, context);
+  }
+
+  /**
    * Encodes exactly {@code decodedSize} bytes pulled from a channel, which only zlib does: it reads
    * the channel itself and detects a short or long source. The caller has reserved {@link
    * #encodeCost} and lends the lease; source and sink stay the caller's.
