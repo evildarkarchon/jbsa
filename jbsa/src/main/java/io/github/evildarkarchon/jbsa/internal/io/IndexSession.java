@@ -388,13 +388,11 @@ public final class IndexSession {
    */
   public DiagnosticLocation location(
       long ordinal, String name, String field, long offset, long length) {
-    return new DiagnosticLocation(
-        Optional.of(context.path()),
+    return context.location(
         ordinal < 0 ? OptionalLong.empty() : OptionalLong.of(ordinal),
         Optional.ofNullable(name),
         Optional.of(field),
-        Optional.of(new DiagnosticLocation.ByteSpan(offset, length)),
-        Optional.empty());
+        Optional.of(new DiagnosticLocation.ByteSpan(offset, length)));
   }
 
   /**

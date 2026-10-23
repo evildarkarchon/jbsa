@@ -19,7 +19,8 @@ import org.junit.jupiter.api.Test;
  * Qualifies internal reservations independently of host memory and archive-format implementations.
  */
 final class ResourceBudgetTest {
-  private static final IoContext CONTEXT = IoContext.of(Path.of("archive.bin"), Operation.OPEN);
+  private static final IoContext CONTEXT =
+      IoContext.destination(Path.of("archive.bin"), Operation.OPEN);
 
   /**
    * A growing scratch owner reuses one token, rejects over-limit growth, and returns all credit.

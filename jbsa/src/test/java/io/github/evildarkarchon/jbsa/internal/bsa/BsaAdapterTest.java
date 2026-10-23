@@ -26,7 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class BsaAdapterTest {
   private static final Path TARGET = Path.of("unused.bsa").toAbsolutePath();
-  private static final IoContext CONTEXT = IoContext.of(TARGET, Operation.PACK);
+  private static final IoContext CONTEXT = IoContext.destination(TARGET, Operation.PACK);
 
   @TempDir Path temporary;
 
@@ -198,7 +198,8 @@ class BsaAdapterTest {
     var admitted = admitted(0x67, options(PackOptions.Compression.ZLIB, Map.of()));
     var entry = admitted.plan(List.of(entry("x\\a.txt", 1)), CONTEXT).getFirst();
     var processing =
-        new IoContext(TARGET, Operation.PACK, OperationPhase.PROCESSING, OptionalLong.of(3));
+        IoContext.destination(TARGET, Operation.PACK)
+            .at(OperationPhase.PROCESSING, OptionalLong.of(3));
     admitted.checkStored(entry.stabilized(0x3fff_ffffL), processing);
     var failure =
         assertThrows(
@@ -438,9 +439,10 @@ class BsaAdapterTest {
         identity.getBytes(StandardCharsets.US_ASCII),
         0,
         size,
-        reader -> {
+        (reader, processing) -> {
           throw new AssertionError("Adapters must not read payloads");
-        });
+        },
+        IoContext.generated(identity, Operation.PACK));
   }
 
   /** A generated source with fixed bytes. */

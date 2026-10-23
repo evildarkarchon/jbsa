@@ -192,8 +192,7 @@ final class Codecs {
       case STORED -> PayloadWindows.transfer(input, decodedSize, sink, checkpoint, processing);
       case ZLIB -> codec.encode(input, decodedSize, sink, checkpoint, admission, processing);
       case BSA_LZ4_FRAME -> {
-        if (input == null)
-          throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
+        if (input == null) throw processing.roleFailure("source.invalid-channel", null);
         long[] read = {0};
         codec.encode(
             (offset, bytes) -> {
@@ -211,8 +210,7 @@ final class Codecs {
         requireEnd(input, checkpoint, processing);
       }
       case LZ4_RAW -> {
-        if (input == null)
-          throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
+        if (input == null) throw processing.roleFailure("source.invalid-channel", null);
         // The reservation keeps the order the self-reserving encoder had: dispatch admission
         // first, so an oversized block reports codec.dispatch-limit rather than the capacity
         // failure its cost would raise, then cancellation, then the charge.
@@ -249,9 +247,9 @@ final class Codecs {
     while (bytes.hasRemaining()) {
       checkpoint.check();
       int count = input.read(bytes);
-      if (count < 0) throw processing.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (count < 0) throw processing.roleFailure("source.length-mismatch", null);
       if (count == 0) {
-        if (++idle > 16) throw processing.failure(FailureKind.SOURCE, "io.no-progress", null);
+        if (++idle > 16) throw processing.roleFailure("io.no-progress", null);
       } else idle = 0;
     }
   }
@@ -268,8 +266,8 @@ final class Codecs {
       checkpoint.check();
       int count = input.read(probe);
       if (count < 0) return;
-      if (count > 0) throw processing.failure(FailureKind.SOURCE, "source.length-mismatch", null);
-      if (++idle > 16) throw processing.failure(FailureKind.SOURCE, "io.no-progress", null);
+      if (count > 0) throw processing.roleFailure("source.length-mismatch", null);
+      if (++idle > 16) throw processing.roleFailure("io.no-progress", null);
     }
   }
 }

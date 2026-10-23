@@ -29,7 +29,7 @@ public final class Lz4LaunchProbe {
    * @throws AssertionError if lz4-java's JNI library was loaded (JBSA-CODEC-014)
    */
   public static void main(String[] args) throws Exception {
-    var context = IoContext.of(Path.of("probe.bin"), Operation.OPEN);
+    var context = IoContext.source(Path.of("probe.bin"), Operation.OPEN);
     BethesdaArchives.standard();
     long size;
     // A budget's native ceilings come from LZ4-free module facts, so charging zlib loads no LZ4.

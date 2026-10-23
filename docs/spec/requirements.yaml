@@ -1,6 +1,6 @@
 schema_version: 2
 specification:
-  version: 0.21.1
+  version: 0.22.0
   status: normative
   authority: docs/spec/README.md
 requirements:
@@ -2658,13 +2658,17 @@ requirements:
       - https://github.com/evildarkarchon/jbsa/issues/15#issuecomment-5520876855
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5533832048
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+      - https://github.com/evildarkarchon/jbsa/issues/104
     lifecycle_state: active
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
+      - https://github.com/evildarkarchon/jbsa/issues/104
     test_evidence:
       - docs/development/interface-freeze.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/IoContextTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/ExactIoTest.java
   - id: JBSA-OPS-005
     owner:
       document: docs/spec/operation-semantics.md
@@ -2672,13 +2676,17 @@ requirements:
     source_decisions:
       - https://github.com/evildarkarchon/jbsa/issues/13#issuecomment-5520636777
       - https://github.com/evildarkarchon/jbsa/issues/24#issuecomment-5550691183
+      - https://github.com/evildarkarchon/jbsa/issues/104
     lifecycle_state: active
     verification_class: conformance-case
     implementation_tickets:
       - .scratch/jbsa-1-0/issues/36-implement-validation-failures-diagnostics-progress-and-cancellation.md
+      - https://github.com/evildarkarchon/jbsa/issues/104
     test_evidence:
       - docs/development/interface-freeze.md
       - jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/PublicOutcomeContractIT.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/IoContextTest.java
+      - jbsa/src/test/java/io/github/evildarkarchon/jbsa/PackSourceLocationTest.java
   - id: JBSA-OPS-006
     owner:
       document: docs/spec/operation-semantics.md

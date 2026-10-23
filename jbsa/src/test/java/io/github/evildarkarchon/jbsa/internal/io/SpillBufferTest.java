@@ -25,7 +25,7 @@ final class SpillBufferTest {
   /** Small scratch supports append and backpatching without creating a disk artifact. */
   @Test
   void replaysAndBackpatchesSmallScratch() throws Exception {
-    IoContext context = IoContext.of(scratchParent, Operation.PACK);
+    IoContext context = IoContext.destination(scratchParent, Operation.PACK);
     try (ResourceBudget budget = new ResourceBudget(ResourceLimits.standard(), context);
         SpillBuffer scratch = SpillBuffer.open(scratchParent, budget, context)) {
       scratch.write(0, ByteBuffer.wrap(new byte[] {1, 2, 3}));
@@ -44,7 +44,7 @@ final class SpillBufferTest {
   /** Appending beyond a caller limit leaves the prior representation intact and reusable. */
   @Test
   void rejectsScratchGrowthBeforeChangingContents() throws Exception {
-    IoContext context = IoContext.of(scratchParent, Operation.PACK);
+    IoContext context = IoContext.destination(scratchParent, Operation.PACK);
     ResourceLimits standard = ResourceLimits.standard();
     ResourceLimits limits =
         new ResourceLimits(
@@ -81,7 +81,7 @@ final class SpillBufferTest {
   /** Large scratch crosses into disk storage with one bounded memory credit and one handle. */
   @Test
   void spillsAndReplaysWithFixedWorkingMemoryThenRemovesItsFile() throws Exception {
-    IoContext context = IoContext.of(scratchParent, Operation.PACK);
+    IoContext context = IoContext.destination(scratchParent, Operation.PACK);
     try (ResourceBudget budget =
         new ResourceBudget(ResourceLimits.standard(), context, 64 * 1024, 0, 1)) {
       try (SpillBuffer scratch = SpillBuffer.open(scratchParent, budget, context)) {
@@ -111,7 +111,7 @@ final class SpillBufferTest {
   /** Empty spans are valid, invalid extents cannot grow scratch, and sealing fixes replay bytes. */
   @Test
   void checksExtentsAndSealsUntilIdempotentClose() throws Exception {
-    IoContext context = IoContext.of(scratchParent, Operation.PACK);
+    IoContext context = IoContext.destination(scratchParent, Operation.PACK);
     try (ResourceBudget budget = new ResourceBudget(ResourceLimits.standard(), context)) {
       SpillBuffer scratch = SpillBuffer.open(scratchParent, budget, context);
       scratch.write(0, ByteBuffer.allocate(0));
@@ -147,7 +147,7 @@ final class SpillBufferTest {
   // Forces the deletion failure with the DOS read-only attribute.
   @EnabledOnOs(OS.WINDOWS)
   void reportsExactResidualAndReturnsCreditsWhenScratchDeletionFails() throws Exception {
-    IoContext context = IoContext.of(scratchParent, Operation.PACK);
+    IoContext context = IoContext.destination(scratchParent, Operation.PACK);
     try (ResourceBudget budget =
         new ResourceBudget(ResourceLimits.standard(), context, 64 * 1024, 0, 1)) {
       SpillBuffer scratch = SpillBuffer.open(scratchParent, budget, context);
@@ -184,7 +184,7 @@ final class SpillBufferTest {
   void closesFailedSpillCreationAndReleasesItsReservations() throws Exception {
     Path unavailableParent = scratchParent.resolve("ordinary-file");
     Files.write(unavailableParent, new byte[] {3});
-    IoContext context = IoContext.of(scratchParent, Operation.PACK);
+    IoContext context = IoContext.destination(scratchParent, Operation.PACK);
     try (ResourceBudget budget =
         new ResourceBudget(ResourceLimits.standard(), context, 64 * 1024, 0, 1)) {
       SpillBuffer scratch = SpillBuffer.open(unavailableParent, budget, context);
@@ -214,8 +214,8 @@ final class SpillBufferTest {
   void preservesReplayFailureAndBoundsSecondaryCleanupFailures(long secondaryLimit)
       throws Exception {
     IoContext context =
-        new IoContext(
-            scratchParent, Operation.PACK, OperationPhase.PROCESSING, java.util.OptionalLong.of(9));
+        IoContext.destination(scratchParent, Operation.PACK)
+            .at(OperationPhase.PROCESSING, java.util.OptionalLong.of(9));
     ResourceLimits standard = ResourceLimits.standard();
     ResourceLimits limits =
         new ResourceLimits(

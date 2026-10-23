@@ -103,8 +103,7 @@ final class PortableLz4 implements Lz4Adapter {
     byte[] output = new byte[(int) AdmittedCodec.rawLz4Bound(decodedSize)];
     ByteBuffer window = ByteBuffer.wrap(input);
     caller(() -> source.read(0, window), context);
-    if (window.hasRemaining())
-      throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+    if (window.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
     caller(checkpoint::check, context);
     int count;
     try {
@@ -160,8 +159,7 @@ final class PortableLz4 implements Lz4Adapter {
     byte[] output = new byte[(int) decodedSize];
     ByteBuffer window = ByteBuffer.wrap(input);
     caller(() -> source.read(0, window), context);
-    if (window.hasRemaining())
-      throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+    if (window.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
     caller(checkpoint::check, context);
     int count;
     try {
@@ -240,8 +238,7 @@ final class PortableLz4 implements Lz4Adapter {
         ByteBuffer window = ByteBuffer.wrap(input, 0, count);
         long offset = read;
         caller(() -> source.read(offset, window), context);
-        if (window.hasRemaining())
-          throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+        if (window.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
         int encoded = compressor.compress(input, 0, count, block, 4, block.length - 4);
         int header;
         int length;
@@ -496,8 +493,7 @@ final class PortableLz4 implements Lz4Adapter {
       ByteBuffer window = ByteBuffer.wrap(target, offset, length);
       long position = supplied;
       caller(() -> source.read(position, window), context);
-      if (window.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (window.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
       supplied += length;
     }
 

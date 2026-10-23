@@ -1,6 +1,5 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
-import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
@@ -32,7 +31,7 @@ final class PayloadWindows {
       Checkpoint checkpoint,
       IoContext context)
       throws IOException {
-    if (input == null) throw context.failure(FailureKind.SOURCE, "source.invalid-channel", null);
+    if (input == null) throw context.roleFailure("source.invalid-channel", null);
     ByteBuffer buffer = ByteBuffer.allocate(WINDOW_BYTES);
     long count = 0;
     int idle = 0;
@@ -44,16 +43,15 @@ final class PayloadWindows {
       int read = input.read(buffer);
       if (read < 0) break;
       if (read == 0) {
-        if (++idle > 16) throw context.failure(FailureKind.SOURCE, "io.no-progress", null);
+        if (++idle > 16) throw context.roleFailure("io.no-progress", null);
         continue;
       }
       idle = 0;
-      if (read > length - count)
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (read > length - count) throw context.roleFailure("source.length-mismatch", null);
       sink.write(count, buffer.flip());
       count += read;
     }
-    if (count != length) throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+    if (count != length) throw context.roleFailure("source.length-mismatch", null);
   }
 
   /**

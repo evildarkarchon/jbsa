@@ -71,13 +71,13 @@ final class Publications {
       OperationSession operation,
       PublicationTransaction.FileActions files)
       throws ArchiveException {
-    IoContext context = IoContext.of(destination, Operation.PACK);
+    IoContext context = IoContext.destination(destination, Operation.PACK);
     var plan = PublicationTransaction.Plan.ArchiveSet.streamed(destination, writers, policy);
     return operation.run(
         context,
         resources -> {
           ResourceBudget budget = ResourceBudget.forMutation(limits, context);
-          resources.register(budget::close);
+          resources.register(budget::close, context);
           return new OperationSession.Published(
               PublicationTransaction.publish(operation, budget, plan, files));
         });
@@ -152,16 +152,13 @@ final class Publications {
       PublicationTransaction.FileActions files)
       throws ArchiveException {
     var budgetContext =
-        new IoContext(
-            plan.root().toAbsolutePath().normalize(),
-            Operation.EXTRACT,
-            OperationPhase.PREFLIGHT,
-            OptionalLong.of(plan.planOrdinal()));
+        IoContext.destination(plan.root().toAbsolutePath().normalize(), Operation.EXTRACT)
+            .at(OperationPhase.PREFLIGHT, OptionalLong.of(plan.planOrdinal()));
     return operation.run(
-        IoContext.of(plan.root(), Operation.EXTRACT),
+        IoContext.destination(plan.root(), Operation.EXTRACT),
         resources -> {
           ResourceBudget budget = ResourceBudget.forMutation(limits, budgetContext);
-          resources.register(budget::close);
+          resources.register(budget::close, budgetContext);
           return new OperationSession.Published(
               PublicationTransaction.publish(operation, budget, plan, files));
         });

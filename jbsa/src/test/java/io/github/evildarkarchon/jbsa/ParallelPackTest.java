@@ -180,6 +180,8 @@ class ParallelPackTest {
     assertEquals(
         sequential.primaryFailure().diagnosticIdentifier(),
         parallel.primaryFailure().diagnosticIdentifier());
+    // A generated source is located by its ordinal and name, never by either run's destination.
+    assertEquals(sequential.primaryFailure().location(), parallel.primaryFailure().location());
     assertEquals(sequential.secondaryFailures().size(), parallel.secondaryFailures().size());
     assertFalse(Files.exists(temporary.resolve("failed-two.ba2")));
     assertFalse(

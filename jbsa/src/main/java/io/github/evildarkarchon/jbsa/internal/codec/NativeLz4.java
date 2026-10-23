@@ -94,8 +94,7 @@ final class NativeLz4 implements Lz4Adapter {
         state.input.clear().limit(count);
         long offset = read;
         caller(() -> source.read(offset, state.input), context);
-        if (state.input.hasRemaining())
-          throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+        if (state.input.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
         state.input.flip();
         state.output.clear();
         int encoded =
@@ -164,7 +163,7 @@ final class NativeLz4 implements Lz4Adapter {
             state.input.clear().limit(count);
             caller(() -> source.read(supplied, state.input), context);
             if (state.input.hasRemaining())
-              throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+              throw context.roleFailure("source.length-mismatch", null);
             state.input.flip();
             if (first) {
               first = false;
@@ -260,8 +259,7 @@ final class NativeLz4 implements Lz4Adapter {
       ByteBuffer output = arena.allocate(bound, 8).asByteBuffer();
       ByteBuffer state = arena.allocate(524288, 8).asByteBuffer();
       caller(() -> source.read(0, input), context);
-      if (input.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (input.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
       input.flip();
       caller(checkpoint::check, context);
       int count;
@@ -316,8 +314,7 @@ final class NativeLz4 implements Lz4Adapter {
       ByteBuffer output =
           arena.allocate(Math.max(1, decodedSize)).asByteBuffer().limit((int) decodedSize);
       caller(() -> source.read(0, input), context);
-      if (input.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
+      if (input.hasRemaining()) throw context.roleFailure("source.length-mismatch", null);
       input.flip();
       caller(checkpoint::check, context);
       int count;

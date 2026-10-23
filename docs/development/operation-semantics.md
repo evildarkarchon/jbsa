@@ -43,9 +43,15 @@ CLEANUP progress, closes the caller-owned resources the body registers (the pack
 resource budget, the stabilization spool, the open source archive, and the
 extraction budget) in reverse registration order, and finishes the operation
 exactly once. Once the operation has failed, session methods stop their caller
-with the internal `OperationStopped` signal, which carries no evidence. Code
-between a session call and the template rethrows it unchanged, and every
-`ArchiveException` the template catches is admitted (ADR-0005).
+with the internal `OperationStopped` signal, which carries no evidence, and the
+worker runner stops discarded work with `WorkerStopped`. Every catch site hands
+its throwable to `IoContext`'s one structuring entry, which rethrows either stop
+unchanged, so the template receives the session's stop as it was raised, and
+every `ArchiveException` the template catches is admitted (ADR-0005, ADR-0006).
+A body registers each resource with the location its close failure reports, and
+each `IoContext` is an Operation Source or an Operation Destination: its role, not
+the direction of the I/O, decides SOURCE or DESTINATION and whether its path fills
+a location's `archive` or `artifact` field.
 
 Pack writers call `StagedFile.completedEntry(decodedBytes)` once per final logical
 entry. Encoded framing, backpatches, compression, sharing, and replay never add

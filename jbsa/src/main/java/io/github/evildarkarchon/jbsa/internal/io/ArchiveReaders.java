@@ -16,10 +16,19 @@ public final class ArchiveReaders {
   public static OpenArchive open(
       Path path, OpenOptions options, Operation operation, DiagnosticPolicy policy)
       throws IOException {
+    return open(IoContext.source(path, operation), options, policy);
+  }
+
+  /**
+   * Opens an owned family index at a location whose role locates every failure it reports. Pack
+   * readback opens its staged part as a destination: reading the operation's own staged output is
+   * never a source read (ADR-0006).
+   */
+  public static OpenArchive open(IoContext location, OpenOptions options, DiagnosticPolicy policy)
+      throws IOException {
     return OwnedArchive.load(
-        path,
+        location,
         options.resourceLimits(),
-        operation,
         policy,
         session -> {
           // The same recognizer and prefix length as BethesdaArchives.detect. Every reader reports

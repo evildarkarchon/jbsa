@@ -39,20 +39,30 @@ public final class ArchiveInput implements AutoCloseable {
       } catch (IOException cleanup) {
         cause.addSuppressed(cleanup);
       }
-      throw context.failure(FailureKind.SOURCE, "operation.source-io", cause);
+      throw context.structure(cause);
     }
   }
 
   /** Opens an archive on the qualified provider; unsupported sharing never falls back silently. */
-  public static ArchiveInput open(Path path, Operation operation) throws ArchiveException {
-    return open(path, operation, false);
+  public static ArchiveInput open(Path path, Operation operation) throws IOException {
+    return open(path, IoContext.source(path, operation), false);
+  }
+
+  /**
+   * Opens an archive at a location whose role locates its failures, such as a destination for a
+   * read of the operation's own staged output, which is never a source read (ADR-0006).
+   *
+   * @param location the path to open, with the role and operation its failures report
+   */
+  public static ArchiveInput open(IoContext location) throws IOException {
+    return open(location.path().orElseThrow(), location, false);
   }
 
   /**
    * Opens a revalidated pack source without following a last-moment final-component indirection.
    */
-  public static ArchiveInput openSource(Path path) throws ArchiveException {
-    return open(path, Operation.PACK, true);
+  public static ArchiveInput openSource(Path path) throws IOException {
+    return open(path, IoContext.source(path, Operation.PACK), true);
   }
 
   /**
@@ -60,9 +70,8 @@ public final class ArchiveInput implements AutoCloseable {
    * other host opens plainly by design rather than after a sharing failure, and a non-default
    * provider is refused everywhere because its handle semantics are unknown.
    */
-  private static ArchiveInput open(Path path, Operation operation, boolean noFollow)
-      throws ArchiveException {
-    IoContext context = IoContext.of(path, operation);
+  private static ArchiveInput open(Path path, IoContext context, boolean noFollow)
+      throws IOException {
     if (path.getFileSystem() != FileSystems.getDefault()) {
       throw context.failure(FailureKind.CAPABILITY, "io.input-sharing-unavailable", null);
     }
@@ -76,10 +85,10 @@ public final class ArchiveInput implements AutoCloseable {
       return new ArchiveInput(FileChannel.open(path, options), context);
     } catch (UnsupportedOperationException cause) {
       throw context.failure(FailureKind.CAPABILITY, "io.input-sharing-unavailable", cause);
-    } catch (ArchiveException cause) {
-      throw cause;
-    } catch (IOException | SecurityException cause) {
-      throw context.failure(FailureKind.SOURCE, "operation.source-io", cause);
+    } catch (SecurityException cause) {
+      throw context.ioFailure(cause);
+    } catch (IOException cause) {
+      throw context.structure(cause);
     }
   }
 
@@ -104,9 +113,7 @@ public final class ArchiveInput implements AutoCloseable {
     try {
       channel.close();
     } catch (IOException cause) {
-      throw new IoContext(
-              context.path(), context.operation(), OperationPhase.CLEANUP, context.ordinal())
-          .failure(FailureKind.SOURCE, "operation.source-io", cause);
+      throw context.at(OperationPhase.CLEANUP).structure(cause);
     }
   }
 }

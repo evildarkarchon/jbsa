@@ -140,6 +140,14 @@ _Avoid_: Warning callback, mutable strict mode
 The structured completion record of a successful mutating archive operation, including its published artifacts and Conformance Diagnostics. Operational non-success is represented separately and never disguised as a successful report.
 _Avoid_: Console output, success message
 
+**Operation Source**:
+What an archive operation reads to obtain its content: the archive being read or extracted, or a pack's loose, generated, or repacked inputs. A source failure points recovery at the input.
+_Avoid_: Input file, origin
+
+**Operation Destination**:
+What an archive operation creates, including its staged and scratch data, even while the operation reads it back. A destination failure points recovery at the output location.
+_Avoid_: Target, output file
+
 **Artifact State**:
 The post-operation state reported for an affected filesystem artifact: published, unchanged, restored, missing, or residual staging. It describes observable state rather than promising operation-wide atomic visibility.
 _Avoid_: Partial output flag

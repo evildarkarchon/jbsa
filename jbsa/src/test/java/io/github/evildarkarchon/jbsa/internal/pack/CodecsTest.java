@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 /** The codec map's own costing: the credits a readback declaration charges (#92, user story 4). */
 final class CodecsTest {
   private static final IoContext CONTEXT =
-      IoContext.of(Path.of("unused.mem").toAbsolutePath(), Operation.PACK);
+      IoContext.destination(Path.of("unused.mem").toAbsolutePath(), Operation.PACK);
 
   /**
    * A readback charges the largest decode cost of any codec it declares, under the codecs pack

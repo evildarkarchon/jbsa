@@ -70,3 +70,5 @@ graphify-out/
 .codegraph/
 
 /.claude/worktrees
+
+docs/Architecture Reviews

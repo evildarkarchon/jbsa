@@ -86,8 +86,12 @@ public final class OperationSession {
     /**
      * Registers a resource the body has just acquired. Resources close in reverse registration
      * order, after the body and before the operation finishes, whether the body succeeds or not.
+     *
+     * @param location where the resource lives and on which side: the open source archive is a
+     *     source at the archive; a stabilization spool or mutation budget is a destination at its
+     *     path. A raw close failure is structured there, at CLEANUP with no ordinal.
      */
-    void register(Resource resource);
+    void register(Resource resource, IoContext location);
   }
 
   /** One mutating operation's work, from {@code begin} through publication. */
@@ -99,8 +103,9 @@ public final class OperationSession {
      *
      * @param resources the scope where the body registers each caller-owned resource it acquires
      * @return the published result; publication returns it even when it accepted a failure
-     * @throws IOException any failure before publication; the template accepts and settles it,
-     *     except {@link OperationStopped}, whose failure the session already holds
+     * @throws IOException any failure before publication, structured at its own site; the template
+     *     accepts and settles it, except {@link OperationStopped}, whose failure the session
+     *     already holds
      */
     Published run(Resources resources) throws IOException;
   }
@@ -128,14 +133,15 @@ public final class OperationSession {
    * <ul>
    *   <li>A {@link RuntimeException} or {@link AssertionError} from the body becomes INTERNAL
    *       {@code operation.internal-failure} at the phase it interrupted (PREFLIGHT before {@link
-   *       #begin}), with no ordinal. An unstructured {@link IOException} becomes SOURCE {@code
-   *       operation.source-io} at {@code context}. Any other {@link Error} propagates after the
-   *       registered resources close.
+   *       #begin}), with no ordinal. So does an unstructured {@link IOException}: every catch site
+   *       structures its own faults, so a raw one reaching the template is a JBSA bug (ADR-0006).
+   *       Any other {@link Error} propagates after the registered resources close.
    *   <li>An {@link ArchiveException} from the body is accepted. {@link OperationStopped} is not a
    *       failure and admits nothing: the session already holds the failure it stopped for.
    *   <li>Registered resources close in reverse registration order, after the body and before the
-   *       operation finishes, on success and on failure. A close failure is accepted as a CLEANUP
-   *       failure, so it orders behind any earlier Primary Failure.
+   *       operation finishes, on success and on failure. A close failure is structured at the
+   *       resource's declared location and accepted as a CLEANUP failure, so it orders behind any
+   *       earlier Primary Failure.
    *   <li>CLEANUP then reports the published artifact count, or zero when the body failed before
    *       publication returned.
    *   <li>The operation finishes exactly once, with the body's Archive Parts on success.
@@ -143,7 +149,7 @@ public final class OperationSession {
    *
    * <p>A session runs at most one template, on its coordinator thread.
    *
-   * @param context the operation's location: its path locates mapped body and close failures
+   * @param context the operation's location: its path locates an unexpected body failure
    * @param body the operation, which registers its caller-owned resources as it acquires them
    * @return the settled report
    * @throws ArchiveException the Primary Failure, with Secondary Failures and artifact evidence
@@ -155,24 +161,39 @@ public final class OperationSession {
       if (started) throw new IllegalStateException("The operation already ran");
       started = true;
     }
-    List<Resource> registered = new ArrayList<>();
+    List<Registered> registered = new ArrayList<>();
     Published published = null;
     try {
-      published = body.run(resource -> registered.add(Objects.requireNonNull(resource)));
+      published =
+          body.run(
+              (resource, location) ->
+                  registered.add(
+                      new Registered(
+                          Objects.requireNonNull(resource, "resource"),
+                          Objects.requireNonNull(location, "location"))));
     } catch (OperationStopped stopped) {
       // A signal, not a failure: the session already holds every record of what stopped the body.
+    } catch (WorkerStopped leaked) {
+      // A worker's stop belongs to its runner; reaching the template is a JBSA bug. A stop can
+      // never
+      // be a failure's cause, so the INTERNAL failure records the leak without it.
+      accept(
+          context
+              .at(phase().orElse(OperationPhase.PREFLIGHT), OptionalLong.empty())
+              .failure(FailureKind.INTERNAL, "operation.internal-failure", null));
     } catch (ArchiveException failure) {
       accept(failure);
-    } catch (IOException failure) {
-      accept(context.sourceFailure(failure));
-    } catch (RuntimeException | AssertionError unexpected) {
+    } catch (IOException | RuntimeException | AssertionError unexpected) {
+      // ADR-0006: every catch site structures its own I/O faults, so an unstructured one that
+      // reaches the template is a JBSA bug, never a SOURCE or DESTINATION fault.
       accept(
-          located(context, phase().orElse(OperationPhase.PREFLIGHT))
+          context
+              .at(phase().orElse(OperationPhase.PREFLIGHT), OptionalLong.empty())
               .failure(FailureKind.INTERNAL, "operation.internal-failure", unexpected));
     } finally {
       // ADR-0003 D10: caller-owned resources, the pack budget among them, close before the
       // epilogue settles, so their failures and residuals belong to the one outcome.
-      close(registered, context);
+      close(registered);
     }
     cleanup();
     if (published == null) {
@@ -184,26 +205,29 @@ public final class OperationSession {
   }
 
   /**
-   * Closes each registered resource, newest first, accepting every close failure at CLEANUP. A
-   * later close still runs after an earlier one fails.
+   * Closes each registered resource, newest first, accepting every close failure at CLEANUP and the
+   * resource's declared location. A later close still runs after an earlier one fails.
    */
-  private void close(List<Resource> registered, IoContext context) {
-    IoContext cleanup = located(context, OperationPhase.CLEANUP);
-    for (Resource resource : registered.reversed()) {
+  private void close(List<Registered> registered) {
+    for (Registered resource : registered.reversed()) {
       try {
-        resource.close();
-      } catch (IOException failure) {
-        accept(cleanup.sourceFailure(failure));
-      } catch (RuntimeException | AssertionError unexpected) {
-        accept(cleanup.failure(FailureKind.INTERNAL, "operation.internal-failure", unexpected));
+        resource.resource().close();
+      } catch (IOException | RuntimeException | AssertionError failure) {
+        try {
+          accept(
+              resource
+                  .location()
+                  .at(OperationPhase.CLEANUP, OptionalLong.empty())
+                  .structure(failure));
+        } catch (StopSignal stopped) {
+          // A signal, not a failure: whatever stopped the close already holds its evidence.
+        }
       }
     }
   }
 
-  /** Locates an operation-level failure at a phase, on the context's path, with no ordinal. */
-  private IoContext located(IoContext context, OperationPhase at) {
-    return new IoContext(context.path(), operation, at, OptionalLong.empty());
-  }
+  /** One registered caller-owned resource and the location its raw close failure reports. */
+  private record Registered(Resource resource, IoContext location) {}
 
   /**
    * Enters preflight for a fresh invocation, or verifies a collaborating adapter is still there.

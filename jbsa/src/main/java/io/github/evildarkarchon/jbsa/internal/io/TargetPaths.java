@@ -81,6 +81,7 @@ public final class TargetPaths implements AutoCloseable {
    *
    * @param files the filesystem actions whose identity reads and pin this containment uses
    * @throws ArchiveException for unsafe names/collisions, unavailable identity, or destination I/O
+   * @throws IOException only a stop signal, which the structuring entry hands back unchanged
    */
   static TargetPaths preflight(
       Path root,
@@ -88,7 +89,7 @@ public final class TargetPaths implements AutoCloseable {
       TargetPolicy policy,
       IoContext context,
       PublicationTransaction.FileActions files)
-      throws ArchiveException {
+      throws IOException {
     Objects.requireNonNull(root, "root");
     Objects.requireNonNull(names, "names");
     Objects.requireNonNull(policy, "policy");
@@ -128,21 +129,21 @@ public final class TargetPaths implements AutoCloseable {
       boolean exists = rootState != null;
       Path pinnedPath = exists ? absolute : absolute.getParent();
       if (pinnedPath == null) {
-        throw context.failure(FailureKind.DESTINATION, "extraction.parent-unavailable", null);
+        throw context.roleFailure("extraction.parent-unavailable", null);
       }
       pin = files.pin(pinnedPath);
       if (pin.snapshot().indirection() || !pin.snapshot().directory()) {
         throw context.failure(FailureKind.POLICY, "extraction.unsafe-directory", null);
       }
       if (exists && !rootState.equals(pin.snapshot())) {
-        throw context.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
+        throw context.roleFailure("extraction.destination-changed", null);
       }
       TargetPaths plan =
           new TargetPaths(absolute, exists, targets, pinnedPath, pin, context, files);
       if (!exists) {
         // A root that appeared between inspection and pinning is an unexpected mutation.
         if (files.inspect(absolute) != null) {
-          throw context.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
+          throw context.roleFailure("extraction.destination-changed", null);
         }
         plan.expected.put(absolute, null);
       }
@@ -168,21 +169,22 @@ public final class TargetPaths implements AutoCloseable {
         }
       }
       ArchiveException primary = null;
-      if (failure instanceof ArchiveException archive) {
-        primary = archive;
-      } else if (failure instanceof UnsupportedOperationException capability) {
+      if (failure instanceof UnsupportedOperationException capability) {
         primary =
             context.failure(FailureKind.CAPABILITY, "extraction.identity-unavailable", capability);
-      } else if (failure instanceof IOException || failure instanceof SecurityException) {
-        primary = context.failure(FailureKind.DESTINATION, "extraction.destination-io", failure);
+      } else if (failure instanceof SecurityException denied) {
+        primary = context.roleFailure("extraction.destination-io", denied);
+      } else if (failure instanceof IOException io) {
+        // The pin is already released, so a stop the entry rethrows strands nothing.
+        primary = context.structure(io, "extraction.destination-io");
       }
       if (primary != null) {
         if (cleanupFailure == null) throw primary;
         List<Failure> secondary = new ArrayList<>(primary.secondaryFailures());
         secondary.add(
-            new IoContext(
-                    context.path(), context.operation(), OperationPhase.CLEANUP, context.ordinal())
-                .failure(FailureKind.DESTINATION, "extraction.pin-cleanup", cleanupFailure)
+            context
+                .at(OperationPhase.CLEANUP)
+                .roleFailure("extraction.pin-cleanup", cleanupFailure)
                 .primaryFailure());
         // The coordinator applies ResourceLimits to this single additional cleanup observation.
         throw new ArchiveException(
@@ -223,8 +225,9 @@ public final class TargetPaths implements AutoCloseable {
    *
    * @param location the caller's current phase and ordinal, which locate any failure
    * @throws ArchiveException if the containment chain or the target no longer matches the plan
+   * @throws IOException only a stop signal, which the structuring entry hands back unchanged
    */
-  public void recheck(Path target, IoContext location) throws ArchiveException {
+  public void recheck(Path target, IoContext location) throws IOException {
     recheckParents(target, location);
     verify(target, location);
   }
@@ -235,8 +238,9 @@ public final class TargetPaths implements AutoCloseable {
    *
    * @param location the caller's current phase and ordinal, which locate any failure
    * @throws ArchiveException if the root or a target parent no longer matches the plan
+   * @throws IOException only a stop signal, which the structuring entry hands back unchanged
    */
-  public void recheckParents(Path target, IoContext location) throws ArchiveException {
+  public void recheckParents(Path target, IoContext location) throws IOException {
     requireTarget(target);
     recheckRoot(location);
     for (Path parent : descendants(target.getParent())) {
@@ -249,8 +253,9 @@ public final class TargetPaths implements AutoCloseable {
    *
    * @param location the caller's current phase and ordinal, which locate any failure
    * @throws ArchiveException if the pinned path, or a new root's absence, no longer holds
+   * @throws IOException only a stop signal, which the structuring entry hands back unchanged
    */
-  public void recheckRoot(IoContext location) throws ArchiveException {
+  public void recheckRoot(IoContext location) throws IOException {
     if (closed) throw new IllegalStateException("Target containment is closed");
     verify(pinnedPath, location);
     if (!existingRoot) verify(root, location);
@@ -262,8 +267,9 @@ public final class TargetPaths implements AutoCloseable {
    *
    * @param location the caller's current phase and ordinal, which locate any failure
    * @throws ArchiveException if a parent changed or the path is not the directory just created
+   * @throws IOException only a stop signal, which the structuring entry hands back unchanged
    */
-  public void createdDirectory(Path path, IoContext location) throws ArchiveException {
+  public void createdDirectory(Path path, IoContext location) throws IOException {
     if (!path.startsWith(root)
         || path.equals(root)
         || targetSet.contains(path)
@@ -277,7 +283,7 @@ public final class TargetPaths implements AutoCloseable {
     }
     PathIdentity.Snapshot state = inspect(path, location);
     if (state == null || !state.directory() || state.indirection()) {
-      throw location.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
+      throw location.roleFailure("extraction.destination-changed", null);
     }
     // Known short-name aliases share operation-owned growth, while unrelated paths retain their
     // original expected state and must still fail revalidation if another actor creates them.
@@ -291,7 +297,7 @@ public final class TargetPaths implements AutoCloseable {
    * before any publication. This catches short-directory aliases even when the leaves do not exist
    * yet, and case collisions through them on every host.
    */
-  private void checkPhysicalPaths() throws ArchiveException {
+  private void checkPhysicalPaths() throws IOException {
     Map<Object, Set<String>> keysByParent = new HashMap<>();
     Map<Object, List<Path>> suffixesByParent = new HashMap<>();
     for (Path target : targets) {
@@ -374,9 +380,9 @@ public final class TargetPaths implements AutoCloseable {
         pin.close();
         closed = true;
       } catch (IOException failure) {
-        throw new IoContext(
-                context.path(), context.operation(), OperationPhase.CLEANUP, context.ordinal())
-            .failure(FailureKind.DESTINATION, "extraction.pin-cleanup", failure);
+        // Releasing a pin raises only provider faults, and close throws only structured failures,
+        // so it creates the role failure itself; the raw tripwire backs that.
+        throw context.at(OperationPhase.CLEANUP).roleFailure("extraction.pin-cleanup", failure);
       }
     }
   }
@@ -415,7 +421,7 @@ public final class TargetPaths implements AutoCloseable {
   }
 
   /** Captures parent and target states only after each preceding component is known to be safe. */
-  private void inspectTarget(Path target, TargetPolicy policy) throws ArchiveException {
+  private void inspectTarget(Path target, TargetPolicy policy) throws IOException {
     boolean absentParent = !existingRoot;
     for (Path parent : descendants(target.getParent())) {
       PathIdentity.Snapshot state;
@@ -455,15 +461,15 @@ public final class TargetPaths implements AutoCloseable {
    * Compares detached no-follow identity and classification with the expected operation state,
    * locating a mismatch or read failure at {@code location}.
    */
-  private void verify(Path path, IoContext location) throws ArchiveException {
+  private void verify(Path path, IoContext location) throws IOException {
     if (!expected.containsKey(path)
         || !Objects.equals(expected.get(path), inspect(path, location))) {
-      throw location.failure(FailureKind.DESTINATION, "extraction.destination-changed", null);
+      throw location.roleFailure("extraction.destination-changed", null);
     }
   }
 
   /** Reads one preflight identity, locating any failure at the preflight context. */
-  private PathIdentity.Snapshot inspect(Path path) throws ArchiveException {
+  private PathIdentity.Snapshot inspect(Path path) throws IOException {
     return inspect(path, context);
   }
 
@@ -471,13 +477,15 @@ public final class TargetPaths implements AutoCloseable {
    * Converts provider errors into semantic containment failures without copying their messages,
    * located at {@code location}.
    */
-  private PathIdentity.Snapshot inspect(Path path, IoContext location) throws ArchiveException {
+  private PathIdentity.Snapshot inspect(Path path, IoContext location) throws IOException {
     try {
       return files.inspect(path);
     } catch (UnsupportedOperationException failure) {
       throw location.failure(FailureKind.CAPABILITY, "extraction.identity-unavailable", failure);
-    } catch (IOException | SecurityException failure) {
-      throw location.failure(FailureKind.DESTINATION, "extraction.destination-io", failure);
+    } catch (SecurityException failure) {
+      throw location.roleFailure("extraction.destination-io", failure);
+    } catch (IOException failure) {
+      throw location.structure(failure, "extraction.destination-io");
     }
   }
 

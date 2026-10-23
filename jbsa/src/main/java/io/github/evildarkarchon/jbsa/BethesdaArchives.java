@@ -2,14 +2,12 @@ package io.github.evildarkarchon.jbsa;
 
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveInput;
 import io.github.evildarkarchon.jbsa.internal.io.Detection;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalLong;
 
 /**
  * The synchronous, stateless Bethesda Archive module.
@@ -47,7 +45,7 @@ public final class BethesdaArchives {
     } catch (ArchiveException cause) {
       throw cause;
     } catch (IOException cause) {
-      throw failure(Operation.DETECT, FailureKind.SOURCE, "operation.source-io", path, cause);
+      throw IoContext.source(path, Operation.DETECT).ioFailure(cause);
     }
     return Detection.recognize(Arrays.copyOf(prefix.array(), prefix.position()));
   }
@@ -74,7 +72,7 @@ public final class BethesdaArchives {
     } catch (ArchiveException failure) {
       throw failure;
     } catch (IOException cause) {
-      throw failure(Operation.INSPECT, FailureKind.SOURCE, "operation.source-io", path, cause);
+      throw IoContext.source(path, Operation.INSPECT).ioFailure(cause);
     }
   }
 
@@ -98,7 +96,7 @@ public final class BethesdaArchives {
     } catch (ArchiveException failure) {
       throw failure;
     } catch (IOException cause) {
-      throw failure(operation, FailureKind.SOURCE, "operation.source-io", path, cause);
+      throw IoContext.source(path, operation).ioFailure(cause);
     }
   }
 
@@ -143,39 +141,5 @@ public final class BethesdaArchives {
                 request, control, io.github.evildarkarchon.jbsa.internal.ba2.Ba2Adapter.INSTANCE);
       };
     }
-  }
-
-  /**
-   * Constructs detached, structured baseline failures without creating output or retaining handles.
-   */
-  private static ArchiveException failure(
-      Operation operation, FailureKind kind, String identifier, Path path, Throwable cause) {
-    DiagnosticLocation location =
-        new DiagnosticLocation(
-            operation == Operation.PACK ? Optional.empty() : Optional.of(path),
-            OptionalLong.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            operation == Operation.PACK ? Optional.of(path) : Optional.empty());
-    Diagnostic diagnostic =
-        new Diagnostic(
-            identifier,
-            DiagnosticSeverity.ERROR,
-            operation,
-            OperationPhase.PREFLIGHT,
-            location,
-            new java.util.TreeMap<>(),
-            Optional.empty());
-    Failure primary =
-        new Failure(
-            kind,
-            OperationPhase.PREFLIGHT,
-            OptionalLong.empty(),
-            Optional.of(identifier),
-            Optional.of(location),
-            Optional.ofNullable(cause));
-    return new ArchiveException(
-        identifier, primary, List.of(diagnostic), List.of(), Optional.empty(), List.of());
   }
 }

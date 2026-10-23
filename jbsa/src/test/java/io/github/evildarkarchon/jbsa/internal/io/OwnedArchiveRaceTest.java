@@ -21,7 +21,7 @@ final class OwnedArchiveRaceTest {
   void indexFailureRetainsStructuredCleanup() throws Exception {
     ControlledChannel channel = new ControlledChannel();
     channel.failClose = true;
-    IoContext context = IoContext.of(Path.of("synthetic.bin"), Operation.OPEN);
+    IoContext context = IoContext.source(Path.of("synthetic.bin"), Operation.OPEN);
     ArchiveException failure =
         assertThrows(
             ArchiveException.class,
@@ -164,7 +164,7 @@ final class OwnedArchiveRaceTest {
 
   /** Supplies a structural index directly to the unexported constructor seam. */
   private static OpenArchive open(ControlledChannel channel) throws Exception {
-    IoContext context = IoContext.of(Path.of("synthetic.bin"), Operation.OPEN);
+    IoContext context = IoContext.source(Path.of("synthetic.bin"), Operation.OPEN);
     ArchiveDetection detection =
         new ArchiveDetection(
             DetectionStatus.SUPPORTED_FAMILY,

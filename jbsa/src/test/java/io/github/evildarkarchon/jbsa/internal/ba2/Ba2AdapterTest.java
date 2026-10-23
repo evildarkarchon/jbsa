@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
  */
 class Ba2AdapterTest {
   private static final Path TARGET = Path.of("unused.ba2").toAbsolutePath();
-  private static final IoContext CONTEXT = IoContext.of(TARGET, Operation.PACK);
+  private static final IoContext CONTEXT = IoContext.destination(TARGET, Operation.PACK);
 
   /**
    * Fallout 4 is always v1. Starfield is v2 unless raw LZ4 is in use (explicitly, by an override,
@@ -519,9 +519,10 @@ class Ba2AdapterTest {
         identity.getBytes(StandardCharsets.US_ASCII),
         0,
         size,
-        reader -> {
+        (reader, processing) -> {
           throw new AssertionError("Adapters must not read payloads");
-        });
+        },
+        IoContext.generated(display, Operation.PACK));
   }
 
   /** One resolved archive-set owner. */

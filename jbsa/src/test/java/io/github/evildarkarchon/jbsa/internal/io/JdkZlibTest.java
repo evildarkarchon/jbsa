@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
  * covers the portable provider on Windows in a fresh JVM.
  */
 final class JdkZlibTest {
-  private static final IoContext CONTEXT = IoContext.of(Path.of("zlib.bin"), Operation.OPEN);
+  private static final IoContext CONTEXT = IoContext.source(Path.of("zlib.bin"), Operation.OPEN);
 
   /** Invalid data reports the pinned provider's profile, never a constant native alias. */
   @Test

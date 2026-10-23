@@ -293,6 +293,7 @@ public final class Ba2Reader {
                   options.compatibilityProfile().isPresent()
                           && context
                               .path()
+                              .orElseThrow()
                               .getFileName()
                               .toString()
                               .toLowerCase(Locale.ROOT)

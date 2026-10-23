@@ -158,7 +158,7 @@ final class TargetPathsTest {
                         directory,
                         names,
                         TargetPolicy.FAIL,
-                        IoContext.of(directory, Operation.EXTRACT),
+                        IoContext.destination(directory, Operation.EXTRACT),
                         new PublicationTransaction.FileActions() {
                           /** Reports the second directory as the first one's alias. */
                           @Override
@@ -188,7 +188,7 @@ final class TargetPathsTest {
             directory,
             List.of("first/missing/one.bin", "second/missing/two.bin"),
             TargetPolicy.FAIL,
-            IoContext.of(directory, Operation.EXTRACT),
+            IoContext.destination(directory, Operation.EXTRACT),
             new PublicationTransaction.FileActions() {
               /** Observes everything beneath the second directory through the first one. */
               @Override
@@ -262,7 +262,7 @@ final class TargetPathsTest {
                     directory,
                     List.of("existing.bin"),
                     TargetPolicy.FAIL,
-                    IoContext.of(directory, Operation.EXTRACT),
+                    IoContext.destination(directory, Operation.EXTRACT),
                     new PublicationTransaction.FileActions() {
                       /** Pins for real, but reports a failure after releasing the pin. */
                       @Override
@@ -447,8 +447,8 @@ final class TargetPathsTest {
    * here is built with.
    */
   private IoContext caller() {
-    return new IoContext(
-        directory, Operation.EXTRACT, OperationPhase.PUBLISHING, OptionalLong.of(3));
+    return IoContext.destination(directory, Operation.EXTRACT)
+        .at(OperationPhase.PUBLISHING, OptionalLong.of(3));
   }
 
   /**
@@ -461,7 +461,7 @@ final class TargetPathsTest {
         root,
         names,
         policy,
-        IoContext.of(root, Operation.EXTRACT),
+        IoContext.destination(root, Operation.EXTRACT),
         new PublicationTransaction.FileActions());
   }
 

@@ -20,10 +20,12 @@ public final class PackSources {
 
   /**
    * Attributes lazy source revalidation and read failures to their final logical processing slot.
+   *
+   * @param context the entry's PROCESSING location, at its source (ADR-0006)
    */
   public static void consume(Entry entry, Reader reader, IoContext context) throws IOException {
     try {
-      entry.payload().consume(reader);
+      entry.payload().consume(reader, context);
     } catch (ArchiveException failure) {
       if (failure.primaryFailure().phase() != OperationPhase.PREFLIGHT) throw failure;
       var diagnostics =
@@ -55,11 +57,9 @@ public final class PackSources {
           failure.artifacts(),
           failure.assessment(),
           failure.secondaryFailures());
-    } catch (OperationStopped stopped) {
-      // A reader's session checkpoint stopped the pack; the session holds why.
-      throw stopped;
     } catch (IOException failure) {
-      throw context.failure(FailureKind.SOURCE, "operation.source-io", failure);
+      // A reader's checkpoint stop comes back unchanged from the entry.
+      throw context.structure(failure);
     }
   }
 
@@ -76,7 +76,6 @@ public final class PackSources {
   public static List<Entry> plan(
       PackRequest request, OperationSession operation, ResourceBudget budget, Charset encoding)
       throws IOException {
-    IoContext context = IoContext.of(request.destination(), Operation.PACK);
     Map<String, Entry> overlay = new LinkedHashMap<>();
     for (PackSource source : request.sources()) {
       operation.checkpoint(OperationPhase.PREFLIGHT, OptionalLong.empty());
@@ -85,64 +84,33 @@ public final class PackSources {
             entry(
                 generated.name(),
                 generated.length(),
-                reader -> consumeGenerated(generated, reader, context, operation),
-                context,
+                (reader, processing) -> consumeGenerated(generated, reader, processing, operation),
+                IoContext.generated(generated.name(), Operation.PACK),
                 encoding),
             overlay,
             request,
             operation,
             budget);
       } else if (source instanceof PackSource.NamedFile named) {
-        rejectOutput(named.path(), request.destination(), context);
-        admit(
-            loose(named.name(), named.path(), context, encoding),
-            overlay,
-            request,
-            operation,
-            budget);
+        Path path = named.path().toAbsolutePath().normalize();
+        rejectOutput(path, request.destination(), IoContext.source(path, Operation.PACK));
+        admit(loose(named.name(), path, encoding), overlay, request, operation, budget);
       } else if (source instanceof PackSource.DetectedPath detected) {
         Path path = detected.path().toAbsolutePath().normalize();
+        // Each check is located at the path it examined, here the detected root itself.
+        IoContext context = IoContext.source(path, Operation.PACK);
         rejectOutput(path, request.destination(), context);
-        PathIdentity.Snapshot shape = shape(path, context);
+        PathIdentity.Snapshot shape = shape(path);
         if (shape == null || shape.indirection())
-          throw context.failure(FailureKind.SOURCE, "source.not-regular", null);
+          throw context.roleFailure("source.not-regular", null);
         if (shape.directory()) {
           List<Entry> discovered = new ArrayList<>();
-          Files.walkFileTree(
-              path,
-              new SimpleFileVisitor<>() {
-                /**
-                 * Omits directory indirections before any descendants can enter the source plan.
-                 */
-                @Override
-                public FileVisitResult preVisitDirectory(
-                    Path directory, BasicFileAttributes attributes) throws IOException {
-                  operation.checkpoint(OperationPhase.PREFLIGHT, OptionalLong.empty());
-                  var current = shape(directory, context);
-                  return current != null && current.directory() && !current.indirection()
-                      ? FileVisitResult.CONTINUE
-                      : FileVisitResult.SKIP_SUBTREE;
-                }
-
-                /**
-                 * Admits only no-follow regular files after output exclusion and resource
-                 * accounting.
-                 */
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attributes)
-                    throws IOException {
-                  if (outputPath(file, request.destination())) return FileVisitResult.CONTINUE;
-                  var current = shape(file, context);
-                  if (current != null && current.regular() && !current.indirection()) {
-                    Entry entry = loose(path.relativize(file).toString(), file, context, encoding);
-                    // Count candidates before retaining them, even if a later overlay replaces
-                    // them.
-                    account(entry, operation, budget);
-                    discovered.add(entry);
-                  }
-                  return FileVisitResult.CONTINUE;
-                }
-              });
+          try {
+            walk(path, discovered, request, operation, budget, encoding);
+          } catch (IOException failure) {
+            // A raw tree-walk fault, such as an unreadable directory, is SOURCE at the walked root.
+            throw context.structure(failure);
+          }
           discovered.sort(Comparator.comparing(Entry::identity).thenComparing(Entry::displayName));
           for (Entry entry : discovered)
             if (included(entry.displayName, request.options())) overlay.put(entry.identity, entry);
@@ -151,7 +119,7 @@ public final class PackSources {
           ArchiveDetection detection = BethesdaArchives.standard().detect(path);
           if (detection.status() == DetectionStatus.UNRECOGNIZED) {
             admit(
-                loose(path.getFileName().toString(), path, context, encoding),
+                loose(path.getFileName().toString(), path, encoding),
                 overlay,
                 request,
                 operation,
@@ -177,7 +145,7 @@ public final class PackSources {
                     entry(
                         metadata.displayName(),
                         metadata.decodedSize(),
-                        reader ->
+                        (reader, processing) ->
                             stable.consume(
                                 ignored -> {
                                   try (OpenArchive reopened =
@@ -204,10 +172,55 @@ public final class PackSources {
               }
             }
           }
-        } else throw context.failure(FailureKind.SOURCE, "source.not-regular", null);
+        } else throw context.roleFailure("source.not-regular", null);
       }
     }
     return new ArrayList<>(overlay.values());
+  }
+
+  /**
+   * Discovers one directory root's regular files. Each file is planned as a loose source at its own
+   * path; structured failures and stop signals pass through, and a raw walk fault reaches the
+   * caller, which locates it at the root.
+   */
+  private static void walk(
+      Path root,
+      List<Entry> discovered,
+      PackRequest request,
+      OperationSession operation,
+      ResourceBudget budget,
+      Charset encoding)
+      throws IOException {
+    Files.walkFileTree(
+        root,
+        new SimpleFileVisitor<>() {
+          /** Omits directory indirections before any descendants can enter the source plan. */
+          @Override
+          public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes)
+              throws IOException {
+            operation.checkpoint(OperationPhase.PREFLIGHT, OptionalLong.empty());
+            var current = shape(directory);
+            return current != null && current.directory() && !current.indirection()
+                ? FileVisitResult.CONTINUE
+                : FileVisitResult.SKIP_SUBTREE;
+          }
+
+          /** Admits only no-follow regular files after output exclusion and resource accounting. */
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attributes)
+              throws IOException {
+            if (outputPath(file, request.destination())) return FileVisitResult.CONTINUE;
+            var current = shape(file);
+            if (current != null && current.regular() && !current.indirection()) {
+              Entry entry = loose(root.relativize(file).toString(), file, encoding);
+              // Count candidates before retaining them, even if a later overlay replaces
+              // them.
+              account(entry, operation, budget);
+              discovered.add(entry);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        });
   }
 
   /** Counts parsed wire sections without charging payload bytes to a repack invocation. */
@@ -262,47 +275,45 @@ public final class PackSources {
    * Settles transferred generated channels explicitly so close errors remain structured evidence. A
    * read and a close failure fold into one failure for the caller to throw.
    *
+   * @param processing the entry's PROCESSING location: a generated source has no path, so it is
+   *     located by its entry ordinal and name
    * @param operation the pack's session, which takes a close failure directly when the read was
    *     stopped by the session, because the stop signal carries no evidence to fold it into
    */
   private static void consumeGenerated(
       PackSource.GeneratedEntry generated,
       Reader reader,
-      IoContext context,
+      IoContext processing,
       OperationSession operation)
       throws IOException {
-    var failures = FailureRetention.folding(Operation.PACK);
     ReadableByteChannel channel = null;
-    boolean stopped = false;
+    Throwable read = null;
     try {
       channel = generated.contentFactory().open();
-      if (channel == null)
-        throw context.failure(FailureKind.SOURCE, "source.invalid-channel", null);
+      if (channel == null) throw processing.roleFailure("source.invalid-channel", null);
       reader.read(channel);
-    } catch (OperationStopped signal) {
-      stopped = true;
-      throw signal;
-    } catch (ArchiveException failure) {
-      failures.accept(failure);
-    } catch (IOException failure) {
-      failures.accept(context.failure(FailureKind.SOURCE, "operation.source-io", failure));
-    } catch (RuntimeException | AssertionError failure) {
-      failures.accept(context.failure(FailureKind.INTERNAL, "operation.internal-failure", failure));
-    } finally {
-      if (channel != null) {
-        try {
-          channel.close();
-        } catch (IOException failure) {
-          ArchiveException closing =
-              new IoContext(
-                      context.path(), Operation.PACK, OperationPhase.CLEANUP, context.ordinal())
-                  .failure(FailureKind.SOURCE, "operation.source-io", failure);
-          if (stopped) operation.accept(closing);
-          else failures.accept(closing);
-        }
+    } catch (IOException | RuntimeException | Error failure) {
+      read = failure;
+    }
+    List<ArchiveException> cleanup = new ArrayList<>(1);
+    if (channel != null) {
+      try {
+        channel.close();
+      } catch (IOException | RuntimeException | AssertionError failure) {
+        cleanup.add(processing.at(OperationPhase.CLEANUP).structure(failure));
       }
     }
-    if (failures.failed()) throw failures.finish(List.of());
+    if (read == null) {
+      if (!cleanup.isEmpty()) throw cleanup.getFirst();
+      return;
+    }
+    if (read instanceof OperationStopped stopped) {
+      // The session's stop has no evidence to fold the close failure into, so it goes straight in.
+      cleanup.forEach(operation::accept);
+      throw stopped;
+    }
+    // A worker's stop carries the close failure to its runner; anything else folds with it.
+    throw processing.settle(read, cleanup);
   }
 
   /** Rejects explicit output aliases before source detection or archive expansion. */
@@ -333,25 +344,30 @@ public final class PackSources {
         && (number.length() > 1 || number.charAt(0) >= '2');
   }
 
-  /** Obtains no-follow Windows classification, treating absent native support as a capability. */
-  private static PathIdentity.Snapshot shape(Path path, IoContext context) throws IOException {
+  /**
+   * Obtains no-follow Windows classification, treating absent native support as a capability. A
+   * failure is located at the path examined.
+   */
+  private static PathIdentity.Snapshot shape(Path path) throws IOException {
+    IoContext context = IoContext.source(path, Operation.PACK);
     try {
       return PathIdentity.inspect(path);
     } catch (UnsupportedOperationException failure) {
       throw context.failure(FailureKind.CAPABILITY, "source.identity-unavailable", failure);
-    } catch (IOException | SecurityException failure) {
-      throw context.failure(FailureKind.SOURCE, "source.attributes", failure);
+    } catch (SecurityException failure) {
+      throw context.roleFailure("source.attributes", failure);
+    } catch (IOException failure) {
+      throw context.structure(failure, "source.attributes");
     }
   }
 
   /** Plans one loose source and revalidates its identity around bounded, deny-write consumption. */
-  private static Entry loose(String name, Path path, IoContext context, Charset encoding)
-      throws ArchiveException {
+  private static Entry loose(String name, Path path, Charset encoding) throws IOException {
     SourceFile source = SourceFile.plan(path);
     return entry(
         name,
         source.size(),
-        reader ->
+        (reader, processing) ->
             source.consume(
                 input -> {
                   reader.read(
@@ -388,17 +404,21 @@ public final class PackSources {
                       });
                   return null;
                 }),
-        context,
+        IoContext.source(path.toAbsolutePath().normalize(), Operation.PACK),
         encoding);
   }
 
-  /** Strictly encodes an eligible Unicode name before it can participate in an overlay. */
+  /**
+   * Strictly encodes an eligible Unicode name before it can participate in an overlay.
+   *
+   * @param location the entry's source location, which also locates a name it cannot encode
+   */
   private static Entry entry(
-      String name, long size, Payload source, IoContext context, Charset encoding)
+      String name, long size, Payload payload, IoContext location, Charset encoding)
       throws ArchiveException {
     var identity = NormalizedNameIdentity.from(name, encoding);
     if (identity.isEmpty())
-      throw context.failure(FailureKind.POLICY, "pack.invalid-encode-name", null);
+      throw location.failure(FailureKind.POLICY, "pack.invalid-encode-name", null);
     byte[] bytes;
     try {
       ByteBuffer encoded =
@@ -406,10 +426,16 @@ public final class PackSources {
       bytes = new byte[encoded.remaining()];
       encoded.get(bytes);
     } catch (CharacterCodingException failure) {
-      throw context.failure(FailureKind.POLICY, "pack.invalid-encode-name", failure);
+      throw location.failure(FailureKind.POLICY, "pack.invalid-encode-name", failure);
     }
     return new Entry(
-        name, identity.orElseThrow().value(), bytes, Tes3Names.hash(bytes), size, source);
+        name,
+        identity.orElseThrow().value(),
+        bytes,
+        Tes3Names.hash(bytes),
+        size,
+        payload,
+        location);
   }
 
   /** Counts source candidates before filtering or replacement, then admits a matching entry. */
@@ -464,15 +490,42 @@ public final class PackSources {
     return scalar >= 'A' && scalar <= 'Z' ? scalar + 32 : scalar;
   }
 
-  /** Detached, canonical input with a repeatable bounded consumption contract. */
+  /**
+   * Detached, canonical input with a repeatable bounded consumption contract.
+   *
+   * @param location the Operation Source the entry is read from, in PREFLIGHT: a loose file or a
+   *     repacked archive at its path, or a generated source, which has no path and is located by
+   *     its name. {@link #processing} locates the entry's processing failures there (ADR-0006).
+   */
   public record Entry(
-      String displayName, String identity, byte[] name, long hash, long size, Payload payload) {}
+      String displayName,
+      String identity,
+      byte[] name,
+      long hash,
+      long size,
+      Payload payload,
+      IoContext location) {
+    /** Requires the source location every processing failure of the entry reports. */
+    public Entry {
+      java.util.Objects.requireNonNull(location, "location");
+    }
+
+    /** Returns the entry's PROCESSING location at its source, for one operation-wide ordinal. */
+    public IoContext processing(long ordinal) {
+      return location.at(OperationPhase.PROCESSING, OptionalLong.of(ordinal));
+    }
+  }
 
   /** Owns source handles only for a synchronous consumption, including final source validation. */
   @FunctionalInterface
   public interface Payload {
-    /** Consumes the stable source and closes all source-owned resources before returning. */
-    void consume(Reader reader) throws IOException;
+    /**
+     * Consumes the stable source and closes all source-owned resources before returning.
+     *
+     * @param processing the entry's PROCESSING location, where the payload locates failures it
+     *     structures itself
+     */
+    void consume(Reader reader, IoContext processing) throws IOException;
   }
 
   /** Borrows a source channel until returning; callers must not retain or close that channel. */

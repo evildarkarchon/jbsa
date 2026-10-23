@@ -51,7 +51,8 @@ public final class PackPipeline {
     var operation =
         new OperationSession(
             Operation.PACK, request.resourceLimits(), request.diagnosticPolicy(), control);
-    var context = IoContext.of(request.destination(), Operation.PACK);
+    // The pack's own location is its destination; each entry's source locates its own failures.
+    var context = IoContext.destination(request.destination(), Operation.PACK);
     return operation.run(
         context, resources -> pack(request, adapter, operation, context, resources));
   }
@@ -73,7 +74,7 @@ public final class PackPipeline {
     // The pipeline owns the budget lifetime (D10); the template closes it before the epilogue
     // settles.
     ResourceBudget budget = ResourceBudget.forMutation(request.resourceLimits(), context);
-    resources.register(budget::close);
+    resources.register(budget::close, context);
     var run = new Run(request, operation, context, budget, resources);
     operation.begin();
     run.workers = WorkerLimits.snapshot(request.workerSelection());
@@ -342,13 +343,13 @@ public final class PackPipeline {
     run.operation.completePhase();
     run.operation.processing(false);
     // One spool bounds heap and handle use independently of entry count, and fixes split sizes.
-    run.stable =
-        SpillBuffer.open(Path.of(System.getProperty("java.io.tmpdir")), run.budget, run.context);
+    Path scratch = Path.of(System.getProperty("java.io.tmpdir"));
+    run.stable = SpillBuffer.open(scratch, run.budget, run.context);
     SpillBuffer stable = run.stable;
     // Stabilization scratch normally closes through the publication plan's source-close action,
     // after every part has staged and before commit; the template settles it after any earlier
     // failure, before the budget it draws on. Closing an already closed spool is a no-op.
-    run.resources.register(stable::close);
+    run.resources.register(stable::close, IoContext.destination(scratch, Operation.PACK));
     List<Planned<K>> sized;
     Replay<K> replay;
     long replayHeap;
@@ -439,7 +440,7 @@ public final class PackPipeline {
         for (int ordinal = 0; ordinal < planned.size(); ordinal++) {
           try (TransformStage.Input staged = stage.next()) {
             Planned<K> entry = planned.get(ordinal);
-            IoContext processing = processing(run.context, ordinal);
+            IoContext processing = entry.source().processing(ordinal);
             OptionalLong location = processing.ordinal();
             Checkpoint checkpoint =
                 () -> run.operation.checkpoint(OperationPhase.PROCESSING, location);
@@ -552,7 +553,7 @@ public final class PackPipeline {
         for (int ordinal = 0; ordinal < planned.size(); ordinal++) {
           try (TransformStage.Input staged = stage.next()) {
             Planned<K> entry = planned.get(ordinal);
-            IoContext processing = processing(run.context, ordinal);
+            IoContext processing = entry.source().processing(ordinal);
             OptionalLong location = processing.ordinal();
             Checkpoint checkpoint =
                 () -> run.operation.checkpoint(OperationPhase.PROCESSING, location);
@@ -825,7 +826,9 @@ public final class PackPipeline {
   /**
    * Reopens one staged part, requires a CONFORMING assessment, and decodes every entry through one
    * bounded window. The reader owns its own budget, so its peak is also admitted against the
-   * still-live pack budget: readback must not silently exceed the operation's capacity.
+   * still-live pack budget: readback must not silently exceed the operation's capacity. The part is
+   * the operation's own staged output, so it opens as a destination and a read fault is DESTINATION
+   * (ADR-0006).
    *
    * @throws ArchiveException INTERNAL {@link Admitted.Readback#nonconformingId()} for a part that
    *     reopens as nonconforming, or the reader's own structured failure
@@ -844,10 +847,9 @@ public final class PackPipeline {
                 0);
         var archive =
             ArchiveReaders.open(
-                staged,
+                IoContext.destination(staged, Operation.PACK),
                 new OpenOptions(
                     request.compatibilityProfile(), request.resourceLimits(), request.ddsTarget()),
-                Operation.PACK,
                 request.diagnosticPolicy())) {
       if (archive.inspection().assessment().disposition() != ArchiveDisposition.CONFORMING)
         throw run.context.failure(FailureKind.INTERNAL, readback.nonconformingId(), null);
@@ -965,7 +967,7 @@ public final class PackPipeline {
       for (int index = 0; index < part.size(); index++) {
         try (TransformStage.Input staged = stage.next()) {
           Planned<K> entry = part.get(index);
-          IoContext processing = processing(run.context, firstOrdinal + index);
+          IoContext processing = entry.source().processing(firstOrdinal + index);
           Placed<K> result =
               run.request.options().sharing()
                   ? placeShared(
@@ -1137,12 +1139,6 @@ public final class PackPipeline {
         reader.read(input);
       }
     }
-  }
-
-  /** Returns the PROCESSING location of one operation-wide output ordinal. */
-  private static IoContext processing(IoContext context, long ordinal) {
-    return new IoContext(
-        context.path(), Operation.PACK, OperationPhase.PROCESSING, OptionalLong.of(ordinal));
   }
 
   /** Describes one staged part for the report. */
