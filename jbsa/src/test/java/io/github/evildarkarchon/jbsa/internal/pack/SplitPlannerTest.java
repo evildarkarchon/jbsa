@@ -101,8 +101,7 @@ final class SplitPlannerTest {
                     }));
 
     assertEquals(
-        Optional.of("memory.layout-too-large"),
-        failure.primaryFailure().diagnosticIdentifier());
+        Optional.of("memory.layout-too-large"), failure.primaryFailure().diagnosticIdentifier());
     assertEquals(List.of(List.of("a"), List.of("b", "c")), seen);
   }
 
@@ -112,9 +111,7 @@ final class SplitPlannerTest {
    */
   private static List<Integer> sizes(
       List<Admitted.Planned<String>> planned, long familyDefault, PackOptions.Splitting splitting) {
-    return planner(0, familyDefault, splitting).split(planned).stream()
-        .map(List::size)
-        .toList();
+    return planner(0, familyDefault, splitting).split(planned).stream().map(List::size).toList();
   }
 
   /**
