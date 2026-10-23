@@ -13,6 +13,7 @@ import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -328,23 +329,27 @@ final class Lz4Qualification {
   }
 
   /**
-   * Dispatches only to the release-pinned raw or frame profile under test, as its caller: the
-   * admitted codec's encode cost is reserved from {@code budget} first and lent to the encoder.
+   * Dispatches only to the release-pinned raw or qualification-only general frame profile under
+   * test, as its caller: the admitted codec's encode cost is reserved from {@code budget} first and
+   * lent to the encoder.
    */
   private static void encode(
       String codec, byte[] data, ByteSink sink, Checkpoint checkpoints, ResourceBudget budget)
       throws IOException {
-    AdmittedCodec.Cost cost = admitted(codec, "encode").encodeCost(data.length);
+    AdmittedCodec admitted = admitted(codec, "encode");
+    AdmittedCodec.Cost cost = admitted.encodeCost(data.length);
     try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
       if (codec.equals("raw-lz4"))
-        Lz4Raw.encode(source(data), data.length, sink, checkpoints, lease, CONTEXT);
-      else Lz4Frame.encode(source(data), data.length, sink, checkpoints, lease, CONTEXT);
+        Lz4Raw.encode(admitted, source(data), data.length, sink, checkpoints, lease, CONTEXT);
+      else Lz4Frame.encodeGeneral(source(data), data.length, sink, checkpoints, lease, CONTEXT);
     }
   }
 
   /**
    * Dispatches exact on-wire and logical sizes to the release-pinned decoder under test, as its
-   * caller: the admitted codec's decode cost is reserved from {@code budget} first and lent.
+   * caller: the admitted codec's decode cost is reserved from {@code budget} first and lent. A
+   * frame drains through the admitted decoder one 64 KiB window at a time, observing the checkpoint
+   * before each window as a streaming reader would.
    */
   private static void decode(
       String codec,
@@ -354,11 +359,27 @@ final class Lz4Qualification {
       Checkpoint checkpoints,
       ResourceBudget budget)
       throws IOException {
-    AdmittedCodec.Cost cost = admitted(codec, "decode").decodeCost(frame.length, size);
+    AdmittedCodec admitted = admitted(codec, "decode");
+    AdmittedCodec.Cost cost = admitted.decodeCost(frame.length, size);
     try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
-      if (codec.equals("raw-lz4"))
-        Lz4Raw.decode(source(frame), frame.length, size, sink, checkpoints, lease, CONTEXT);
-      else Lz4Frame.decode(source(frame), frame.length, size, sink, checkpoints, lease, CONTEXT);
+      if (codec.equals("raw-lz4")) {
+        Lz4Raw.decode(
+            admitted, source(frame), frame.length, size, sink, checkpoints, lease, CONTEXT);
+        return;
+      }
+      try (var decoder =
+          Lz4Frame.decoder(admitted, source(frame), frame.length, size, lease, CONTEXT)) {
+        ByteBuffer window = ByteBuffer.allocate(65536);
+        long produced = 0;
+        while (true) {
+          checkpoints.check();
+          if (decoder.read(window.clear()) < 0) return;
+          window.flip();
+          int count = window.remaining();
+          sink.write(produced, window);
+          produced += count;
+        }
+      }
     }
   }
 

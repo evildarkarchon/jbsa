@@ -3,10 +3,10 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
-import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
@@ -181,7 +181,7 @@ final class Codecs {
         if (input == null)
           throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
         long[] read = {0};
-        BsaLz4Frame.encode(
+        Lz4Frame.encode(
             codec,
             (offset, bytes) -> {
               // The encoder reads its source once, front to back; anything else is a JBSA bug.
@@ -208,6 +208,7 @@ final class Codecs {
         Cost cost = cost(codec, decodedSize);
         try (var lease = budget.reserve(cost.heap(), cost.nativeBytes(), 0, 0)) {
           Lz4Raw.encode(
+              codec,
               (offset, bytes) -> {
                 // Raw LZ4 reads its whole block once from offset zero; anything else is a JBSA
                 // bug.

@@ -2,10 +2,10 @@ package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
-import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
@@ -131,12 +131,15 @@ public final class Lz4LaunchProbe {
       try (var lease = reserve(budget, rawEncoder.encodeCost(data.length))) {
         block =
             collect(
-                sink -> Lz4Raw.encode(source(data), data.length, sink, () -> {}, lease, context));
+                sink ->
+                    Lz4Raw.encode(
+                        rawEncoder, source(data), data.length, sink, () -> {}, lease, context));
       }
       ByteBuffer decoded = ByteBuffer.allocate(data.length);
       AdmittedCodec rawDecoder = AdmittedCodec.admit(PayloadCodec.LZ4_RAW, "decode", context);
       try (var lease = reserve(budget, rawDecoder.decodeCost(block.length, data.length))) {
         Lz4Raw.decode(
+            rawDecoder,
             source(block),
             block.length,
             data.length,
@@ -152,13 +155,13 @@ public final class Lz4LaunchProbe {
         frame =
             collect(
                 sink ->
-                    BsaLz4Frame.encode(
+                    Lz4Frame.encode(
                         encoder, source(data), data.length, sink, () -> {}, lease, context));
       }
       AdmittedCodec decoding = AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "decode", context);
       try (var lease = reserve(budget, decoding.decodeCost(frame.length, data.length));
           var decoder =
-              BsaLz4Frame.decoder(
+              Lz4Frame.decoder(
                   decoding, source(frame), frame.length, data.length, lease, context)) {
         // One spare byte keeps the destination non-full, so the decoder can report terminal EOF
         // (which also validates exact frame consumption) instead of a zero-length read.

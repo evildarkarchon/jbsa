@@ -21,7 +21,9 @@ import org.junit.jupiter.api.condition.OS;
 
 /**
  * Exercises frame dispatch, corruption rejection, cancellation and resource return through the
- * process's pinned provider: native LWJGL on Windows x64, portable lz4-java elsewhere.
+ * module's frame entry points and the process's pinned provider: native LWJGL on Windows x64,
+ * portable lz4-java elsewhere. Frames come from the qualification-only general encoder and decode
+ * through the admitted BSA frame codec's decoder, which reads any independent or linked frame.
  */
 final class Lz4FrameTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("frame.bin"), Operation.OPEN);
@@ -31,12 +33,15 @@ final class Lz4FrameTest {
 
   private static final long NATIVE_CEILING = 12L * 1024 * 1024;
 
+  /** Returns the BSA frame codec admitted for decoding under the provider this process pins. */
+  private static AdmittedCodec decoding() throws ArchiveException {
+    return AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "decode", CONTEXT);
+  }
+
   /** Reserves one frame decoder's cost for the provider admission pins, as its owner must. */
   private static ResourceBudget.Lease reserveDecoder(
       ResourceBudget budget, long storedSize, long decodedSize) throws ArchiveException {
-    AdmittedCodec.Cost cost =
-        AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "decode", CONTEXT)
-            .decodeCost(storedSize, decodedSize);
+    AdmittedCodec.Cost cost = decoding().decodeCost(storedSize, decodedSize);
     return budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
   }
 
@@ -48,18 +53,6 @@ final class Lz4FrameTest {
     return budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
   }
 
-  /**
-   * Reserves one one-shot frame decode's credit: the decoder's cost, plus the 64 KiB heap window
-   * the portable one-shot copies output through.
-   */
-  private static ResourceBudget.Lease reserveOneShot(
-      ResourceBudget budget, long storedSize, long decodedSize) throws ArchiveException {
-    AdmittedCodec admitted = AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "decode", CONTEXT);
-    AdmittedCodec.Cost cost = admitted.decodeCost(storedSize, decodedSize);
-    long window = admitted.provider() == Lz4Runtime.Provider.PORTABLE ? 65536 : 0;
-    return budget.reserve(cost.heapBytes() + window, cost.nativeBytes(), 0, 0);
-  }
-
   @Test
   void decoderStateMayBeConsumedAndClosedByAnotherThread() throws Exception {
     byte[] data = new byte[200_000];
@@ -67,7 +60,8 @@ final class Lz4FrameTest {
     byte[] frame = encode(data);
     try (ResourceBudget budget = budget();
         ResourceBudget.Lease lease = reserveDecoder(budget, frame.length, data.length)) {
-      var decoder = Lz4Frame.decoder(source(frame), frame.length, data.length, lease, CONTEXT);
+      var decoder =
+          Lz4Frame.decoder(decoding(), source(frame), frame.length, data.length, lease, CONTEXT);
       var result =
           CompletableFuture.supplyAsync(
               () -> {
@@ -123,31 +117,30 @@ final class Lz4FrameTest {
   }
 
   /**
-   * A cancelled decode leaves its caller's lease open and holds no credit of its own, so every
-   * credit returns once the caller closes the lease; a callback failure keeps operation identity.
+   * A decoder whose borrowed source is cancelled mid-frame leaves its owner's lease open and holds
+   * no credit of its own, so every credit returns once the owner closes the decoder and the lease;
+   * a source callback failure keeps operation identity.
    */
   @Test
   void releasesDecoderCreditsAfterCancellationAndPreservesCallbackFailure() throws Exception {
-    byte[] frame = encode(new byte[400000]);
-    AtomicInteger checks = new AtomicInteger();
+    // Incompressible content keeps the frame larger than one 64 KiB source window, so the decoder
+    // must come back to its source mid-frame.
+    byte[] data = new byte[400000];
+    new Random(46).nextBytes(data);
+    byte[] frame = encode(data);
+    AtomicInteger reads = new AtomicInteger();
     IOException cancellation = new IOException("cancelled");
+    ByteSource cancelling =
+        (offset, bytes) -> {
+          if (reads.incrementAndGet() == 2) throw cancellation;
+          source(frame).read(offset, bytes);
+        };
     try (ResourceBudget budget = budget()) {
-      var lease = reserveOneShot(budget, frame.length, 400000);
-      assertSame(
-          cancellation,
-          assertThrows(
-              IOException.class,
-              () ->
-                  Lz4Frame.decode(
-                      source(frame),
-                      frame.length,
-                      400000,
-                      (offset, bytes) -> {},
-                      () -> {
-                        if (checks.incrementAndGet() == 3) throw cancellation;
-                      },
-                      lease,
-                      CONTEXT)));
+      var lease = reserveDecoder(budget, frame.length, 400000);
+      try (var decoder =
+          Lz4Frame.decoder(decoding(), cancelling, frame.length, 400000, lease, CONTEXT)) {
+        assertSame(cancellation, assertThrows(IOException.class, () -> drain(decoder, 8192)));
+      }
       // The borrowed lease is still the caller's until it closes it.
       assertThrows(
           ArchiveException.class, () -> budget.reserve(HEAP_CEILING, NATIVE_CEILING, 0, 0));
@@ -155,21 +148,14 @@ final class Lz4FrameTest {
       try (ResourceBudget.Lease returned = budget.reserve(HEAP_CEILING, NATIVE_CEILING, 0, 0)) {
         assertNotNull(returned);
       }
-      try (var failing = reserveOneShot(budget, frame.length, 400000)) {
-        ArchiveException failure =
-            assertThrows(
-                ArchiveException.class,
-                () ->
-                    Lz4Frame.decode(
-                        source(frame),
-                        frame.length,
-                        400000,
-                        (offset, bytes) -> {
-                          throw new IllegalStateException("caller failure");
-                        },
-                        () -> {},
-                        failing,
-                        CONTEXT));
+      ByteSource failingSource =
+          (offset, bytes) -> {
+            throw new IllegalStateException("caller failure");
+          };
+      try (var failing = reserveDecoder(budget, frame.length, 400000);
+          var decoder =
+              Lz4Frame.decoder(decoding(), failingSource, frame.length, 400000, failing, CONTEXT)) {
+        ArchiveException failure = assertThrows(ArchiveException.class, () -> drain(decoder, 8192));
         assertEquals(
             "operation.internal-failure",
             failure.primaryFailure().diagnosticIdentifier().orElseThrow());
@@ -228,7 +214,7 @@ final class Lz4FrameTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            Lz4Frame.encode(
+            Lz4Frame.encodeGeneral(
                 (offset, bytes) -> fail("source touched"),
                 1,
                 (offset, bytes) -> fail("sink touched"),
@@ -253,7 +239,7 @@ final class Lz4FrameTest {
           assertThrows(
               IOException.class,
               () ->
-                  Lz4Frame.encode(
+                  Lz4Frame.encodeGeneral(
                       source(data),
                       data.length,
                       (offset, bytes) -> {},
@@ -299,22 +285,32 @@ final class Lz4FrameTest {
     try (ResourceBudget budget = budget();
         var lease = reserveEncoder(budget, data.length)) {
       long count =
-          Lz4Frame.encode(source(data), data.length, sink(output), () -> {}, lease, CONTEXT);
+          Lz4Frame.encodeGeneral(source(data), data.length, sink(output), () -> {}, lease, CONTEXT);
       assertEquals(output.size(), count);
     }
     return output.toByteArray();
   }
 
-  /** Decodes on a lease of the one-shot decode credit from an isolated bounded ledger. */
+  /**
+   * Decodes through the admitted decoder on a lease of its decode cost from an isolated bounded
+   * ledger, draining it to terminal EOF.
+   */
   private static byte[] decode(byte[] frame, long size) throws Exception {
-    var output = new ByteArrayOutputStream();
     try (ResourceBudget budget = budget();
-        var lease = reserveOneShot(budget, frame.length, size)) {
-      assertEquals(
-          size,
-          Lz4Frame.decode(
-              source(frame), frame.length, size, sink(output), () -> {}, lease, CONTEXT));
+        var lease = reserveDecoder(budget, frame.length, size);
+        var decoder =
+            Lz4Frame.decoder(decoding(), source(frame), frame.length, size, lease, CONTEXT)) {
+      byte[] decoded = drain(decoder, 65536);
+      assertEquals(size, decoded.length);
+      return decoded;
     }
+  }
+
+  /** Reads a decoder to terminal EOF through one bounded destination window. */
+  private static byte[] drain(Lz4Frame.Decoder decoder, int window) throws IOException {
+    var output = new ByteArrayOutputStream();
+    ByteBuffer buffer = ByteBuffer.allocate(window);
+    while (decoder.read(buffer.clear()) >= 0) output.write(buffer.array(), 0, buffer.position());
     return output.toByteArray();
   }
 }

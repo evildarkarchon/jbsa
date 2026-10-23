@@ -1,23 +1,26 @@
 package io.github.evildarkarchon.jbsa.internal.codec;
 
-import static org.lwjgl.util.lz4.LZ4Frame.*;
-
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
-import java.lang.foreign.Arena;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import org.lwjgl.PointerBuffer;
-import org.lwjgl.util.lz4.LZ4FDecompressOptions;
-import org.lwjgl.util.lz4.LZ4FPreferences;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.TreeMap;
 
 /**
- * Release-pinned streaming frame adapter with independently owned, admitted codec state. Each call
- * runs through the provider {@link Lz4Runtime#preflight} pins: the native LWJGL adapter, or the
- * portable {@link PortableLz4} provider when native LZ4 is unavailable.
+ * Release-pinned streaming LZ4 frame entry points with independently owned, admitted codec state.
+ * The versioned-BSA 0x69 profile runs through the {@link Lz4Adapter} its {@link AdmittedCodec}
+ * selected, so it never preflights again, and its failures carry that codec's family-layered
+ * profile identity.
+ *
+ * <p>The linked, checksummed, level-9 general profile stays as a qualification-only path, {@link
+ * #encodeGeneral}; no archive family packs it.
+ *
+ * <p>This class must stay free of LWJGL and lz4-java references; the adapters own them.
  */
 public final class Lz4Frame {
   /** Native-provider heap bookkeeping per encoder or decoder. */
@@ -29,19 +32,22 @@ public final class Lz4Frame {
   /** Native-provider memory for one decoder, bounded by a 4 MiB block plus direct windows. */
   public static final long DECODE_NATIVE_BYTES = 9 * 1024 * 1024 + 3 * 65536;
 
-  private static final int WINDOW = 65536;
-
   private Lz4Frame() {}
 
   /**
-   * Encodes an exact positional source in bounded windows, on the caller's reservation of {@link
-   * AdmittedCodec#encodeCost} for the pinned provider. Callbacks are borrowed synchronously; all
-   * native state is released on success, failure, or cancellation, and the lease stays the caller's
-   * to close.
+   * Encodes one exact level-12 independent-block versioned-BSA frame on the caller's codec
+   * reservation, and binds failures to the admitted codec's profile. Callbacks are borrowed
+   * synchronously; all codec state is released on success, failure, or cancellation, and the lease
+   * stays the caller's to close.
    *
+   * @param admitted the admitted BSA frame codec, whose adapter runs the call
+   * @param lease a lease already covering {@code admitted}'s encode cost
    * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException when {@code admitted} is not the BSA frame codec, or the size
+   *     is negative
    */
   public static long encode(
+      AdmittedCodec admitted,
       ByteSource source,
       long decodedSize,
       ByteSink sink,
@@ -49,165 +55,78 @@ public final class Lz4Frame {
       ResourceBudget.Lease lease,
       IoContext context)
       throws IOException {
-    return encode(source, decodedSize, sink, checkpoint, lease, context, false);
-  }
-
-  /**
-   * Encodes one frame with the exact versioned-BSA 0x69 profile, on the caller's reservation of its
-   * encode cost.
-   *
-   * @throws NullPointerException when {@code lease} is null
-   */
-  public static long encodeBsa(
-      ByteSource source,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget.Lease lease,
-      IoContext context)
-      throws IOException {
-    return encode(source, decodedSize, sink, checkpoint, lease, context, true);
-  }
-
-  /** Runs one encoder invocation through the pinned provider on the caller's lease. */
-  private static long encode(
-      ByteSource source,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget.Lease lease,
-      IoContext context,
-      boolean bsaProfile)
-      throws IOException {
-    java.util.Objects.requireNonNull(lease, "lease");
+    Objects.requireNonNull(lease, "lease");
+    Lz4Adapter adapter = bsaFrame(admitted);
     if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
-    Provider provider = Lz4Runtime.preflight("lz4-frame", "encode", context);
-    return encode(provider, source, decodedSize, sink, checkpoint, lease, context, bsaProfile);
-  }
-
-  /**
-   * Encodes through an explicit provider. Production code reaches this only with the pinned
-   * provider; tests use it to exercise both providers in one process.
-   *
-   * @param lease the caller's reservation of the provider's encode cost; the encoder borrows it and
-   *     never reserves or closes credit itself
-   * @throws NullPointerException when {@code lease} is null
-   */
-  static long encode(
-      Provider provider,
-      ByteSource source,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget.Lease lease,
-      IoContext context,
-      boolean bsaProfile)
-      throws IOException {
-    java.util.Objects.requireNonNull(lease, "lease");
-    if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
-    if (provider == Provider.PORTABLE)
-      return PortableLz4.encodeFrame(
-          source, decodedSize, sink, checkpoint, lease, context, bsaProfile);
-    try (var state = new State(true, context)) {
-      var preferences = state.preferences;
-      preferences.compressionLevel(bsaProfile ? 12 : 9).autoFlush(true);
-      if (bsaProfile) {
-        preferences
-            .frameInfo()
-            .blockSizeID(LZ4F_max4MB)
-            .blockMode(LZ4F_blockIndependent)
-            .blockChecksumFlag(LZ4F_noBlockChecksum)
-            .contentChecksumFlag(LZ4F_noContentChecksum)
-            .contentSize(0)
-            .dictID(0);
-      } else {
-        preferences
-            .frameInfo()
-            .blockSizeID(LZ4F_max64KB)
-            .blockMode(LZ4F_blockLinked)
-            .contentChecksumFlag(LZ4F_contentChecksumEnabled)
-            .contentSize(decodedSize);
-      }
-      caller(checkpoint::check, context);
-      long written =
-          emit(
-              sink,
-              0,
-              state.output,
-              checked(LZ4F_compressBegin(state.handle, state.output, preferences), true, context),
-              context);
-      for (long read = 0; read < decodedSize; ) {
-        caller(checkpoint::check, context);
-        int count = (int) Math.min(WINDOW, decodedSize - read);
-        state.input.clear().limit(count);
-        long offset = read;
-        caller(() -> source.read(offset, state.input), context);
-        if (state.input.hasRemaining())
-          throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
-        state.input.flip();
-        state.output.clear();
-        int encoded =
-            checked(
-                LZ4F_compressUpdate(state.handle, state.output, state.input, null), true, context);
-        written = emit(sink, written, state.output, encoded, context);
-        read += count;
-      }
-      caller(checkpoint::check, context);
-      state.output.clear();
-      return emit(
-          sink,
-          written,
-          state.output,
-          checked(LZ4F_compressEnd(state.handle, state.output, null), true, context),
-          context);
-    } catch (RuntimeException | LinkageError | AssertionError cause) {
-      throw fault(context, "encode", decodedSize, -1, cause);
+    try {
+      return adapter.encodeFrame(source, decodedSize, sink, checkpoint, lease, context, true);
+    } catch (ArchiveException failure) {
+      throw reprofile(failure, admitted.profile());
     }
   }
 
   /**
-   * Creates an incremental decoder after its owner reserves the declared decode resources. The
-   * decoder borrows its positional source and the owner's lease, and releases native state when
-   * closed.
+   * Creates an incremental decoder after its owner reserves the admitted codec's decode resources.
+   * The decoder borrows its positional source and the owner's lease, releases its codec state when
+   * closed, and its later content failures retain the admitted codec's profile identity.
    *
-   * @param lease the owner's reservation of {@link AdmittedCodec#decodeCost}, which outlives the
+   * @param admitted the admitted BSA frame codec, whose adapter runs the decoder
+   * @param lease the owner's reservation of {@code admitted}'s decode cost, which outlives the
    *     decoder and is never closed here
    * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException when {@code admitted} is not the BSA frame codec, or a size is
+   *     negative
    */
   public static Decoder decoder(
+      AdmittedCodec admitted,
       ByteSource source,
       long storedSize,
       long decodedSize,
       ResourceBudget.Lease lease,
       IoContext context)
       throws ArchiveException {
-    java.util.Objects.requireNonNull(lease, "lease");
+    Objects.requireNonNull(lease, "lease");
+    Lz4Adapter adapter = bsaFrame(admitted);
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
-    Provider provider = Lz4Runtime.preflight("lz4-frame", "decode", context);
-    return decoder(provider, source, storedSize, decodedSize, lease, context);
+    try {
+      return new Reprofiled(
+          adapter.frameDecoder(source, storedSize, decodedSize, lease, context),
+          admitted.profile());
+    } catch (ArchiveException failure) {
+      throw reprofile(failure, admitted.profile());
+    }
   }
 
   /**
-   * Creates a decoder through an explicit provider; tests use it to cross-decode providers.
+   * Encodes one linked, checksummed, level-9 general frame through the pinned provider, on the
+   * caller's reservation of {@link AdmittedCodec#encodeCost} for the BSA frame under that provider.
+   * This is a qualification-only path, so it preflights for itself; its failures carry the
+   * provider's own profile identity.
    *
-   * @param lease the owner's reservation of the provider's decode cost, borrowed
    * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException when the size is negative
    */
-  static Decoder decoder(
-      Provider provider,
+  public static long encodeGeneral(
       ByteSource source,
-      long storedSize,
       long decodedSize,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget.Lease lease,
       IoContext context)
-      throws ArchiveException {
-    java.util.Objects.requireNonNull(lease, "lease");
-    if (storedSize < 0 || decodedSize < 0)
-      throw new IllegalArgumentException("Negative codec size");
-    return provider == Provider.PORTABLE
-        ? PortableLz4.decoder(source, storedSize, decodedSize, lease, context)
-        : new NativeDecoder(source, storedSize, decodedSize, context);
+      throws IOException {
+    Objects.requireNonNull(lease, "lease");
+    if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
+    Provider provider = Lz4Runtime.preflight("lz4-frame", "encode", context);
+    return Lz4Adapter.of(provider)
+        .encodeFrame(source, decodedSize, sink, checkpoint, lease, context, false);
+  }
+
+  /** Returns the adapter the admitted BSA frame codec selected, rejecting any other codec. */
+  private static Lz4Adapter bsaFrame(AdmittedCodec admitted) {
+    if (admitted.codec() != PayloadCodec.BSA_LZ4_FRAME)
+      throw new IllegalArgumentException("The BSA frame needs the admitted BSA frame codec");
+    return admitted.adapter();
   }
 
   /**
@@ -227,356 +146,66 @@ public final class Lz4Frame {
     void close();
   }
 
-  /** Per-content sequential native frame decoder with bounded direct input and output windows. */
-  private static final class NativeDecoder implements Decoder {
-    private final ByteSource source;
-    private final long storedSize, decodedSize;
-    private final IoContext context;
-    private final State state;
-    private long supplied, produced;
-    private boolean first = true, finished, closed;
+  /** Owns one adapter decoder while normalizing its public profile evidence. */
+  private static final class Reprofiled implements Decoder {
+    private final Decoder delegate;
+    private final String profile;
 
-    /** Allocates independent native state only after capability preflight and caller admission. */
-    private NativeDecoder(ByteSource source, long storedSize, long decodedSize, IoContext context)
-        throws ArchiveException {
-      this.source = source;
-      this.storedSize = storedSize;
-      this.decodedSize = decodedSize;
-      this.context = context;
-      state = new State(false, context);
-      state.input.limit(0);
+    private Reprofiled(Decoder delegate, String profile) {
+      this.delegate = delegate;
+      this.profile = profile;
     }
 
-    /** Returns one bounded decoded window and validates exact frame consumption at terminal EOF. */
+    /** Reads one bounded window and rewrites only the opaque codec-profile value on failure. */
     @Override
-    public synchronized int read(ByteBuffer destination) throws IOException {
-      if (closed) throw new java.nio.channels.ClosedChannelException();
-      if (!destination.hasRemaining()) return 0;
-      if (finished) return -1;
+    public int read(ByteBuffer destination) throws IOException {
       try {
-        while (true) {
-          if (!state.input.hasRemaining()) {
-            if (supplied == storedSize)
-              throw invalid(context, "codec.invalid-data", decodedSize, produced);
-            int count = (int) Math.min(WINDOW, storedSize - supplied);
-            state.input.clear().limit(count);
-            caller(() -> source.read(supplied, state.input), context);
-            if (state.input.hasRemaining())
-              throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
-            state.input.flip();
-            if (first) {
-              first = false;
-              if (count < 4 || state.input.order(ByteOrder.LITTLE_ENDIAN).getInt(0) != 0x184D2204)
-                throw invalid(context, "codec.invalid-data", decodedSize, produced);
-            }
-            supplied += count;
-          }
-          int available = state.input.remaining();
-          int capacity =
-              (int)
-                  Math.min(
-                      Math.min(WINDOW, destination.remaining()),
-                      decodedSize - produced + (produced == decodedSize ? 1 : 0));
-          state.output.clear().limit(capacity);
-          state.inputSize.put(0, available);
-          state.outputSize.put(0, capacity);
-          long result =
-              LZ4F_decompress(
-                  state.handle,
-                  state.output,
-                  state.outputSize,
-                  state.input,
-                  state.inputSize,
-                  state.decodeOptions);
-          if (LZ4F_isError(result))
-            throw Lz4Runtime.failure(
-                Provider.NATIVE,
-                context,
-                FailureKind.FORMAT,
-                "codec.invalid-data",
-                "lz4-frame",
-                "decode",
-                decodedSize,
-                produced,
-                providerError(result));
-          int consumed = Math.toIntExact(state.inputSize.get(0));
-          int count = Math.toIntExact(state.outputSize.get(0));
-          if (consumed < 0 || consumed > available || count < 0 || count > capacity)
-            throw new IllegalStateException("Invalid provider counts");
-          state.input.position(state.input.position() + consumed);
-          if (count > decodedSize - produced)
-            throw invalid(context, "codec.size-mismatch", decodedSize, produced + count);
-          if (count > 0) {
-            state.output.position(0).limit(count);
-            destination.put(state.output);
-            produced += count;
-          }
-          if (result == 0) {
-            if (produced != decodedSize || supplied != storedSize || state.input.hasRemaining())
-              throw invalid(context, "codec.size-mismatch", decodedSize, produced);
-            finished = true;
-          }
-          if (count > 0) return count;
-          if (finished) return -1;
-          if (consumed == 0) throw invalid(context, "codec.invalid-data", decodedSize, produced);
-        }
+        return delegate.read(destination);
       } catch (ArchiveException failure) {
-        throw failure;
-      } catch (RuntimeException | LinkageError | AssertionError cause) {
-        throw fault(context, "decode", decodedSize, produced, cause);
+        throw reprofile(failure, profile);
       }
     }
 
-    /** Releases native frame state exactly once, including abandoned content reads. */
-    @Override
-    public synchronized void close() {
-      if (!closed) {
-        closed = true;
-        state.close();
-      }
-    }
-  }
-
-  /**
-   * Decodes one ordinary frame, requiring exact compressed and decoded lengths. Native calls and
-   * output publication are bounded; excess decoded bytes are detected without publishing them.
-   *
-   * @param lease the caller's reservation of {@link AdmittedCodec#decodeCost} for the pinned
-   *     provider, plus one 64 KiB heap output window under the portable provider; borrowed
-   * @throws NullPointerException when {@code lease} is null
-   */
-  public static long decode(
-      ByteSource source,
-      long storedSize,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget.Lease lease,
-      IoContext context)
-      throws IOException {
-    java.util.Objects.requireNonNull(lease, "lease");
-    if (storedSize < 0 || decodedSize < 0)
-      throw new IllegalArgumentException("Negative codec size");
-    Provider provider = Lz4Runtime.preflight("lz4-frame", "decode", context);
-    return decode(provider, source, storedSize, decodedSize, sink, checkpoint, lease, context);
-  }
-
-  /**
-   * Decodes one ordinary frame through an explicit provider, as {@link #decode} does.
-   *
-   * @param lease the caller's reservation, sized as {@link #decode} documents; borrowed
-   * @throws NullPointerException when {@code lease} is null
-   */
-  static long decode(
-      Provider provider,
-      ByteSource source,
-      long storedSize,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget.Lease lease,
-      IoContext context)
-      throws IOException {
-    java.util.Objects.requireNonNull(lease, "lease");
-    if (storedSize < 0 || decodedSize < 0)
-      throw new IllegalArgumentException("Negative codec size");
-    if (provider == Provider.PORTABLE)
-      return PortableLz4.decodeFrame(
-          source, storedSize, decodedSize, sink, checkpoint, lease, context);
-    try (var state = new State(false, context)) {
-      long supplied = 0, produced = 0;
-      state.input.limit(0);
-      while (true) {
-        caller(checkpoint::check, context);
-        if (!state.input.hasRemaining() && supplied < storedSize) {
-          int count = (int) Math.min(WINDOW, storedSize - supplied);
-          state.input.clear().limit(count);
-          long offset = supplied;
-          caller(() -> source.read(offset, state.input), context);
-          if (state.input.hasRemaining())
-            throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
-          state.input.flip();
-          // Skippable frames are valid LZ4 transport but cannot represent an archive payload.
-          if (supplied == 0
-              && (count < 4 || state.input.order(ByteOrder.LITTLE_ENDIAN).getInt(0) != 0x184D2204))
-            throw invalid(context, "codec.invalid-data", decodedSize, produced);
-          supplied += count;
-        }
-        int available = state.input.remaining();
-        state
-            .output
-            .clear()
-            .limit(
-                (int) Math.min(WINDOW, decodedSize - produced + (produced == decodedSize ? 1 : 0)));
-        state.inputSize.put(0, available);
-        state.outputSize.put(0, state.output.remaining());
-        long result =
-            LZ4F_decompress(
-                state.handle,
-                state.output,
-                state.outputSize,
-                state.input,
-                state.inputSize,
-                state.decodeOptions);
-        if (LZ4F_isError(result))
-          throw Lz4Runtime.failure(
-              Provider.NATIVE,
-              context,
-              FailureKind.FORMAT,
-              "codec.invalid-data",
-              "lz4-frame",
-              "decode",
-              decodedSize,
-              produced,
-              providerError(result));
-        int consumed = Math.toIntExact(state.inputSize.get(0));
-        int count = Math.toIntExact(state.outputSize.get(0));
-        if (consumed < 0 || consumed > available || count < 0 || count > state.output.remaining())
-          throw new IllegalStateException("Invalid provider counts");
-        state.input.position(state.input.position() + consumed);
-        if (count > decodedSize - produced)
-          throw invalid(context, "codec.size-mismatch", decodedSize, produced + count);
-        produced = emit(sink, produced, state.output, count, context);
-        if (result == 0) {
-          if (produced != decodedSize || supplied != storedSize || state.input.hasRemaining())
-            throw invalid(context, "codec.size-mismatch", decodedSize, produced);
-          return produced;
-        }
-        if (consumed == 0 && count == 0)
-          throw invalid(context, "codec.invalid-data", decodedSize, produced);
-      }
-    } catch (RuntimeException | LinkageError | AssertionError cause) {
-      throw fault(context, "decode", decodedSize, -1, cause);
-    }
-  }
-
-  /** Normalizes provider return codes without exposing native messages or codes. */
-  private static int checked(long result, boolean encode, IoContext context)
-      throws ArchiveException {
-    if (LZ4F_isError(result))
-      throw Lz4Runtime.failure(
-          Provider.NATIVE,
-          context,
-          FailureKind.INTERNAL,
-          encode ? "codec.compression-failed" : "codec.provider-fault",
-          "lz4-frame",
-          encode ? "encode" : "decode",
-          -1,
-          -1,
-          providerError(result));
-    return Math.toIntExact(result);
-  }
-
-  /** Retains native evidence exclusively in the non-public failure cause. */
-  private static Throwable providerError(long result) {
-    return new IllegalStateException(
-        "LZ4 frame error " + result + ": " + LZ4F_getErrorName(result));
-  }
-
-  /** Publishes only the valid prefix; positional arithmetic remains checked and wide. */
-  private static long emit(
-      ByteSink sink, long offset, ByteBuffer bytes, int count, IoContext context)
-      throws IOException {
-    if (count > 0) {
-      bytes.position(0).limit(count);
-      caller(() -> sink.write(offset, bytes), context);
-    }
-    return Math.addExact(offset, count);
-  }
-
-  /** Distinguishes borrowed callback faults from codec provider failures. */
-  private static void caller(Callback callback, IoContext context) throws IOException {
-    try {
-      callback.run();
-    } catch (RuntimeException | AssertionError cause) {
-      throw context.failure(FailureKind.INTERNAL, "operation.internal-failure", cause);
-    }
-  }
-
-  @FunctionalInterface
-  private interface Callback {
-    /** Runs one synchronous borrowed callback. */
-    void run() throws IOException;
-  }
-
-  private static ArchiveException invalid(
-      IoContext context, String id, long expected, long actual) {
-    return Lz4Runtime.failure(
-        Provider.NATIVE,
-        context,
-        FailureKind.FORMAT,
-        id,
-        "lz4-frame",
-        "decode",
-        expected,
-        actual,
-        null);
-  }
-
-  private static ArchiveException fault(
-      IoContext context, String direction, long expected, long actual, Throwable cause) {
-    return Lz4Runtime.failure(
-        Provider.NATIVE,
-        context,
-        FailureKind.INTERNAL,
-        "codec.provider-fault",
-        "lz4-frame",
-        direction,
-        expected,
-        actual,
-        cause);
-  }
-
-  /** Owns every explicit native allocation and frees partial construction in reverse order. */
-  private static final class State implements AutoCloseable {
-    private final Arena arena;
-    private ByteBuffer input, output;
-    private PointerBuffer inputSize, outputSize;
-    private LZ4FPreferences preferences;
-    private LZ4FDecompressOptions decodeOptions;
-    private long handle;
-    private final boolean encode;
-
-    /** Allocates only after the caller's complete worst-case reservation has succeeded. */
-    State(boolean encode, IoContext context) throws ArchiveException {
-      this.encode = encode;
-      // Lazy content channels can move between consumer threads; synchronized decoder methods
-      // provide serialization, while encoder state never leaves its invocation thread.
-      arena = encode ? Arena.ofConfined() : Arena.ofShared();
-      try {
-        input = arena.allocate(WINDOW, 8).asByteBuffer();
-        output = arena.allocate(WINDOW * 2, 8).asByteBuffer();
-        inputSize = PointerBuffer.create(arena.allocate(8, 8).asByteBuffer());
-        outputSize = PointerBuffer.create(arena.allocate(8, 8).asByteBuffer());
-        if (encode)
-          preferences =
-              new LZ4FPreferences(arena.allocate(LZ4FPreferences.SIZEOF, 8).asByteBuffer());
-        else
-          decodeOptions =
-              new LZ4FDecompressOptions(
-                  arena.allocate(LZ4FDecompressOptions.SIZEOF, 8).asByteBuffer());
-        inputSize.put(0, 0);
-        long result =
-            encode
-                ? LZ4F_createCompressionContext(inputSize, LZ4F_VERSION)
-                : LZ4F_createDecompressionContext(inputSize, LZ4F_VERSION);
-        handle = inputSize.get(0);
-        checked(result, encode, context);
-      } catch (Throwable cause) {
-        close();
-        throw cause;
-      }
-    }
-
-    /** Ends one invocation; no state is shared with concurrent calls or retained globally. */
+    /** Releases the delegated codec state exactly once. */
     @Override
     public void close() {
-      if (handle != 0) {
-        if (encode) LZ4F_freeCompressionContext(handle);
-        else LZ4F_freeDecompressionContext(handle);
-        handle = 0;
-      }
-      arena.close();
+      delegate.close();
     }
+  }
+
+  /**
+   * Preserves failure ownership and causes while selecting the family codec-profile identity of the
+   * provider that ran, so portable and native evidence stay distinct.
+   */
+  static ArchiveException reprofile(ArchiveException failure, String profile) {
+    List<Diagnostic> diagnostics = new ArrayList<>();
+    for (Diagnostic diagnostic : failure.diagnostics()) {
+      var values = new TreeMap<>(diagnostic.values());
+      values.put("profile", profile);
+      diagnostics.add(
+          new Diagnostic(
+              diagnostic.identifier(),
+              diagnostic.severity(),
+              diagnostic.operation(),
+              diagnostic.phase(),
+              diagnostic.location(),
+              values,
+              diagnostic.explanation()));
+    }
+    if (failure instanceof ArchiveCancelledException)
+      return new ArchiveCancelledException(
+          failure.getMessage(),
+          failure.primaryFailure(),
+          diagnostics,
+          failure.artifacts(),
+          failure.assessment(),
+          failure.secondaryFailures());
+    return new ArchiveException(
+        failure.getMessage(),
+        failure.primaryFailure(),
+        diagnostics,
+        failure.artifacts(),
+        failure.assessment(),
+        failure.secondaryFailures());
   }
 }

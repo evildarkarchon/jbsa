@@ -2,9 +2,9 @@ package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
-import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.IOException;
@@ -298,7 +298,7 @@ public final class OwnedArchive implements OpenArchive {
     private final AdmittedCodec codec;
 
     private JdkZlib.Decoder decoder;
-    private BsaLz4Frame.Decoder lz4Decoder;
+    private Lz4Frame.Decoder lz4Decoder;
     private ByteBuffer decodedRawLz4;
     private int chunkIndex;
     private long chunkPosition;
@@ -330,7 +330,7 @@ public final class OwnedArchive implements OpenArchive {
               : null;
       lz4Decoder =
           stored.codec() == PayloadCodec.BSA_LZ4_FRAME
-              ? BsaLz4Frame.decoder(
+              ? Lz4Frame.decoder(
                   codec,
                   (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
                   stored.streamSize(),
@@ -485,6 +485,7 @@ public final class OwnedArchive implements OpenArchive {
       AdmittedCodec.Cost cost = raw.decodeCost(streamSize, decodedSize);
       try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
         Lz4Raw.decode(
+            raw,
             (relative, bytes) -> input.readExact(Math.addExact(offset, relative), bytes),
             streamSize,
             decodedSize,

@@ -110,9 +110,25 @@ public final class AdmittedCodec {
       throw new IllegalArgumentException("Codec direction must be encode or decode");
     return switch (codec) {
       case STORED, ZLIB -> new AdmittedCodec(codec, null);
-      case BSA_LZ4_FRAME -> new AdmittedCodec(codec, BsaLz4Frame.preflight(direction, context));
+      case BSA_LZ4_FRAME -> new AdmittedCodec(codec, bsaFramePreflight(direction, context));
       case LZ4_RAW -> new AdmittedCodec(codec, Lz4Runtime.preflight("raw-lz4", direction, context));
     };
+  }
+
+  /**
+   * Pins the shared runtime's provider while binding capability evidence to the Versioned BSA frame
+   * profile.
+   *
+   * @return the provider every later call in this process uses
+   */
+  private static Provider bsaFramePreflight(String direction, IoContext context)
+      throws ArchiveException {
+    try {
+      return Lz4Runtime.preflight("lz4-frame", direction, context);
+    } catch (ArchiveException failure) {
+      // No provider ran, so the failure keeps the family's primary (native) profile identity.
+      throw Lz4Frame.reprofile(failure, Provider.NATIVE.bsaFrameProfile());
+    }
   }
 
   /**
@@ -134,6 +150,17 @@ public final class AdmittedCodec {
   /** Returns the resolved LZ4 provider, or null for stored and zlib. */
   Provider provider() {
     return provider;
+  }
+
+  /**
+   * Returns the LZ4 adapter of the provider admission resolved; the LZ4 entries run every call
+   * through it, so they never preflight or choose a provider again.
+   *
+   * @throws IllegalArgumentException for stored and zlib, which resolve no LZ4 provider
+   */
+  Lz4Adapter adapter() {
+    if (provider == null) throw new IllegalArgumentException(codec + " has no LZ4 adapter");
+    return Lz4Adapter.of(provider);
   }
 
   /**
@@ -176,8 +203,7 @@ public final class AdmittedCodec {
   public String profile() {
     return switch (codec) {
       case STORED, ZLIB -> pinnedProfile();
-      case BSA_LZ4_FRAME ->
-          provider == Provider.PORTABLE ? BsaLz4Frame.PORTABLE_PROFILE : BsaLz4Frame.PROFILE;
+      case BSA_LZ4_FRAME -> provider.bsaFrameProfile();
       case LZ4_RAW -> provider.profile();
     };
   }

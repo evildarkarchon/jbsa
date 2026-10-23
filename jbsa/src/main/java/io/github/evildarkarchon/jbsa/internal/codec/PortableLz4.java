@@ -29,8 +29,14 @@ import net.jpountz.xxhash.XXHashFactory;
  * <p>Every method allocates only heap, which the caller reserved before the call and lends as a
  * lease, and keeps all codec state per call or per decoder, so concurrent calls never share mutable
  * state.
+ *
+ * <p>It is the only production class that references lz4-java, and only through its {@code Safe}
+ * holder and method bodies, so loading this adapter class does not load lz4-java.
  */
-final class PortableLz4 {
+final class PortableLz4 implements Lz4Adapter {
+  /** The one instance {@link Lz4Adapter#of} returns; creating it touches no lz4-java class. */
+  static final PortableLz4 ADAPTER = new PortableLz4();
+
   /** The frame magic number, little-endian on the wire. */
   private static final int MAGIC = 0x184D2204;
 
@@ -66,7 +72,8 @@ final class PortableLz4 {
    *
    * @throws LinkageError if lz4-java is absent or cannot initialize
    */
-  static void admit() {
+  @Override
+  public void admit() {
     // Touching one field runs the holder's static initializer exactly once.
     java.util.Objects.requireNonNull(Safe.DECOMPRESSOR);
   }
@@ -79,7 +86,8 @@ final class PortableLz4 {
    * @param lease the caller's reservation of that cost, borrowed and never closed here
    * @throws NullPointerException when {@code lease} is null
    */
-  static long rawEncode(
+  @Override
+  public long encodeRaw(
       ByteSource source,
       long decodedSize,
       ByteSink sink,
@@ -136,7 +144,8 @@ final class PortableLz4 {
    * @param lease the caller's reservation of that cost, borrowed and never closed here
    * @throws NullPointerException when {@code lease} is null
    */
-  static long rawDecode(
+  @Override
+  public long decodeRaw(
       ByteSource source,
       long storedSize,
       long decodedSize,
@@ -206,7 +215,8 @@ final class PortableLz4 {
    *     AdmittedCodec#PORTABLE_FRAME_ENCODE_HEAP_BYTES}, borrowed and never closed here
    * @throws NullPointerException when {@code lease} is null
    */
-  static long encodeFrame(
+  @Override
+  public long encodeFrame(
       ByteSource source,
       long decodedSize,
       ByteSink sink,
@@ -291,7 +301,8 @@ final class PortableLz4 {
    * @param lease the caller's reservation, which outlives the decoder and is never closed here
    * @throws NullPointerException when {@code lease} is null
    */
-  static FrameDecoder decoder(
+  @Override
+  public Lz4Frame.Decoder frameDecoder(
       ByteSource source,
       long storedSize,
       long decodedSize,
@@ -299,37 +310,6 @@ final class PortableLz4 {
       IoContext context) {
     java.util.Objects.requireNonNull(lease, "lease");
     return new FrameDecoder(source, storedSize, decodedSize, context);
-  }
-
-  /**
-   * Decodes one ordinary frame to a positional sink, requiring exact compressed and decoded
-   * lengths. Decoded bytes beyond the declared size are detected without being published.
-   *
-   * @param lease the caller's reservation of {@link AdmittedCodec#PORTABLE_FRAME_DECODE_HEAP_BYTES}
-   *     plus the one {@link #WINDOW}-byte output window this call allocates, borrowed
-   * @throws NullPointerException when {@code lease} is null
-   */
-  static long decodeFrame(
-      ByteSource source,
-      long storedSize,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget.Lease lease,
-      IoContext context)
-      throws IOException {
-    java.util.Objects.requireNonNull(lease, "lease");
-    try (var decoder = decoder(source, storedSize, decodedSize, lease, context)) {
-      ByteBuffer window = ByteBuffer.allocate(WINDOW);
-      long produced = 0;
-      while (true) {
-        caller(checkpoint::check, context);
-        window.clear();
-        int count = decoder.read(window);
-        if (count < 0) return produced;
-        produced = emit(sink, produced, window.flip(), context);
-      }
-    }
   }
 
   /**

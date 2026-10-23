@@ -1,20 +1,18 @@
 package io.github.evildarkarchon.jbsa.internal.codec;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
-import java.lang.foreign.Arena;
-import java.nio.ByteBuffer;
 import java.util.Objects;
-import org.lwjgl.util.lz4.LZ4;
-import org.lwjgl.util.lz4.LZ4HC;
 
 /**
  * Unsplittable raw-block profile with checked admission and independently owned codec buffers. Each
- * call runs through the provider {@link Lz4Runtime#preflight} pins: native buffers for the LWJGL
- * adapter, heap buffers for the portable {@link PortableLz4} provider.
+ * call runs through the {@link Lz4Adapter} its {@link AdmittedCodec} selected: native buffers for
+ * the LWJGL adapter, heap buffers for the portable {@link PortableLz4} adapter. Admission already
+ * pinned that provider, so no call preflights again.
+ *
+ * <p>This class must stay free of LWJGL and lz4-java references; the adapters own them.
  */
 public final class Lz4Raw {
   private static final long MAX_INPUT = 0x7E000000L;
@@ -27,10 +25,13 @@ public final class Lz4Raw {
    * caller has reserved the admitted codec's encode cost (the complete source, worst-case output
    * and HC state) before the call; callbacks remain caller-owned.
    *
+   * @param admitted the admitted raw LZ4 codec, whose adapter runs the call
    * @param lease the caller's reservation of that cost, borrowed and never closed here
    * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException when {@code admitted} is not the raw LZ4 codec
    */
   public static long encode(
+      AdmittedCodec admitted,
       ByteSource source,
       long decodedSize,
       ByteSink sink,
@@ -39,17 +40,23 @@ public final class Lz4Raw {
       IoContext context)
       throws IOException {
     Objects.requireNonNull(lease, "lease");
-    return encode(source, decodedSize, sink, checkpoint, lease, context, 9);
+    return encode(admitted, source, decodedSize, sink, checkpoint, lease, context, 9);
   }
 
   /**
    * Encodes one admitted raw HC block at the family-qualified compression level, on the caller's
    * reservation of its encode cost.
    *
+   * @param admitted the admitted raw LZ4 codec, whose adapter runs the call
    * @param lease the caller's reservation of that cost, borrowed and never closed here
    * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException when {@code admitted} is not the raw LZ4 codec, or the level
+   *     is outside 1 through 12
+   * @throws ArchiveException POLICY {@code codec.size-limit} or {@code codec.dispatch-limit} before
+   *     any effect
    */
   public static long encode(
+      AdmittedCodec admitted,
       ByteSource source,
       long decodedSize,
       ByteSink sink,
@@ -59,83 +66,12 @@ public final class Lz4Raw {
       int compressionLevel)
       throws IOException {
     Objects.requireNonNull(lease, "lease");
+    Lz4Adapter adapter = raw(admitted);
     if (compressionLevel < 1 || compressionLevel > 12)
       throw new IllegalArgumentException("Raw LZ4 HC level must be between 1 and 12");
     checkSize(decodedSize, DISPATCH_LIMIT, context);
-    Provider provider = Lz4Runtime.preflight("raw-lz4", "encode", context);
-    return encode(
-        provider, source, decodedSize, sink, checkpoint, lease, context, compressionLevel);
-  }
-
-  /**
-   * Encodes through an explicit provider after the caller's size admission. Production code reaches
-   * this only with the pinned provider; tests use it to exercise both providers.
-   *
-   * @param lease the caller's reservation of the provider's encode cost, borrowed
-   * @throws NullPointerException when {@code lease} is null
-   */
-  static long encode(
-      Provider provider,
-      ByteSource source,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget.Lease lease,
-      IoContext context,
-      int compressionLevel)
-      throws IOException {
-    Objects.requireNonNull(lease, "lease");
-    if (compressionLevel < 1 || compressionLevel > 12)
-      throw new IllegalArgumentException("Raw LZ4 HC level must be between 1 and 12");
-    checkSize(decodedSize, DISPATCH_LIMIT, context);
-    if (provider == Provider.PORTABLE)
-      return PortableLz4.rawEncode(
-          source, decodedSize, sink, checkpoint, lease, context, compressionLevel);
-    long bound = AdmittedCodec.rawLz4Bound(decodedSize);
-    caller(checkpoint::check, context);
-    // Explicit external HC state avoids an unaccounted provider allocation inside compression.
-    try (Arena arena = Arena.ofConfined()) {
-      ByteBuffer input =
-          arena.allocate(Math.max(1, decodedSize), 8).asByteBuffer().limit((int) decodedSize);
-      ByteBuffer output = arena.allocate(bound, 8).asByteBuffer();
-      ByteBuffer state = arena.allocate(524288, 8).asByteBuffer();
-      caller(() -> source.read(0, input), context);
-      if (input.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
-      input.flip();
-      caller(checkpoint::check, context);
-      int count;
-      try {
-        if (LZ4HC.LZ4_sizeofStateHC() > state.capacity())
-          throw new IllegalStateException("HC state exceeds credit");
-        count = LZ4HC.LZ4_compress_HC_extStateHC(state, input, output, compressionLevel);
-      } catch (RuntimeException | LinkageError | AssertionError cause) {
-        throw Lz4Runtime.failure(
-            Provider.NATIVE,
-            context,
-            FailureKind.INTERNAL,
-            "codec.provider-fault",
-            "raw-lz4",
-            "encode",
-            decodedSize,
-            -1,
-            cause);
-      }
-      if (count <= 0)
-        throw Lz4Runtime.failure(
-            Provider.NATIVE,
-            context,
-            FailureKind.INTERNAL,
-            "codec.compression-failed",
-            "raw-lz4",
-            "encode",
-            decodedSize,
-            -1,
-            null);
-      caller(checkpoint::check, context);
-      caller(() -> sink.write(0, output.limit(count)), context);
-      return count;
-    }
+    return adapter.encodeRaw(
+        source, decodedSize, sink, checkpoint, lease, context, compressionLevel);
   }
 
   /**
@@ -143,10 +79,15 @@ public final class Lz4Raw {
    * admitted codec's decode cost. Source and sink are borrowed; the caller supplies a wire-bounded
    * block and owns destination publication.
    *
+   * @param admitted the admitted raw LZ4 codec, whose adapter runs the call
    * @param lease the caller's reservation of that cost, borrowed and never closed here
    * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException when {@code admitted} is not the raw LZ4 codec
+   * @throws ArchiveException POLICY {@code codec.size-limit} or {@code codec.dispatch-limit} before
+   *     any effect, or a structured codec failure
    */
   public static long decode(
+      AdmittedCodec admitted,
       ByteSource source,
       long storedSize,
       long decodedSize,
@@ -156,73 +97,16 @@ public final class Lz4Raw {
       IoContext context)
       throws IOException {
     Objects.requireNonNull(lease, "lease");
+    Lz4Adapter adapter = raw(admitted);
     admitDecode(storedSize, decodedSize, context);
-    Provider provider = Lz4Runtime.preflight("raw-lz4", "decode", context);
-    return decode(provider, source, storedSize, decodedSize, sink, checkpoint, lease, context);
+    return adapter.decodeRaw(source, storedSize, decodedSize, sink, checkpoint, lease, context);
   }
 
-  /**
-   * Decodes one admitted raw block through an explicit provider, as the public overload does.
-   *
-   * @param lease the caller's reservation of the provider's decode cost, borrowed
-   * @throws NullPointerException when {@code lease} is null
-   */
-  static long decode(
-      Provider provider,
-      ByteSource source,
-      long storedSize,
-      long decodedSize,
-      ByteSink sink,
-      Checkpoint checkpoint,
-      ResourceBudget.Lease lease,
-      IoContext context)
-      throws IOException {
-    Objects.requireNonNull(lease, "lease");
-    admitDecode(storedSize, decodedSize, context);
-    if (provider == Provider.PORTABLE)
-      return PortableLz4.rawDecode(
-          source, storedSize, decodedSize, sink, checkpoint, lease, context);
-    caller(checkpoint::check, context);
-    try (Arena arena = Arena.ofConfined()) {
-      ByteBuffer input =
-          arena.allocate(Math.max(1, storedSize)).asByteBuffer().limit((int) storedSize);
-      ByteBuffer output =
-          arena.allocate(Math.max(1, decodedSize)).asByteBuffer().limit((int) decodedSize);
-      caller(() -> source.read(0, input), context);
-      if (input.hasRemaining())
-        throw context.failure(FailureKind.SOURCE, "source.length-mismatch", null);
-      input.flip();
-      caller(checkpoint::check, context);
-      int count;
-      try {
-        count = LZ4.LZ4_decompress_safe(input, output);
-      } catch (RuntimeException | LinkageError | AssertionError cause) {
-        throw Lz4Runtime.failure(
-            Provider.NATIVE,
-            context,
-            FailureKind.INTERNAL,
-            "codec.provider-fault",
-            "raw-lz4",
-            "decode",
-            decodedSize,
-            -1,
-            cause);
-      }
-      if (count < 0 || count != decodedSize)
-        throw Lz4Runtime.failure(
-            Provider.NATIVE,
-            context,
-            FailureKind.FORMAT,
-            count < 0 ? "codec.invalid-data" : "codec.size-mismatch",
-            "raw-lz4",
-            "decode",
-            decodedSize,
-            count,
-            null);
-      caller(checkpoint::check, context);
-      caller(() -> sink.write(0, output.limit(count)), context);
-      return count;
-    }
+  /** Returns the adapter the admitted raw LZ4 codec selected, rejecting any other codec. */
+  private static Lz4Adapter raw(AdmittedCodec admitted) {
+    if (admitted.codec() != PayloadCodec.LZ4_RAW)
+      throw new IllegalArgumentException("A raw block needs the admitted raw LZ4 codec");
+    return admitted.adapter();
   }
 
   /**
@@ -253,23 +137,5 @@ public final class Lz4Raw {
       throw context.failure(FailureKind.POLICY, "codec.size-limit", null);
     if (size > dispatchLimit)
       throw context.failure(FailureKind.POLICY, "codec.dispatch-limit", null);
-  }
-
-  /**
-   * Preserves callback failure identity instead of attributing user code to the native provider.
-   */
-  private static void caller(Callback callback, IoContext context) throws IOException {
-    try {
-      callback.run();
-    } catch (RuntimeException | AssertionError cause) {
-      throw context.failure(FailureKind.INTERNAL, "operation.internal-failure", cause);
-    }
-  }
-
-  /** A synchronous borrowed operation callback whose resources remain caller-owned. */
-  @FunctionalInterface
-  private interface Callback {
-    /** Executes one callback without extending its lifetime. */
-    void run() throws IOException;
   }
 }
