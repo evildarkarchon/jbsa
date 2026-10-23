@@ -278,6 +278,29 @@ public final class TransformStage implements AutoCloseable {
   }
 
   /**
+   * Joins the transform stage's workers and rethrows the first outcome. Closing the stage settles
+   * the failures of unconsumed work and discarded results straight into the session, and then stops
+   * with {@link OperationStopped}; behind an earlier outcome that stop adds nothing, because the
+   * session already holds what it stopped for.
+   *
+   * @param pending the coordinator's own outcome while consuming the stage, or null when it
+   *     consumed every entry without failing
+   * @throws IOException the first outcome, when it is checked
+   */
+  void finish(Throwable pending) throws IOException {
+    try {
+      close();
+    } catch (Throwable cleanup) {
+      if (pending == null) pending = cleanup;
+      else if (!(cleanup instanceof OperationStopped)) pending.addSuppressed(cleanup);
+    }
+    if (pending instanceof IOException checked) throw checked;
+    if (pending instanceof Error fatal) throw fatal;
+    if (pending instanceof RuntimeException unchecked) throw unchecked;
+    if (pending != null) throw new AssertionError(pending);
+  }
+
+  /**
    * Returns a processing location at the entry's source, whose ordinal is independent of worker
    * completion order.
    */
