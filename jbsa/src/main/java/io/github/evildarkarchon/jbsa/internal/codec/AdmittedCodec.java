@@ -3,6 +3,11 @@ package io.github.evildarkarchon.jbsa.internal.codec;
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Objects;
 
 /**
@@ -10,7 +15,8 @@ import java.util.Objects;
  * capability check once and resolves the LZ4 provider; the value then owns every fact that depends
  * on it: the worst-case bound, the heap and native cost of one encode or decode call, and the Codec
  * Profile identity its failures carry. It is the one definition of those facts, so callers cost a
- * codec through the value they admitted instead of restating a formula.
+ * codec through the value they admitted instead of restating a formula. It is also the only way
+ * into the codec's encoder and decoder, so no caller picks a codec implementation itself (#98).
  *
  * <p>Stored and zlib need only the JDK, so admitting them has no side effect: it never loads or
  * pins an LZ4 provider ({@code Lz4LaunchTest}'s zlib-only launch). Their identity is the pinned
@@ -24,6 +30,15 @@ import java.util.Objects;
 public final class AdmittedCodec {
   /** The largest raw block one call encodes or decodes: Starfield's qualified dispatch limit. */
   static final long RAW_LZ4_DISPATCH_LIMIT = 16L * 1024 * 1024;
+
+  /** The raw LZ4 HC level Starfield BA2 output is qualified against. */
+  private static final int RAW_LZ4_LEVEL = 12;
+
+  /**
+   * The window stored content is copied in: the reader's 64 KiB exact-I/O window, so a stored
+   * payload yields the same reads it did when the reader copied it itself.
+   */
+  private static final int STORED_WINDOW_BYTES = 64 * 1024;
 
   /** The versioned BSA 0x69 profile auto-flushes one LZ4 block per source window of this size. */
   private static final long BSA_LZ4_BLOCK_BYTES = 65536;
@@ -193,6 +208,189 @@ public final class AdmittedCodec {
    */
   public Cost maxDecodeCost() {
     return maxDecodeCost(codec, provider);
+  }
+
+  /**
+   * Refuses a raw block's wire and dispatch sizes before the codec is admitted or any decode cost
+   * is reserved, so an oversized block reports its codec limit rather than a capability or capacity
+   * failure. Only raw LZ4 has an unsplittable dispatch limit; every other codec accepts any size
+   * here and validates its stream as it decodes.
+   *
+   * @throws ArchiveException POLICY {@code codec.size-limit} or {@code codec.dispatch-limit}
+   */
+  public static void checkDecodeSize(
+      PayloadCodec codec, long storedSize, long decodedSize, IoContext context)
+      throws ArchiveException {
+    if (codec == PayloadCodec.LZ4_RAW) Lz4Raw.admitDecode(storedSize, decodedSize, context);
+  }
+
+  /**
+   * Refuses a raw block above the provider or dispatch limit before its caller reserves the encode
+   * cost, so a refused block reports {@code codec.dispatch-limit}, not the capacity failure its
+   * oversized cost would otherwise raise first. Every other codec accepts any size here.
+   *
+   * @throws ArchiveException POLICY {@code codec.size-limit} or {@code codec.dispatch-limit}
+   */
+  public static void checkEncodeSize(PayloadCodec codec, long decodedSize, IoContext context)
+      throws ArchiveException {
+    if (codec == PayloadCodec.LZ4_RAW) Lz4Raw.admitEncode(decodedSize, context);
+  }
+
+  /**
+   * Encodes exactly {@code decodedSize} bytes pulled from a channel, which only zlib does: it reads
+   * the channel itself and detects a short or long source. The caller has reserved {@link
+   * #encodeCost} and lends the lease; source and sink stay the caller's.
+   *
+   * @param lease the caller's reservation of the encode cost, borrowed and never closed here
+   * @return the encoded length
+   * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException for any codec but zlib
+   * @throws IOException a structured source, codec, or sink failure
+   */
+  public long encode(
+      ReadableByteChannel source,
+      long decodedSize,
+      ByteSink sink,
+      Checkpoint checkpoint,
+      ResourceBudget.Lease lease,
+      IoContext context)
+      throws IOException {
+    Objects.requireNonNull(lease, "lease");
+    if (codec != PayloadCodec.ZLIB)
+      throw new IllegalArgumentException(codec + " does not encode from a channel");
+    return JdkZlib.encode(this, source, decodedSize, sink, checkpoint, lease, context);
+  }
+
+  /**
+   * Encodes exactly {@code decodedSize} bytes read in exact positional windows, which the LZ4
+   * codecs do: the versioned BSA frame at its pinned profile, and raw LZ4 as one unsplittable block
+   * at Starfield's qualified HC level. The caller adapts its source, has reserved {@link
+   * #encodeCost}, and lends the lease.
+   *
+   * @param lease the caller's reservation of the encode cost, borrowed and never closed here
+   * @return the encoded length
+   * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException for stored and zlib
+   * @throws IOException a structured size-limit, codec, source, or sink failure
+   */
+  public long encode(
+      ByteSource source,
+      long decodedSize,
+      ByteSink sink,
+      Checkpoint checkpoint,
+      ResourceBudget.Lease lease,
+      IoContext context)
+      throws IOException {
+    Objects.requireNonNull(lease, "lease");
+    return switch (codec) {
+      case STORED, ZLIB ->
+          throw new IllegalArgumentException(codec + " does not encode positional windows");
+      case BSA_LZ4_FRAME ->
+          Lz4Frame.encode(this, source, decodedSize, sink, checkpoint, lease, context);
+      case LZ4_RAW ->
+          Lz4Raw.encode(this, source, decodedSize, sink, checkpoint, lease, context, RAW_LZ4_LEVEL);
+    };
+  }
+
+  /**
+   * Creates the sequential decoder of one streaming payload: stored content is copied in bounded
+   * windows, zlib and the BSA frame are decoded. The owner has reserved {@link #decodeCost} and
+   * lends that lease for the decoder's whole life; it closes the decoder exactly once.
+   *
+   * @param source the payload's stored bytes at stream-relative positions, borrowed
+   * @param storedSize the exact stored stream size; stored content reads {@code decodedSize}
+   * @param lease the owner's reservation, which outlives the decoder and is never closed here
+   * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException for raw LZ4, which decodes whole blocks through {@link
+   *     #decode}, or for a negative size
+   * @throws ArchiveException when the frame decoder's state cannot be created
+   */
+  public PayloadDecoder decoder(
+      ByteSource source,
+      long storedSize,
+      long decodedSize,
+      ResourceBudget.Lease lease,
+      IoContext context)
+      throws ArchiveException {
+    Objects.requireNonNull(lease, "lease");
+    return switch (codec) {
+      case STORED -> new StoredDecoder(source, decodedSize);
+      case ZLIB -> JdkZlib.decoder(this, source, storedSize, decodedSize, lease, context);
+      case BSA_LZ4_FRAME -> Lz4Frame.decoder(this, source, storedSize, decodedSize, lease, context);
+      case LZ4_RAW ->
+          throw new IllegalArgumentException("Raw LZ4 decodes whole blocks, not a stream");
+    };
+  }
+
+  /**
+   * Decodes one complete block, which only raw LZ4 does, publishing it to {@code sink} in order.
+   * The caller has refused oversized blocks through {@link #checkDecodeSize}, reserved {@link
+   * #decodeCost} for this call, and holds the decoded copy itself.
+   *
+   * @param lease the caller's reservation of this call's cost, borrowed and never closed here
+   * @return the decoded length, always {@code decodedSize}
+   * @throws NullPointerException when {@code lease} is null
+   * @throws IllegalArgumentException for every codec that streams through {@link #decoder}
+   * @throws IOException a structured size-limit, codec, source, or sink failure
+   */
+  public long decode(
+      ByteSource source,
+      long storedSize,
+      long decodedSize,
+      ByteSink sink,
+      Checkpoint checkpoint,
+      ResourceBudget.Lease lease,
+      IoContext context)
+      throws IOException {
+    Objects.requireNonNull(lease, "lease");
+    if (!codec.decodesWholeBlocks())
+      throw new IllegalArgumentException(codec + " streams through a decoder");
+    return Lz4Raw.decode(this, source, storedSize, decodedSize, sink, checkpoint, lease, context);
+  }
+
+  /**
+   * Copies stored content in bounded windows. It holds no codec state, so it charges nothing and
+   * close only marks it closed. Neither read nor close takes a lock: a parent closing its cursors
+   * must never wait behind a stored read in flight.
+   */
+  private static final class StoredDecoder implements PayloadDecoder {
+    private final ByteSource source;
+    private final long decodedSize;
+    private long position;
+    private volatile boolean closed;
+
+    /**
+     * @throws IllegalArgumentException for a negative size
+     */
+    private StoredDecoder(ByteSource source, long decodedSize) {
+      if (decodedSize < 0) throw new IllegalArgumentException("Negative decoded size");
+      this.source = source;
+      this.decodedSize = decodedSize;
+    }
+
+    /** Copies at most one 64 KiB window, or returns -1 once the declared size is served. */
+    @Override
+    public int read(ByteBuffer destination) throws IOException {
+      if (closed) throw new ClosedChannelException();
+      if (!destination.hasRemaining()) return 0;
+      if (position == decodedSize) return -1;
+      int count =
+          (int)
+              Math.min(
+                  Math.min(destination.remaining(), STORED_WINDOW_BYTES), decodedSize - position);
+      ByteBuffer window = destination.slice();
+      window.limit(count);
+      source.read(position, window);
+      destination.position(destination.position() + count);
+      position += count;
+      return count;
+    }
+
+    /** Marks the decoder closed; there is no state to release. */
+    @Override
+    public void close() {
+      closed = true;
+    }
   }
 
   /**

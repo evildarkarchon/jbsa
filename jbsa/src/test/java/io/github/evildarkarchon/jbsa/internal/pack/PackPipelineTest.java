@@ -3,7 +3,6 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
@@ -25,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -846,9 +846,10 @@ class PackPipelineTest {
         }
 
         @Override
-        public Readback readback(
-            List<Planned<String>> part, Layout layout, Map<PayloadCodec, AdmittedCodec> codecs) {
-          return readback ? new Readback("memory.noncanonical-staged-output", 0, 0, 1) : null;
+        public Readback readback(List<Planned<String>> part, Layout layout) {
+          return readback
+              ? new Readback("memory.noncanonical-staged-output", 0, 0, 1, Set.of(), 0)
+              : null;
         }
 
         @Override

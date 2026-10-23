@@ -1,7 +1,6 @@
 package io.github.evildarkarchon.jbsa.internal.ba2;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveNames;
@@ -395,25 +394,19 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
      * the part holds a raw-LZ4 entry (which needs its largest source whole), otherwise zlib.
      */
     @Override
-    public Readback readback(
-        List<Planned<Key>> part, Layout layout, Map<PayloadCodec, AdmittedCodec> codecs) {
+    public Readback readback(List<Planned<Key>> part, Layout layout) {
       boolean validatesRawLz4 =
           rawLz4 && part.stream().anyMatch(entry -> entry.codec() != PayloadCodec.STORED);
-      // Raw LZ4's block buffers are native under the LWJGL provider and heap under the portable
-      // one; the admitted codec's largest decode cost already places them for the provider pack
-      // admission pinned. The reader's decoded copy of the largest source is its own charge.
-      AdmittedCodec.Cost decode =
-          codecs.get(validatesRawLz4 ? PayloadCodec.LZ4_RAW : PayloadCodec.ZLIB).maxDecodeCost();
-      long codecHeap =
-          validatesRawLz4
-              ? part.stream().mapToLong(entry -> entry.source().size()).max().orElse(0)
-                  + decode.heapBytes()
-              : decode.heapBytes();
+      // The pipeline costs the declared codec from the ones pack admission pinned, including the
+      // reader's decoded copy of the largest source for raw LZ4. A part with no raw-LZ4 entry,
+      // even an all-stored one, declares zlib, the conservative codec readback has always charged.
       return new Readback(
           "ba2.noncanonical-staged-output",
-          512L * part.size() + 8L * layout.metadataBytes() + 65536 + codecHeap,
-          decode.nativeBytes(),
-          1);
+          512L * part.size() + 8L * layout.metadataBytes() + 65536,
+          0,
+          1,
+          Set.of(validatesRawLz4 ? PayloadCodec.LZ4_RAW : PayloadCodec.ZLIB),
+          part.stream().mapToLong(entry -> entry.source().size()).max().orElse(0));
     }
   }
 

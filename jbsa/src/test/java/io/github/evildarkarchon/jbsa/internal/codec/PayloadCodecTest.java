@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.SplittableRandom;
 import net.jpountz.lz4.LZ4Factory;
@@ -319,6 +320,150 @@ final class PayloadCodecTest {
   }
 
   /**
+   * zlib round-trips through the admitted codec on leases of exactly its constant credits, and
+   * stored content streams through the admitted codec's decoder at no credit at all, in windows of
+   * at most 64 KiB, ending with -1 once its declared size is served.
+   */
+  @Test
+  void jdkCodecsStreamThroughTheAdmittedCodecOnTheirCallersCredit() throws Exception {
+    AdmittedCodec zlib = AdmittedCodec.admit(PayloadCodec.ZLIB, "decode", CONTEXT);
+    AdmittedCodec stored = AdmittedCodec.admit(PayloadCodec.STORED, "decode", CONTEXT);
+    for (int size : new int[] {0, SMALL, WINDOW + 1}) {
+      byte[] data = sample(size);
+      byte[] encoded =
+          onLease(
+              132_096,
+              524_288,
+              (lease, sink) ->
+                  zlib.encode(
+                      java.nio.channels.Channels.newChannel(new java.io.ByteArrayInputStream(data)),
+                      size,
+                      sink,
+                      () -> {},
+                      lease,
+                      CONTEXT));
+      byte[] inflated =
+          onLease(
+              66_560,
+              65_536,
+              (lease, sink) -> {
+                try (var decoder =
+                    zlib.decoder(source(encoded), encoded.length, size, lease, CONTEXT)) {
+                  sink.write(0, ByteBuffer.wrap(drain(decoder, size, 4_096)));
+                }
+              });
+      assertArrayEquals(data, inflated, "zlib " + size);
+      List<Integer> windows = new java.util.ArrayList<>();
+      byte[] copied =
+          onLease(
+              0,
+              0,
+              (lease, sink) -> {
+                try (var decoder = stored.decoder(source(data), size, size, lease, CONTEXT)) {
+                  assertEquals(0, decoder.read(ByteBuffer.allocate(0)));
+                  ByteBuffer output = ByteBuffer.allocate(size + WINDOW);
+                  for (int count; (count = decoder.read(output)) >= 0; ) windows.add(count);
+                  assertEquals(-1, decoder.read(output));
+                  sink.write(0, output.flip());
+                }
+              });
+      assertArrayEquals(data, copied, "stored " + size);
+      assertEquals(size <= WINDOW ? (size == 0 ? 0 : 1) : 2, windows.size(), "stored windows");
+      assertTrue(windows.stream().allMatch(count -> count > 0 && count <= WINDOW));
+    }
+  }
+
+  /**
+   * Raw LZ4 alone decodes whole blocks: its caller decodes a complete block through {@code decode}
+   * and holds the decoded copy, while every other codec streams through {@code decoder}. zlib alone
+   * pulls its source from a channel; the LZ4 codecs read exact positional windows. Each entry
+   * refuses a codec it does not serve before touching its source, sink or lease.
+   */
+  @Test
+  void eachAdmittedEntryServesOnlyItsCodecs() throws Exception {
+    assertEquals(
+        java.util.EnumSet.of(PayloadCodec.LZ4_RAW),
+        java.util.Arrays.stream(PayloadCodec.values())
+            .filter(PayloadCodec::decodesWholeBlocks)
+            .collect(
+                java.util.stream.Collectors.toCollection(
+                    () -> java.util.EnumSet.noneOf(PayloadCodec.class))));
+    ByteSource unread = (offset, bytes) -> fail("source read by a refused entry");
+    ByteSink unwritten = (offset, bytes) -> fail("sink written by a refused entry");
+    try (var budget = budget(ROOMY, ROOMY);
+        var lease = budget.reserve(0, 0, 0, 0)) {
+      for (PayloadCodec codec : PayloadCodec.values())
+        for (Provider provider : Provider.values()) {
+          AdmittedCodec admitted = codec(codec, provider);
+          if (codec.decodesWholeBlocks())
+            assertThrows(
+                IllegalArgumentException.class,
+                () -> admitted.decoder(unread, 1, 1, lease, CONTEXT),
+                codec + " decoder");
+          else
+            assertThrows(
+                IllegalArgumentException.class,
+                () -> admitted.decode(unread, 1, 1, unwritten, () -> {}, lease, CONTEXT),
+                codec + " decode");
+          if (codec != PayloadCodec.ZLIB)
+            assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    admitted.encode(
+                        java.nio.channels.Channels.newChannel(
+                            java.io.InputStream.nullInputStream()),
+                        1,
+                        unwritten,
+                        () -> {},
+                        lease,
+                        CONTEXT),
+                codec + " channel encode");
+          if (codec == PayloadCodec.STORED || codec == PayloadCodec.ZLIB)
+            assertThrows(
+                IllegalArgumentException.class,
+                () -> admitted.encode(unread, 1, unwritten, () -> {}, lease, CONTEXT),
+                codec + " positional encode");
+        }
+    }
+  }
+
+  /**
+   * A raw block's wire and dispatch sizes are refused before admission, so an oversized block
+   * reports its codec limit rather than a capability or capacity failure. Only raw LZ4 has an
+   * unsplittable dispatch limit; every other codec admits any size here.
+   */
+  @Test
+  void onlyRawLz4RefusesBlockSizesBeforeAdmission() throws Exception {
+    long bound = 16_843_025;
+    assertSizeRefused(
+        "codec.dispatch-limit",
+        () -> AdmittedCodec.checkDecodeSize(PayloadCodec.LZ4_RAW, bound + 1, 1, CONTEXT));
+    assertSizeRefused(
+        "codec.dispatch-limit",
+        () -> AdmittedCodec.checkDecodeSize(PayloadCodec.LZ4_RAW, 1, DISPATCH + 1L, CONTEXT));
+    assertSizeRefused(
+        "codec.size-limit",
+        () -> AdmittedCodec.checkDecodeSize(PayloadCodec.LZ4_RAW, -1, 1, CONTEXT));
+    assertSizeRefused(
+        "codec.dispatch-limit",
+        () -> AdmittedCodec.checkEncodeSize(PayloadCodec.LZ4_RAW, DISPATCH + 1L, CONTEXT));
+    AdmittedCodec.checkDecodeSize(PayloadCodec.LZ4_RAW, bound, DISPATCH, CONTEXT);
+    AdmittedCodec.checkEncodeSize(PayloadCodec.LZ4_RAW, DISPATCH, CONTEXT);
+    for (PayloadCodec codec : PayloadCodec.values())
+      if (codec != PayloadCodec.LZ4_RAW) {
+        AdmittedCodec.checkDecodeSize(codec, Long.MAX_VALUE, Long.MAX_VALUE, CONTEXT);
+        AdmittedCodec.checkEncodeSize(codec, Long.MAX_VALUE, CONTEXT);
+      }
+  }
+
+  /** Asserts a POLICY size refusal with the given identifier. */
+  private static void assertSizeRefused(String identifier, Executable call) {
+    ArchiveException failure = assertThrows(ArchiveException.class, call);
+    assertEquals(FailureKind.POLICY, failure.kind());
+    assertEquals(identifier, failure.primaryFailure().diagnosticIdentifier().orElseThrow());
+  }
+
+  /**
    * Every encoder and decoder entry takes the caller's lease and rejects a missing one at the call,
    * before it reads its source, writes its sink or allocates codec state (#96). The check precedes
    * provider preflight, so every entry, and every adapter the factory returns, is exercised under
@@ -344,6 +489,22 @@ final class PayloadCodecTest {
                 CONTEXT));
     entries.put("zlib decoder", () -> JdkZlib.decoder(zlib, unread, 1, 1, null, CONTEXT));
     entries.put(
+        "admitted zlib encode",
+        () ->
+            zlib.encode(
+                java.nio.channels.Channels.newChannel(java.io.InputStream.nullInputStream()),
+                1,
+                unwritten,
+                unchecked,
+                null,
+                CONTEXT));
+    entries.put("admitted zlib decoder", () -> zlib.decoder(unread, 1, 1, null, CONTEXT));
+    entries.put(
+        "admitted stored decoder",
+        () ->
+            AdmittedCodec.admit(PayloadCodec.STORED, "decode", CONTEXT)
+                .decoder(unread, 1, 1, null, CONTEXT));
+    entries.put(
         "general frame encode",
         () -> Lz4Frame.encodeGeneral(unread, 1, unwritten, unchecked, null, CONTEXT));
     for (Provider provider : Provider.values()) {
@@ -365,6 +526,18 @@ final class PayloadCodecTest {
       entries.put(
           provider + " versioned BSA frame decoder",
           () -> Lz4Frame.decoder(frame, unread, 1, 1, null, CONTEXT));
+      entries.put(
+          provider + " admitted raw encode",
+          () -> raw.encode(unread, 1, unwritten, unchecked, null, CONTEXT));
+      entries.put(
+          provider + " admitted raw decode",
+          () -> raw.decode(unread, 1, 1, unwritten, unchecked, null, CONTEXT));
+      entries.put(
+          provider + " admitted BSA frame encode",
+          () -> frame.encode(unread, 1, unwritten, unchecked, null, CONTEXT));
+      entries.put(
+          provider + " admitted BSA frame decoder",
+          () -> frame.decoder(unread, 1, 1, null, CONTEXT));
       entries.put(
           provider + " adapter frame encode",
           () -> adapter.encodeFrame(unread, 1, unwritten, unchecked, null, CONTEXT, true));
@@ -759,7 +932,7 @@ final class PayloadCodecTest {
   }
 
   /** Reads a decoder to terminal EOF through bounded windows. */
-  private static byte[] drain(Lz4Frame.Decoder decoder, int size, int window)
+  private static byte[] drain(PayloadDecoder decoder, int size, int window)
       throws java.io.IOException {
     var output = new ByteArrayOutputStream(Math.max(0, size));
     ByteBuffer buffer = ByteBuffer.allocate(window);
@@ -872,9 +1045,10 @@ final class PayloadCodecTest {
   }
 
   /**
-   * Runs one raw encode and the decode of its own output, each on a lease of exactly the admitted
-   * codec's cost. The decode cost depends on the stored size, so the encoded length of the fixed
-   * sample is pinned as well.
+   * Runs one raw encode and the decode of its own output through the admitted codec's whole-block
+   * entries, each on a lease of exactly the admitted codec's cost. The decode cost depends on the
+   * stored size, so the encoded length of the fixed sample is pinned as well; the admitted encoder
+   * runs at Starfield's qualified HC level 12, which these lengths were recorded at.
    */
   private static void assertRaw(
       Provider provider,
@@ -893,22 +1067,21 @@ final class PayloadCodecTest {
         onLease(
             encodeHeap,
             encodeNative,
-            (lease, sink) ->
-                Lz4Raw.encode(admitted, source(data), size, sink, () -> {}, lease, CONTEXT, 12));
+            (lease, sink) -> admitted.encode(source(data), size, sink, () -> {}, lease, CONTEXT));
     assertEquals(storedSize, stored.length, provider + " raw stored size " + size);
     byte[] decoded =
         onLease(
             decodeHeap,
             decodeNative,
             (lease, sink) ->
-                Lz4Raw.decode(
-                    admitted, source(stored), stored.length, size, sink, () -> {}, lease, CONTEXT));
+                admitted.decode(
+                    source(stored), stored.length, size, sink, () -> {}, lease, CONTEXT));
     assertArrayEquals(data, decoded);
   }
 
   /**
-   * Runs the BSA frame's encode and its incremental decoder through the admitted codec, each on a
-   * lease of exactly the admitted codec's cost.
+   * Runs the BSA frame's encode and its incremental decoder through the admitted codec's entries,
+   * each on a lease of exactly the admitted codec's cost.
    */
   private static void assertFrame(
       Provider provider,
@@ -925,8 +1098,7 @@ final class PayloadCodecTest {
         onLease(
             encodeHeap,
             encodeNative,
-            (lease, sink) ->
-                Lz4Frame.encode(admitted, source(data), size, sink, () -> {}, lease, CONTEXT));
+            (lease, sink) -> admitted.encode(source(data), size, sink, () -> {}, lease, CONTEXT));
     assertEquals(new Cost(decodeHeap, decodeNative), admitted.decodeCost(stored.length, size));
     byte[] streamed =
         onLease(
@@ -934,7 +1106,7 @@ final class PayloadCodecTest {
             decodeNative,
             (lease, sink) -> {
               try (var decoder =
-                  Lz4Frame.decoder(admitted, source(stored), stored.length, size, lease, CONTEXT)) {
+                  admitted.decoder(source(stored), stored.length, size, lease, CONTEXT)) {
                 ByteBuffer output = ByteBuffer.allocate(size + 1);
                 while (decoder.read(output) >= 0) {
                   // Drains to terminal EOF, which also validates exact frame consumption.

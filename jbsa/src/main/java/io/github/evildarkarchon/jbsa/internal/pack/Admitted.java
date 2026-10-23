@@ -108,14 +108,14 @@ public interface Admitted<K> {
    * not read its output back. The pipeline performs the reopen and full decode; this only states
    * the credits it needs and the diagnostic for a nonconforming part.
    *
+   * <p>It declares only family knowledge (ADR-0003): which Payload Codecs the reader decodes and
+   * the part's largest source, never a codec cost. The pipeline costs those codecs from the ones
+   * pack admission pinned, so the adapter never resolves a provider itself.
+   *
    * @param part the part's entries, in output order, with their exact stored sizes
    * @param layout the value {@link #layout} returned for this part
-   * @param codecs every codec the pipeline admitted for this request (stored, zlib, and each of
-   *     {@link #requiredCodecs()}); the reader's codec credits come from their decode costs, so the
-   *     adapter never resolves a provider itself
    */
-  default Readback readback(
-      List<Planned<K>> part, Layout layout, Map<PayloadCodec, AdmittedCodec> codecs) {
+  default Readback readback(List<Planned<K>> part, Layout layout) {
     return null;
   }
 
@@ -352,20 +352,54 @@ public interface Admitted<K> {
   }
 
   /**
-   * How the pipeline validates one staged part: it admits these credits against the operation
-   * budget, reopens the part, requires a CONFORMING assessment, and decodes every entry.
+   * How the pipeline validates one staged part: it admits these credits, plus {@link #codecCost} of
+   * the declared codecs, against the operation budget, reopens the part, requires a CONFORMING
+   * assessment, and decodes every entry.
    *
    * @param nonconformingId the INTERNAL diagnostic for a part that reopens as nonconforming
-   * @param heapBytes the reader's peak heap, including one 64 KiB decode window
-   * @param nativeBytes the reader's peak native memory
+   * @param heapBytes the reader's peak heap besides its codec, including one 64 KiB decode window
+   * @param nativeBytes the reader's peak native memory besides its codec
    * @param handles the file handles the reader holds
+   * @param decodes the Payload Codecs the reader may decode while validating the part
+   * @param largestSource the part's largest entry source size, which bounds the decoded copy a
+   *     reader holds for a whole-block codec
    */
-  record Readback(String nonconformingId, long heapBytes, long nativeBytes, long handles) {
-    /** Requires the identifier and rejects negative credits. */
+  record Readback(
+      String nonconformingId,
+      long heapBytes,
+      long nativeBytes,
+      long handles,
+      Set<PayloadCodec> decodes,
+      long largestSource) {
+    /** Requires the identifier and codecs, copies the codecs, and rejects negative credits. */
     public Readback {
       Objects.requireNonNull(nonconformingId, "nonconformingId");
-      if (heapBytes < 0 || nativeBytes < 0 || handles < 0)
+      decodes = Set.copyOf(decodes);
+      if (heapBytes < 0 || nativeBytes < 0 || handles < 0 || largestSource < 0)
         throw new IllegalArgumentException("Negative readback credit");
+    }
+
+    /**
+     * Returns the reader's codec credits under the codecs pack admission pinned. The reader opens
+     * one entry at a time, so one codec is live at once: the credit is the largest decode cost of
+     * any declared codec, where a whole-block codec (raw LZ4) also holds the decoded copy of the
+     * largest source on the heap.
+     *
+     * @param admitted every codec the pipeline admitted for this request
+     * @throws IllegalStateException when a declared codec was not admitted, which is a JBSA bug
+     */
+    public AdmittedCodec.Cost codecCost(Map<PayloadCodec, AdmittedCodec> admitted) {
+      long heap = 0, nativeBytes = 0;
+      for (PayloadCodec codec : decodes) {
+        AdmittedCodec found = admitted.get(codec);
+        if (found == null)
+          throw new IllegalStateException(codec + " is read back without being admitted");
+        AdmittedCodec.Cost decode = found.maxDecodeCost();
+        long copy = codec.decodesWholeBlocks() ? largestSource : 0;
+        heap = Math.max(heap, decode.heapBytes() + copy);
+        nativeBytes = Math.max(nativeBytes, decode.nativeBytes());
+      }
+      return new AdmittedCodec.Cost(heap, nativeBytes);
     }
   }
 
