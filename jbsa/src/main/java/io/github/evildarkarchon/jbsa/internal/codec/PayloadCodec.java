@@ -2,9 +2,9 @@ package io.github.evildarkarchon.jbsa.internal.codec;
 
 /**
  * The encoding of one entry payload, shared by pack and read. On pack, an adapter selects one per
- * planned entry and the pipeline's private codec map owns each encoder invocation and its
- * worst-case bound and heap/native costs; adapters only name one. On read, it is the complete
- * internal codec identity of one ordinary payload span.
+ * planned entry and the pipeline's private codec map owns each encoder invocation; adapters only
+ * name one. On read, it is the complete internal codec identity of one ordinary payload span. In
+ * both directions its worst-case bound and heap/native costs belong to its {@link AdmittedCodec}.
  */
 public enum PayloadCodec {
   /** The payload is copied unchanged. */

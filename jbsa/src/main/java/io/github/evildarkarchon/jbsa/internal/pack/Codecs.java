@@ -2,34 +2,39 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * The pipeline's private codec map. It is the only place that invokes a payload encoder and knows
- * its worst-case output bound and heap/native working set. Stored, zlib, the versioned BSA LZ4
- * frame, and Starfield raw LZ4 are routed here. One conservative zlib bound serves every family
- * (D3).
+ * The pipeline's private codec map. It is the only place that invokes a payload encoder. Stored,
+ * zlib, the versioned BSA LZ4 frame, and Starfield raw LZ4 are routed here, each through the {@link
+ * AdmittedCodec} the request admitted once, which owns its worst-case output bound and heap/native
+ * working set. One conservative zlib bound serves every family (D3).
  */
 final class Codecs {
-  /** The versioned BSA 0x69 profile auto-flushes one LZ4 block per source window of this size. */
-  private static final long LZ4_BLOCK_BYTES = 65536;
-
   /** The raw LZ4 HC level Starfield BA2 output is qualified against. */
   private static final int LZ4_RAW_LEVEL = 12;
 
-  private Codecs() {}
+  /** Every codec this request admitted, keyed by the codec an adapter names. */
+  private final Map<PayloadCodec, AdmittedCodec> admitted;
+
+  private Codecs(Map<PayloadCodec, AdmittedCodec> admitted) {
+    this.admitted = admitted;
+  }
 
   /**
    * One encoding's admission costs.
@@ -41,47 +46,67 @@ final class Codecs {
   record Cost(long bound, long heap, long nativeBytes) {}
 
   /**
-   * Returns the admission costs of encoding {@code decodedSize} bytes with {@code codec}.
+   * Admits every codec a request can select before any source is planned. Stored and zlib need only
+   * the JDK, so they are always admitted and admitting them has no side effect. Each codec in
+   * {@code required} is admitted once: both LZ4 profiles pin their provider here, before any side
+   * effect: the native LWJGL adapter where it loads (the Windows x64 boundary), and the portable
+   * lz4-java provider everywhere else (JBSA-CODEC-015). The pin holds for the rest of the process,
+   * so an operation never switches providers mid-encode.
    *
-   * @throws ArithmeticException when the bound does not fit a signed long
-   */
-  static Cost cost(PayloadCodec codec, long decodedSize) {
-    return switch (codec) {
-      case STORED -> new Cost(decodedSize, 0, 0);
-      case ZLIB ->
-          new Cost(zlibBound(decodedSize), JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES);
-      case BSA_LZ4_FRAME -> {
-        // Preflight has already pinned the provider, so this charges the encoder that will run.
-        Lz4Runtime.Provider provider = Lz4Runtime.selected();
-        yield new Cost(
-            bsaLz4Bound(decodedSize),
-            Lz4Frame.encodeHeapBytes(provider),
-            Lz4Frame.encodeNativeBytes(provider));
-      }
-      // Lz4Raw admits its whole block, output bound, and HC state against the operation budget on
-      // every call, so the map charges nothing up front; a precharge would count them twice.
-      case LZ4_RAW -> new Cost(lz4RawBound(decodedSize), 0, 0);
-    };
-  }
-
-  /**
-   * Admits one codec's runtime capability before any source is planned. Stored and zlib need only
-   * the JDK. Both LZ4 profiles pin their provider here, before any side effect: the native LWJGL
-   * adapter where it loads (the Windows x64 boundary), and the portable lz4-java provider
-   * everywhere else (JBSA-CODEC-015). The pin holds for the rest of the process, so an operation
-   * never switches providers mid-encode.
-   *
+   * @param required the adapter's {@link Admitted#requiredCodecs()}
    * @throws ArchiveException {@code CAPABILITY codec.unavailable} only when neither LZ4 provider
    *     can be admitted
    */
-  static void preflight(PayloadCodec codec, IoContext context) throws ArchiveException {
-    switch (codec) {
-      case STORED, ZLIB -> {
-        // JDK-only encoders have no provider to admit.
-      }
-      case BSA_LZ4_FRAME -> BsaLz4Frame.preflight("encode", context);
-      case LZ4_RAW -> Lz4Runtime.preflight("raw-lz4", "encode", context);
-    }
+  static Codecs admit(Set<PayloadCodec> required, IoContext context) throws ArchiveException {
+    var codecs = new EnumMap<PayloadCodec, AdmittedCodec>(PayloadCodec.class);
+    codecs.put(PayloadCodec.STORED, AdmittedCodec.admit(PayloadCodec.STORED, "encode", context));
+    codecs.put(PayloadCodec.ZLIB, AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", context));
+    for (PayloadCodec codec : required)
+      if (!codecs.containsKey(codec))
+        codecs.put(codec, AdmittedCodec.admit(codec, "encode", context));
+    return new Codecs(Collections.unmodifiableMap(codecs));
+  }
+
+  /**
+   * Returns the admitted form of a codec an adapter selected.
+   *
+   * @throws IllegalStateException when the adapter selects an LZ4 codec it did not declare in
+   *     {@link Admitted#requiredCodecs()}, which is a JBSA bug
+   */
+  AdmittedCodec admitted(PayloadCodec codec) {
+    AdmittedCodec found = admitted.get(codec);
+    if (found == null)
+      throw new IllegalStateException(codec + " was selected without being a required codec");
+    return found;
+  }
+
+  /** Returns every admitted codec, for declarations such as readback that cost a decode. */
+  Map<PayloadCodec, AdmittedCodec> all() {
+    return admitted;
+  }
+
+  /**
+   * Returns the admission costs of encoding {@code decodedSize} bytes with an admitted codec.
+   *
+   * @throws ArithmeticException when the bound does not fit a signed long
+   */
+  Cost cost(PayloadCodec codec, long decodedSize) {
+    return cost(admitted(codec), decodedSize);
+  }
+
+  /**
+   * Returns the admission costs of encoding {@code decodedSize} bytes with {@code codec}: its bound
+   * and encode cost, both owned by the admitted codec.
+   *
+   * @throws ArithmeticException when the bound does not fit a signed long
+   */
+  static Cost cost(AdmittedCodec codec, long decodedSize) {
+    long bound = codec.bound(decodedSize);
+    // Lz4Raw admits its whole block, output bound, and HC state against the operation budget on
+    // every call, so the map charges nothing up front; a precharge would count them twice.
+    if (codec.codec() == PayloadCodec.LZ4_RAW) return new Cost(bound, 0, 0);
+    AdmittedCodec.Cost encode = codec.encodeCost(decodedSize);
+    return new Cost(bound, encode.heapBytes(), encode.nativeBytes());
   }
 
   /**
@@ -94,40 +119,12 @@ final class Codecs {
     return codec != PayloadCodec.LZ4_RAW;
   }
 
-  /** One raw LZ4 block's worst-case compressed size. */
-  static long lz4RawBound(long size) {
-    return Math.addExact(size, size / 255 + 16);
-  }
-
   /**
-   * zlib's conservative fixed-block bound, which covers any default-level source plus its wrapper.
-   * It is the one zlib bound for every family (D3).
+   * Encodes one declared source with a codec this request admitted, as {@link
+   * #encode(AdmittedCodec, ReadableByteChannel, long, ByteSink, Checkpoint, ResourceBudget,
+   * ResourceBudget.Lease, IoContext)} does.
    */
-  static long zlibBound(long size) {
-    return Math.addExact(size, Math.addExact((size >> 3) + (size >> 8) + (size >> 9), 22));
-  }
-
-  /**
-   * The pinned BSA LZ4 profile auto-flushes 64 KiB chunks without block checksums. Each chunk adds
-   * at most one four-byte block header; the 64-byte allowance covers the frame header and end mark.
-   */
-  static long bsaLz4Bound(long size) {
-    return Math.addExact(
-        size, Math.addExact(4L * ((size + LZ4_BLOCK_BYTES - 1) / LZ4_BLOCK_BYTES), 64));
-  }
-
-  /**
-   * Encodes one declared source into positional sink writes relative to the payload start. The same
-   * call serves the coordinator and transform-stage workers; only the checkpoint and the admission
-   * differ.
-   *
-   * @param budget the operation budget a borrowing encoder settles against
-   * @param admission a reservation already covering {@link #cost}'s heap and native bytes; only the
-   *     BSA LZ4 frame borrows it, and it may be null for the other codecs. Raw LZ4 admits its own
-   *     working set against {@code budget} instead
-   * @throws IOException a structured source-length, stall, codec, or sink failure
-   */
-  static void encode(
+  void encode(
       PayloadCodec codec,
       ReadableByteChannel input,
       long decodedSize,
@@ -137,14 +134,40 @@ final class Codecs {
       ResourceBudget.Lease admission,
       IoContext processing)
       throws IOException {
-    switch (codec) {
+    encode(admitted(codec), input, decodedSize, sink, checkpoint, budget, admission, processing);
+  }
+
+  /**
+   * Encodes one declared source into positional sink writes relative to the payload start. The same
+   * call serves the coordinator and transform-stage workers; only the checkpoint and the admission
+   * differ.
+   *
+   * @param codec the admitted codec, whose provider and profile identity the encoder uses
+   * @param budget the operation budget a borrowing encoder settles against
+   * @param admission a reservation already covering {@link #cost}'s heap and native bytes; only the
+   *     BSA LZ4 frame borrows it, and it may be null for the other codecs. Raw LZ4 admits its own
+   *     working set against {@code budget} instead
+   * @throws IOException a structured source-length, stall, codec, or sink failure
+   */
+  static void encode(
+      AdmittedCodec codec,
+      ReadableByteChannel input,
+      long decodedSize,
+      ByteSink sink,
+      Checkpoint checkpoint,
+      ResourceBudget budget,
+      ResourceBudget.Lease admission,
+      IoContext processing)
+      throws IOException {
+    switch (codec.codec()) {
       case STORED -> PayloadWindows.transfer(input, decodedSize, sink, checkpoint, processing);
-      case ZLIB -> JdkZlib.encode(input, decodedSize, sink, checkpoint, processing);
+      case ZLIB -> JdkZlib.encode(codec, input, decodedSize, sink, checkpoint, processing);
       case BSA_LZ4_FRAME -> {
         if (input == null)
           throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
         long[] read = {0};
         BsaLz4Frame.encodePrecharged(
+            codec,
             (offset, bytes) -> {
               // The encoder reads its source once, front to back; anything else is a JBSA bug.
               if (offset != read[0])

@@ -33,24 +33,18 @@ final class PortableLz4 {
   /** The frame magic number, little-endian on the wire. */
   private static final int MAGIC = 0x184D2204;
 
-  /** The frame window the encoder reads and flushes as one block, matching the native profile. */
-  private static final int WINDOW = 65536;
-
-  /** The largest block any valid frame may declare (block-maximum identifier 7). */
-  private static final int MAX_BLOCK = 4 * 1024 * 1024;
+  /**
+   * The frame window the encoder reads and flushes as one block, matching the native profile.
+   * Package-private, and a compile-time constant, so {@link AdmittedCodec}'s frame cost can name it
+   * without loading this class.
+   */
+  static final int WINDOW = 65536;
 
   /**
-   * lz4-java's HC compressor allocates a fresh {@code int[32768]} hash table and {@code
-   * short[65536]} chain table on every call; this covers both arrays and their headers.
+   * The largest block any valid frame may declare (block-maximum identifier 7). Package-private for
+   * the same reason as {@link #WINDOW}.
    */
-  private static final long HC_STATE_BYTES = 2 * 131072 + 4096;
-
-  /** Heap for one frame encode: bookkeeping, one input window, and one worst-case block. */
-  static final long FRAME_ENCODE_HEAP_BYTES =
-      4096 + WINDOW + 4 + WINDOW + WINDOW / 255 + 16 + HC_STATE_BYTES;
-
-  /** Heap for one frame decoder: bookkeeping plus a compressed and a decoded maximum block. */
-  static final long FRAME_DECODE_HEAP_BYTES = 4096 + 2L * MAX_BLOCK;
+  static final int MAX_BLOCK = 4 * 1024 * 1024;
 
   private PortableLz4() {}
 
@@ -76,24 +70,10 @@ final class PortableLz4 {
     java.util.Objects.requireNonNull(Safe.DECOMPRESSOR);
   }
 
-  /** Returns the heap one raw encode of {@code decodedSize} bytes reserves. */
-  static long rawEncodeHeapBytes(long decodedSize) {
-    return 4096 + decodedSize + rawBound(decodedSize) + HC_STATE_BYTES;
-  }
-
-  /** Returns the heap one raw decode reserves for its whole stored and decoded block. */
-  static long rawDecodeHeapBytes(long storedSize, long decodedSize) {
-    return 4096 + storedSize + decodedSize + 16;
-  }
-
-  /** Returns the upstream {@code LZ4_compressBound}, which lz4-java also uses. */
-  private static long rawBound(long size) {
-    return size + size / 255 + 16;
-  }
-
   /**
    * Encodes one admitted raw HC block without splitting. The caller has already checked the
-   * dispatch limits; the whole block, its worst-case output and the HC tables are reserved first.
+   * dispatch limits; the whole block, its worst-case output and the HC tables are reserved first,
+   * at exactly the portable raw-LZ4 encode cost {@link AdmittedCodec} publishes.
    */
   static long rawEncode(
       ByteSource source,
@@ -105,10 +85,12 @@ final class PortableLz4 {
       int compressionLevel)
       throws IOException {
     caller(checkpoint::check, context);
-    try (var lease = budget.reserve(rawEncodeHeapBytes(decodedSize), 0, 0, 0)) {
+    AdmittedCodec.Cost cost =
+        AdmittedCodec.encodeCost(PayloadCodec.LZ4_RAW, Provider.PORTABLE, decodedSize);
+    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
       int size = (int) decodedSize;
       byte[] input = new byte[size];
-      byte[] output = new byte[(int) rawBound(decodedSize)];
+      byte[] output = new byte[(int) AdmittedCodec.rawLz4Bound(decodedSize)];
       ByteBuffer window = ByteBuffer.wrap(input);
       caller(() -> source.read(0, window), context);
       if (window.hasRemaining())
@@ -160,7 +142,9 @@ final class PortableLz4 {
       IoContext context)
       throws IOException {
     caller(checkpoint::check, context);
-    try (var lease = budget.reserve(rawDecodeHeapBytes(storedSize, decodedSize), 0, 0, 0)) {
+    AdmittedCodec.Cost cost =
+        AdmittedCodec.decodeCost(PayloadCodec.LZ4_RAW, Provider.PORTABLE, storedSize, decodedSize);
+    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
       byte[] input = new byte[(int) storedSize];
       byte[] output = new byte[(int) decodedSize];
       ByteBuffer window = ByteBuffer.wrap(input);
@@ -217,8 +201,8 @@ final class PortableLz4 {
    * lz4-java's block compressor has no dictionary input, and JBSA-CODEC-013 claims no
    * cross-provider byte identity.
    *
-   * @param admission a worker lease that already covers {@link #FRAME_ENCODE_HEAP_BYTES}, or null
-   *     to reserve it here
+   * @param admission a worker lease that already covers {@link
+   *     AdmittedCodec#PORTABLE_FRAME_ENCODE_HEAP_BYTES}, or null to reserve it here
    */
   static long encodeFrame(
       ByteSource source,
@@ -230,7 +214,10 @@ final class PortableLz4 {
       IoContext context,
       boolean bsaProfile)
       throws IOException {
-    try (var lease = admission == null ? budget.reserve(FRAME_ENCODE_HEAP_BYTES, 0, 0, 0) : null) {
+    try (var lease =
+        admission == null
+            ? budget.reserve(AdmittedCodec.PORTABLE_FRAME_ENCODE_HEAP_BYTES, 0, 0, 0)
+            : null) {
       LZ4Compressor compressor = Safe.LZ4.highCompressor(bsaProfile ? 12 : 9);
       StreamingXXHash32 contentHash = bsaProfile ? null : Safe.XXHASH.newStreamingHash32(0);
       byte[] input = new byte[WINDOW];
@@ -298,8 +285,9 @@ final class PortableLz4 {
   }
 
   /**
-   * Creates an incremental frame decoder. The caller has reserved {@link #FRAME_DECODE_HEAP_BYTES};
-   * the decoder borrows its positional source and holds only heap state.
+   * Creates an incremental frame decoder. The caller has reserved {@link
+   * AdmittedCodec#PORTABLE_FRAME_DECODE_HEAP_BYTES}; the decoder borrows its positional source and
+   * holds only heap state.
    */
   static FrameDecoder decoder(
       ByteSource source, long storedSize, long decodedSize, IoContext context) {
@@ -319,7 +307,8 @@ final class PortableLz4 {
       ResourceBudget budget,
       IoContext context)
       throws IOException {
-    try (var lease = budget.reserve(FRAME_DECODE_HEAP_BYTES + WINDOW, 0, 0, 0);
+    try (var lease =
+            budget.reserve(AdmittedCodec.PORTABLE_FRAME_DECODE_HEAP_BYTES + WINDOW, 0, 0, 0);
         var decoder = decoder(source, storedSize, decodedSize, context)) {
       ByteBuffer window = ByteBuffer.allocate(WINDOW);
       long produced = 0;

@@ -1,11 +1,10 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive.StoredEntry;
 import java.io.IOException;
@@ -267,23 +266,16 @@ public final class IndexSession {
       throws IOException {
     if (length < 0 || length > 128) throw new IllegalArgumentException("Payload prefix extent");
     ExactIo.end(offset, streamSize, input.size(), context);
-    try (var credit =
-        budget.reserve(
-            length
-                + switch (codec) {
-                  case STORED -> 0;
-                  case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
-                  case LZ4_RAW -> 0;
-                  case BSA_LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
-                },
-            switch (codec) {
-              case STORED -> 0;
-              case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
-              case LZ4_RAW -> 0;
-              case BSA_LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
-            },
-            0,
-            0)) {
+    // The codec is admitted when the prefix first needs it, so a BSA frame's credit charges the
+    // provider admission pins. Raw LZ4 admits and reserves its own working set inside each decode
+    // call, so it charges nothing here.
+    AdmittedCodec admitted =
+        codec == PayloadCodec.LZ4_RAW ? null : AdmittedCodec.admit(codec, "decode", context);
+    AdmittedCodec.Cost cost =
+        admitted == null
+            ? new AdmittedCodec.Cost(0, 0)
+            : admitted.decodeCost(streamSize, decodedSize);
+    try (var credit = budget.reserve(length + cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
       ByteBuffer prefix =
           ByteBuffer.allocate((int) Math.min(length, decodedSize))
               .order(java.nio.ByteOrder.LITTLE_ENDIAN);
@@ -308,6 +300,7 @@ public final class IndexSession {
         case BSA_LZ4_FRAME -> {
           try (var decoder =
               BsaLz4Frame.decoder(
+                  admitted,
                   (relative, bytes) -> input.readExact(offset + relative, bytes),
                   streamSize,
                   decodedSize,
@@ -320,6 +313,7 @@ public final class IndexSession {
         case ZLIB -> {
           try (var decoder =
               JdkZlib.decoder(
+                  admitted,
                   (relative, bytes) -> input.readExact(offset + relative, bytes),
                   streamSize,
                   decodedSize,

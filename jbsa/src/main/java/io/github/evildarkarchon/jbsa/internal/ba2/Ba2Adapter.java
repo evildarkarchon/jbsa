@@ -1,9 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.ba2;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.ArchiveNames;
@@ -397,24 +395,24 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
      * the part holds a raw-LZ4 entry (which needs its largest source whole), otherwise zlib.
      */
     @Override
-    public Readback readback(List<Planned<Key>> part, Layout layout) {
+    public Readback readback(
+        List<Planned<Key>> part, Layout layout, Map<PayloadCodec, AdmittedCodec> codecs) {
       boolean validatesRawLz4 =
           rawLz4 && part.stream().anyMatch(entry -> entry.codec() != PayloadCodec.STORED);
       // Raw LZ4's block buffers are native under the LWJGL provider and heap under the portable
-      // one; pack preflight has already pinned which of the two the reader will use.
-      Lz4Runtime.Provider provider = validatesRawLz4 ? Lz4Runtime.selected() : null;
+      // one; the admitted codec's largest decode cost already places them for the provider pack
+      // admission pinned. The reader's decoded copy of the largest source is its own charge.
+      AdmittedCodec.Cost decode =
+          codecs.get(validatesRawLz4 ? PayloadCodec.LZ4_RAW : PayloadCodec.ZLIB).maxDecodeCost();
       long codecHeap =
           validatesRawLz4
-              ? 4096
-                  + part.stream().mapToLong(entry -> entry.source().size()).max().orElse(0)
-                  + Lz4Raw.maxDecodeHeapBytes(provider)
-              : JdkZlib.DECODE_HEAP_BYTES;
-      long codecNative =
-          validatesRawLz4 ? Lz4Raw.maxDecodeNativeBytes(provider) : JdkZlib.DECODE_NATIVE_BYTES;
+              ? part.stream().mapToLong(entry -> entry.source().size()).max().orElse(0)
+                  + decode.heapBytes()
+              : decode.heapBytes();
       return new Readback(
           "ba2.noncanonical-staged-output",
           512L * part.size() + 8L * layout.metadataBytes() + 65536 + codecHeap,
-          codecNative,
+          decode.nativeBytes(),
           1);
     }
   }

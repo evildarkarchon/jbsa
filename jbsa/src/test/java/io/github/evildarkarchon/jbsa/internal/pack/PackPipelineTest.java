@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
@@ -845,7 +846,8 @@ class PackPipelineTest {
         }
 
         @Override
-        public Readback readback(List<Planned<String>> part, Layout layout) {
+        public Readback readback(
+            List<Planned<String>> part, Layout layout, Map<PayloadCodec, AdmittedCodec> codecs) {
           return readback ? new Readback("memory.noncanonical-staged-output", 0, 0, 1) : null;
         }
 

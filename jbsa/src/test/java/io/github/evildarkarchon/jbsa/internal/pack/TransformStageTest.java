@@ -3,9 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.OperationSession;
@@ -154,17 +152,19 @@ class TransformStageTest {
   @Test
   void encodingsComeFromTheCodecMap() throws Exception {
     try (var budget = ResourceBudget.forMutation(ResourceLimits.standard(), CONTEXT)) {
-      assertNull(TransformStage.encoding(PayloadCodec.STORED, 1000, true, budget));
-      var zlib = TransformStage.encoding(PayloadCodec.ZLIB, 1000, true, budget);
+      assertNull(TransformStage.encoding(admit(PayloadCodec.STORED), 1000, true, budget));
+      AdmittedCodec zlibCodec = admit(PayloadCodec.ZLIB);
+      var zlib = TransformStage.encoding(zlibCodec, 1000, true, budget);
       assertEquals(1000 + 125 + 3 + 1 + 22, zlib.outputBound());
-      assertEquals(JdkZlib.ENCODE_HEAP_BYTES, zlib.heapBytes());
-      assertEquals(JdkZlib.ENCODE_NATIVE_BYTES, zlib.nativeBytes());
+      assertEquals(zlibCodec.encodeCost(1000).heapBytes(), zlib.heapBytes());
+      assertEquals(zlibCodec.encodeCost(1000).nativeBytes(), zlib.nativeBytes());
       assertTrue(zlib.retainsRaw());
-      var lz4 = TransformStage.encoding(PayloadCodec.BSA_LZ4_FRAME, 65537, false, budget);
+      AdmittedCodec frame = admit(PayloadCodec.BSA_LZ4_FRAME);
+      var lz4 = TransformStage.encoding(frame, 65537, false, budget);
       assertEquals(65537 + 2 * 4 + 64, lz4.outputBound());
-      // The frame encoder's working set belongs to whichever provider preflight pinned.
-      assertEquals(Lz4Frame.encodeHeapBytes(Lz4Runtime.selected()), lz4.heapBytes());
-      assertEquals(Lz4Frame.encodeNativeBytes(Lz4Runtime.selected()), lz4.nativeBytes());
+      // The frame encoder's working set belongs to whichever provider admission pinned.
+      assertEquals(frame.encodeCost(65537).heapBytes(), lz4.heapBytes());
+      assertEquals(frame.encodeCost(65537).nativeBytes(), lz4.nativeBytes());
       assertFalse(lz4.retainsRaw());
     }
   }
@@ -194,10 +194,16 @@ class TransformStageTest {
     assertEquals(ContentSharing.key(9, digest, true), ContentSharing.key(9, digest.clone(), true));
   }
 
+  /** Admits a codec for encoding, as the pipeline's requiredCodecs step does. */
+  private static AdmittedCodec admit(PayloadCodec codec) throws ArchiveException {
+    return AdmittedCodec.admit(codec, "encode", CONTEXT);
+  }
+
   /** Reports whether a two-worker stage over the sources would use workers under a ceiling. */
   private static boolean parallel(List<PackSources.Entry> sources, long maxScratch, boolean zlib)
       throws Exception {
     var standard = ResourceLimits.standard();
+    AdmittedCodec zlibCodec = admit(PayloadCodec.ZLIB);
     var limits =
         new ResourceLimits(
             standard.maxEntries(),
@@ -219,7 +225,7 @@ class TransformStageTest {
                 ordinal ->
                     zlib
                         ? TransformStage.encoding(
-                            PayloadCodec.ZLIB, sources.get(ordinal).size(), true, budget)
+                            zlibCodec, sources.get(ordinal).size(), true, budget)
                         : null)) {
       return stage.parallel();
     }

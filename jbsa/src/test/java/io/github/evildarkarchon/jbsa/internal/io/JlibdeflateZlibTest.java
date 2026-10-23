@@ -3,10 +3,12 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
@@ -220,6 +222,7 @@ final class JlibdeflateZlibTest {
   private static byte[] jdkEncode(byte[] data) throws Exception {
     var encoded = new java.io.ByteArrayOutputStream();
     JdkZlib.encode(
+        AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
         java.nio.channels.Channels.newChannel(new java.io.ByteArrayInputStream(data)),
         data.length,
         sink(encoded),

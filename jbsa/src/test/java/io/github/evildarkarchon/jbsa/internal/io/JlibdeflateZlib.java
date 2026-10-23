@@ -5,10 +5,12 @@ import com.fulcrumgenomics.jlibdeflate.LibdeflateCompressor;
 import com.fulcrumgenomics.jlibdeflate.LibdeflateDecompressor;
 import com.fulcrumgenomics.jlibdeflate.LibdeflateException;
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -330,7 +332,13 @@ final class JlibdeflateZlib {
       IoContext context)
       throws IOException {
     try (var lease = budget.reserve(JdkZlib.DECODE_HEAP_BYTES, JdkZlib.DECODE_NATIVE_BYTES, 0, 0);
-        var decoder = JdkZlib.decoder(source, storedSize, decodedSize, context)) {
+        var decoder =
+            JdkZlib.decoder(
+                AdmittedCodec.admit(PayloadCodec.ZLIB, "decode", context),
+                source,
+                storedSize,
+                decodedSize,
+                context)) {
       ByteBuffer window = ByteBuffer.allocate(65536);
       long written = 0;
       while (true) {

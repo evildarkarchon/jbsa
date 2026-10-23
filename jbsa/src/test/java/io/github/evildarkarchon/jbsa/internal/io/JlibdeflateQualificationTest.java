@@ -3,10 +3,13 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,6 +38,13 @@ import org.junit.jupiter.api.io.TempDir;
 @EnabledIfSystemProperty(named = "jbsa.zlib.qualification", matches = "true")
 @TestMethodOrder(MethodOrderer.MethodName.class)
 final class JlibdeflateQualificationTest {
+  /**
+   * The packaged release codec profile ({@code META-INF/jbsa-codec-profile.json}) that describes
+   * zlib, which this lane's evidence names. It is the native LZ4 profile id; the baseline adapter
+   * used to publish it as {@code JdkZlib.PROFILE}.
+   */
+  private static final String BASELINE_PROFILE = Lz4Runtime.PROFILE;
+
   private static final IoContext CONTEXT =
       IoContext.of(Path.of("qualification.bin"), Operation.OPEN);
   private static final String[] CORPORA = {
@@ -327,7 +337,13 @@ final class JlibdeflateQualificationTest {
               if (provider.equals(JDK)) {
                 try (var lease =
                     budget.reserve(JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES, 0, 0)) {
-                  JdkZlib.encode(channel, size, encodeSink, encodeClock, CONTEXT);
+                  JdkZlib.encode(
+                      AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
+                      channel,
+                      size,
+                      encodeSink,
+                      encodeClock,
+                      CONTEXT);
                 }
               } else {
                 JlibdeflateZlib.encode(
@@ -649,7 +665,7 @@ final class JlibdeflateQualificationTest {
     assertTrue(
         new String(profile, StandardCharsets.UTF_8).contains("\"jlibdeflate\":\"not-promoted\""));
     rows.append("baseline_profile\t")
-        .append(JdkZlib.PROFILE)
+        .append(BASELINE_PROFILE)
         .append(' ')
         .append(digest)
         .append('\n');
@@ -684,7 +700,7 @@ final class JlibdeflateQualificationTest {
             .append(Runtime.getRuntime().maxMemory())
             .append('\n')
             .append("baseline_profile=")
-            .append(JdkZlib.PROFILE)
+            .append(BASELINE_PROFILE)
             .append('\n')
             .append("baseline_profile_sha256=")
             .append(digest)
@@ -820,6 +836,7 @@ final class JlibdeflateQualificationTest {
   private static byte[] jdkEncode(byte[] data) throws IOException {
     var encoded = new ByteArrayOutputStream();
     JdkZlib.encode(
+        AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
         Channels.newChannel(new ByteArrayInputStream(data)),
         data.length,
         sink(encoded),

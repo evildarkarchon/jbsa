@@ -3,8 +3,10 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Map;
@@ -25,6 +27,7 @@ final class JdkZlibTest {
     ArchiveException failure;
     try (var decoder =
         JdkZlib.decoder(
+            AdmittedCodec.admit(PayloadCodec.ZLIB, "decode", CONTEXT),
             (offset, bytes) -> bytes.put(stored, (int) offset, bytes.remaining()),
             stored.length,
             8,
