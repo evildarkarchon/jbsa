@@ -2,12 +2,15 @@ package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
-import io.github.evildarkarchon.jbsa.internal.io.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
-import io.github.evildarkarchon.jbsa.internal.io.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Frame;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -42,7 +45,7 @@ final class Codecs {
    *
    * @throws ArithmeticException when the bound does not fit a signed long
    */
-  static Cost cost(Codec codec, long decodedSize) {
+  static Cost cost(PayloadCodec codec, long decodedSize) {
     return switch (codec) {
       case STORED -> new Cost(decodedSize, 0, 0);
       case ZLIB ->
@@ -71,7 +74,7 @@ final class Codecs {
    * @throws ArchiveException {@code CAPABILITY codec.unavailable} only when neither LZ4 provider
    *     can be admitted
    */
-  static void preflight(Codec codec, IoContext context) throws ArchiveException {
+  static void preflight(PayloadCodec codec, IoContext context) throws ArchiveException {
     switch (codec) {
       case STORED, ZLIB -> {
         // JDK-only encoders have no provider to admit.
@@ -87,8 +90,8 @@ final class Codecs {
    * (native under the LWJGL provider, heap under the portable one) against the operation budget
    * itself, so concurrent workers would multiply that peak outside the stage's headroom rule.
    */
-  static boolean workerEncodes(Codec codec) {
-    return codec != Codec.LZ4_RAW;
+  static boolean workerEncodes(PayloadCodec codec) {
+    return codec != PayloadCodec.LZ4_RAW;
   }
 
   /** One raw LZ4 block's worst-case compressed size. */
@@ -125,18 +128,18 @@ final class Codecs {
    * @throws IOException a structured source-length, stall, codec, or sink failure
    */
   static void encode(
-      Codec codec,
+      PayloadCodec codec,
       ReadableByteChannel input,
       long decodedSize,
-      PayloadWindows.Sink sink,
-      PayloadWindows.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       ResourceBudget.Lease admission,
       IoContext processing)
       throws IOException {
     switch (codec) {
       case STORED -> PayloadWindows.transfer(input, decodedSize, sink, checkpoint, processing);
-      case ZLIB -> JdkZlib.encode(input, decodedSize, sink::write, checkpoint::check, processing);
+      case ZLIB -> JdkZlib.encode(input, decodedSize, sink, checkpoint, processing);
       case BSA_LZ4_FRAME -> {
         if (input == null)
           throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
@@ -150,8 +153,8 @@ final class Codecs {
               read[0] += bytes.position();
             },
             decodedSize,
-            sink::write,
-            checkpoint::check,
+            sink,
+            checkpoint,
             budget,
             admission,
             processing);
@@ -168,8 +171,8 @@ final class Codecs {
               readExact(input, bytes, checkpoint, processing);
             },
             decodedSize,
-            sink::write,
-            checkpoint::check,
+            sink,
+            checkpoint,
             budget,
             processing,
             LZ4_RAW_LEVEL);
@@ -180,10 +183,7 @@ final class Codecs {
 
   /** Fills one bounded codec window without letting a stalled generated channel spin forever. */
   private static void readExact(
-      ReadableByteChannel input,
-      ByteBuffer bytes,
-      PayloadWindows.Checkpoint checkpoint,
-      IoContext processing)
+      ReadableByteChannel input, ByteBuffer bytes, Checkpoint checkpoint, IoContext processing)
       throws IOException {
     int idle = 0;
     while (bytes.hasRemaining()) {
@@ -201,8 +201,7 @@ final class Codecs {
    * probe it could not notice a generated source that yields more bytes than it declared.
    */
   private static void requireEnd(
-      ReadableByteChannel input, PayloadWindows.Checkpoint checkpoint, IoContext processing)
-      throws IOException {
+      ReadableByteChannel input, Checkpoint checkpoint, IoContext processing) throws IOException {
     ByteBuffer probe = ByteBuffer.allocate(1);
     int idle = 0;
     while (true) {

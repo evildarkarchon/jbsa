@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -191,7 +192,7 @@ final class OwnedArchiveRaceTest {
                   new EntryMetadata.Tes3(0, 0, 0, 0)),
               0,
               2,
-              OwnedArchive.PayloadCodec.STORED);
+              PayloadCodec.STORED);
           return new ArchiveInspection(
               detection,
               new ArchiveMetadata.Tes3(1, 0, 0),

@@ -3,6 +3,12 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -207,7 +213,7 @@ final class Lz4Qualification {
     for (boolean encoding : new boolean[] {true, false}) {
       IOException cancelled = new IOException("qualification cancellation");
       int[] checks = {0};
-      JdkZlib.Checkpoint checkpoint =
+      Checkpoint checkpoint =
           () -> {
             if (++checks[0] == 3) throw cancelled;
           };
@@ -297,12 +303,12 @@ final class Lz4Qualification {
     }
   }
 
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
   /** Uses bounded positional output copying, whose cost is included in measured adapter time. */
-  private static JdkZlib.ByteSink sink(ByteArrayOutputStream output) {
+  private static ByteSink sink(ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];
@@ -313,11 +319,7 @@ final class Lz4Qualification {
 
   /** Dispatches only to the release-pinned raw or frame profile under test. */
   private static void encode(
-      String codec,
-      byte[] data,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoints,
-      ResourceBudget budget)
+      String codec, byte[] data, ByteSink sink, Checkpoint checkpoints, ResourceBudget budget)
       throws IOException {
     if (codec.equals("raw-lz4"))
       Lz4Raw.encode(source(data), data.length, sink, checkpoints, budget, CONTEXT);
@@ -329,8 +331,8 @@ final class Lz4Qualification {
       String codec,
       byte[] frame,
       long size,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoints,
+      ByteSink sink,
+      Checkpoint checkpoints,
       ResourceBudget budget)
       throws IOException {
     if (codec.equals("raw-lz4"))
@@ -341,7 +343,7 @@ final class Lz4Qualification {
   /**
    * Measures observed cancellation checkpoint gaps, conservatively including Java I/O and pauses.
    */
-  private static final class Checkpoints implements JdkZlib.Checkpoint {
+  private static final class Checkpoints implements Checkpoint {
     private long previous;
     private long maxGap;
 

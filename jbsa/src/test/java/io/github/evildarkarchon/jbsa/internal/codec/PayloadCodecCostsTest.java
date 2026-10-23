@@ -1,10 +1,11 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
-import io.github.evildarkarchon.jbsa.internal.pack.Codec;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import io.github.evildarkarchon.jbsa.internal.pack.TransformStage;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -76,11 +77,11 @@ final class PayloadCodecCostsTest {
               new long[][] {{73, 401_685, 0}, {65_604, 401_685, 0}, {16_778_304, 401_685, 0}};
         };
     try (var budget = budget(ROOMY, ROOMY)) {
-      assertNull(TransformStage.encoding(Codec.STORED, WINDOW, false, budget));
+      assertNull(TransformStage.encoding(PayloadCodec.STORED, WINDOW, false, budget));
       for (int index = 0; index < SIZES.length; index++) {
-        assertEncoding(zlib[index], Codec.ZLIB, SIZES[index], budget);
-        assertEncoding(frame[index], Codec.BSA_LZ4_FRAME, SIZES[index], budget);
-        assertEncoding(raw[index], Codec.LZ4_RAW, SIZES[index], budget);
+        assertEncoding(zlib[index], PayloadCodec.ZLIB, SIZES[index], budget);
+        assertEncoding(frame[index], PayloadCodec.BSA_LZ4_FRAME, SIZES[index], budget);
+        assertEncoding(raw[index], PayloadCodec.LZ4_RAW, SIZES[index], budget);
       }
     }
   }
@@ -141,7 +142,7 @@ final class PayloadCodecCostsTest {
 
   /** Checks one pack pre-charge row: worst-case output bound, heap and native credit. */
   private static void assertEncoding(
-      long[] expected, Codec codec, int size, ResourceBudget budget) {
+      long[] expected, PayloadCodec codec, int size, ResourceBudget budget) {
     var encoding = TransformStage.encoding(codec, size, false, budget);
     assertArrayEquals(
         expected,
@@ -281,7 +282,7 @@ final class PayloadCodecCostsTest {
   @FunctionalInterface
   private interface Budgeted {
     /** Runs the call; credits it reserves must be released on return. */
-    void run(ResourceBudget budget, JdkZlib.ByteSink sink) throws Exception;
+    void run(ResourceBudget budget, ByteSink sink) throws Exception;
   }
 
   /** Creates a budget with exact heap and native ceilings and no handles. */
@@ -297,12 +298,12 @@ final class PayloadCodecCostsTest {
   }
 
   /** Supplies exactly each requested bounded window. */
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
   /** Collects positional writes in order. */
-  private static JdkZlib.ByteSink sink(ByteArrayOutputStream output) {
+  private static ByteSink sink(ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];

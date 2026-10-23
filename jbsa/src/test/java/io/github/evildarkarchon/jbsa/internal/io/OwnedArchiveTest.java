@@ -3,6 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.file.Files;
@@ -156,7 +157,7 @@ final class OwnedArchiveTest {
                   new EntryMetadata.Tes3(0, 0, 0, 0)),
               0,
               length,
-              OwnedArchive.PayloadCodec.STORED);
+              PayloadCodec.STORED);
           return inspection;
         });
   }

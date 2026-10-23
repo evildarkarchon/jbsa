@@ -3,10 +3,10 @@ package io.github.evildarkarchon.jbsa.internal.tes3;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted;
-import io.github.evildarkarchon.jbsa.internal.pack.Codec;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -38,7 +38,7 @@ class Tes3AdapterTest {
         List.of("low", "tie-a", "tie-\u0080", "high-low"),
         planned.stream().map(entry -> entry.source().displayName()).toList());
     for (var entry : planned) {
-      assertEquals(Codec.STORED, entry.codec());
+      assertEquals(PayloadCodec.STORED, entry.codec());
       assertEquals(0, entry.frame().length);
       assertSame(entry.source().name(), entry.key().bytes());
       assertEquals(entry.source().hash(), entry.key().hash());

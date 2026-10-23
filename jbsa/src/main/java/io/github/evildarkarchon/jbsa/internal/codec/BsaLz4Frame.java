@@ -1,7 +1,9 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -34,10 +36,10 @@ public final class BsaLz4Frame {
 
   /** Encodes one exact level-12 independent-block frame and binds failures to this profile. */
   public static long encode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -52,10 +54,10 @@ public final class BsaLz4Frame {
 
   /** Borrows a worker's full codec reservation while retaining the BSA profile diagnostics. */
   public static long encodePrecharged(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       ResourceBudget.Lease admission,
       IoContext context)
@@ -72,7 +74,7 @@ public final class BsaLz4Frame {
 
   /** Creates a lazy decoder whose later content failures retain the BSA profile identity. */
   public static Decoder decoder(
-      JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context)
+      ByteSource source, long storedSize, long decodedSize, IoContext context)
       throws ArchiveException {
     Provider provider = preflight("decode", context);
     try {

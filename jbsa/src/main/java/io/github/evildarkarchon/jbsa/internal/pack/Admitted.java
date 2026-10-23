@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import java.nio.ByteBuffer;
@@ -41,7 +42,7 @@ public interface Admitted<K> {
    * pipeline checks each one immediately after {@link FamilyAdapter#admit}, before source planning,
    * so the adapter itself never loads a native provider and stays pure on every platform.
    */
-  default Set<Codec> requiredCodecs() {
+  default Set<PayloadCodec> requiredCodecs() {
     return Set.of();
   }
 
@@ -203,7 +204,7 @@ public interface Admitted<K> {
   record Planned<K>(
       PackSources.Entry source,
       K key,
-      Codec codec,
+      PayloadCodec codec,
       byte[] frame,
       long storedSize,
       List<Segment> segments) {
@@ -221,7 +222,8 @@ public interface Admitted<K> {
     }
 
     /** An entry whose payload is one unsegmented record of a known or unknown stored size. */
-    public Planned(PackSources.Entry source, K key, Codec codec, byte[] frame, long storedSize) {
+    public Planned(
+        PackSources.Entry source, K key, PayloadCodec codec, byte[] frame, long storedSize) {
       this(source, key, codec, frame, storedSize, List.of());
     }
 
@@ -229,13 +231,13 @@ public interface Admitted<K> {
      * Predicts the stored size from the codec: a stored record is exactly its frame plus the
      * declared source size, while an encoded one stays {@link #UNKNOWN_SIZE} until stabilized.
      */
-    public Planned(PackSources.Entry source, K key, Codec codec, byte[] frame) {
+    public Planned(PackSources.Entry source, K key, PayloadCodec codec, byte[] frame) {
       this(
           source,
           key,
           codec,
           frame,
-          codec == Codec.STORED ? Math.addExact(frame.length, source.size()) : UNKNOWN_SIZE);
+          codec == PayloadCodec.STORED ? Math.addExact(frame.length, source.size()) : UNKNOWN_SIZE);
     }
 
     /** Returns this entry with the exact stored size stabilization measured. */
@@ -269,7 +271,7 @@ public interface Admitted<K> {
    *     between a stored entry and a compressed one
    * @param owner the owner's archive-set identity; equal identities are emitted once per part
    */
-  record Segment(long rawSize, long storedSize, Codec codec, int owner) {
+  record Segment(long rawSize, long storedSize, PayloadCodec codec, int owner) {
     /** Rejects negative extents and a missing codec. */
     public Segment {
       if (rawSize < 0 || storedSize < 0 || owner < 0)

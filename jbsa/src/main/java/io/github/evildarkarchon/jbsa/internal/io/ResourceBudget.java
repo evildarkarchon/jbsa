@@ -3,6 +3,8 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.ResourceLimits;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -53,8 +55,12 @@ public final class ResourceBudget implements AutoCloseable {
 
   /**
    * Uses explicit capacities for deterministic admission tests; every ceiling must be nonnegative.
+   *
+   * <p>Public only so the codec unit tests in {@code internal.codec} can reach it after the codecs
+   * left this package (#94); production code still uses the two capacity-deriving factories above.
+   * The package is not exported, so this widens nothing outside the module.
    */
-  ResourceBudget(
+  public ResourceBudget(
       ResourceLimits limits,
       IoContext context,
       long heapCeiling,

@@ -1,7 +1,12 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive.PayloadCodec;
+import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive.StoredEntry;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -269,13 +274,13 @@ public final class IndexSession {
                   case STORED -> 0;
                   case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
                   case LZ4_RAW -> 0;
-                  case LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
+                  case BSA_LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
                 },
             switch (codec) {
               case STORED -> 0;
               case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
               case LZ4_RAW -> 0;
-              case LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
+              case BSA_LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
             },
             0,
             0)) {
@@ -300,7 +305,7 @@ public final class IndexSession {
                 () -> {},
                 budget,
                 context);
-        case LZ4_FRAME -> {
+        case BSA_LZ4_FRAME -> {
           try (var decoder =
               BsaLz4Frame.decoder(
                   (relative, bytes) -> input.readExact(offset + relative, bytes),

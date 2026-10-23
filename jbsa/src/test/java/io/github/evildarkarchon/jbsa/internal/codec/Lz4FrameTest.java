@@ -1,8 +1,10 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -222,7 +224,7 @@ final class Lz4FrameTest {
   }
 
   /** Supplies exactly each requested bounded window. */
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
@@ -231,7 +233,7 @@ final class Lz4FrameTest {
   }
 
   /** Collects frame output while verifying that windows remain bounded. */
-  private static JdkZlib.ByteSink sink(ByteArrayOutputStream output) {
+  private static ByteSink sink(ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       assertTrue(bytes.remaining() <= 131072);

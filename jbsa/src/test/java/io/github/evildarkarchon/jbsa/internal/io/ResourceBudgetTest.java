@@ -6,6 +6,7 @@ import io.github.evildarkarchon.jbsa.ArchiveException;
 import io.github.evildarkarchon.jbsa.FailureKind;
 import io.github.evildarkarchon.jbsa.Operation;
 import io.github.evildarkarchon.jbsa.ResourceLimits;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;

@@ -1,7 +1,9 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.ByteBuffer;
@@ -42,10 +44,10 @@ public final class Lz4Raw {
    * remain caller-owned.
    */
   public static long encode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -54,10 +56,10 @@ public final class Lz4Raw {
 
   /** Encodes one admitted raw HC block at the family-qualified compression level. */
   public static long encode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context,
       int compressionLevel)
@@ -76,10 +78,10 @@ public final class Lz4Raw {
    */
   static long encode(
       Provider provider,
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context,
       int compressionLevel)
@@ -143,11 +145,11 @@ public final class Lz4Raw {
    * borrowed; the caller supplies a wire-bounded block and owns destination publication.
    */
   public static long decode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -159,11 +161,11 @@ public final class Lz4Raw {
   /** Decodes one admitted raw block through an explicit provider, as the public overload does. */
   static long decode(
       Provider provider,
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {

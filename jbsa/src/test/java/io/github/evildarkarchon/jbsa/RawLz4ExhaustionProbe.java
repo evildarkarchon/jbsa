@@ -1,6 +1,6 @@
 package io.github.evildarkarchon.jbsa;
 
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

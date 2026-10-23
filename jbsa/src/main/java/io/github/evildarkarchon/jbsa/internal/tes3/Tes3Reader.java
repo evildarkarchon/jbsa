@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.tes3;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -124,7 +125,7 @@ public final class Tes3Reader {
               size,
               size,
               new EntryMetadata.Tes3(hash, nameOffset, relativeOffset, dataOffset));
-      session.add(metadata, dataOffset, size, OwnedArchive.PayloadCodec.STORED);
+      session.add(metadata, dataOffset, size, PayloadCodec.STORED);
     }
     if (cursor != hashStart) throw malformed("tes3.invalid-name-block");
     session.checkOverlaps("tes3.overlapping-payloads");

@@ -1,9 +1,11 @@
-package io.github.evildarkarchon.jbsa.internal.io;
+package io.github.evildarkarchon.jbsa.internal.codec;
 
 import static org.lwjgl.util.lz4.LZ4Frame.*;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.io.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime.Provider;
+import io.github.evildarkarchon.jbsa.internal.io.IoContext;
+import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.io.IOException;
 import java.lang.foreign.Arena;
 import java.nio.ByteBuffer;
@@ -58,10 +60,10 @@ public final class Lz4Frame {
    * all memory credits and native state are released on success, failure, or cancellation.
    */
   public static long encode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -70,10 +72,10 @@ public final class Lz4Frame {
 
   /** Encodes one frame with the exact versioned-BSA 0x69 profile. */
   public static long encodeBsa(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -86,10 +88,10 @@ public final class Lz4Frame {
    * that lease after the private result has settled; this method does not charge or close it again.
    */
   public static long encodeBsaPrecharged(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       ResourceBudget.Lease admission,
       IoContext context)
@@ -100,10 +102,10 @@ public final class Lz4Frame {
 
   /** Runs one admitted encoder invocation, borrowing a worker lease when one was precharged. */
   private static long encode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       ResourceBudget.Lease admission,
       IoContext context,
@@ -121,10 +123,10 @@ public final class Lz4Frame {
    */
   static long encode(
       Provider provider,
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       ResourceBudget.Lease admission,
       IoContext context,
@@ -198,7 +200,7 @@ public final class Lz4Frame {
    * decoder borrows its positional source and releases native state when closed.
    */
   public static Decoder decoder(
-      JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context)
+      ByteSource source, long storedSize, long decodedSize, IoContext context)
       throws ArchiveException {
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
@@ -208,11 +210,7 @@ public final class Lz4Frame {
 
   /** Creates a decoder through an explicit provider; tests use it to cross-decode providers. */
   static Decoder decoder(
-      Provider provider,
-      JdkZlib.ByteSource source,
-      long storedSize,
-      long decodedSize,
-      IoContext context)
+      Provider provider, ByteSource source, long storedSize, long decodedSize, IoContext context)
       throws ArchiveException {
     if (storedSize < 0 || decodedSize < 0)
       throw new IllegalArgumentException("Negative codec size");
@@ -240,7 +238,7 @@ public final class Lz4Frame {
 
   /** Per-content sequential native frame decoder with bounded direct input and output windows. */
   private static final class NativeDecoder implements Decoder {
-    private final JdkZlib.ByteSource source;
+    private final ByteSource source;
     private final long storedSize, decodedSize;
     private final IoContext context;
     private final State state;
@@ -248,8 +246,7 @@ public final class Lz4Frame {
     private boolean first = true, finished, closed;
 
     /** Allocates independent native state only after capability preflight and caller admission. */
-    private NativeDecoder(
-        JdkZlib.ByteSource source, long storedSize, long decodedSize, IoContext context)
+    private NativeDecoder(ByteSource source, long storedSize, long decodedSize, IoContext context)
         throws ArchiveException {
       this.source = source;
       this.storedSize = storedSize;
@@ -354,11 +351,11 @@ public final class Lz4Frame {
    * output publication are bounded; excess decoded bytes are detected without publishing them.
    */
   public static long decode(
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -371,11 +368,11 @@ public final class Lz4Frame {
   /** Decodes one ordinary frame through an explicit provider, as {@link #decode} does. */
   static long decode(
       Provider provider,
-      JdkZlib.ByteSource source,
+      ByteSource source,
       long storedSize,
       long decodedSize,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
+      ByteSink sink,
+      Checkpoint checkpoint,
       ResourceBudget budget,
       IoContext context)
       throws IOException {
@@ -477,7 +474,7 @@ public final class Lz4Frame {
 
   /** Publishes only the valid prefix; positional arithmetic remains checked and wide. */
   private static long emit(
-      JdkZlib.ByteSink sink, long offset, ByteBuffer bytes, int count, IoContext context)
+      ByteSink sink, long offset, ByteBuffer bytes, int count, IoContext context)
       throws IOException {
     if (count > 0) {
       bytes.position(0).limit(count);

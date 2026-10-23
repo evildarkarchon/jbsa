@@ -3,6 +3,10 @@ package io.github.evildarkarchon.jbsa.internal.io;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
+import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
+import io.github.evildarkarchon.jbsa.internal.codec.Checkpoint;
+import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -310,7 +314,7 @@ final class JlibdeflateQualificationTest {
           for (int round = 0; round < WARMUPS + REPETITIONS; round++) {
             var encodeClock = new Checkpoints();
             int[] encodedLength = {0};
-            JdkZlib.ByteSink encodeSink =
+            ByteSink encodeSink =
                 (offset, bytes) -> {
                   int count = bytes.remaining();
                   bytes.get(encodedBuffer, Math.toIntExact(offset), count);
@@ -337,7 +341,7 @@ final class JlibdeflateQualificationTest {
             else assertArrayEquals(first, encoded, provider + " repeatable bytes");
 
             var decodeClock = new Checkpoints();
-            JdkZlib.ByteSink decodeSink =
+            ByteSink decodeSink =
                 (offset, bytes) ->
                     bytes.get(decodedBuffer, Math.toIntExact(offset), bytes.remaining());
             Arrays.fill(decodedBuffer, (byte) 0);
@@ -737,7 +741,7 @@ final class JlibdeflateQualificationTest {
       for (boolean encoding : new boolean[] {true, false}) {
         IOException cancelled = new IOException("qualification cancellation");
         int[] checks = {0};
-        JdkZlib.Checkpoint checkpoint =
+        Checkpoint checkpoint =
             () -> {
               if (++checks[0] == cancelAt) throw cancelled;
             };
@@ -834,11 +838,7 @@ final class JlibdeflateQualificationTest {
 
   /** Drives the production streaming decoder through the same loop the candidate dispatch uses. */
   private static void jdkDecodeInto(
-      byte[] stored,
-      long size,
-      JdkZlib.ByteSink sink,
-      JdkZlib.Checkpoint checkpoint,
-      ResourceBudget budget)
+      byte[] stored, long size, ByteSink sink, Checkpoint checkpoint, ResourceBudget budget)
       throws IOException {
     JlibdeflateZlib.jdkDecode(
         source(stored), stored.length, size, sink, checkpoint, budget, CONTEXT);
@@ -865,11 +865,11 @@ final class JlibdeflateQualificationTest {
     return new ResourceBudget(ResourceLimits.standard(), CONTEXT, 256L << 20, 64L << 20, 0);
   }
 
-  private static JdkZlib.ByteSource source(byte[] data) {
+  private static ByteSource source(byte[] data) {
     return (offset, bytes) -> bytes.put(data, Math.toIntExact(offset), bytes.remaining());
   }
 
-  private static JdkZlib.ByteSink sink(ByteArrayOutputStream output) {
+  private static ByteSink sink(ByteArrayOutputStream output) {
     return (offset, bytes) -> {
       assertEquals(output.size(), offset);
       byte[] chunk = new byte[bytes.remaining()];
@@ -911,7 +911,7 @@ final class JlibdeflateQualificationTest {
   }
 
   /** Records the largest elapsed time between observations, including callbacks and pauses. */
-  private static final class Checkpoints implements JdkZlib.Checkpoint {
+  private static final class Checkpoints implements Checkpoint {
     private long previous;
     private long maxGap;
 
