@@ -33,8 +33,9 @@ import org.junit.jupiter.params.provider.EnumSource;
  * native ceilings derived from them, and the behaviour of both LZ4 adapters behind the internal
  * provider seam.
  *
- * <p>Adapter cases reach the native and portable adapters through the one package-private factory,
- * {@link Lz4Adapter#of}, including on Windows, where the process itself pins the native provider
+ * <p>Every case, cost or adapter, chooses its provider through the one package-private factory,
+ * {@link AdmittedCodec#forProvider}; adapter cases take the adapter that codec runs every call
+ * through. That holds on Windows too, where the process itself pins the native provider
  * (JBSA-CODEC-014, JBSA-CODEC-015). Native cases run only on the Windows x64 baseline.
  *
  * <p>Every expected value is a literal, never recomputed from a production formula. The cost
@@ -507,7 +508,7 @@ final class PayloadCodecTest {
     for (Provider provider : Provider.values()) {
       AdmittedCodec raw = codec(PayloadCodec.LZ4_RAW, provider);
       AdmittedCodec frame = codec(PayloadCodec.BSA_LZ4_FRAME, provider);
-      Lz4Adapter adapter = Lz4Adapter.of(provider);
+      Lz4Adapter adapter = adapterOf(provider);
       entries.put(
           provider + " raw encode",
           () -> Lz4Raw.encode(raw, unread, 1, unwritten, unchecked, null, CONTEXT));
@@ -777,7 +778,7 @@ final class PayloadCodecTest {
         assertEquals(FailureKind.POLICY, refused.primaryFailure().kind());
       }
     }
-    Lz4Adapter portable = Lz4Adapter.of(Provider.PORTABLE);
+    Lz4Adapter portable = adapterOf(Provider.PORTABLE);
     ByteSource untouched = (offset, bytes) -> fail("source touched");
     ByteSink unwritten = (offset, bytes) -> fail("sink touched");
     assertThrows(
@@ -864,7 +865,7 @@ final class PayloadCodecTest {
       assumeTrue(OS.WINDOWS.isCurrentOs(), "native LZ4 is a Windows x64 boundary");
       Lz4Runtime.nativePreflight("lz4-frame", "decode", CONTEXT);
     }
-    return Lz4Adapter.of(provider);
+    return adapterOf(provider);
   }
 
   /**
@@ -875,7 +876,7 @@ final class PayloadCodecTest {
       throws Exception {
     var output = new ByteArrayOutputStream();
     try (var lease = lease(budget, codec(PayloadCodec.LZ4_RAW, provider).encodeCost(data.length))) {
-      Lz4Adapter.of(provider)
+      adapterOf(provider)
           .encodeRaw(source(data), data.length, sink(output), () -> {}, lease, CONTEXT, 12);
     }
     return output.toByteArray();
@@ -890,7 +891,7 @@ final class PayloadCodecTest {
     var output = new ByteArrayOutputStream();
     try (var lease =
         lease(budget, codec(PayloadCodec.LZ4_RAW, provider).decodeCost(block.length, size))) {
-      Lz4Adapter.of(provider)
+      adapterOf(provider)
           .decodeRaw(source(block), block.length, size, sink(output), () -> {}, lease, CONTEXT);
     }
     return output.toByteArray();
@@ -903,7 +904,7 @@ final class PayloadCodecTest {
         var lease =
             lease(budget, codec(PayloadCodec.BSA_LZ4_FRAME, provider).encodeCost(data.length))) {
       long count =
-          Lz4Adapter.of(provider)
+          adapterOf(provider)
               .encodeFrame(source(data), data.length, sink(output), () -> {}, lease, CONTEXT, bsa);
       assertEquals(output.size(), count);
     }
@@ -922,8 +923,7 @@ final class PayloadCodecTest {
                 budget,
                 codec(PayloadCodec.BSA_LZ4_FRAME, provider).decodeCost(frame.length, size));
         var decoder =
-            Lz4Adapter.of(provider)
-                .frameDecoder(source(frame), frame.length, size, lease, CONTEXT)) {
+            adapterOf(provider).frameDecoder(source(frame), frame.length, size, lease, CONTEXT)) {
       return drain(decoder, (int) Math.min(size, Integer.MAX_VALUE), window);
     }
   }
@@ -1029,6 +1029,15 @@ final class PayloadCodecTest {
   /** Returns the codec as admitted under an explicit provider, whatever this process pinned. */
   private static AdmittedCodec codec(PayloadCodec codec, Provider provider) {
     return AdmittedCodec.forProvider(codec, provider);
+  }
+
+  /**
+   * Returns a provider's LZ4 adapter through the same factory: the adapter that provider's admitted
+   * LZ4 codecs run every call through. Both LZ4 codecs share one adapter per provider, so the raw
+   * codec serves frame cases too. Unlike {@link #adapter}, this loads nothing first.
+   */
+  private static Lz4Adapter adapterOf(Provider provider) {
+    return codec(PayloadCodec.LZ4_RAW, provider).adapter();
   }
 
   /** Checks one pack pre-charge row: worst-case output bound, heap and native credit. */
