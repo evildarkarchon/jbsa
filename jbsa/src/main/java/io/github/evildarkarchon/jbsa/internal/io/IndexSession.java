@@ -2,8 +2,8 @@ package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
-import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
+import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.OwnedArchive.StoredEntry;
@@ -282,6 +282,7 @@ public final class IndexSession {
       switch (codec) {
         case LZ4_RAW ->
             Lz4Raw.decode(
+                admitted,
                 (relative, bytes) -> input.readExact(offset + relative, bytes),
                 streamSize,
                 decodedSize,
@@ -299,7 +300,7 @@ public final class IndexSession {
                 context);
         case BSA_LZ4_FRAME -> {
           try (var decoder =
-              BsaLz4Frame.decoder(
+              Lz4Frame.decoder(
                   admitted,
                   (relative, bytes) -> input.readExact(offset + relative, bytes),
                   streamSize,

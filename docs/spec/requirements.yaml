@@ -828,10 +828,10 @@ requirements:
     test_evidence:
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#productionReachesLz4JavaOnlyThroughSafeFactories"
       - "jbsa-conformance-tests/src/test/java/io/github/evildarkarchon/jbsa/verification/ModuleArchitectureIT.java#lz4JavaScanRejectsFastestFactory"
-      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PortableLz4Test.java#crossDecodesNativeAndPortableOutputBothWays"
-      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PortableLz4Test.java#bsaFrameUsesTheVersionedBsaDescriptor"
-      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PortableLz4Test.java#rawBlocksRoundTripDeterministicallyWithoutNativeMemory"
-      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PortableLz4Test.java#rejectsMalformedFrames"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PayloadCodecTest.java#crossDecodesNativeAndPortableOutputBothWays"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PayloadCodecTest.java#bsaFrameUsesTheVersionedBsaDescriptor"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PayloadCodecTest.java#rawBlocksRoundTripDeterministicallyWithoutNativeMemory"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PayloadCodecTest.java#rejectsMalformedFrames"
       - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts"
       - compliance/dependency-inventory.json
       - compliance/native-payload-inventory.json
@@ -848,8 +848,8 @@ requirements:
     test_evidence:
       - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java#qualifiesClasspathLaunchPolicyAndLazyMissingArtifacts"
       - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/io/Lz4LaunchTest.java#reportsUnavailableOnlyWithoutEitherProvider"
-      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PortableLz4Test.java#reportsLinkedBlockFramesAsUnsupported"
-      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PortableLz4Test.java#refusesUnadmittedHeapBeforeEffects"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PayloadCodecTest.java#reportsLinkedBlockFramesAsUnsupported"
+      - "jbsa/src/test/java/io/github/evildarkarchon/jbsa/internal/codec/PayloadCodecTest.java#refusesUnadmittedHeapBeforeEffects"
       - ".github/workflows/build.yml#linux-portability"
   - id: JBSA-COMPAT-001
     owner:

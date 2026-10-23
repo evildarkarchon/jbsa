@@ -18,6 +18,12 @@ public final class Lz4Runtime {
   /** Opaque evidence identity of the portable lz4-java profile; never conflated with native. */
   public static final String PORTABLE_PROFILE = "jbsa-lz4-portable-v1";
 
+  /** Opaque evidence identity of the versioned-BSA 0x69 frame profile under the native provider. */
+  static final String BSA_FRAME_PROFILE = "jbsa-bsa-069-lz4-v1";
+
+  /** Opaque evidence identity of the versioned-BSA 0x69 frame profile under lz4-java. */
+  static final String PORTABLE_BSA_FRAME_PROFILE = "jbsa-bsa-069-lz4-portable-v1";
+
   private static boolean loaded;
   private static Provider pinned;
 
@@ -26,19 +32,29 @@ public final class Lz4Runtime {
   /** One LZ4 implementation; every operation in a process runs through the same pinned one. */
   public enum Provider {
     /** The hidden LWJGL 3.4.3 adapter backed by upstream LZ4 1.10.0, qualified on Windows x64. */
-    NATIVE(PROFILE),
+    NATIVE(PROFILE, BSA_FRAME_PROFILE),
     /** lz4-java's pure-Java safe provider, available wherever the native adapter is not. */
-    PORTABLE(PORTABLE_PROFILE);
+    PORTABLE(PORTABLE_PROFILE, PORTABLE_BSA_FRAME_PROFILE);
 
     private final String profile;
+    private final String bsaFrameProfile;
 
-    Provider(String profile) {
+    Provider(String profile, String bsaFrameProfile) {
       this.profile = profile;
+      this.bsaFrameProfile = bsaFrameProfile;
     }
 
     /** Returns the opaque codec-profile identity recorded in this provider's diagnostics. */
     public String profile() {
       return profile;
+    }
+
+    /**
+     * Returns the Versioned BSA family-layered identity of the 0x69 frame profile under this
+     * provider, which the {@link PayloadCodec#BSA_LZ4_FRAME} admitted codec's failures carry.
+     */
+    String bsaFrameProfile() {
+      return bsaFrameProfile;
     }
   }
 
@@ -53,13 +69,12 @@ public final class Lz4Runtime {
   public static synchronized Provider preflight(String codec, String direction, IoContext context)
       throws ArchiveException {
     Provider provider = selected();
-    if (provider == Provider.PORTABLE) {
-      try {
-        PortableLz4.admit();
-      } catch (LinkageError | RuntimeException cause) {
-        // The portable set is pinned even though lz4-java cannot load, so its identity is reported.
-        throw unavailable(provider, context, codec, direction, "provider-unavailable", cause);
-      }
+    try {
+      // Only the portable adapter has anything left to load; native pinning implies it loaded.
+      Lz4Adapter.of(provider).admit();
+    } catch (LinkageError | RuntimeException cause) {
+      // The portable set is pinned even though lz4-java cannot load, so its identity is reported.
+      throw unavailable(provider, context, codec, direction, "provider-unavailable", cause);
     }
     return provider;
   }
@@ -123,7 +138,8 @@ public final class Lz4Runtime {
         reason = "native-access";
         throw new IllegalStateException();
       }
-      if (org.lwjgl.util.lz4.LZ4.LZ4_versionNumber() != 11000) {
+      // Only now, with LWJGL known to resolve, may the native adapter's class be touched.
+      if (NativeLz4.versionNumber() != 11000) {
         reason = "provider-version";
         throw new IllegalStateException();
       }

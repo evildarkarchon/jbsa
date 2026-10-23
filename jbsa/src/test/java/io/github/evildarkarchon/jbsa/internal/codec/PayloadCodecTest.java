@@ -1,6 +1,7 @@
 package io.github.evildarkarchon.jbsa.internal.codec;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec.Cost;
@@ -10,18 +11,30 @@ import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import io.github.evildarkarchon.jbsa.internal.pack.TransformStage;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Random;
 import java.util.SplittableRandom;
+import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.xxhash.XXHashFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.function.Executable;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 /**
  * The payload codec module's contract (#92): every admitted {@link PayloadCodec}'s worst-case
- * bound, its heap and native cost per provider and direction, its Codec Profile identity, and the
- * native ceilings derived from them.
+ * bound, its heap and native cost per provider and direction, its Codec Profile identity, the
+ * native ceilings derived from them, and the behaviour of both LZ4 adapters behind the internal
+ * provider seam.
+ *
+ * <p>Adapter cases reach the native and portable adapters through the one package-private factory,
+ * {@link Lz4Adapter#of}, including on Windows, where the process itself pins the native provider
+ * (JBSA-CODEC-014, JBSA-CODEC-015). Native cases run only on the Windows x64 baseline.
  *
  * <p>Every expected value is a literal, never recomputed from a production formula. The cost
  * literals are the ones Payload Codec 01 (#93) recorded from a real run of today's codecs, for a
@@ -45,6 +58,14 @@ final class PayloadCodecTest {
 
   /** Room for any one call below; only the probed dimension is ever tight. */
   private static final long ROOMY = 256L << 20;
+
+  /** Heap for a 4 MiB raw block or a frame decoder's two 4 MiB blocks, with no native memory. */
+  private static final long HEAP_ONLY_CEILING = 24L * 1024 * 1024;
+
+  /** Independent frame-building helpers; tests may use lz4-java directly, production may not. */
+  private static final LZ4Factory LZ4 = LZ4Factory.safeInstance();
+
+  private static final XXHashFactory XXHASH = XXHashFactory.safeInstance();
 
   /** The portable provider must never load lz4-java's bundled JNI library in this process. */
   @AfterAll
@@ -291,19 +312,17 @@ final class PayloadCodecTest {
     for (int size : SIZES) assertFrame(Provider.NATIVE, size, 4_096, 2_293_760, 4_096, 9_633_792);
   }
 
-  /**
-   * Portable frames run on one fixed caller heap credit per call. The one-shot decoder's credit is
-   * the decoder's plus the one 64 KiB window it copies output through.
-   */
+  /** Portable frames run on one fixed caller heap credit per call, at any size. */
   @Test
   void portableLz4FrameRunsOnAFixedCallerHeapCredit() throws Exception {
-    for (int size : SIZES) assertFrame(Provider.PORTABLE, size, 401_685, 0, 8_458_240, 0);
+    for (int size : SIZES) assertFrame(Provider.PORTABLE, size, 401_685, 0, 8_392_704, 0);
   }
 
   /**
    * Every encoder and decoder entry takes the caller's lease and rejects a missing one at the call,
    * before it reads its source, writes its sink or allocates codec state (#96). The check precedes
-   * provider preflight, so every entry is exercised under both providers on any host.
+   * provider preflight, so every entry, and every adapter the factory returns, is exercised under
+   * both providers on any host.
    */
   @Test
   void everyStreamEntryRejectsAMissingLease() throws Exception {
@@ -324,49 +343,517 @@ final class PayloadCodecTest {
                 null,
                 CONTEXT));
     entries.put("zlib decoder", () -> JdkZlib.decoder(zlib, unread, 1, 1, null, CONTEXT));
-    entries.put("raw encode", () -> Lz4Raw.encode(unread, 1, unwritten, unchecked, null, CONTEXT));
     entries.put(
-        "raw encode at a level",
-        () -> Lz4Raw.encode(unread, 1, unwritten, unchecked, null, CONTEXT, 12));
-    entries.put(
-        "raw decode", () -> Lz4Raw.decode(unread, 1, 1, unwritten, unchecked, null, CONTEXT));
-    entries.put(
-        "frame encode", () -> Lz4Frame.encode(unread, 1, unwritten, unchecked, null, CONTEXT));
-    entries.put(
-        "BSA frame encode",
-        () -> Lz4Frame.encodeBsa(unread, 1, unwritten, unchecked, null, CONTEXT));
-    entries.put("frame decoder", () -> Lz4Frame.decoder(unread, 1, 1, null, CONTEXT));
-    entries.put(
-        "frame one-shot decode",
-        () -> Lz4Frame.decode(unread, 1, 1, unwritten, unchecked, null, CONTEXT));
+        "general frame encode",
+        () -> Lz4Frame.encodeGeneral(unread, 1, unwritten, unchecked, null, CONTEXT));
     for (Provider provider : Provider.values()) {
+      AdmittedCodec raw = codec(PayloadCodec.LZ4_RAW, provider);
       AdmittedCodec frame = codec(PayloadCodec.BSA_LZ4_FRAME, provider);
+      Lz4Adapter adapter = Lz4Adapter.of(provider);
       entries.put(
           provider + " raw encode",
-          () -> Lz4Raw.encode(provider, unread, 1, unwritten, unchecked, null, CONTEXT, 12));
+          () -> Lz4Raw.encode(raw, unread, 1, unwritten, unchecked, null, CONTEXT));
+      entries.put(
+          provider + " raw encode at a level",
+          () -> Lz4Raw.encode(raw, unread, 1, unwritten, unchecked, null, CONTEXT, 12));
       entries.put(
           provider + " raw decode",
-          () -> Lz4Raw.decode(provider, unread, 1, 1, unwritten, unchecked, null, CONTEXT));
-      entries.put(
-          provider + " frame encode",
-          () -> Lz4Frame.encode(provider, unread, 1, unwritten, unchecked, null, CONTEXT, true));
-      entries.put(
-          provider + " frame decoder",
-          () -> Lz4Frame.decoder(provider, unread, 1, 1, null, CONTEXT));
-      entries.put(
-          provider + " frame one-shot decode",
-          () -> Lz4Frame.decode(provider, unread, 1, 1, unwritten, unchecked, null, CONTEXT));
+          () -> Lz4Raw.decode(raw, unread, 1, 1, unwritten, unchecked, null, CONTEXT));
       entries.put(
           provider + " versioned BSA frame encode",
-          () -> BsaLz4Frame.encode(frame, unread, 1, unwritten, unchecked, null, CONTEXT));
+          () -> Lz4Frame.encode(frame, unread, 1, unwritten, unchecked, null, CONTEXT));
       entries.put(
           provider + " versioned BSA frame decoder",
-          () -> BsaLz4Frame.decoder(frame, unread, 1, 1, null, CONTEXT));
+          () -> Lz4Frame.decoder(frame, unread, 1, 1, null, CONTEXT));
+      entries.put(
+          provider + " adapter frame encode",
+          () -> adapter.encodeFrame(unread, 1, unwritten, unchecked, null, CONTEXT, true));
+      entries.put(
+          provider + " adapter frame decoder",
+          () -> adapter.frameDecoder(unread, 1, 1, null, CONTEXT));
+      entries.put(
+          provider + " adapter raw encode",
+          () -> adapter.encodeRaw(unread, 1, unwritten, unchecked, null, CONTEXT, 12));
+      entries.put(
+          provider + " adapter raw decode",
+          () -> adapter.decodeRaw(unread, 1, 1, unwritten, unchecked, null, CONTEXT));
     }
     entries.forEach(
         (entry, call) ->
             assertEquals(
                 "lease", assertThrows(NullPointerException.class, call, entry).getMessage()));
+  }
+
+  /**
+   * Portable raw HC blocks round-trip deterministically with heap-only credits, including empty
+   * input: the budget grants no native memory at all.
+   */
+  @Test
+  void rawBlocksRoundTripDeterministicallyWithoutNativeMemory() throws Exception {
+    for (int size : new int[] {0, 5, 65536, 1_048_576, 4_194_304}) {
+      byte[] data = mixed(size, 43);
+      try (var budget = heapOnlyBudget()) {
+        byte[] block = rawEncode(Provider.PORTABLE, data, budget);
+        assertArrayEquals(block, rawEncode(Provider.PORTABLE, data, budget));
+        assertArrayEquals(data, rawDecode(Provider.PORTABLE, block, size, budget));
+        assertAllHeapReturned(budget);
+      }
+    }
+  }
+
+  /**
+   * Malformed blocks, overlong output and short output fail as FORMAT with the adapter's own
+   * profile, before any sink write.
+   */
+  @ParameterizedTest
+  @EnumSource(Provider.class)
+  void rawDecodeRejectsMalformedAndMismatchedBlocks(Provider provider) throws Exception {
+    Lz4Adapter adapter = adapter(provider);
+    byte[] hello;
+    try (var budget = crossBudget()) {
+      hello = rawEncode(provider, "hello".getBytes(), budget);
+    }
+    for (byte[] invalid : new byte[][] {new byte[0], {0, 0, 0}, {16, 65}, hello}) {
+      int size = invalid == hello ? 4 : 5;
+      try (var budget = crossBudget();
+          var lease =
+              lease(
+                  budget, codec(PayloadCodec.LZ4_RAW, provider).decodeCost(invalid.length, size))) {
+        ArchiveException failure =
+            assertThrows(
+                ArchiveException.class,
+                () ->
+                    adapter.decodeRaw(
+                        source(invalid),
+                        invalid.length,
+                        size,
+                        (offset, bytes) -> fail("destination touched"),
+                        () -> {},
+                        lease,
+                        CONTEXT));
+        assertEquals(FailureKind.FORMAT, failure.primaryFailure().kind());
+        assertEquals(provider.profile(), failure.diagnostics().getFirst().values().get("profile"));
+      }
+    }
+  }
+
+  /**
+   * Every adapter's BSA frame carries exactly the JBSA-BSA-010 descriptor and one block per 64 KiB
+   * window, and decodes back through the same adapter.
+   */
+  @ParameterizedTest
+  @EnumSource(Provider.class)
+  void bsaFrameUsesTheVersionedBsaDescriptor(Provider provider) throws Exception {
+    adapter(provider);
+    byte[] data = mixed(200_000, 44);
+    byte[] frame = frameEncode(provider, data, true);
+    ByteBuffer wire = ByteBuffer.wrap(frame).order(ByteOrder.LITTLE_ENDIAN);
+    assertEquals(0x184D2204, wire.getInt());
+    assertEquals(0x60, wire.get() & 0xFF, "version 01, independent blocks, no checksums or size");
+    assertEquals(0x70, wire.get() & 0xFF, "4 MiB block maximum");
+    int checksum = XXHASH.hash32().hash(new byte[] {0x60, 0x70}, 0, 2, 0);
+    assertEquals((checksum >>> 8) & 0xFF, wire.get() & 0xFF);
+    int blocks = 0;
+    for (int header = wire.getInt(); header != 0; header = wire.getInt()) {
+      int size = header & 0x7FFFFFFF;
+      assertTrue(size <= 65536, "each auto-flushed block holds at most one window");
+      wire.position(wire.position() + size);
+      blocks++;
+    }
+    assertEquals(4, blocks);
+    assertFalse(wire.hasRemaining(), "no content checksum follows the end mark");
+    assertArrayEquals(data, frameDecode(provider, frame, data.length, 65536));
+  }
+
+  /** Both frame profiles round-trip deterministically across window edges and empty content. */
+  @ParameterizedTest
+  @EnumSource(Provider.class)
+  void framesRoundTripAcrossWindowEdges(Provider provider) throws Exception {
+    adapter(provider);
+    for (boolean bsa : new boolean[] {true, false}) {
+      for (int size : new int[] {0, 1, 65535, 65536, 65537, 400_000}) {
+        byte[] data = mixed(size, 45);
+        byte[] frame = frameEncode(provider, data, bsa);
+        assertArrayEquals(frame, frameEncode(provider, data, bsa));
+        assertArrayEquals(data, frameDecode(provider, frame, size, 65536));
+        assertArrayEquals(data, frameDecode(provider, frame, size, 777));
+      }
+    }
+  }
+
+  /** Upstream-shaped frames with 4 MiB blocks, checksums, and content size decode exactly. */
+  @ParameterizedTest
+  @EnumSource(Provider.class)
+  void decodesMaximumBlocksAndEveryOptionalFrameField(Provider provider) throws Exception {
+    adapter(provider);
+    byte[] data = mixed(5 * 1024 * 1024, 46);
+    for (int flags : new int[] {0x60, 0x70, 0x68, 0x64, 0x7C}) {
+      byte[] frame = frame(flags, 0x70, data, 4 * 1024 * 1024, true);
+      assertArrayEquals(data, frameDecode(provider, frame, data.length, 8192), "FLG " + flags);
+    }
+    // A raw (incompressible-flagged) maximum block is copied rather than decompressed.
+    byte[] raw = frame(0x60, 0x70, data, 4 * 1024 * 1024, false);
+    assertArrayEquals(data, frameDecode(provider, raw, data.length, 65536));
+  }
+
+  /**
+   * Header 0x80000000 is an empty uncompressed block, not an end mark. The native adapter, the
+   * reference LZ4 1.10.0 decoder, skips it, and the portable adapter must agree so both accept the
+   * same frames.
+   */
+  @ParameterizedTest
+  @EnumSource(Provider.class)
+  void skipsAnEmptyUncompressedBlockLikeTheReferenceDecoder(Provider provider) throws Exception {
+    adapter(provider);
+    byte[] data = mixed(70_000, 51);
+    byte[] frame = withEmptyRawBlockBeforeEndMark(frame(0x60, 0x40, data, 65536, false));
+    assertArrayEquals(data, frameDecode(provider, frame, data.length, 4096));
+    assertArrayEquals(data, frameDecode(provider, frame, data.length, 65536));
+  }
+
+  /**
+   * Corruption, truncation, trailing bytes, reserved bits, and checksum or size mismatches fail as
+   * FORMAT with the decoding adapter's own profile; nothing past the declared size is published.
+   */
+  @ParameterizedTest
+  @EnumSource(Provider.class)
+  void rejectsMalformedFrames(Provider provider) throws Exception {
+    adapter(provider);
+    byte[] data = mixed(150_000, 47);
+    byte[] general = frameEncode(provider, data, false);
+    byte[] checksummed = frame(0x70, 0x40, data, 65536, true);
+    byte[] badContent = general.clone();
+    badContent[badContent.length - 1] ^= 1;
+    byte[] badBlock = checksummed.clone();
+    badBlock[badBlock.length - 5] ^= 1;
+    byte[] badHeader = general.clone();
+    badHeader[6 + 8] ^= 1;
+    byte[] reserved = frame(0x62, 0x40, data, 65536, true);
+    // Stored raw so the block is certainly larger than the declared 64 KiB maximum.
+    byte[] tooLarge = frame(0x60, 0x40, data, 131072, false);
+    byte[] skippable = general.clone();
+    // 0x184D2A50 is a skippable frame: valid LZ4 transport, but never an archive payload.
+    skippable[0] = 0x50;
+    skippable[1] = 0x2A;
+    byte[] wrongContentSize = frame(0x68, 0x40, data, 65536, true);
+    ByteBuffer.wrap(wrongContentSize, 6, 8)
+        .order(ByteOrder.LITTLE_ENDIAN)
+        .putLong(data.length + 1L);
+    fixHeaderChecksum(wrongContentSize, 8);
+    for (byte[] invalid :
+        new byte[][] {
+          new byte[0],
+          new byte[20],
+          badContent,
+          badBlock,
+          badHeader,
+          reserved,
+          tooLarge,
+          skippable,
+          wrongContentSize,
+          Arrays.copyOf(general, general.length - 1),
+          Arrays.copyOf(general, general.length + 1)
+        }) {
+      ArchiveException failure =
+          assertThrows(
+              ArchiveException.class, () -> frameDecode(provider, invalid, data.length, 65536));
+      assertEquals(FailureKind.FORMAT, failure.primaryFailure().kind());
+      assertEquals(provider.profile(), failure.diagnostics().getFirst().values().get("profile"));
+    }
+    for (long wrongSize : new long[] {data.length - 1, data.length + 1})
+      assertEquals(
+          "codec.size-mismatch",
+          assertThrows(
+                  ArchiveException.class, () -> frameDecode(provider, general, wrongSize, 65536))
+              .primaryFailure()
+              .diagnosticIdentifier()
+              .orElseThrow());
+  }
+
+  /**
+   * A valid linked-block frame is a portable-adapter capability limit, not corrupt data: it is
+   * reported as {@code CAPABILITY codec.unavailable} and never silently mis-decoded.
+   */
+  @Test
+  void reportsLinkedBlockFramesAsUnsupported() throws Exception {
+    byte[] data = mixed(1000, 48);
+    byte[] linked = frame(0x40, 0x40, data, 65536, true);
+    ArchiveException failure =
+        assertThrows(
+            ArchiveException.class,
+            () -> frameDecode(Provider.PORTABLE, linked, data.length, 65536));
+    assertEquals(FailureKind.CAPABILITY, failure.primaryFailure().kind());
+    assertEquals(
+        "codec.unavailable", failure.primaryFailure().diagnosticIdentifier().orElseThrow());
+    assertEquals(
+        "dependent-blocks", failure.diagnostics().getFirst().values().get("capabilityCause"));
+  }
+
+  /**
+   * Too little heap fails as POLICY before the source or sink is touched; nothing is native. The
+   * caller's reservation of the portable cost is the only admission, so it is what refuses, and a
+   * portable encoder offered no admission refuses before either callback runs.
+   */
+  @Test
+  void refusesUnadmittedHeapBeforeEffects() throws Exception {
+    AdmittedCodec frame = codec(PayloadCodec.BSA_LZ4_FRAME, Provider.PORTABLE);
+    AdmittedCodec raw = codec(PayloadCodec.LZ4_RAW, Provider.PORTABLE);
+    assertEquals(0, frame.encodeCost(1).nativeBytes());
+    assertEquals(0, raw.encodeCost(1).nativeBytes());
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 4096, 0, 0)) {
+      for (AdmittedCodec codec : new AdmittedCodec[] {frame, raw}) {
+        ArchiveException refused =
+            assertThrows(ArchiveException.class, () -> lease(budget, codec.encodeCost(1)));
+        assertEquals(FailureKind.POLICY, refused.primaryFailure().kind());
+      }
+    }
+    Lz4Adapter portable = Lz4Adapter.of(Provider.PORTABLE);
+    ByteSource untouched = (offset, bytes) -> fail("source touched");
+    ByteSink unwritten = (offset, bytes) -> fail("sink touched");
+    assertThrows(
+        NullPointerException.class,
+        () -> portable.encodeFrame(untouched, 1, unwritten, () -> {}, null, CONTEXT, true));
+    assertThrows(
+        NullPointerException.class,
+        () -> portable.encodeRaw(untouched, 1, unwritten, () -> {}, null, CONTEXT, 12));
+  }
+
+  /** A decoder handed to another thread still decodes and closes exactly once. */
+  @ParameterizedTest
+  @EnumSource(Provider.class)
+  void decoderMayBeConsumedAndClosedByAnotherThread(Provider provider) throws Exception {
+    Lz4Adapter adapter = adapter(provider);
+    byte[] data = mixed(200_000, 49);
+    byte[] frame = frameEncode(provider, data, true);
+    try (var budget = crossBudget();
+        var lease =
+            lease(
+                budget,
+                codec(PayloadCodec.BSA_LZ4_FRAME, provider)
+                    .decodeCost(frame.length, data.length))) {
+      var decoder = adapter.frameDecoder(source(frame), frame.length, data.length, lease, CONTEXT);
+      byte[] decoded =
+          java.util.concurrent.CompletableFuture.supplyAsync(
+                  () -> {
+                    try (decoder) {
+                      return drain(decoder, data.length, 8192);
+                    } catch (java.io.IOException failure) {
+                      throw new java.util.concurrent.CompletionException(failure);
+                    }
+                  })
+              .get(10, java.util.concurrent.TimeUnit.SECONDS);
+      assertArrayEquals(data, decoded);
+      assertThrows(
+          java.nio.channels.ClosedChannelException.class,
+          () -> decoder.read(ByteBuffer.allocate(1)));
+    }
+  }
+
+  /**
+   * Native and portable output decode through the other adapter in both directions. Neither
+   * adapter's bytes are claimed identical to the other's (JBSA-CODEC-013); only content is.
+   */
+  @Test
+  // Cross-decoding needs the native LWJGL adapter, a Windows x64 boundary.
+  @EnabledOnOs(OS.WINDOWS)
+  void crossDecodesNativeAndPortableOutputBothWays() throws Exception {
+    adapter(Provider.NATIVE);
+    for (int size : new int[] {0, 5, 65537, 1_048_576}) {
+      byte[] data = mixed(size, 50);
+      try (var budget = crossBudget()) {
+        byte[] nativeBlock = rawEncode(Provider.NATIVE, data, budget);
+        byte[] portableBlock = rawEncode(Provider.PORTABLE, data, budget);
+        assertArrayEquals(data, rawDecode(Provider.PORTABLE, nativeBlock, size, budget));
+        assertArrayEquals(data, rawDecode(Provider.NATIVE, portableBlock, size, budget));
+      }
+      for (boolean bsa : new boolean[] {true, false}) {
+        byte[] nativeFrame = frameEncode(Provider.NATIVE, data, bsa);
+        byte[] portableFrame = frameEncode(Provider.PORTABLE, data, bsa);
+        if (bsa) assertArrayEquals(data, frameDecode(Provider.PORTABLE, nativeFrame, size, 65536));
+        else
+          // The native general profile links its blocks, which the portable adapter cannot read.
+          assertEquals(
+              FailureKind.CAPABILITY,
+              assertThrows(
+                      ArchiveException.class,
+                      () -> frameDecode(Provider.PORTABLE, nativeFrame, size, 65536))
+                  .primaryFailure()
+                  .kind());
+        assertArrayEquals(data, frameDecode(Provider.NATIVE, portableFrame, size, 65536));
+      }
+    }
+  }
+
+  /**
+   * Returns the adapter under test through the package-private factory. The native adapter is
+   * qualified and loaded only on the Windows x64 baseline, so elsewhere its cases are skipped; on
+   * Windows it must load, so a broken native adapter fails rather than skips.
+   */
+  private static Lz4Adapter adapter(Provider provider) throws ArchiveException {
+    if (provider == Provider.NATIVE) {
+      assumeTrue(OS.WINDOWS.isCurrentOs(), "native LZ4 is a Windows x64 boundary");
+      Lz4Runtime.nativePreflight("lz4-frame", "decode", CONTEXT);
+    }
+    return Lz4Adapter.of(provider);
+  }
+
+  /**
+   * Encodes one raw block at the Starfield level through the given adapter, on a lease of that
+   * provider's encode cost drawn from {@code budget}.
+   */
+  private static byte[] rawEncode(Provider provider, byte[] data, ResourceBudget budget)
+      throws Exception {
+    var output = new ByteArrayOutputStream();
+    try (var lease = lease(budget, codec(PayloadCodec.LZ4_RAW, provider).encodeCost(data.length))) {
+      Lz4Adapter.of(provider)
+          .encodeRaw(source(data), data.length, sink(output), () -> {}, lease, CONTEXT, 12);
+    }
+    return output.toByteArray();
+  }
+
+  /**
+   * Decodes one raw block through the given adapter, on a lease of that provider's decode cost
+   * drawn from {@code budget}.
+   */
+  private static byte[] rawDecode(Provider provider, byte[] block, int size, ResourceBudget budget)
+      throws Exception {
+    var output = new ByteArrayOutputStream();
+    try (var lease =
+        lease(budget, codec(PayloadCodec.LZ4_RAW, provider).decodeCost(block.length, size))) {
+      Lz4Adapter.of(provider)
+          .decodeRaw(source(block), block.length, size, sink(output), () -> {}, lease, CONTEXT);
+    }
+    return output.toByteArray();
+  }
+
+  /** Encodes one frame through the given adapter under a ledger that fits either provider. */
+  private static byte[] frameEncode(Provider provider, byte[] data, boolean bsa) throws Exception {
+    var output = new ByteArrayOutputStream();
+    try (var budget = crossBudget();
+        var lease =
+            lease(budget, codec(PayloadCodec.BSA_LZ4_FRAME, provider).encodeCost(data.length))) {
+      long count =
+          Lz4Adapter.of(provider)
+              .encodeFrame(source(data), data.length, sink(output), () -> {}, lease, CONTEXT, bsa);
+      assertEquals(output.size(), count);
+    }
+    return output.toByteArray();
+  }
+
+  /**
+   * Decodes one whole frame through the given adapter's incremental decoder with a fixed
+   * destination window, on a lease of exactly that provider's decoder cost.
+   */
+  private static byte[] frameDecode(Provider provider, byte[] frame, long size, int window)
+      throws Exception {
+    try (var budget = crossBudget();
+        var lease =
+            lease(
+                budget,
+                codec(PayloadCodec.BSA_LZ4_FRAME, provider).decodeCost(frame.length, size));
+        var decoder =
+            Lz4Adapter.of(provider)
+                .frameDecoder(source(frame), frame.length, size, lease, CONTEXT)) {
+      return drain(decoder, (int) Math.min(size, Integer.MAX_VALUE), window);
+    }
+  }
+
+  /** Reads a decoder to terminal EOF through bounded windows. */
+  private static byte[] drain(Lz4Frame.Decoder decoder, int size, int window)
+      throws java.io.IOException {
+    var output = new ByteArrayOutputStream(Math.max(0, size));
+    ByteBuffer buffer = ByteBuffer.allocate(window);
+    while (decoder.read(buffer.clear()) >= 0) output.write(buffer.array(), 0, buffer.position());
+    return output.toByteArray();
+  }
+
+  /** Builds a heap-only ledger; zero native credit proves the portable adapter uses none. */
+  private static ResourceBudget heapOnlyBudget() {
+    return new ResourceBudget(ResourceLimits.standard(), CONTEXT, HEAP_ONLY_CEILING, 0, 0);
+  }
+
+  /** Builds a ledger that admits either adapter's credit, native direct buffers included. */
+  private static ResourceBudget crossBudget() {
+    return new ResourceBudget(ResourceLimits.standard(), CONTEXT, 64L << 20, 64L << 20, 0);
+  }
+
+  /** Requires every heap credit of a heap-only ledger to be available again. */
+  private static void assertAllHeapReturned(ResourceBudget budget) throws Exception {
+    try (var all = budget.reserve(HEAP_ONLY_CEILING, 0, 0, 0)) {
+      assertNotNull(all);
+    }
+  }
+
+  /** Reserves one call's cost from the ledger, as every codec caller must before the call. */
+  private static ResourceBudget.Lease lease(ResourceBudget budget, Cost cost)
+      throws ArchiveException {
+    return budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
+  }
+
+  /** Returns deterministic, partly compressible sample content. */
+  private static byte[] mixed(int size, long seed) {
+    byte[] data = new byte[size];
+    Random random = new Random(seed);
+    for (int index = 0; index < size; index++)
+      data[index] = (byte) (index % 3 == 0 ? random.nextInt() : index / 97);
+    return data;
+  }
+
+  /**
+   * Builds an LZ4 frame independently of the adapters under test. Content size and checksums follow
+   * the FLG bits; {@code compress} false stores every block raw with the high bit set.
+   */
+  private static byte[] frame(int flg, int bd, byte[] data, int blockSize, boolean compress) {
+    var output = new ByteArrayOutputStream();
+    ByteBuffer header = ByteBuffer.allocate(15).order(ByteOrder.LITTLE_ENDIAN);
+    header.putInt(0x184D2204).put((byte) flg).put((byte) bd);
+    if ((flg & 0x08) != 0) header.putLong(data.length);
+    int descriptor = header.position() - 4;
+    header.put((byte) ((XXHASH.hash32().hash(header.array(), 4, descriptor, 0) >>> 8) & 0xFF));
+    output.write(header.array(), 0, header.position());
+    var compressor = LZ4.highCompressor(9);
+    for (int offset = 0; offset < data.length; offset += blockSize) {
+      int length = Math.min(blockSize, data.length - offset);
+      byte[] block;
+      int word;
+      if (compress) {
+        block = compressor.compress(Arrays.copyOfRange(data, offset, offset + length));
+        word = block.length;
+      } else {
+        block = Arrays.copyOfRange(data, offset, offset + length);
+        word = length | 0x80000000;
+      }
+      output.writeBytes(little(word));
+      output.writeBytes(block);
+      if ((flg & 0x10) != 0)
+        output.writeBytes(little(XXHASH.hash32().hash(block, 0, block.length, 0)));
+    }
+    output.writeBytes(little(0));
+    if ((flg & 0x04) != 0) output.writeBytes(little(XXHASH.hash32().hash(data, 0, data.length, 0)));
+    return output.toByteArray();
+  }
+
+  /**
+   * Inserts a 0x80000000 block header just before the end mark of a frame built without a content
+   * checksum, whose end mark is therefore its final four bytes.
+   */
+  private static byte[] withEmptyRawBlockBeforeEndMark(byte[] frame) {
+    var output = new ByteArrayOutputStream();
+    output.write(frame, 0, frame.length - 4);
+    output.writeBytes(little(0x80000000));
+    output.writeBytes(little(0));
+    return output.toByteArray();
+  }
+
+  /** Recomputes the descriptor checksum after a test edits the descriptor. */
+  private static void fixHeaderChecksum(byte[] frame, int optionalBytes) {
+    int descriptor = 2 + optionalBytes;
+    frame[4 + descriptor] = (byte) ((XXHASH.hash32().hash(frame, 4, descriptor, 0) >>> 8) & 0xFF);
+  }
+
+  /** Encodes one little-endian 32-bit word. */
+  private static byte[] little(int value) {
+    return ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(value).array();
   }
 
   /** Returns the codec as admitted under an explicit provider, whatever this process pinned. */
@@ -407,7 +894,7 @@ final class PayloadCodecTest {
             encodeHeap,
             encodeNative,
             (lease, sink) ->
-                Lz4Raw.encode(provider, source(data), size, sink, () -> {}, lease, CONTEXT, 12));
+                Lz4Raw.encode(admitted, source(data), size, sink, () -> {}, lease, CONTEXT, 12));
     assertEquals(storedSize, stored.length, provider + " raw stored size " + size);
     byte[] decoded =
         onLease(
@@ -415,21 +902,21 @@ final class PayloadCodecTest {
             decodeNative,
             (lease, sink) ->
                 Lz4Raw.decode(
-                    provider, source(stored), stored.length, size, sink, () -> {}, lease, CONTEXT));
+                    admitted, source(stored), stored.length, size, sink, () -> {}, lease, CONTEXT));
     assertArrayEquals(data, decoded);
   }
 
   /**
-   * Runs the BSA frame's encode, its one-shot decode and its incremental decoder, each on a lease
-   * of exactly its credit: the admitted codec's cost, or for the one-shot decode the given credit.
+   * Runs the BSA frame's encode and its incremental decoder through the admitted codec, each on a
+   * lease of exactly the admitted codec's cost.
    */
   private static void assertFrame(
       Provider provider,
       int size,
       long encodeHeap,
       long encodeNative,
-      long oneShotHeap,
-      long oneShotNative)
+      long decodeHeap,
+      long decodeNative)
       throws Exception {
     AdmittedCodec admitted = codec(PayloadCodec.BSA_LZ4_FRAME, provider);
     assertEquals(new Cost(encodeHeap, encodeNative), admitted.encodeCost(size));
@@ -439,24 +926,15 @@ final class PayloadCodecTest {
             encodeHeap,
             encodeNative,
             (lease, sink) ->
-                Lz4Frame.encode(
-                    provider, source(data), size, sink, () -> {}, lease, CONTEXT, true));
-    byte[] decoded =
-        onLease(
-            oneShotHeap,
-            oneShotNative,
-            (lease, sink) ->
-                Lz4Frame.decode(
-                    provider, source(stored), stored.length, size, sink, () -> {}, lease, CONTEXT));
-    assertArrayEquals(data, decoded);
-    Cost decode = admitted.decodeCost(stored.length, size);
+                Lz4Frame.encode(admitted, source(data), size, sink, () -> {}, lease, CONTEXT));
+    assertEquals(new Cost(decodeHeap, decodeNative), admitted.decodeCost(stored.length, size));
     byte[] streamed =
         onLease(
-            decode.heapBytes(),
-            decode.nativeBytes(),
+            decodeHeap,
+            decodeNative,
             (lease, sink) -> {
               try (var decoder =
-                  Lz4Frame.decoder(provider, source(stored), stored.length, size, lease, CONTEXT)) {
+                  Lz4Frame.decoder(admitted, source(stored), stored.length, size, lease, CONTEXT)) {
                 ByteBuffer output = ByteBuffer.allocate(size + 1);
                 while (decoder.read(output) >= 0) {
                   // Drains to terminal EOF, which also validates exact frame consumption.

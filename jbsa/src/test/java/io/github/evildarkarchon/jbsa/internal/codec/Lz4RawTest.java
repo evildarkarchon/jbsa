@@ -12,7 +12,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Exercises the internal raw-block qualification seam with independently authored wire bytes,
- * through the process's pinned provider: native LWJGL on Windows x64, portable lz4-java elsewhere.
+ * through the admitted codec's adapter for the process's pinned provider: native LWJGL on Windows
+ * x64, portable lz4-java elsewhere.
  */
 final class Lz4RawTest {
   private static final IoContext CONTEXT = IoContext.of(Path.of("raw.ba2"), Operation.OPEN);
@@ -22,6 +23,11 @@ final class Lz4RawTest {
    * plus the HC tables on the heap under lz4-java.
    */
   private static final long CEILING = 40_000_000;
+
+  /** Returns raw LZ4 admitted for one direction, so each call runs on the provider it pinned. */
+  private static AdmittedCodec raw(String direction) throws ArchiveException {
+    return AdmittedCodec.admit(PayloadCodec.LZ4_RAW, direction, CONTEXT);
+  }
 
   /**
    * Borrowed callback faults retain operation identity, and the encoder leaves credit to its
@@ -37,6 +43,7 @@ final class Lz4RawTest {
               ArchiveException.class,
               () ->
                   Lz4Raw.encode(
+                      raw("encode"),
                       (offset, bytes) -> {
                         throw new IllegalStateException("caller");
                       },
@@ -54,6 +61,7 @@ final class Lz4RawTest {
               java.io.IOException.class,
               () ->
                   Lz4Raw.encode(
+                      raw("encode"),
                       (offset, bytes) -> bytes.put((byte) 42),
                       1,
                       (offset, bytes) -> fail("destination touched"),
@@ -88,6 +96,7 @@ final class Lz4RawTest {
         for (int repeat = 0; repeat < 2; repeat++) {
           var encoded = new java.io.ByteArrayOutputStream();
           Lz4Raw.encode(
+              raw("encode"),
               (offset, bytes) -> bytes.put(original, (int) offset, bytes.remaining()),
               size,
               (offset, bytes) -> {
@@ -103,6 +112,7 @@ final class Lz4RawTest {
           previous = block;
           ByteBuffer decoded = ByteBuffer.allocate(size);
           Lz4Raw.decode(
+              raw("decode"),
               (offset, bytes) -> bytes.put(block, (int) offset, bytes.remaining()),
               block.length,
               size,
@@ -124,6 +134,7 @@ final class Lz4RawTest {
     try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, CEILING, CEILING, 0);
         var lease = budget.reserve(CEILING, CEILING, 0, 0)) {
       Lz4Raw.decode(
+          raw("decode"),
           (offset, bytes) -> bytes.put(encoded, (int) offset, bytes.remaining()),
           encoded.length,
           5,
@@ -146,6 +157,7 @@ final class Lz4RawTest {
                 ArchiveException.class,
                 () ->
                     Lz4Raw.encode(
+                        raw("encode"),
                         (offset, bytes) -> fail("source touched"),
                         size,
                         (offset, bytes) -> fail("destination touched"),
@@ -168,6 +180,7 @@ final class Lz4RawTest {
                 ArchiveException.class,
                 () ->
                     Lz4Raw.decode(
+                        raw("decode"),
                         (offset, bytes) -> bytes.put(encoded),
                         encoded.length,
                         5,
