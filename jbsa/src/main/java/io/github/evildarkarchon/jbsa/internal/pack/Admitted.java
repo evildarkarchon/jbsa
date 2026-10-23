@@ -115,6 +115,16 @@ public interface Admitted<K> {
    */
   sealed interface Emission<K> {
     /**
+     * Returns how each source is sliced before Content Sharing; empty for every case but a chunking
+     * {@link SetOwners}. Admission reads it before dispatch, for the per-entry reserve and the
+     * deferred decoded-size charge. {@link Chunker} is family data in this contract, not a
+     * pipeline-private module, so declaring it here keeps adapters free of pipeline references.
+     */
+    default Optional<Chunker<K>> chunker() {
+      return Optional.empty();
+    }
+
+    /**
      * Each part reads its sources while it stages (TES3). Identical payloads share within one
      * Archive Part, compared on their raw bytes, and a split charges each entry's declared decoded
      * size, because a streamed part cannot know an encoded size before it stages.

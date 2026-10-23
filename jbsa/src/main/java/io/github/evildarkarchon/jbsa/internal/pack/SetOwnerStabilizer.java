@@ -11,7 +11,6 @@ import io.github.evildarkarchon.jbsa.internal.pack.Admitted.Patch;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted.Placed;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted.Planned;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
@@ -23,7 +22,7 @@ import java.util.Optional;
 import java.util.OptionalLong;
 
 /**
- * Stabilization for the {@link Admitted.Emission.SetOwners} emission (BA2): each payload, or each
+ * Stabilization for the {@link Admitted.Emission.SetOwners} Emission (BA2): each payload, or each
  * slice a chunking family cuts from it, resolves to a Content Sharing owner decided once for the
  * whole archive set on raw bytes, and each part emits an owner once, at its first reference.
  *
@@ -55,6 +54,8 @@ record SetOwnerStabilizer<K>(Admitted<K> admitted, Optional<Admitted.Chunker<K>>
   /** One replay window and one readback window, plus bounded record and header buffers. */
   @Override
   public long replayHeap(boolean sharing) {
+    // Owners were already shared across the whole set during stabilization, so replay never
+    // compares candidates and the sharing flag cannot change this peak.
     return 2L * PayloadWindows.WINDOW_BYTES + 1024;
   }
 
@@ -72,8 +73,7 @@ record SetOwnerStabilizer<K>(Admitted<K> admitted, Optional<Admitted.Chunker<K>>
   private List<Planned<K>> stabilizeSet(
       Run run, List<Planned<K>> planned, SpillBuffer stable, List<SetOwner> owners)
       throws IOException {
-    Admitted.Chunker<K> chunker = this.chunker.orElse(null);
-    boolean chunked = chunker != null;
+    boolean chunked = chunker.isPresent();
     TransformStage stage =
         new TransformStage(
             run.operation(),
@@ -94,8 +94,7 @@ record SetOwnerStabilizer<K>(Admitted<K> admitted, Optional<Admitted.Chunker<K>>
     boolean sharing = run.request().options().sharing();
     ContentSharing<SetOwner> index = new ContentSharing<>();
     List<Planned<K>> sized = new ArrayList<>(planned.size());
-    ResourceLimits limits = run.request().resourceLimits();
-    long decoded = 0;
+    var decoded = new DecodedLimit(run.request().resourceLimits());
     Throwable pending = null;
     try {
       // Worker handle leases must not starve the coordinator's ordered stable spool.
@@ -142,9 +141,10 @@ record SetOwnerStabilizer<K>(Admitted<K> admitted, Optional<Admitted.Chunker<K>>
             K key = entry.key();
             long chargedDecoded = -1;
             if (chunked) {
-              ByteBuffer head = ByteBuffer.allocate((int) Math.min(chunker.headBytes(), size));
+              Admitted.Chunker<K> declared = chunker.orElseThrow();
+              ByteBuffer head = ByteBuffer.allocate((int) Math.min(declared.headBytes(), size));
               stable.read(rawOffset, head);
-              Admitted.Chunks<K> chunks = chunker.chunk(entry, head.flip(), processing);
+              Admitted.Chunks<K> chunks = declared.chunk(entry, head.flip(), processing);
               run.budget().metadata(chunks.metadataBytes());
               long payload = rawOffset + chunks.payloadStart();
               if (chunks.rewrite() == Admitted.Rewrite.BGR24_TO_BGRA32)
@@ -157,14 +157,7 @@ record SetOwnerStabilizer<K>(Admitted<K> admitted, Optional<Admitted.Chunker<K>>
             } else segments.add(owner.resolve(rawOffset, size, entry.codec(), staged));
             Planned<K> measured = entry.segmented(key, segments);
             admitted.checkStored(measured, processing);
-            if (chunked) {
-              if (chargedDecoded > limits.maxDecodedBytes() - decoded)
-                throw processing.limit(
-                    "maxDecodedBytes",
-                    limits.maxDecodedBytes(),
-                    BigInteger.valueOf(decoded).add(BigInteger.valueOf(chargedDecoded)).toString());
-              decoded += chargedDecoded;
-            }
+            if (chunked) decoded.charge(chargedDecoded, processing);
             sized.add(measured);
           }
         }

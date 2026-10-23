@@ -4,7 +4,6 @@ import io.github.evildarkarchon.jbsa.*;
 import io.github.evildarkarchon.jbsa.internal.io.*;
 import io.github.evildarkarchon.jbsa.internal.pack.Admitted.Planned;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -50,7 +49,7 @@ public final class PackPipeline {
 
   /**
    * The pack body: admission, planning, then the Emission's module, which publishes. It registers
-   * the resource budget with the template; a stabilized emission also registers its stable spool.
+   * the resource budget with the template; a stabilized Emission also registers its stable spool.
    *
    * @return the artifacts publication settled and the staged Archive Parts
    * @throws IOException a failure before publication; publication accepts its own failures
@@ -70,11 +69,11 @@ public final class PackPipeline {
     WorkerSelection.UpTo workers = WorkerLimits.snapshot(request.workerSelection());
     Admitted<K> admitted = adapter.admit(request, context);
     Admitted.Emission<K> emission = admitted.emission();
-    Optional<Admitted.Chunker<K>> chunker = chunker(emission);
+    Optional<Admitted.Chunker<K>> chunker = emission.chunker();
     // Capability admission is the last step of admit's rung: it runs before source planning, as
     // the family packers' own checks did, but here rather than in the pure adapter.
     Codecs codecs = Codecs.admit(admitted.requiredCodecs(), context);
-    // Every collaborator now exists, so the run every emission path borrows is complete.
+    // Every collaborator now exists, so the run every Emission path borrows is complete.
     var run = new Run(request, operation, context, budget, resources, workers, codecs);
     List<PackSources.Entry> sources =
         PackSources.plan(request, operation, budget, admitted.nameCharset());
@@ -91,7 +90,7 @@ public final class PackPipeline {
     // A chunking family's decoded extent is known only from each envelope, so stabilization
     // charges it instead, still in Logical Plan Order.
     if (chunker.isEmpty()) chargeDecoded(sources, request.resourceLimits(), context);
-    SplitPlanner<K> planner = splitPlanner(admitted, request.options().splitting());
+    SplitPlanner<K> planner = splitPlanner(admitted, emission, request.options().splitting());
     return switch (emission) {
       case Admitted.Emission.Streamed<K> streamed ->
           StreamedEmitter.emit(run, admitted, planner, planned);
@@ -105,18 +104,6 @@ public final class PackPipeline {
               planner,
               planned,
               new SetOwnerStabilizer<>(admitted, owners.chunker()));
-    };
-  }
-
-  /**
-   * Returns the chunker a set-wide owner Emission declares; no other case chunks. Admission needs
-   * it before dispatch, for the per-entry reserve and the deferred decoded-size charge.
-   */
-  private static <K> Optional<Admitted.Chunker<K>> chunker(Admitted.Emission<K> emission) {
-    return switch (emission) {
-      case Admitted.Emission.Streamed<K> streamed -> Optional.empty();
-      case Admitted.Emission.PerPartRecords<K> records -> Optional.empty();
-      case Admitted.Emission.SetOwners<K> owners -> owners.chunker();
     };
   }
 
@@ -139,15 +126,8 @@ public final class PackPipeline {
   private static void chargeDecoded(
       List<PackSources.Entry> sources, ResourceLimits limits, IoContext context)
       throws ArchiveException {
-    long decoded = 0;
-    for (PackSources.Entry source : sources) {
-      if (source.size() > limits.maxDecodedBytes() - decoded)
-        throw context.limit(
-            "maxDecodedBytes",
-            limits.maxDecodedBytes(),
-            BigInteger.valueOf(decoded).add(BigInteger.valueOf(source.size())).toString());
-      decoded += source.size();
-    }
+    var decoded = new DecodedLimit(limits);
+    for (PackSources.Entry source : sources) decoded.charge(source.size(), context);
   }
 
   /**
@@ -168,12 +148,14 @@ public final class PackPipeline {
    * Returns the split planner for one pack: the adapter's split cost, the payload cost its Emission
    * case implies, and the byte target the request's Splitting arm resolves to. Building it is pure,
    * so building it before dispatch moves no failure.
+   *
+   * @param emission the Emission {@code admitted} declared, read once at admission
    */
   private static <K> SplitPlanner<K> splitPlanner(
-      Admitted<K> admitted, PackOptions.Splitting splitting) {
+      Admitted<K> admitted, Admitted.Emission<K> emission, PackOptions.Splitting splitting) {
     return new SplitPlanner<>(
         admitted.splitCost(),
-        SplitPlanner.payloadCost(admitted.emission()),
+        SplitPlanner.payloadCost(emission),
         target(admitted.defaultSplitTarget(), splitting));
   }
 }

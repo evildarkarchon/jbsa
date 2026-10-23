@@ -8,9 +8,9 @@ import io.github.evildarkarchon.jbsa.internal.io.ResourceBudget;
 import java.util.Objects;
 
 /**
- * Operation-owned collaborators every emission path borrows, plus the scope where it registers the
+ * Operation-owned collaborators every Emission path borrows, plus the scope where it registers the
  * caller-owned resources the operation template closes. The pack body builds it once, right after
- * codec admission, so no emission path can see a collaborator before it exists. Scratch an emitter
+ * codec admission, so no Emission path can see a collaborator before it exists. Scratch an emitter
  * opens itself, such as the stabilized spool, belongs to that emitter rather than to the run.
  *
  * @param request the pack request

@@ -110,7 +110,13 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
         && (global == PackOptions.Compression.STORED
             || options.entryCompression().containsValue(PackOptions.Compression.STORED)))
       throw context.failure(FailureKind.UNSUPPORTED, "dx10.stored-encode", null);
-    return new Plan(dds, rawLz4, version, charset, options, request.ddsTarget().orElse(null));
+    return new Plan(
+        dds,
+        rawLz4,
+        version,
+        charset,
+        options,
+        Plan.emissionFor(dds, request.ddsTarget().orElse(null)));
   }
 
   /**
@@ -121,7 +127,7 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
    * @param version the wire version, 1, 2, or 3
    * @param charset the name profile names are planned and encoded under
    * @param options the request's pack options, which select codecs
-   * @param ddsTarget the DDS platform target; null for General archives
+   * @param emission the set-wide owner Emission {@link #emissionFor} built once at admission
    */
   record Plan(
       boolean dds,
@@ -129,7 +135,7 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
       int version,
       Charset charset,
       PackOptions options,
-      DdsTarget ddsTarget)
+      Emission<Key> emission)
       implements Admitted<Key> {
     /** BA2 names are planned under windows-1252 or the active ANSI profile. */
     @Override
@@ -149,14 +155,21 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
     }
 
     /**
-     * Owners are decided once for the whole set on raw (for DX10, normalized) bytes. DX10 chunks
-     * each texture from its DDS envelope head, and reserves bounded partition and header state per
-     * entry beyond the shared source-entry allowance.
+     * Returns BA2's Emission. Owners are decided once for the whole set on raw (for DX10,
+     * normalized) bytes. DX10 chunks each texture from its DDS envelope head, and reserves bounded
+     * partition and header state per entry beyond the shared source-entry allowance.
+     *
+     * @param ddsTarget the DDS platform target DX10 envelopes are analyzed for; null for General
+     *     archives, which do not chunk
      */
-    @Override
-    public Emission<Key> emission() {
+    static Emission<Key> emissionFor(boolean dds, DdsTarget ddsTarget) {
+      if (!dds) return new Emission.SetOwners<>(Optional.empty());
       return new Emission.SetOwners<>(
-          dds ? Optional.of(new Chunker<>(DDS_HEAD_BYTES, 2048, this::chunk)) : Optional.empty());
+          Optional.of(
+              new Chunker<>(
+                  DDS_HEAD_BYTES,
+                  2048,
+                  (entry, head, processing) -> chunk(entry, head, ddsTarget, processing))));
     }
 
     /**
@@ -241,8 +254,11 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
      * Validates the DDS envelope and returns its mip partitions, a BGR24 rewrite when the legacy
      * format needs one, the canonical decoded size (payload plus synthesized header), and the
      * source header as metadata. Every slice's raw size must fit its u32 record field.
+     *
+     * @param ddsTarget the DDS platform target the envelope is analyzed and canonicalized for
      */
-    private Chunks<Key> chunk(Planned<Key> entry, ByteBuffer head, IoContext processing)
+    private static Chunks<Key> chunk(
+        Planned<Key> entry, ByteBuffer head, DdsTarget ddsTarget, IoContext processing)
         throws ArchiveException {
       DdsEnvelope.Analysis texture =
           DdsEnvelope.analyze(head, entry.source().size(), ddsTarget, processing);

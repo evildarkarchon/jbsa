@@ -207,11 +207,11 @@ class PackPipelineTest {
   }
 
   /**
-   * Streamed emission carries stored, unframed payloads only. A streamed plan holding a compressed
-   * ({@code .z}) or framed ({@code .f}) entry is a programmer error caught once, before splitting
-   * and before any source is read: INTERNAL at PREFLIGHT, then zero CLEANUP progress, and no part
-   * is published. The stored entry {@code b} comes first in output order, so a check made while
-   * staging would already have read it.
+   * The Streamed Emission carries stored, unframed payloads only. A streamed plan holding a
+   * compressed ({@code .z}) or framed ({@code .f}) entry is a programmer error caught once, before
+   * splitting and before any source is read: INTERNAL at PREFLIGHT, then zero CLEANUP progress, and
+   * no part is published. The stored entry {@code b} comes first in output order, so a check made
+   * while staging would already have read it.
    */
   @ParameterizedTest
   @ValueSource(strings = {"a.z", "a.f"})
@@ -1106,34 +1106,20 @@ class PackPipelineTest {
   private record Record(String name, long offset, byte[] payload) {}
 
   /**
-   * The {@link Admitted.Emission} case a {@link MemoryEncoder} declares, one per strategy the
-   * pipeline runs; each case fixes the Content Sharing scope and basis and the split payload cost.
-   */
-  private enum Strategy {
-    /** Streamed emission, per-part sharing of raw bytes, decoded split cost (TES3). */
-    STREAMED,
-    /**
-     * Stabilized emission, per-part sharing of complete stored records, stored split cost
-     * (versioned BSA).
-     */
-    PER_PART_RECORDS,
-    /** Stabilized emission, archive-set sharing of raw owners, first-owner split cost (BA2). */
-    SET_OWNERS
-  }
-
-  /**
    * A test-only family: "MEM1", a u32 count, then per entry a u32 payload-relative offset, u32
    * size, and an 8-byte NUL-padded name; payloads follow. Output order reverses Logical Plan Order,
    * so tests can tell the two apart, and the name "bad" breaks its only per-entry rule. The name
    * "boom" makes {@code plan} throw an {@link AssertionError}, standing in for a programmer error.
-   * Under streamed emission, a name ending in {@code .z} is planned zlib-encoded and one ending in
-   * {@code .f} is planned with a one-byte frame, both of which streamed emission rejects.
+   * Under the Streamed Emission, a name ending in {@code .z} is planned zlib-encoded and one ending
+   * in {@code .f} is planned with a one-byte frame, both of which the Streamed Emission rejects.
    *
    * @param defaultSplitTarget the FamilyDefault split target
    * @param refuse whether admission fails with UNSUPPORTED {@code memory.admit-refused}
    * @param events the adapter calls made, in order
    * @param fixedCost the fixed per-entry split cost
-   * @param strategy which Emission case the adapter declares
+   * @param emission the Emission the adapter declares, which fixes its Content Sharing scope and
+   *     basis and its split payload cost: Streamed (the TES3 settings), PerPartRecords (versioned
+   *     BSA), or SetOwners without a chunker (General BA2)
    * @param readback whether every staged part is read back; no reader recognizes MEM1, so a
    *     readback always fails
    * @param maxRecord the largest stabilized stored record {@code checkStored} accepts; a larger one
@@ -1144,7 +1130,7 @@ class PackPipelineTest {
       boolean refuse,
       List<String> events,
       long fixedCost,
-      Strategy strategy,
+      Admitted.Emission<String> emission,
       boolean readback,
       long maxRecord)
       implements FamilyAdapter<String> {
@@ -1160,7 +1146,14 @@ class PackPipelineTest {
     }
 
     MemoryEncoder(long defaultSplitTarget, boolean refuse, List<String> events, long fixedCost) {
-      this(defaultSplitTarget, refuse, events, fixedCost, Strategy.STREAMED, false, Long.MAX_VALUE);
+      this(
+          defaultSplitTarget,
+          refuse,
+          events,
+          fixedCost,
+          new Admitted.Emission.Streamed<>(),
+          false,
+          Long.MAX_VALUE);
     }
 
     /** A set-wide stabilized encoder, optionally reading every part back. */
@@ -1170,7 +1163,7 @@ class PackPipelineTest {
           false,
           Collections.synchronizedList(new ArrayList<>()),
           0,
-          Strategy.SET_OWNERS,
+          new Admitted.Emission.SetOwners<>(Optional.empty()),
           readback,
           Long.MAX_VALUE);
     }
@@ -1189,7 +1182,7 @@ class PackPipelineTest {
           false,
           Collections.synchronizedList(new ArrayList<>()),
           0,
-          Strategy.PER_PART_RECORDS,
+          new Admitted.Emission.PerPartRecords<>(),
           false,
           maxRecord);
     }
@@ -1216,11 +1209,7 @@ class PackPipelineTest {
 
         @Override
         public Emission<String> emission() {
-          return switch (strategy) {
-            case STREAMED -> new Emission.Streamed<>();
-            case PER_PART_RECORDS -> new Emission.PerPartRecords<>();
-            case SET_OWNERS -> new Emission.SetOwners<>(Optional.empty());
-          };
+          return emission;
         }
 
         @Override
@@ -1254,18 +1243,19 @@ class PackPipelineTest {
             // Stands in for a programmer error inside an adapter, which no family rule describes.
             if (source.displayName().equals("boom")) throw new AssertionError("plan bug");
             String name = source.displayName();
-            if (strategy == Strategy.PER_PART_RECORDS)
+            boolean streamed = emission instanceof Emission.Streamed<String>;
+            if (emission instanceof Emission.PerPartRecords<String>)
               planned.add(
                   new Planned<>(
                       source,
                       name,
                       name.endsWith(".z") ? PayloadCodec.ZLIB : PayloadCodec.STORED,
                       new byte[] {(byte) name.length()}));
-            // A streamed plan of a compressed or framed entry stands in for an adapter bug: streamed
-            // emission carries stored, unframed payloads only.
-            else if (strategy == Strategy.STREAMED && name.endsWith(".z"))
+            // A streamed plan of a compressed or framed entry stands in for an adapter bug: the
+            // Streamed Emission carries stored, unframed payloads only.
+            else if (streamed && name.endsWith(".z"))
               planned.add(new Planned<>(source, name, PayloadCodec.ZLIB, new byte[0]));
-            else if (strategy == Strategy.STREAMED && name.endsWith(".f"))
+            else if (streamed && name.endsWith(".f"))
               planned.add(new Planned<>(source, name, PayloadCodec.STORED, new byte[] {1}));
             else planned.add(new Planned<>(source, name, PayloadCodec.STORED, new byte[0]));
           }
