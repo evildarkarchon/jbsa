@@ -873,8 +873,8 @@ class PackPipelineTest {
   }
 
   /**
-   * A failure during stabilization leaves the spool to the operation template, which closes it
-   * with every other registered resource before CLEANUP begins; the failure stays primary with no
+   * A failure during stabilization leaves the spool to the operation template, which closes it with
+   * every other registered resource before CLEANUP begins; the failure stays primary with no
    * cleanup evidence behind it.
    */
   @Test
@@ -978,8 +978,7 @@ class PackPipelineTest {
    * the pipeline opens its stable spool, so a test can watch the spool's spill file. Test classes
    * run one at a time in one JVM, so nothing else reads the property meanwhile.
    */
-  private static <T> T withSpoolDirectory(Path scratch, ThrowingSupplier<T> body)
-      throws Throwable {
+  private static <T> T withSpoolDirectory(Path scratch, ThrowingSupplier<T> body) throws Throwable {
     String previous = System.getProperty("java.io.tmpdir");
     System.setProperty("java.io.tmpdir", scratch.toString());
     try {
@@ -1135,8 +1134,8 @@ class PackPipelineTest {
   private record Record(String name, long offset, byte[] payload) {}
 
   /**
-   * The Emission settings a {@link MemoryEncoder} declares, one per strategy the pipeline runs today:
-   * the emission kind, Content Sharing scope and basis, and split payload cost together.
+   * The {@link Admitted.Emission} case a {@link MemoryEncoder} declares, one per strategy the
+   * pipeline runs; each case fixes the Content Sharing scope and basis and the split payload cost.
    */
   private enum Strategy {
     /** Streamed emission, per-part sharing of raw bytes, decoded split cost (TES3). */
@@ -1160,7 +1159,7 @@ class PackPipelineTest {
    * @param refuse whether admission fails with UNSUPPORTED {@code memory.admit-refused}
    * @param events the adapter calls made, in order
    * @param fixedCost the fixed per-entry split cost
-   * @param strategy which of today's three Emission settings the adapter declares
+   * @param strategy which Emission case the adapter declares
    * @param readback whether every staged part is read back; no reader recognizes MEM1, so a
    *     readback always fails
    * @param maxRecord the largest stabilized stored record {@code checkStored} accepts; a larger one
@@ -1242,29 +1241,17 @@ class PackPipelineTest {
         }
 
         @Override
-        public Emission emission() {
-          return strategy == Strategy.STREAMED ? Emission.STREAMING : Emission.STABILIZED;
+        public Emission<String> emission() {
+          return switch (strategy) {
+            case STREAMED -> new Emission.Streamed<>();
+            case PER_PART_RECORDS -> new Emission.PerPartRecords<>();
+            case SET_OWNERS -> new Emission.SetOwners<>(Optional.empty());
+          };
         }
 
         @Override
         public SplitCost<String> splitCost() {
-          return new SplitCost<>(
-              fixedCost,
-              name -> 0,
-              switch (strategy) {
-                case STREAMED -> PayloadCost.DECODED;
-                case PER_PART_RECORDS -> PayloadCost.STORED;
-                case SET_OWNERS -> PayloadCost.UNIQUE_STORED;
-              });
-        }
-
-        @Override
-        public Sharing sharing() {
-          return switch (strategy) {
-            case STREAMED -> new Sharing(Sharing.Scope.PER_PART, Sharing.Basis.RAW);
-            case PER_PART_RECORDS -> new Sharing(Sharing.Scope.PER_PART, Sharing.Basis.STORED);
-            case SET_OWNERS -> new Sharing(Sharing.Scope.ARCHIVE_SET, Sharing.Basis.RAW);
-          };
+          return new SplitCost<>(fixedCost, name -> 0);
         }
 
         @Override

@@ -39,8 +39,8 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
    * @param name the ASCII wire name with forward slashes, as stored in the trailing name table
    * @param identity the canonical hashed identity the record carries
    * @param displayLength the source display name's length in chars, which the split cost charges
-   * @param texture the DDS envelope analysis {@link Admitted#chunk} attached, or null for General
-   *     entries and DX10 entries not yet stabilized
+   * @param texture the DDS envelope analysis {@link Admitted.Chunker#chunk} attached, or null for
+   *     General entries and DX10 entries not yet stabilized
    */
   public record Key(
       byte[] name,
@@ -148,9 +148,15 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
       return 0;
     }
 
+    /**
+     * Owners are decided once for the whole set on raw (for DX10, normalized) bytes. DX10 chunks
+     * each texture from its DDS envelope head, and reserves bounded partition and header state per
+     * entry beyond the shared source-entry allowance.
+     */
     @Override
-    public Emission emission() {
-      return Emission.STABILIZED;
+    public Emission<Key> emission() {
+      return new Emission.SetOwners<>(
+          dds ? Optional.of(new Chunker<>(DDS_HEAD_BYTES, 2048, this::chunk)) : Optional.empty());
     }
 
     /**
@@ -159,30 +165,13 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
      */
     @Override
     public SplitCost<Key> splitCost() {
-      return new SplitCost<>(200, Key::displayLength, PayloadCost.UNIQUE_STORED);
-    }
-
-    /** Owners are decided once for the whole set on raw (for DX10, normalized) bytes. */
-    @Override
-    public Sharing sharing() {
-      return new Sharing(Sharing.Scope.ARCHIVE_SET, Sharing.Basis.RAW);
+      return new SplitCost<>(200, Key::displayLength);
     }
 
     /** Raw LZ4 is the one BA2 codec with a native provider to admit; zlib is JDK-only. */
     @Override
     public Set<PayloadCodec> requiredCodecs() {
       return rawLz4 ? Set.of(PayloadCodec.LZ4_RAW) : Set.of();
-    }
-
-    /** DDS adds bounded partition and header state beyond the shared source-entry allowance. */
-    @Override
-    public long entryReserveBytes() {
-      return dds ? 2048 : 0;
-    }
-
-    @Override
-    public int chunkHeadBytes() {
-      return dds ? DDS_HEAD_BYTES : 0;
     }
 
     /**
@@ -253,8 +242,7 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
      * format needs one, the canonical decoded size (payload plus synthesized header), and the
      * source header as metadata. Every slice's raw size must fit its u32 record field.
      */
-    @Override
-    public Chunks<Key> chunk(Planned<Key> entry, ByteBuffer head, IoContext processing)
+    private Chunks<Key> chunk(Planned<Key> entry, ByteBuffer head, IoContext processing)
         throws ArchiveException {
       DdsEnvelope.Analysis texture =
           DdsEnvelope.analyze(head, entry.source().size(), ddsTarget, processing);

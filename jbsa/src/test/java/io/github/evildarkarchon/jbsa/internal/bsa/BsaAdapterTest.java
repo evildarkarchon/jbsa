@@ -135,18 +135,18 @@ class BsaAdapterTest {
         Set.of(), admitted(0x68, options(PackOptions.Compression.ZLIB, Map.of())).requiredCodecs());
   }
 
-  /** The split cost charges stored records; sharing compares complete stored records per part. */
+  /**
+   * Versioned BSA declares the per-part stored-record Emission, which shares complete stored
+   * records per part and charges splits their stored size; the split cost adds a fixed allowance
+   * and the name bytes.
+   */
   @Test
-  void declaresStabilizedStoredRecordRules() throws Exception {
+  void declaresPerPartRecordEmission() throws Exception {
     var admitted = admitted(0x68, options(PackOptions.Compression.STORED, Map.of()));
-    assertEquals(Admitted.Emission.STABILIZED, admitted.emission());
-    assertEquals(Admitted.PayloadCost.STORED, admitted.splitCost().payload());
+    assertEquals(new Admitted.Emission.PerPartRecords<>(), admitted.emission());
     assertEquals(200, admitted.splitCost().fixed());
     var key = admitted.plan(List.of(entry("abc\\de.txt", 1)), CONTEXT).getFirst().key();
     assertEquals(3 + 1 + 6, admitted.splitCost().nameCost().applyAsLong(key));
-    assertEquals(
-        new Admitted.Sharing(Admitted.Sharing.Scope.PER_PART, Admitted.Sharing.Basis.STORED),
-        admitted.sharing());
     assertEquals(2_147_483_647L, admitted.defaultSplitTarget());
   }
 
