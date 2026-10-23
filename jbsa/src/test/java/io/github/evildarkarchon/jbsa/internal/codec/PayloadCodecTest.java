@@ -1067,6 +1067,10 @@ final class PayloadCodecTest {
       long decodeHeap,
       long decodeNative)
       throws Exception {
+    // Admit the provider before its adapter runs, as production does: a native call that loads
+    // LWJGL without native admission leaves LWJGL's own library path set, which every later
+    // native preflight in this JVM rejects as a configuration override.
+    adapter(provider);
     AdmittedCodec admitted = codec(PayloadCodec.LZ4_RAW, provider);
     assertEquals(new Cost(encodeHeap, encodeNative), admitted.encodeCost(size));
     assertEquals(new Cost(decodeHeap, decodeNative), admitted.decodeCost(storedSize, size));
@@ -1099,6 +1103,8 @@ final class PayloadCodecTest {
       long decodeHeap,
       long decodeNative)
       throws Exception {
+    // Admitted first for the reason assertRaw gives.
+    adapter(provider);
     AdmittedCodec admitted = codec(PayloadCodec.BSA_LZ4_FRAME, provider);
     assertEquals(new Cost(encodeHeap, encodeNative), admitted.encodeCost(size));
     byte[] data = sample(size);
