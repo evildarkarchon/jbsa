@@ -17,26 +17,9 @@ import org.lwjgl.util.lz4.LZ4HC;
  */
 public final class Lz4Raw {
   private static final long MAX_INPUT = 0x7E000000L;
-  private static final long DISPATCH_LIMIT = 16L * 1024 * 1024;
-  public static final long ENCODE_NATIVE_BYTES =
-      DISPATCH_LIMIT + DISPATCH_LIMIT + DISPATCH_LIMIT / 255 + 16 + 524288 + 32;
-  public static final long DECODE_NATIVE_BYTES =
-      DISPATCH_LIMIT + DISPATCH_LIMIT + DISPATCH_LIMIT / 255 + 16 + 16;
+  private static final long DISPATCH_LIMIT = AdmittedCodec.RAW_LZ4_DISPATCH_LIMIT;
 
   private Lz4Raw() {}
-
-  /**
-   * Returns the largest heap one decode reserves beyond its 4096-byte bookkeeping. The portable
-   * provider holds the whole stored and decoded block on the heap instead of in native memory.
-   */
-  public static long maxDecodeHeapBytes(Provider provider) {
-    return provider == Provider.PORTABLE ? DECODE_NATIVE_BYTES : 0;
-  }
-
-  /** Returns the largest native memory one decode reserves; the portable provider needs none. */
-  public static long maxDecodeNativeBytes(Provider provider) {
-    return provider == Provider.NATIVE ? DECODE_NATIVE_BYTES : 0;
-  }
 
   /**
    * Encodes one admitted raw HC block at the shared level 9 without fallback or splitting. The
@@ -92,10 +75,12 @@ public final class Lz4Raw {
     if (provider == Provider.PORTABLE)
       return PortableLz4.rawEncode(
           source, decodedSize, sink, checkpoint, budget, context, compressionLevel);
-    long bound = decodedSize + decodedSize / 255 + 16;
+    long bound = AdmittedCodec.rawLz4Bound(decodedSize);
+    AdmittedCodec.Cost cost =
+        AdmittedCodec.encodeCost(PayloadCodec.LZ4_RAW, Provider.NATIVE, decodedSize);
     caller(checkpoint::check, context);
     // Explicit external HC state avoids an unaccounted provider allocation inside compression.
-    try (var lease = budget.reserve(4096, decodedSize + bound + 524288 + 32, 0, 0);
+    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
         Arena arena = Arena.ofConfined()) {
       ByteBuffer input =
           arena.allocate(Math.max(1, decodedSize), 8).asByteBuffer().limit((int) decodedSize);
@@ -173,8 +158,10 @@ public final class Lz4Raw {
     if (provider == Provider.PORTABLE)
       return PortableLz4.rawDecode(
           source, storedSize, decodedSize, sink, checkpoint, budget, context);
+    AdmittedCodec.Cost cost =
+        AdmittedCodec.decodeCost(PayloadCodec.LZ4_RAW, Provider.NATIVE, storedSize, decodedSize);
     caller(checkpoint::check, context);
-    try (var lease = budget.reserve(4096, storedSize + decodedSize + 16, 0, 0);
+    try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
         Arena arena = Arena.ofConfined()) {
       ByteBuffer input =
           arena.allocate(Math.max(1, storedSize)).asByteBuffer().limit((int) storedSize);
@@ -221,7 +208,7 @@ public final class Lz4Raw {
   public static void admitDecode(long storedSize, long decodedSize, IoContext context)
       throws ArchiveException {
     // Incompressible blocks grow by the upstream compressBound allowance.
-    checkSize(storedSize, DISPATCH_LIMIT + DISPATCH_LIMIT / 255 + 16, context);
+    checkSize(storedSize, AdmittedCodec.rawLz4Bound(DISPATCH_LIMIT), context);
     checkSize(decodedSize, DISPATCH_LIMIT, context);
   }
 

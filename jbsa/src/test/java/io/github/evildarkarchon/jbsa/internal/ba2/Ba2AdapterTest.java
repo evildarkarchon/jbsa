@@ -3,9 +3,7 @@ package io.github.evildarkarchon.jbsa.internal.ba2;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
@@ -335,13 +333,24 @@ class Ba2AdapterTest {
             ArchiveFamily.FO4_GENERAL_BA2, encoding(1, false, false), PackOptions.Compression.ZLIB);
     var part = zlib.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
     var layout = new Admitted.Layout(96, 120);
+    // The codecs pack admission yields: the JDK codecs always, and raw LZ4 when required.
+    AdmittedCodec zlibCodec = AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT);
+    AdmittedCodec rawCodec = AdmittedCodec.admit(PayloadCodec.LZ4_RAW, "encode", CONTEXT);
+    var codecs =
+        Map.of(
+            PayloadCodec.STORED,
+            AdmittedCodec.admit(PayloadCodec.STORED, "encode", CONTEXT),
+            PayloadCodec.ZLIB,
+            zlibCodec,
+            PayloadCodec.LZ4_RAW,
+            rawCodec);
     assertEquals(
         new Admitted.Readback(
             "ba2.noncanonical-staged-output",
-            512L * 2 + 8L * 120 + 65536 + JdkZlib.DECODE_HEAP_BYTES,
-            JdkZlib.DECODE_NATIVE_BYTES,
+            512L * 2 + 8L * 120 + 65536 + zlibCodec.maxDecodeCost().heapBytes(),
+            zlibCodec.maxDecodeCost().nativeBytes(),
             1),
-        zlib.readback(part, layout));
+        zlib.readback(part, layout, codecs));
 
     var raw =
         admit(
@@ -353,15 +362,10 @@ class Ba2AdapterTest {
         new Admitted.Readback(
             "ba2.noncanonical-staged-output",
             // Raw block buffers are native under LWJGL and heap under the portable provider.
-            512L * 2
-                + 8L * 120
-                + 65536
-                + 4096
-                + 700
-                + Lz4Raw.maxDecodeHeapBytes(Lz4Runtime.selected()),
-            Lz4Raw.maxDecodeNativeBytes(Lz4Runtime.selected()),
+            512L * 2 + 8L * 120 + 65536 + 700 + rawCodec.maxDecodeCost().heapBytes(),
+            rawCodec.maxDecodeCost().nativeBytes(),
             1),
-        raw.readback(rawPart, layout));
+        raw.readback(rawPart, layout, codecs));
   }
 
   /** Admits a request for the family with the given global compression and no overrides. */

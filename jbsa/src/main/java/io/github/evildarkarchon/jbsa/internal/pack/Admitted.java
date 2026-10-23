@@ -1,12 +1,14 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.ToLongFunction;
@@ -108,8 +110,12 @@ public interface Admitted<K> {
    *
    * @param part the part's entries, in output order, with their exact stored sizes
    * @param layout the value {@link #layout} returned for this part
+   * @param codecs every codec the pipeline admitted for this request (stored, zlib, and each of
+   *     {@link #requiredCodecs()}); the reader's codec credits come from their decode costs, so the
+   *     adapter never resolves a provider itself
    */
-  default Readback readback(List<Planned<K>> part, Layout layout) {
+  default Readback readback(
+      List<Planned<K>> part, Layout layout, Map<PayloadCodec, AdmittedCodec> codecs) {
     return null;
   }
 

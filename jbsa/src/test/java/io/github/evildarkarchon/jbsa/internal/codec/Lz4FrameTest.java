@@ -31,18 +31,22 @@ final class Lz4FrameTest {
 
   private static final long NATIVE_CEILING = 12L * 1024 * 1024;
 
+  /** Reserves one frame decoder's cost for the provider admission pins, as its owner must. */
+  private static ResourceBudget.Lease reserveDecoder(
+      ResourceBudget budget, long storedSize, long decodedSize) throws ArchiveException {
+    AdmittedCodec.Cost cost =
+        AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "decode", CONTEXT)
+            .decodeCost(storedSize, decodedSize);
+    return budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
+  }
+
   @Test
   void decoderStateMayBeConsumedAndClosedByAnotherThread() throws Exception {
     byte[] data = new byte[200_000];
     new Random(45).nextBytes(data);
     byte[] frame = encode(data);
     try (ResourceBudget budget = budget();
-        ResourceBudget.Lease lease =
-            budget.reserve(
-                Lz4Frame.decodeHeapBytes(Lz4Runtime.selected()),
-                Lz4Frame.decodeNativeBytes(Lz4Runtime.selected()),
-                0,
-                0)) {
+        ResourceBudget.Lease lease = reserveDecoder(budget, frame.length, data.length)) {
       var decoder = Lz4Frame.decoder(source(frame), frame.length, data.length, CONTEXT);
       var result =
           CompletableFuture.supplyAsync(

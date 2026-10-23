@@ -33,28 +33,6 @@ public final class Lz4Frame {
 
   private Lz4Frame() {}
 
-  /** Returns the heap one encoder reserves under the given provider. */
-  public static long encodeHeapBytes(Provider provider) {
-    return provider == Provider.NATIVE ? HEAP_BYTES : PortableLz4.FRAME_ENCODE_HEAP_BYTES;
-  }
-
-  /** Returns the native memory one encoder reserves; the portable provider allocates none. */
-  public static long encodeNativeBytes(Provider provider) {
-    return provider == Provider.NATIVE ? ENCODE_NATIVE_BYTES : 0;
-  }
-
-  /** Returns the heap one decoder's owner must reserve under the given provider. */
-  public static long decodeHeapBytes(Provider provider) {
-    return provider == Provider.NATIVE ? HEAP_BYTES : PortableLz4.FRAME_DECODE_HEAP_BYTES;
-  }
-
-  /**
-   * Returns the native memory one decoder's owner must reserve; the portable provider needs none.
-   */
-  public static long decodeNativeBytes(Provider provider) {
-    return provider == Provider.NATIVE ? DECODE_NATIVE_BYTES : 0;
-  }
-
   /**
    * Encodes an exact positional source in bounded windows. Callbacks are borrowed synchronously;
    * all memory credits and native state are released on success, failure, or cancellation.
@@ -84,8 +62,8 @@ public final class Lz4Frame {
 
   /**
    * Encodes a BSA frame while borrowing a worker admission that already covers this codec's {@link
-   * #encodeHeapBytes} and {@link #encodeNativeBytes} for the pinned provider. The caller releases
-   * that lease after the private result has settled; this method does not charge or close it again.
+   * AdmittedCodec#encodeCost} for the pinned provider. The caller releases that lease after the
+   * private result has settled; this method does not charge or close it again.
    */
   public static long encodeBsaPrecharged(
       ByteSource source,
@@ -220,8 +198,8 @@ public final class Lz4Frame {
   }
 
   /**
-   * One content's sequential frame decoder. Its owner reserves {@link #decodeHeapBytes} and {@link
-   * #decodeNativeBytes} for the pinned provider before creating it and closes it exactly once.
+   * One content's sequential frame decoder. Its owner reserves the admitted codec's {@link
+   * AdmittedCodec#decodeCost} before creating it and closes it exactly once.
    */
   public interface Decoder extends AutoCloseable {
     /**

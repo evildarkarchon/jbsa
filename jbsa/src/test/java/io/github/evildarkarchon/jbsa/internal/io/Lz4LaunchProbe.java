@@ -1,13 +1,14 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSink;
 import io.github.evildarkarchon.jbsa.internal.codec.ByteSource;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
+import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -32,6 +33,8 @@ public final class Lz4LaunchProbe {
     BethesdaArchives.standard();
     long size =
         JdkZlib.encode(
+            // Admitting zlib has no side effect, so the zlib-only launch still never touches LZ4.
+            AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", context),
             Channels.newChannel(new ByteArrayInputStream(new byte[] {42})),
             1,
             (offset, bytes) -> bytes.position(bytes.limit()),
@@ -80,7 +83,13 @@ public final class Lz4LaunchProbe {
   private static String profiles(IoContext context) throws Exception {
     byte[] invalid = {1, 2, 3, 4};
     String zlib;
-    try (var decoder = JdkZlib.decoder(source(invalid), invalid.length, 8, context)) {
+    try (var decoder =
+        JdkZlib.decoder(
+            AdmittedCodec.admit(PayloadCodec.ZLIB, "decode", context),
+            source(invalid),
+            invalid.length,
+            8,
+            context)) {
       decoder.read(ByteBuffer.allocate(8));
       throw new AssertionError("invalid zlib decoded");
     } catch (ArchiveException failure) {
@@ -120,15 +129,17 @@ public final class Lz4LaunchProbe {
           budget,
           context);
       if (!Arrays.equals(data, decoded.array())) throw new AssertionError("raw round trip");
+      AdmittedCodec encoder = AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "encode", context);
       byte[] frame =
           collect(
               sink ->
-                  BsaLz4Frame.encode(source(data), data.length, sink, () -> {}, budget, context));
-      var provider = Lz4Runtime.selected();
-      try (var lease =
-              budget.reserve(
-                  Lz4Frame.decodeHeapBytes(provider), Lz4Frame.decodeNativeBytes(provider), 0, 0);
-          var decoder = BsaLz4Frame.decoder(source(frame), frame.length, data.length, context)) {
+                  BsaLz4Frame.encode(
+                      encoder, source(data), data.length, sink, () -> {}, budget, context));
+      AdmittedCodec decoding = AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "decode", context);
+      AdmittedCodec.Cost cost = decoding.decodeCost(frame.length, data.length);
+      try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
+          var decoder =
+              BsaLz4Frame.decoder(decoding, source(frame), frame.length, data.length, context)) {
         // One spare byte keeps the destination non-full, so the decoder can report terminal EOF
         // (which also validates exact frame consumption) instead of a zero-length read.
         ByteBuffer output = ByteBuffer.allocate(data.length + 1);

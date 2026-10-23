@@ -1,11 +1,10 @@
 package io.github.evildarkarchon.jbsa.internal.io;
 
 import io.github.evildarkarchon.jbsa.*;
+import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.BsaLz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.JdkZlib;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Frame;
 import io.github.evildarkarchon.jbsa.internal.codec.Lz4Raw;
-import io.github.evildarkarchon.jbsa.internal.codec.Lz4Runtime;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -203,25 +202,23 @@ public final class OwnedArchive implements OpenArchive {
                           Long.toString(stored.metadata().decodedSize())));
               throw retention.finish(List.of());
             }
+            // The codec is admitted when the cursor first needs it. A BSA frame pins its provider
+            // here, before its credit is reserved, so the credit charges the decoder that will run.
+            // Raw LZ4 is admitted per decode call inside read() instead, which keeps its
+            // capability failure located at the entry; until then the cursor charges only its
+            // decoded copy, because the raw decoder reserves its own working set on every call.
+            AdmittedCodec codec =
+                stored.codec() == PayloadCodec.LZ4_RAW
+                    ? null
+                    : AdmittedCodec.admit(
+                        stored.codec(), "decode", contentContext(stored.metadata().ordinal()));
+            AdmittedCodec.Cost cost =
+                codec == null
+                    ? new AdmittedCodec.Cost(rawLz4Heap(stored), 0)
+                    : codec.decodeCost(stored.streamSize(), stored.metadata().decodedSize());
             ResourceBudget.Lease credit;
             try {
-              credit =
-                  budget.reserve(
-                      512
-                          + switch (stored.codec()) {
-                            case STORED -> 0;
-                            case ZLIB -> JdkZlib.DECODE_HEAP_BYTES;
-                            case LZ4_RAW -> rawLz4Heap(stored);
-                            case BSA_LZ4_FRAME -> Lz4Frame.decodeHeapBytes(Lz4Runtime.selected());
-                          },
-                      switch (stored.codec()) {
-                        case STORED -> 0;
-                        case ZLIB -> JdkZlib.DECODE_NATIVE_BYTES;
-                        case LZ4_RAW -> 0;
-                        case BSA_LZ4_FRAME -> Lz4Frame.decodeNativeBytes(Lz4Runtime.selected());
-                      },
-                      0,
-                      0);
+              credit = budget.reserve(512 + cost.heapBytes(), cost.nativeBytes(), 0, 0);
             } catch (ArchiveException capacity) {
               // Query children own READ_CONTENT evidence; mutation children retain their operation.
               FailureRetention retention = new FailureRetention(limits, contentOperation());
@@ -236,9 +233,9 @@ public final class OwnedArchive implements OpenArchive {
             }
             Content content;
             try {
-              content = new Content(stored, credit);
+              content = new Content(stored, credit, codec);
             } catch (ArchiveException failure) {
-              // Capability preflight failed before the child could adopt the reserved credits.
+              // Decoder creation failed before the child could adopt the reserved credits.
               credit.close();
               throw failure;
             }
@@ -293,6 +290,10 @@ public final class OwnedArchive implements OpenArchive {
   private final class Content implements EntryContent {
     private final StoredEntry stored;
     private final ResourceBudget.Lease credit;
+
+    /** The entry's admitted codec, or null for raw LZ4, which is admitted per decode call. */
+    private final AdmittedCodec codec;
+
     private JdkZlib.Decoder decoder;
     private BsaLz4Frame.Decoder lz4Decoder;
     private ByteBuffer decodedRawLz4;
@@ -306,14 +307,18 @@ public final class OwnedArchive implements OpenArchive {
     /**
      * Adopts reserved credits and creates at most one parent-owned ordinary-payload decoder.
      *
-     * @throws ArchiveException if native LZ4 capability cannot be established
+     * @param codec the codec openContent admitted, or null for raw LZ4
+     * @throws ArchiveException if the LZ4 frame decoder cannot be created
      */
-    private Content(StoredEntry stored, ResourceBudget.Lease credit) throws ArchiveException {
+    private Content(StoredEntry stored, ResourceBudget.Lease credit, AdmittedCodec codec)
+        throws ArchiveException {
       this.stored = stored;
       this.credit = credit;
+      this.codec = codec;
       decoder =
           stored.codec() == PayloadCodec.ZLIB && stored.header() == null
               ? JdkZlib.decoder(
+                  codec,
                   (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
                   stored.streamSize(),
                   stored.metadata().decodedSize(),
@@ -322,6 +327,7 @@ public final class OwnedArchive implements OpenArchive {
       lz4Decoder =
           stored.codec() == PayloadCodec.BSA_LZ4_FRAME
               ? BsaLz4Frame.decoder(
+                  codec,
                   (offset, bytes) -> input.readExact(Math.addExact(stored.offset(), offset), bytes),
                   stored.streamSize(),
                   stored.metadata().decodedSize(),
@@ -509,6 +515,7 @@ public final class OwnedArchive implements OpenArchive {
               if (decoder == null)
                 decoder =
                     JdkZlib.decoder(
+                        codec,
                         (offset, bytes) ->
                             input.readExact(Math.addExact(chunk.payloadOffset(), offset), bytes),
                         chunk.packedSize(),

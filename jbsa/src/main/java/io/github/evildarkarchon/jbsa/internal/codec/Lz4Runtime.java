@@ -65,9 +65,10 @@ public final class Lz4Runtime {
   }
 
   /**
-   * Returns the pinned provider, selecting it on first use without throwing. Resource accounting
-   * calls this before an adapter preflight so it charges the working set of the provider that will
-   * actually run; the later preflight still reports a missing portable provider.
+   * Returns the pinned provider, selecting it on first use without throwing. Production reaches it
+   * only through admission: {@link #preflight} pins with it, and {@link AdmittedCodec} names a
+   * JDK-only codec's identity with it. Callers cost a codec through its {@link AdmittedCodec}
+   * instead, so they always charge the provider admission resolved.
    */
   public static synchronized Provider selected() {
     if (pinned == null)
