@@ -116,19 +116,6 @@ public final class PackPipeline {
     };
   }
 
-  /**
-   * Returns the payload term a split charges under an Emission: the declared size for a streamed
-   * part, which cannot know an encoded size before it stages; the exact stored record for per-part
-   * records; and an owner's stored size only at its first reference in a part for set-wide owners.
-   */
-  private static PayloadCost payloadCost(Admitted.Emission<?> emission) {
-    return switch (emission) {
-      case Admitted.Emission.Streamed<?> streamed -> PayloadCost.DECODED;
-      case Admitted.Emission.PerPartRecords<?> records -> PayloadCost.STORED;
-      case Admitted.Emission.SetOwners<?> owners -> PayloadCost.UNIQUE_STORED;
-    };
-  }
-
   /** Rejects an entry-compression override whose identity no planned source carries. */
   private static void rejectUnmatchedOverrides(
       PackRequest request, List<PackSources.Entry> sources, IoContext context)
@@ -159,109 +146,30 @@ public final class PackPipeline {
     }
   }
 
-  /** Returns the byte target the request's Splitting arm selects; 0 never splits. */
-  private static long target(Admitted<?> admitted, PackOptions.Splitting splitting) {
+  /**
+   * Returns the byte target a Splitting arm selects: an explicit target as given, the family
+   * default, or one byte for legacy per-entry splitting; 0 never splits.
+   *
+   * @param familyDefault the adapter's {@link Admitted#defaultSplitTarget()}
+   */
+  static long target(long familyDefault, PackOptions.Splitting splitting) {
     return switch (splitting) {
-      case PackOptions.Splitting.FamilyDefault ignored -> admitted.defaultSplitTarget();
+      case PackOptions.Splitting.FamilyDefault ignored -> familyDefault;
       case PackOptions.Splitting.UpToBytes explicit -> explicit.targetBytes();
       case PackOptions.Splitting.LegacyPerEntry ignored -> 1L;
     };
   }
 
   /**
-   * Forms whole-entry parts in output order from the adapter's advisory split cost. A zero target
-   * never splits; legacy per-entry splitting uses a one-byte target. A first-owner cost tracks the
-   * owners each part already references, and re-costs the entry that opens a new part.
+   * Returns the split planner for one pack: the adapter's split cost, the payload cost its Emission
+   * case implies, and the byte target the request's Splitting arm resolves to.
    */
-  static <K> List<List<Planned<K>>> split(
-      List<Planned<K>> planned, Admitted<K> admitted, PackOptions.Splitting splitting) {
-    long target = target(admitted, splitting);
-    Admitted.SplitCost<K> rule = admitted.splitCost();
-    PayloadCost payload = payloadCost(admitted.emission());
-    List<List<Planned<K>>> parts = new ArrayList<>();
-    List<Planned<K>> current = new ArrayList<>();
-    Set<Integer> owners = new HashSet<>();
-    long estimated = 0;
-    for (Planned<K> entry : planned) {
-      long overhead = Math.addExact(rule.fixed(), rule.nameCost().applyAsLong(entry.key()));
-      long cost = Math.addExact(overhead, payloadCost(entry, payload, owners));
-      if (target != 0 && !current.isEmpty() && cost > target - estimated) {
-        parts.add(List.copyOf(current));
-        current.clear();
-        owners.clear();
-        estimated = 0;
-        // Owners the closed part already paid for are charged again in the new one.
-        cost = Math.addExact(overhead, payloadCost(entry, payload, owners));
-      }
-      current.add(entry);
-      for (Admitted.Segment segment : entry.segments()) owners.add(segment.owner());
-      estimated = Math.addExact(estimated, cost);
-    }
-    if (!current.isEmpty()) parts.add(List.copyOf(current));
-    return parts;
-  }
-
-  /**
-   * Returns one entry's payload split cost; a stored cost needs the record's known size. A
-   * first-owner cost charges each distinct segment owner the part does not reference yet; an
-   * unsegmented entry (before stabilization, where nothing can be shared) costs its stored size.
-   *
-   * @param owners the segment owners the current part already references
-   */
-  private static long payloadCost(Planned<?> entry, PayloadCost payload, Set<Integer> owners) {
-    return switch (payload) {
-      case DECODED -> entry.source().size();
-      case STORED -> knownStoredSize(entry);
-      case UNIQUE_STORED -> {
-        if (entry.segments().isEmpty()) yield knownStoredSize(entry);
-        Set<Integer> counted = new HashSet<>();
-        long cost = 0;
-        for (Admitted.Segment segment : entry.segments())
-          if (!owners.contains(segment.owner()) && counted.add(segment.owner()))
-            cost = Math.addExact(cost, segment.storedSize());
-        yield cost;
-      }
-    };
-  }
-
-  /** Returns a stored size that splitting may charge, which must already be known. */
-  private static long knownStoredSize(Planned<?> entry) {
-    if (entry.storedSize() == Planned.UNKNOWN_SIZE)
-      throw new IllegalStateException("A stored split cost needs a stabilized record size");
-    return entry.storedSize();
-  }
-
-  /**
-   * Returns how many parts a stabilized plan will certainly publish before any source is read. When
-   * every stored size is predictable and sharing cannot lower a first-owner cost, the split is
-   * exact, and each predicted part's layout is admitted now so a wire limit fails before any source
-   * read. Otherwise the count is known only when no entry can share a part (every entry's minimum
-   * cost reaches a nonzero target) or nothing splits; any other plan is certain only of its first
-   * part.
-   *
-   * @param sharing whether the request enables Content Sharing
-   */
-  static <K> int knownPartCount(
-      List<Planned<K>> planned,
-      Admitted<K> admitted,
-      PackOptions.Splitting splitting,
-      boolean sharing,
-      IoContext context)
-      throws ArchiveException {
-    boolean shareable = sharing && payloadCost(admitted.emission()) == PayloadCost.UNIQUE_STORED;
-    if (!shareable
-        && planned.stream().allMatch(entry -> entry.storedSize() != Planned.UNKNOWN_SIZE)) {
-      List<List<Planned<K>>> parts = split(planned, admitted, splitting);
-      for (var part : parts) admitted.layout(part, context);
-      return parts.size();
-    }
-    long target = target(admitted, splitting);
-    if (target == 0) return 1;
-    Admitted.SplitCost<K> rule = admitted.splitCost();
-    for (Planned<K> entry : planned)
-      // An unknown payload costs at least zero, so this is the entry's minimum split cost.
-      if (Math.addExact(rule.fixed(), rule.nameCost().applyAsLong(entry.key())) < target) return 1;
-    return planned.size();
+  private static <K> SplitPlanner<K> splitPlanner(
+      Admitted<K> admitted, PackOptions.Splitting splitting) {
+    return new SplitPlanner<>(
+        admitted.splitCost(),
+        SplitPlanner.payloadCost(admitted.emission()),
+        target(admitted.defaultSplitTarget(), splitting));
   }
 
   /**
@@ -276,7 +184,8 @@ public final class PackPipeline {
       Run run, Admitted<K> admitted, List<Planned<K>> planned) throws IOException {
     requireStoredUnframed(planned);
     PackRequest request = run.request;
-    List<List<Planned<K>>> parts = split(planned, admitted, request.options().splitting());
+    List<List<Planned<K>>> parts =
+        splitPlanner(admitted, request.options().splitting()).split(planned);
     List<Layout> layouts = new ArrayList<>(parts.size());
     for (var part : parts) {
       Layout layout = admitted.layout(part, run.context);
@@ -351,12 +260,12 @@ public final class PackPipeline {
       Run run, Admitted<K> admitted, Admitted.Emission<K> emission, List<Planned<K>> planned)
       throws IOException {
     PackRequest request = run.request;
-    PackOptions.Splitting splitting = request.options().splitting();
+    SplitPlanner<K> planner = splitPlanner(admitted, request.options().splitting());
     boolean sharing = request.options().sharing();
     // D9: preflight never depends on sharing; it checks every part the plan can already count.
     PublicationTransaction.preflightArchiveTargets(
         request.destination(),
-        knownPartCount(planned, admitted, splitting, sharing, run.context),
+        planner.knownPartCount(planned, sharing, part -> admitted.layout(part, run.context)),
         request.targetPolicy(),
         request.resourceLimits(),
         run.context);
@@ -402,7 +311,7 @@ public final class PackPipeline {
       }
     }
     stable.seal();
-    List<List<Planned<K>>> parts = split(sized, admitted, splitting);
+    List<List<Planned<K>>> parts = planner.split(sized);
     List<Layout> layouts = new ArrayList<>(parts.size());
     for (var part : parts) {
       Layout layout = admitted.layout(part, run.context);
@@ -1164,19 +1073,6 @@ public final class PackPipeline {
             request.destination().toAbsolutePath().normalize(), number),
         output.size(),
         part.size());
-  }
-
-  /**
-   * Which advisory payload extent a split charges for one entry. The {@link Admitted.Emission} case
-   * implies it, so no adapter declares it.
-   */
-  enum PayloadCost {
-    /** The declared source size. */
-    DECODED,
-    /** The stabilized record size, including framing. */
-    STORED,
-    /** The stabilized record size, charged only for the first owner within a part. */
-    UNIQUE_STORED
   }
 
   /**

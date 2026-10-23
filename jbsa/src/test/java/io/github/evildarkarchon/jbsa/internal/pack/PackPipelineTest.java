@@ -253,17 +253,12 @@ class PackPipelineTest {
     }
   }
 
-  /** The three Splitting arms, driven by the adapter's declarative split cost. */
+  /**
+   * An explicit target splits a streamed pack into whole-entry parts, published under numbered
+   * names. The Splitting arms themselves are pinned by {@code SplitPlannerTest}.
+   */
   @Test
-  void splitArmsFormWholeEntryParts() throws Exception {
-    List<Admitted.Planned<String>> planned =
-        List.of(planned("a", 3), planned("b", 3), planned("c", 1));
-    assertEquals(List.of(3), sizes(planned, 0, new PackOptions.Splitting.FamilyDefault()));
-    assertEquals(List.of(1, 2), sizes(planned, 4, new PackOptions.Splitting.FamilyDefault()));
-    assertEquals(List.of(3), sizes(planned, 4, new PackOptions.Splitting.UpToBytes(0)));
-    assertEquals(List.of(2, 1), sizes(planned, 0, new PackOptions.Splitting.UpToBytes(6)));
-    assertEquals(List.of(1, 1, 1), sizes(planned, 0, new PackOptions.Splitting.LegacyPerEntry()));
-
+  void explicitSplitTargetPublishesNumberedParts() throws Exception {
     var report =
         PackPipeline.pack(
             request(
@@ -278,46 +273,6 @@ class PackPipelineTest {
     assertEquals(2, report.archiveParts().size());
     assertTrue(Files.exists(temporary.resolve("split.mem")));
     assertTrue(Files.exists(temporary.resolve("split2.mem")));
-  }
-
-  /**
-   * D9: a stabilized plan's preflight counts exactly the parts it is certain to publish. Predicted
-   * stored sizes split exactly; with an unknown encoded size only "never splits" and "no two
-   * entries fit one part" are certain, and any other plan is certain only of its first part.
-   */
-  @Test
-  void knownPartCountCoversOnlyCertainParts() throws Exception {
-    var context = IoContext.destination(Path.of("x").toAbsolutePath(), Operation.PACK);
-    var stored = List.of(planned("a", 3), planned("b", 3), planned("c", 1));
-    var cheap = new MemoryEncoder(4, false, new ArrayList<>(), 0).admit(null, context);
-    assertEquals(
-        2,
-        PackPipeline.knownPartCount(
-            stored, cheap, new PackOptions.Splitting.FamilyDefault(), false, context));
-
-    var encoded = List.of(encoded("a", 3), encoded("b", 3), encoded("c", 1));
-    assertEquals(
-        1,
-        PackPipeline.knownPartCount(
-            encoded, cheap, new PackOptions.Splitting.UpToBytes(0), false, context));
-    // A zero minimum cost lets entries share a part, so only the first part is certain.
-    assertEquals(
-        1,
-        PackPipeline.knownPartCount(
-            encoded, cheap, new PackOptions.Splitting.LegacyPerEntry(), false, context));
-    var costly = new MemoryEncoder(0, false, new ArrayList<>(), 200).admit(null, context);
-    assertEquals(
-        3,
-        PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.LegacyPerEntry(), false, context));
-    assertEquals(
-        3,
-        PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.UpToBytes(200), false, context));
-    assertEquals(
-        1,
-        PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.UpToBytes(201), false, context));
   }
 
   /** Preflight checks exactly the known part set before any source payload is opened. */
@@ -1058,38 +1013,6 @@ class PackPipelineTest {
   private static ProgressSnapshot snapshot(
       OperationPhase phase, ProgressMetric metric, long completed, OptionalLong total) {
     return new ProgressSnapshot(Operation.PACK, phase, metric, completed, total);
-  }
-
-  /** Returns part sizes for a split under the given family default target. */
-  private static List<Integer> sizes(
-      List<Admitted.Planned<String>> planned, long familyDefault, PackOptions.Splitting splitting)
-      throws ArchiveException {
-    var admitted =
-        new MemoryEncoder(familyDefault)
-            .admit(null, IoContext.destination(Path.of("x").toAbsolutePath(), Operation.PACK));
-    return PackPipeline.split(planned, admitted, splitting).stream().map(List::size).toList();
-  }
-
-  /** A planned stored entry of a given declared size, whose payload is never read. */
-  private static Admitted.Planned<String> planned(String name, long size) {
-    var entry =
-        new PackSources.Entry(
-            name,
-            name,
-            name.getBytes(StandardCharsets.US_ASCII),
-            0,
-            size,
-            (reader, processing) -> {
-              throw new AssertionError("Splitting must not read payloads");
-            },
-            IoContext.generated(name, Operation.PACK));
-    return new Admitted.Planned<>(entry, name, PayloadCodec.STORED, new byte[0]);
-  }
-
-  /** A planned zlib entry, whose stored size stays unknown until stabilization. */
-  private static Admitted.Planned<String> encoded(String name, long size) {
-    var stored = planned(name, size);
-    return new Admitted.Planned<>(stored.source(), name, PayloadCodec.ZLIB, new byte[0]);
   }
 
   /** Builds a request; the family and encoding are ignored by the memory adapter. */
