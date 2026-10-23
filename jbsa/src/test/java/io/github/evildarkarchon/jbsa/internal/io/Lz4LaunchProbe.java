@@ -31,6 +31,10 @@ public final class Lz4LaunchProbe {
             () -> {},
             context);
     if (size == 0) throw new AssertionError("zlib disabled");
+    if (args[0].startsWith("profiles")) {
+      System.out.println(profiles(context));
+      return;
+    }
     if (args[0].equals("zlib-only")) {
       System.out.println("ZLIB_OK");
       return;
@@ -57,6 +61,37 @@ public final class Lz4LaunchProbe {
     if (!provider.equals("UNAVAILABLE") && net.jpountz.util.Native.isLoaded())
       throw new AssertionError("lz4-java loaded its JNI library");
     System.out.println(nativeResult + " " + provider);
+  }
+
+  /**
+   * Fails a zlib decode before any LZ4 call, then preflights LZ4, and reports both profiles as
+   * {@code ZLIB <profile> LZ4 <profile>}. The LZ4 part is {@code UNAVAILABLE:<profile>} when the
+   * pinned provider cannot be admitted, carrying the capability failure's own profile.
+   *
+   * @throws AssertionError if invalid zlib data decodes, or lz4-java loaded its JNI library
+   */
+  private static String profiles(IoContext context) throws Exception {
+    byte[] invalid = {1, 2, 3, 4};
+    String zlib;
+    try (var decoder = JdkZlib.decoder(source(invalid), invalid.length, 8, context)) {
+      decoder.read(ByteBuffer.allocate(8));
+      throw new AssertionError("invalid zlib decoded");
+    } catch (ArchiveException failure) {
+      if (!failure.diagnostics().getFirst().identifier().equals("codec.invalid-data"))
+        throw failure;
+      zlib = failure.diagnostics().getFirst().values().get("profile");
+    }
+    String lz4;
+    try {
+      lz4 = Lz4Runtime.preflight("raw-lz4", "encode", context).profile();
+    } catch (ArchiveException failure) {
+      if (failure.primaryFailure().kind() != FailureKind.CAPABILITY) throw failure;
+      lz4 = "UNAVAILABLE:" + failure.diagnostics().getFirst().values().get("profile");
+    }
+    // Only check once lz4-java is known to be present; its Native class is otherwise unresolvable.
+    if (!lz4.startsWith("UNAVAILABLE") && net.jpountz.util.Native.isLoaded())
+      throw new AssertionError("lz4-java loaded its JNI library");
+    return "ZLIB " + zlib + " LZ4 " + lz4;
   }
 
   /** Encodes and decodes one raw block and one BSA frame through the pinned provider. */

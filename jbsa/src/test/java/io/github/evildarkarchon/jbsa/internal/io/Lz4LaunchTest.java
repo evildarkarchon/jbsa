@@ -42,6 +42,24 @@ final class Lz4LaunchTest {
         launch(true, false, List.of(), "no-lz4-java"));
   }
 
+  /**
+   * zlib failures and LZ4 capability failures name the profile of the provider set the process
+   * pinned, so a portable process never claims the qualified native profile (#89).
+   */
+  @Test
+  void codecFailuresNameThePinnedProviderProfile() throws Exception {
+    assertEquals("ZLIB jbsa-lz4-v1 LZ4 jbsa-lz4-v1", launch(true, true, List.of(), "profiles"));
+    assertEquals(
+        "ZLIB jbsa-lz4-portable-v1 LZ4 jbsa-lz4-portable-v1",
+        launch(true, true, List.of("-Dorg.lwjgl.librarypath=does-not-exist"), "profiles"));
+    assertEquals(
+        "ZLIB jbsa-lz4-portable-v1 LZ4 jbsa-lz4-portable-v1",
+        launch(false, false, List.of(), "profiles"));
+    assertEquals(
+        "ZLIB jbsa-lz4-portable-v1 LZ4 UNAVAILABLE:jbsa-lz4-portable-v1",
+        launch(true, false, List.of(), "profiles-no-lz4-java"));
+  }
+
   /** Resolves the same resource-module roots as the staged launcher and executes real preflight. */
   @Test
   void qualifiesNamedModuleLaunch() throws Exception {
@@ -64,7 +82,7 @@ final class Lz4LaunchTest {
             Arrays.stream(paths.split(File.pathSeparator))
                 .filter(path -> natives || !path.contains("natives-windows"))
                 .filter(path -> !mode.equals("no-provider") || !path.contains("lwjgl"))
-                .filter(path -> !mode.equals("no-lz4-java") || !path.contains("lz4-java"))
+                .filter(path -> !mode.endsWith("no-lz4-java") || !path.contains("lz4-java"))
                 .toList());
     var command = new ArrayList<String>();
     command.add(Path.of(System.getProperty("java.home"), "bin", "java.exe").toString());
