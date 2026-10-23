@@ -390,23 +390,35 @@ public final class Ba2Adapter implements FamilyAdapter<Ba2Adapter.Key> {
 
     /**
      * Every staged part is reopened and fully decoded before publication. The reader holds per
-     * entry state, eight bytes per metadata byte, one decode window, and one codec: raw LZ4 when
-     * the part holds a raw-LZ4 entry (which needs its largest source whole), otherwise zlib.
+     * entry state, eight bytes per metadata byte, one decode window, and one codec: raw LZ4 when a
+     * record references a raw-LZ4 owner, otherwise zlib. Raw LZ4 decodes each owner the reader
+     * reaches as one whole block, a General entry's payload or one DX10 chunk, so the declaration
+     * names the largest stored and decoded sizes among those blocks (#102).
      */
     @Override
     public Readback readback(List<Planned<Key>> part, Layout layout) {
-      boolean validatesRawLz4 =
-          rawLz4 && part.stream().anyMatch(entry -> entry.codec() != PayloadCodec.STORED);
+      // The records name each owner's codec, so an entry that shares a stored owner's identical
+      // bytes is read as stored, and only raw-LZ4 owners are decoded as blocks.
+      long stored = 0, decoded = 0;
+      boolean validatesRawLz4 = false;
+      for (Planned<Key> entry : part)
+        for (Segment segment : entry.segments())
+          if (segment.codec() == PayloadCodec.LZ4_RAW) {
+            validatesRawLz4 = true;
+            stored = Math.max(stored, segment.storedSize());
+            decoded = Math.max(decoded, segment.rawSize());
+          }
       // The pipeline costs the declared codec from the ones pack admission pinned, including the
-      // reader's decoded copy of the largest source for raw LZ4. A part with no raw-LZ4 entry,
-      // even an all-stored one, declares zlib, the conservative codec readback has always charged.
+      // reader's decoded copy of the largest block for raw LZ4. A part with no raw-LZ4 owner, even
+      // an all-stored one, declares zlib, the conservative codec readback has always charged.
       return new Readback(
           "ba2.noncanonical-staged-output",
           512L * part.size() + 8L * layout.metadataBytes() + 65536,
           0,
           1,
           Set.of(validatesRawLz4 ? PayloadCodec.LZ4_RAW : PayloadCodec.ZLIB),
-          part.stream().mapToLong(entry -> entry.source().size()).max().orElse(0));
+          stored,
+          decoded);
     }
   }
 

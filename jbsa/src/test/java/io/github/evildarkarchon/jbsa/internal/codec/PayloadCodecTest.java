@@ -155,9 +155,10 @@ final class PayloadCodecTest {
   }
 
   /**
-   * The largest cost a single decode call can charge, which BA2 readback declares. Raw LZ4's is one
-   * dispatch-limit block: Payload Codec 01 recorded its working set as 33 620 257 bytes beyond the
-   * 4 096-byte bookkeeping, native under LWJGL and heap under lz4-java.
+   * The largest cost a single decode call can charge, by the same rule the native ceilings are
+   * derived with; BA2 readback charged it until #102 and now charges the part's actual block. Raw
+   * LZ4's is one dispatch-limit block: Payload Codec 01 recorded its working set as 33 620 257
+   * bytes beyond the 4 096-byte bookkeeping, native under LWJGL and heap under lz4-java.
    */
   @Test
   void largestDecodeCostsArePinnedPerCodecAndProvider() {
