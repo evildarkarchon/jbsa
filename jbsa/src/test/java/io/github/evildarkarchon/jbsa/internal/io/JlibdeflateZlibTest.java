@@ -142,7 +142,13 @@ final class JlibdeflateZlibTest {
                             CONTEXT));
             assertEquals(FailureKind.FORMAT, error.primaryFailure().kind());
             assertEquals("codec.invalid-data", error.diagnostics().getFirst().identifier());
-            assertEquals(JdkZlib.PROFILE, error.diagnostics().getFirst().values().get("profile"));
+            // The JDK fallback names the pinned LZ4 provider set's profile, as every zlib failure.
+            String profile =
+                switch (Lz4Runtime.selected()) {
+                  case NATIVE -> "jbsa-lz4-v1";
+                  case PORTABLE -> "jbsa-lz4-portable-v1";
+                };
+            assertEquals(profile, error.diagnostics().getFirst().values().get("profile"));
           }
         });
   }

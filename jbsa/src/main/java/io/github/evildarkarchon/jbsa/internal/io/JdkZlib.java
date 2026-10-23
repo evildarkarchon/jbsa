@@ -9,7 +9,12 @@ import java.util.zip.*;
 
 /** Release-pinned RFC 1950 streaming adapter; every call owns independent bounded codec state. */
 public final class JdkZlib {
+  /**
+   * The packaged release codec profile ({@code META-INF/jbsa-codec-profile.json}) that describes
+   * zlib. Failures do not stamp it: they name the pinned LZ4 provider set's profile instead.
+   */
   public static final String PROFILE = Lz4Runtime.PROFILE;
+
   public static final long ENCODE_HEAP_BYTES = 132096;
   public static final long ENCODE_NATIVE_BYTES = 524288;
   public static final long DECODE_HEAP_BYTES = 66560;
@@ -232,7 +237,10 @@ public final class JdkZlib {
     }
   }
 
-  /** Adds codec direction, profile and exact size evidence to the owning archive location. */
+  /**
+   * Adds codec direction, profile and exact size evidence to the owning archive location. The
+   * profile is the pinned LZ4 provider set's, and building it pins that set if nothing has yet.
+   */
   private static ArchiveException failure(
       IoContext context,
       FailureKind kind,
@@ -246,7 +254,12 @@ public final class JdkZlib {
     var values = new TreeMap<String, String>();
     values.put("codec", "zlib");
     values.put("direction", direction);
-    values.put("profile", PROFILE);
+    // zlib sits inside the release codec profile, so it names the pinned LZ4 provider set's
+    // identity (#89). selected() runs only on this failure path, so successful zlib never touches
+    // the LZ4 runtime (Lz4LaunchTest's zlib-only launch). If nothing is pinned yet, this pins the
+    // set the next LZ4 preflight would have chosen, loading the native adapter only on a host that
+    // grants and ships it; selected() never throws, so the zlib failure itself is preserved.
+    values.put("profile", Lz4Runtime.selected().profile());
     values.put("expected", Long.toString(expected));
     if (actual >= 0) values.put("actual", Long.toString(actual));
     return new ArchiveException(

@@ -111,6 +111,7 @@ public final class Lz4Raw {
         count = LZ4HC.LZ4_compress_HC_extStateHC(state, input, output, compressionLevel);
       } catch (RuntimeException | LinkageError | AssertionError cause) {
         throw Lz4Runtime.failure(
+            Provider.NATIVE,
             context,
             FailureKind.INTERNAL,
             "codec.provider-fault",
@@ -122,6 +123,7 @@ public final class Lz4Raw {
       }
       if (count <= 0)
         throw Lz4Runtime.failure(
+            Provider.NATIVE,
             context,
             FailureKind.INTERNAL,
             "codec.compression-failed",
@@ -186,6 +188,7 @@ public final class Lz4Raw {
         count = LZ4.LZ4_decompress_safe(input, output);
       } catch (RuntimeException | LinkageError | AssertionError cause) {
         throw Lz4Runtime.failure(
+            Provider.NATIVE,
             context,
             FailureKind.INTERNAL,
             "codec.provider-fault",
@@ -197,6 +200,7 @@ public final class Lz4Raw {
       }
       if (count < 0 || count != decodedSize)
         throw Lz4Runtime.failure(
+            Provider.NATIVE,
             context,
             FailureKind.FORMAT,
             count < 0 ? "codec.invalid-data" : "codec.size-mismatch",

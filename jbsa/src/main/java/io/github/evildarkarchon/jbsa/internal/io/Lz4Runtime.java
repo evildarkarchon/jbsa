@@ -56,7 +56,8 @@ public final class Lz4Runtime {
       try {
         PortableLz4.admit();
       } catch (LinkageError | RuntimeException cause) {
-        throw unavailable(context, codec, direction, "provider-unavailable", cause);
+        // The portable set is pinned even though lz4-java cannot load, so its identity is reported.
+        throw unavailable(provider, context, codec, direction, "provider-unavailable", cause);
       }
     }
     return provider;
@@ -84,8 +85,10 @@ public final class Lz4Runtime {
   public static synchronized void nativePreflight(String codec, String direction, IoContext context)
       throws ArchiveException {
     Failure failure = nativeUnavailableReason();
+    // This admission concerns only the native adapter, so its evidence names the native profile.
     if (failure != null)
-      throw unavailable(context, codec, direction, failure.reason(), failure.cause());
+      throw unavailable(
+          Provider.NATIVE, context, codec, direction, failure.reason(), failure.cause());
   }
 
   /** One native admission failure: its stable diagnostic cause and the retained provider detail. */
@@ -129,12 +132,29 @@ public final class Lz4Runtime {
     }
   }
 
-  /** Builds the normalized capability failure with its stable cause as a diagnostic value. */
+  /**
+   * Builds the normalized capability failure with its stable cause as a diagnostic value.
+   *
+   * @param provider the provider whose admission failed; its profile is the evidence identity
+   */
   private static ArchiveException unavailable(
-      IoContext context, String codec, String direction, String reason, Throwable cause) {
+      Provider provider,
+      IoContext context,
+      String codec,
+      String direction,
+      String reason,
+      Throwable cause) {
     ArchiveException base =
         failure(
-            context, FailureKind.CAPABILITY, "codec.unavailable", codec, direction, -1, -1, cause);
+            provider,
+            context,
+            FailureKind.CAPABILITY,
+            "codec.unavailable",
+            codec,
+            direction,
+            -1,
+            -1,
+            cause);
     Diagnostic diagnostic = base.diagnostics().getFirst();
     var values = new TreeMap<>(diagnostic.values());
     values.put("capabilityCause", reason);
@@ -155,23 +175,11 @@ public final class Lz4Runtime {
         List.of());
   }
 
-  /** Retains provider details only as causes while recording stable codec and location evidence. */
-  public static ArchiveException failure(
-      IoContext context,
-      FailureKind kind,
-      String identifier,
-      String codec,
-      String direction,
-      long expected,
-      long actual,
-      Throwable cause) {
-    return failure(
-        Provider.NATIVE, context, kind, identifier, codec, direction, expected, actual, cause);
-  }
-
   /**
    * Builds one normalized codec failure whose opaque profile names the provider that ran, so
-   * portable and native evidence are never conflated (JBSA-CODEC-012, JBSA-CODEC-013).
+   * portable and native evidence are never conflated (JBSA-CODEC-012, JBSA-CODEC-013). Provider
+   * details are retained only as causes; the values record stable codec and location evidence.
+   * There is deliberately no overload that defaults the provider: every caller names it.
    */
   public static ArchiveException failure(
       Provider provider,

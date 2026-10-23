@@ -302,6 +302,7 @@ public final class Lz4Frame {
                   state.decodeOptions);
           if (LZ4F_isError(result))
             throw Lz4Runtime.failure(
+                Provider.NATIVE,
                 context,
                 FailureKind.FORMAT,
                 "codec.invalid-data",
@@ -421,6 +422,7 @@ public final class Lz4Frame {
                 state.decodeOptions);
         if (LZ4F_isError(result))
           throw Lz4Runtime.failure(
+              Provider.NATIVE,
               context,
               FailureKind.FORMAT,
               "codec.invalid-data",
@@ -455,6 +457,7 @@ public final class Lz4Frame {
       throws ArchiveException {
     if (LZ4F_isError(result))
       throw Lz4Runtime.failure(
+          Provider.NATIVE,
           context,
           FailureKind.INTERNAL,
           encode ? "codec.compression-failed" : "codec.provider-fault",
@@ -501,12 +504,21 @@ public final class Lz4Frame {
   private static ArchiveException invalid(
       IoContext context, String id, long expected, long actual) {
     return Lz4Runtime.failure(
-        context, FailureKind.FORMAT, id, "lz4-frame", "decode", expected, actual, null);
+        Provider.NATIVE,
+        context,
+        FailureKind.FORMAT,
+        id,
+        "lz4-frame",
+        "decode",
+        expected,
+        actual,
+        null);
   }
 
   private static ArchiveException fault(
       IoContext context, String direction, long expected, long actual, Throwable cause) {
     return Lz4Runtime.failure(
+        Provider.NATIVE,
         context,
         FailureKind.INTERNAL,
         "codec.provider-fault",
