@@ -26,4 +26,18 @@ public enum PayloadCodec {
   public boolean decodesWholeBlocks() {
     return this == LZ4_RAW;
   }
+
+  /**
+   * Returns the heap a reader holds as its own decoded copy of a block of {@code largestBlock}
+   * decoded bytes, which it charges on top of the admitted codec's cost. A whole-block codec's
+   * reader keeps the decoded block, so it holds the whole size; a streaming codec's reader holds no
+   * copy, so it holds nothing. This is the one definition both the reader and the pack readback
+   * charge, and like {@link #decodesWholeBlocks} it needs no admission.
+   *
+   * @param largestBlock the largest block one decode call produces: a General payload's decoded
+   *     size, a DDS texture's largest packed chunk, or a readback part's largest source
+   */
+  public long decodedCopyBytes(long largestBlock) {
+    return decodesWholeBlocks() ? largestBlock : 0;
+  }
 }

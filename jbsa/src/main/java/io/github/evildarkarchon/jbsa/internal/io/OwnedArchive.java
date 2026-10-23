@@ -29,6 +29,10 @@ public final class OwnedArchive implements OpenArchive {
   private final ArchiveInspection inspection;
   private final List<StoredEntry> entries;
   private final Set<Content> children = Collections.newSetFromMap(new IdentityHashMap<>());
+
+  /** The codecs this archive's cursors have admitted; guarded by {@link #lifetime}. */
+  private final ReadCodecs codecs = new ReadCodecs();
+
   private boolean closed;
 
   /** Adopts the validated index and the sole backing handle after the loader completes. */
@@ -151,16 +155,18 @@ public final class OwnedArchive implements OpenArchive {
    *
    * <p>This is the cursor's own decoded copy of a whole-block codec's payload (raw LZ4), which it
    * charges on top of the admitted codec's cost; a streaming codec's cursor holds no copy, so it
-   * charges nothing here.
+   * charges nothing here. {@link PayloadCodec#decodedCopyBytes} decides which codecs hold one.
    */
   private static long decodedCopyHeap(StoredEntry stored) {
-    if (!stored.codec().decodesWholeBlocks()) return 0;
-    if (stored.header() == null) return stored.metadata().decodedSize();
-    return stored.chunks().stream()
-        .filter(chunk -> chunk.packedSize() != 0)
-        .mapToLong(EntryMetadata.DdsChunk::unpackedSize)
-        .max()
-        .orElse(0);
+    long largestBlock =
+        stored.header() == null
+            ? stored.metadata().decodedSize()
+            : stored.chunks().stream()
+                .filter(chunk -> chunk.packedSize() != 0)
+                .mapToLong(EntryMetadata.DdsChunk::unpackedSize)
+                .max()
+                .orElse(0);
+    return stored.codec().decodedCopyBytes(largestBlock);
   }
 
   /** Returns detached structural evidence, including after the owned input has closed. */
@@ -208,10 +214,10 @@ public final class OwnedArchive implements OpenArchive {
                           Long.toString(stored.metadata().decodedSize())));
               throw retention.finish(List.of());
             }
-            // The codec is admitted when the cursor first needs it. A BSA frame pins its provider
-            // here, before its credit is reserved, so the credit charges the decoder that will run.
-            // Raw LZ4 is admitted per decode call inside read() instead, which keeps its
-            // capability failure located at the entry; until then the cursor charges only its
+            // The archive admits each codec the first time a cursor needs it. A BSA frame pins its
+            // provider here, before its credit is reserved, so the credit charges the decoder that
+            // will run. Raw LZ4 is admitted when read() first decodes a block instead, which keeps
+            // its capability failure located at the entry; until then the cursor charges only its
             // decoded copy. Each raw decode's working set is charged separately, by
             // decodeRawLz4 just before that call, never folded into this credit: here its
             // exhaustion would surface from openContent without the entry name, not from read().
@@ -220,8 +226,7 @@ public final class OwnedArchive implements OpenArchive {
             AdmittedCodec codec =
                 stored.codec().decodesWholeBlocks()
                     ? null
-                    : AdmittedCodec.admit(
-                        stored.codec(), "decode", contentContext(stored.metadata().ordinal()));
+                    : admitted(stored.codec(), contentContext(stored.metadata().ordinal()));
             AdmittedCodec.Cost cost =
                 codec == null
                     ? new AdmittedCodec.Cost(0, 0)
@@ -256,6 +261,30 @@ public final class OwnedArchive implements OpenArchive {
           }
         }
       };
+    }
+  }
+
+  /**
+   * Returns {@code codec} admitted for this archive's cursors, admitting it the first time any
+   * cursor needs it. A failed admission is not remembered, so every later attempt fails again at
+   * its own entry's {@code context}.
+   *
+   * <p>Takes {@link #lifetime}, which callers may already hold. Admission can load the portable
+   * provider's library, but it never reads the input, so the lifetime lock's rule still holds.
+   *
+   * @throws ArchiveException {@code CAPABILITY codec.unavailable} when no LZ4 provider can be
+   *     admitted
+   */
+  private AdmittedCodec admitted(PayloadCodec codec, IoContext context) throws ArchiveException {
+    synchronized (lifetime) {
+      return codecs.admit(codec, context);
+    }
+  }
+
+  /** Returns how many codec admissions this archive has performed; a test seam. */
+  int codecAdmissions() {
+    synchronized (lifetime) {
+      return codecs.admissions();
     }
   }
 
@@ -302,7 +331,7 @@ public final class OwnedArchive implements OpenArchive {
     private final StoredEntry stored;
     private final ResourceBudget.Lease credit;
 
-    /** The entry's admitted codec, or null for raw LZ4, which is admitted per decode call. */
+    /** The entry's admitted codec, or null for raw LZ4, which is admitted at its first decode. */
     private final AdmittedCodec codec;
 
     /**
@@ -476,8 +505,9 @@ public final class OwnedArchive implements OpenArchive {
 
     /**
      * Decodes one exact raw-LZ4 span into the heap credit owned by this content cursor. The raw
-     * codec is admitted, and its whole-block working set reserved, for this call only and released
-     * on return, so a capability or capacity failure surfaces from {@code read()} at the entry.
+     * codec is admitted at the archive's first raw decode and reused after; its whole-block working
+     * set is reserved for this call only and released on return, so a capability or capacity
+     * failure surfaces from {@code read()} at the entry.
      */
     private ByteBuffer decodeRawLz4(long offset, long streamSize, long decodedSize)
         throws IOException {
@@ -490,7 +520,7 @@ public final class OwnedArchive implements OpenArchive {
           };
       // Admission, then interruption, then the charge: the order the self-reserving decoder kept,
       // so a capability failure or an interrupt still wins over capacity exhaustion.
-      AdmittedCodec raw = AdmittedCodec.admit(stored.codec(), "decode", payloadContext);
+      AdmittedCodec raw = admitted(stored.codec(), payloadContext);
       interruption.check();
       AdmittedCodec.Cost cost = raw.decodeCost(streamSize, decodedSize);
       try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
@@ -537,9 +567,7 @@ public final class OwnedArchive implements OpenArchive {
           IoContext payloadContext = contentContext(stored.metadata().ordinal());
           // A stored chunk holds its unpacked bytes verbatim, whatever the entry's codec.
           AdmittedCodec chunkCodec =
-              chunk.packedSize() > 0
-                  ? codec
-                  : AdmittedCodec.admit(PayloadCodec.STORED, "decode", payloadContext);
+              chunk.packedSize() > 0 ? codec : admitted(PayloadCodec.STORED, payloadContext);
           synchronized (lifetime) {
             // Decoder creation shares close's lock so parent close cannot miss new native state.
             if (!open || closed) throw new AsynchronousCloseException();

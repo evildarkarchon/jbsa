@@ -1,14 +1,12 @@
 package io.github.evildarkarchon.jbsa.internal.pack;
 
 import io.github.evildarkarchon.jbsa.ArchiveException;
-import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
 import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.ToLongFunction;
@@ -352,9 +350,9 @@ public interface Admitted<K> {
   }
 
   /**
-   * How the pipeline validates one staged part: it admits these credits, plus {@link #codecCost} of
-   * the declared codecs, against the operation budget, reopens the part, requires a CONFORMING
-   * assessment, and decodes every entry.
+   * How the pipeline validates one staged part: it admits these credits, plus the declared codecs'
+   * cost ({@link Codecs#readbackCost}), against the operation budget, reopens the part, requires a
+   * CONFORMING assessment, and decodes every entry.
    *
    * @param nonconformingId the INTERNAL diagnostic for a part that reopens as nonconforming
    * @param heapBytes the reader's peak heap besides its codec, including one 64 KiB decode window
@@ -377,29 +375,6 @@ public interface Admitted<K> {
       decodes = Set.copyOf(decodes);
       if (heapBytes < 0 || nativeBytes < 0 || handles < 0 || largestSource < 0)
         throw new IllegalArgumentException("Negative readback credit");
-    }
-
-    /**
-     * Returns the reader's codec credits under the codecs pack admission pinned. The reader opens
-     * one entry at a time, so one codec is live at once: the credit is the largest decode cost of
-     * any declared codec, where a whole-block codec (raw LZ4) also holds the decoded copy of the
-     * largest source on the heap.
-     *
-     * @param admitted every codec the pipeline admitted for this request
-     * @throws IllegalStateException when a declared codec was not admitted, which is a JBSA bug
-     */
-    public AdmittedCodec.Cost codecCost(Map<PayloadCodec, AdmittedCodec> admitted) {
-      long heap = 0, nativeBytes = 0;
-      for (PayloadCodec codec : decodes) {
-        AdmittedCodec found = admitted.get(codec);
-        if (found == null)
-          throw new IllegalStateException(codec + " is read back without being admitted");
-        AdmittedCodec.Cost decode = found.maxDecodeCost();
-        long copy = codec.decodesWholeBlocks() ? largestSource : 0;
-        heap = Math.max(heap, decode.heapBytes() + copy);
-        nativeBytes = Math.max(nativeBytes, decode.nativeBytes());
-      }
-      return new AdmittedCodec.Cost(heap, nativeBytes);
     }
   }
 

@@ -79,12 +79,16 @@ public final class Lz4Raw {
    * admitted codec's decode cost. Source and sink are borrowed; the caller supplies a wire-bounded
    * block and owns destination publication.
    *
+   * <p>The caller has already refused the block's sizes through {@link #admitDecode} (by way of
+   * {@link AdmittedCodec#checkDecodeSize}). That check has to run before the caller reserves this
+   * call's cost, so that an oversized block reports its codec limit rather than capacity, and it is
+   * the block's only size check: this method does not repeat it.
+   *
    * @param admitted the admitted raw LZ4 codec, whose adapter runs the call
    * @param lease the caller's reservation of that cost, borrowed and never closed here
    * @throws NullPointerException when {@code lease} is null
    * @throws IllegalArgumentException when {@code admitted} is not the raw LZ4 codec
-   * @throws ArchiveException POLICY {@code codec.size-limit} or {@code codec.dispatch-limit} before
-   *     any effect, or a structured codec failure
+   * @throws ArchiveException a structured codec failure
    */
   public static long decode(
       AdmittedCodec admitted,
@@ -98,7 +102,6 @@ public final class Lz4Raw {
       throws IOException {
     Objects.requireNonNull(lease, "lease");
     Lz4Adapter adapter = raw(admitted);
-    admitDecode(storedSize, decodedSize, context);
     return adapter.decodeRaw(source, storedSize, decodedSize, sink, checkpoint, lease, context);
   }
 

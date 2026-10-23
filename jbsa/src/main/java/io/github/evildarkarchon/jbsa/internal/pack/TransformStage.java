@@ -129,10 +129,11 @@ public final class TransformStage implements AutoCloseable {
   public static Encoding encoding(
       AdmittedCodec codec, long decodedSize, boolean retainsRaw, ResourceBudget budget) {
     if (codec.codec() == PayloadCodec.STORED) return null;
-    Codecs.Cost cost = Codecs.cost(codec, decodedSize);
+    long bound = codec.bound(decodedSize);
+    AdmittedCodec.Cost cost = codec.encodeCost(decodedSize);
     return new Encoding(
-        cost.bound(),
-        cost.heap(),
+        bound,
+        cost.heapBytes(),
         cost.nativeBytes(),
         retainsRaw,
         (input, size, encoded, checkpoint, lease, processing) ->

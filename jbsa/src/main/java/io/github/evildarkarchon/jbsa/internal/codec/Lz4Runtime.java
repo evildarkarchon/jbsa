@@ -29,12 +29,83 @@ public final class Lz4Runtime {
 
   private Lz4Runtime() {}
 
-  /** One LZ4 implementation; every operation in a process runs through the same pinned one. */
+  /** Heap bookkeeping each LZ4 call or decoder holds besides its buffers, under either provider. */
+  private static final long LZ4_BOOKKEEPING_BYTES = 4096;
+
+  /**
+   * One LZ4 implementation; every operation in a process runs through the same pinned one.
+   *
+   * <p>Each provider also owns the facts its {@link AdmittedCodec} costs derive from: where its
+   * working set lives and how large its fixed LZ4 state is. Each constant overrides them, so no
+   * cost formula branches on the provider. These facts are plain arithmetic: evaluating them must
+   * never load LWJGL or lz4-java, because {@link AdmittedCodec}'s static initializer evaluates them
+   * for every provider in processes that never touch LZ4. They are methods rather than constructor
+   * arguments because the portable frame encoder's working set uses {@link
+   * AdmittedCodec#rawLz4Bound}, and calling into {@code AdmittedCodec} while this enum initializes
+   * would cycle back into {@code AdmittedCodec}'s initializer before the constants exist.
+   */
   public enum Provider {
     /** The hidden LWJGL 3.4.3 adapter backed by upstream LZ4 1.10.0, qualified on Windows x64. */
-    NATIVE(PROFILE, BSA_FRAME_PROFILE),
+    NATIVE(PROFILE, BSA_FRAME_PROFILE) {
+      /** LWJGL holds every working buffer in native memory; only bookkeeping stays on the heap. */
+      @Override
+      AdmittedCodec.Cost cost(long workingBytes) {
+        return new AdmittedCodec.Cost(LZ4_BOOKKEEPING_BYTES, workingBytes);
+      }
+
+      /** The native compression context and its direct windows. */
+      @Override
+      long frameEncodeBytes() {
+        return Lz4Frame.ENCODE_NATIVE_BYTES;
+      }
+
+      /** The native decompression context, bounded by a 4 MiB block, and its direct windows. */
+      @Override
+      long frameDecodeBytes() {
+        return Lz4Frame.DECODE_NATIVE_BYTES;
+      }
+
+      /**
+       * The explicit external HC state, which avoids an unaccounted provider allocation, plus the
+       * fixed 32-byte allowance the native adapter has always reserved with it.
+       */
+      @Override
+      long rawHcStateBytes() {
+        return 524288 + 32;
+      }
+    },
     /** lz4-java's pure-Java safe provider, available wherever the native adapter is not. */
-    PORTABLE(PORTABLE_PROFILE, PORTABLE_BSA_FRAME_PROFILE);
+    PORTABLE(PORTABLE_PROFILE, PORTABLE_BSA_FRAME_PROFILE) {
+      /** lz4-java works on heap arrays, so the whole working set joins its bookkeeping there. */
+      @Override
+      AdmittedCodec.Cost cost(long workingBytes) {
+        return new AdmittedCodec.Cost(LZ4_BOOKKEEPING_BYTES + workingBytes, 0);
+      }
+
+      /** One input window, one block header, one worst-case block, and the HC tables. */
+      @Override
+      long frameEncodeBytes() {
+        return PortableLz4.WINDOW
+            + 4
+            + AdmittedCodec.rawLz4Bound(PortableLz4.WINDOW)
+            + rawHcStateBytes();
+      }
+
+      /** One compressed and one decoded block at the frame's 4 MiB block maximum. */
+      @Override
+      long frameDecodeBytes() {
+        return 2L * PortableLz4.MAX_BLOCK;
+      }
+
+      /**
+       * lz4-java's HC compressor allocates a fresh {@code int[32768]} hash table and {@code
+       * short[65536]} chain table on every call; this covers both arrays and their headers.
+       */
+      @Override
+      long rawHcStateBytes() {
+        return 2 * 131072 + 4096;
+      }
+    };
 
     private final String profile;
     private final String bsaFrameProfile;
@@ -43,6 +114,21 @@ public final class Lz4Runtime {
       this.profile = profile;
       this.bsaFrameProfile = bsaFrameProfile;
     }
+
+    /**
+     * Returns the cost of an LZ4 call whose buffers and state total {@code workingBytes}, placed in
+     * the memory this provider allocates them from, plus the heap bookkeeping every call holds.
+     */
+    abstract AdmittedCodec.Cost cost(long workingBytes);
+
+    /** Returns the working set of one versioned BSA frame encoder under this provider. */
+    abstract long frameEncodeBytes();
+
+    /** Returns the working set of one frame decoder under this provider. */
+    abstract long frameDecodeBytes();
+
+    /** Returns the HC state one raw block encode holds besides its source and output. */
+    abstract long rawHcStateBytes();
 
     /** Returns the opaque codec-profile identity recorded in this provider's diagnostics. */
     public String profile() {

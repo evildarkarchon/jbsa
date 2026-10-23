@@ -497,14 +497,11 @@ public final class PackPipeline {
       throws ArchiveException {
     long heap = PayloadWindows.WINDOW_BYTES;
     long nativeBytes = 0;
-    if (!parallel)
-      for (Planned<?> entry : planned) {
-        // A codec Codecs.encode reserves per call must not be charged here a second time.
-        if (!Codecs.coordinatorPrecharges(entry.codec())) continue;
-        Codecs.Cost cost = codecs.cost(entry.codec(), entry.source().size());
-        heap = Math.max(heap, cost.heap());
-        nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
-      }
+    if (!parallel) {
+      AdmittedCodec.Cost encoder = codecs.largestPrecharge(planned);
+      heap = Math.max(heap, encoder.heapBytes());
+      nativeBytes = encoder.nativeBytes();
+    }
     return budget.reserve(heap, nativeBytes, 0, 0);
   }
 
@@ -739,20 +736,21 @@ public final class PackPipeline {
       Codecs codecs,
       ResourceBudget budget)
       throws ArchiveException {
-    long heap = 3L * PayloadWindows.WINDOW_BYTES;
-    long nativeBytes = 0;
-    for (Planned<?> entry : planned) {
-      boolean coordinatorEncodes =
-          entry.codec() != PayloadCodec.STORED
-              && (chunked || !parallel || !Codecs.workerEncodes(entry.codec()));
-      // Raw LZ4 is coordinator-encoded but reserved per call by Codecs.encode, kept apart from
-      // this reservation so its exhaustion outcomes stay where they were (#96).
-      if (!coordinatorEncodes || !Codecs.coordinatorPrecharges(entry.codec())) continue;
-      Codecs.Cost cost = codecs.cost(entry.codec(), entry.source().size());
-      heap = Math.max(heap, cost.heap() + 2L * PayloadWindows.WINDOW_BYTES);
-      nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
-    }
-    return budget.reserve(heap, nativeBytes, 0, 0);
+    // Only the entries the coordinator encodes itself; a worker's encoding is admitted by its own
+    // lease, and a stored entry needs no encoder.
+    AdmittedCodec.Cost encoder =
+        codecs.largestPrecharge(
+            planned.stream()
+                .filter(
+                    entry ->
+                        entry.codec() != PayloadCodec.STORED
+                            && (chunked || !parallel || !Codecs.workerEncodes(entry.codec())))
+                .toList());
+    long heap =
+        Math.max(
+            3L * PayloadWindows.WINDOW_BYTES,
+            encoder.heapBytes() + 2L * PayloadWindows.WINDOW_BYTES);
+    return budget.reserve(heap, encoder.nativeBytes(), 0, 0);
   }
 
   /**
@@ -837,7 +835,7 @@ public final class PackPipeline {
     PackRequest request = run.request;
     // The adapter declares which codecs its reader decodes; their cost comes from the codecs this
     // request admitted, so readback charges the same rule, under the same provider, as the read.
-    AdmittedCodec.Cost codec = readback.codecCost(run.codecs.all());
+    AdmittedCodec.Cost codec = run.codecs.readbackCost(readback);
     try (var credits =
             run.budget.reserve(
                 readback.heapBytes() + codec.heapBytes(),
@@ -928,17 +926,12 @@ public final class PackPipeline {
   private static ResourceBudget.Lease reserveWindows(
       List<? extends Planned<?>> planned, boolean sharing, Codecs codecs, ResourceBudget budget)
       throws ArchiveException {
-    long heap = 0;
-    long nativeBytes = 0;
-    for (Planned<?> entry : planned) {
-      // A codec Codecs.encode reserves per call must not be charged here a second time.
-      if (!Codecs.coordinatorPrecharges(entry.codec())) continue;
-      Codecs.Cost cost = codecs.cost(entry.codec(), entry.source().size());
-      heap = Math.max(heap, cost.heap());
-      nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
-    }
+    AdmittedCodec.Cost encoder = codecs.largestPrecharge(planned);
     return budget.reserve(
-        (sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES + heap, nativeBytes, 0, 0);
+        (sharing ? 2L : 1L) * PayloadWindows.WINDOW_BYTES + encoder.heapBytes(),
+        encoder.nativeBytes(),
+        0,
+        0);
   }
 
   /**

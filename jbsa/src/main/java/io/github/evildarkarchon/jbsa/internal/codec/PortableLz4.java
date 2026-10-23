@@ -211,8 +211,9 @@ final class PortableLz4 implements Lz4Adapter {
    * lz4-java's block compressor has no dictionary input, and JBSA-CODEC-013 claims no
    * cross-provider byte identity.
    *
-   * @param lease the caller's lease covering {@link
-   *     AdmittedCodec#PORTABLE_FRAME_ENCODE_HEAP_BYTES}, borrowed and never closed here
+   * @param lease the caller's lease covering the frame encode cost under this provider, whose
+   *     working set is {@link Lz4Runtime.Provider#frameEncodeBytes} on the heap, borrowed and never
+   *     closed here
    * @throws NullPointerException when {@code lease} is null
    */
   @Override
@@ -294,9 +295,9 @@ final class PortableLz4 implements Lz4Adapter {
   }
 
   /**
-   * Creates an incremental frame decoder. The caller has reserved {@link
-   * AdmittedCodec#PORTABLE_FRAME_DECODE_HEAP_BYTES}; the decoder borrows its positional source and
-   * that lease, and holds only heap state.
+   * Creates an incremental frame decoder. The caller has reserved the frame decode cost under this
+   * provider, whose working set is {@link Lz4Runtime.Provider#frameDecodeBytes} on the heap; the
+   * decoder borrows its positional source and that lease, and holds only heap state.
    *
    * @param lease the caller's reservation, which outlives the decoder and is never closed here
    * @throws NullPointerException when {@code lease} is null

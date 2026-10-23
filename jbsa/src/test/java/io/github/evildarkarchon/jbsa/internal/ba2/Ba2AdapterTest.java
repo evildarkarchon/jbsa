@@ -3,7 +3,6 @@ package io.github.evildarkarchon.jbsa.internal.ba2;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.evildarkarchon.jbsa.*;
-import io.github.evildarkarchon.jbsa.internal.codec.AdmittedCodec;
 import io.github.evildarkarchon.jbsa.internal.codec.PayloadCodec;
 import io.github.evildarkarchon.jbsa.internal.dds.DdsEnvelope;
 import io.github.evildarkarchon.jbsa.internal.io.IoContext;
@@ -329,9 +328,8 @@ class Ba2AdapterTest {
    * holding a raw-LZ4 entry decodes raw LZ4; every other part, including an all-stored part of a
    * raw-LZ4 archive, declares zlib, the conservative codec readback has always charged.
    *
-   * <p>The pipeline costs that codec from the codecs pack admission yielded, so the credits it
-   * charges are the module's largest decode cost, plus the largest source for raw LZ4, whose reader
-   * holds each block's decoded copy.
+   * <p>The pipeline costs that codec from the codecs pack admission yielded; {@code CodecsTest}
+   * pins those credits, since the adapter declares no cost of its own.
    */
   @Test
   void declaresReadbackCreditsAndTheNonconformingId() throws Exception {
@@ -340,24 +338,12 @@ class Ba2AdapterTest {
             ArchiveFamily.FO4_GENERAL_BA2, encoding(1, false, false), PackOptions.Compression.ZLIB);
     var part = zlib.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
     var layout = new Admitted.Layout(96, 120);
-    // The codecs pack admission yields: the JDK codecs always, and raw LZ4 when required.
-    AdmittedCodec zlibCodec = AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT);
-    AdmittedCodec rawCodec = AdmittedCodec.admit(PayloadCodec.LZ4_RAW, "encode", CONTEXT);
-    var codecs =
-        Map.of(
-            PayloadCodec.STORED,
-            AdmittedCodec.admit(PayloadCodec.STORED, "encode", CONTEXT),
-            PayloadCodec.ZLIB,
-            zlibCodec,
-            PayloadCodec.LZ4_RAW,
-            rawCodec);
     long readerHeap = 512L * 2 + 8L * 120 + 65536;
     Admitted.Readback zlibReadback = zlib.readback(part, layout);
     assertEquals(
         new Admitted.Readback(
             "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.ZLIB), 700),
         zlibReadback);
-    assertEquals(zlibCodec.maxDecodeCost(), zlibReadback.codecCost(codecs));
 
     var raw =
         admit(
@@ -370,12 +356,6 @@ class Ba2AdapterTest {
         new Admitted.Readback(
             "ba2.noncanonical-staged-output", readerHeap, 0, 1, Set.of(PayloadCodec.LZ4_RAW), 700),
         rawReadback);
-    // Raw block buffers are native under LWJGL and heap under the portable provider; the decoded
-    // copy of the largest source is always heap.
-    assertEquals(
-        new AdmittedCodec.Cost(
-            700 + rawCodec.maxDecodeCost().heapBytes(), rawCodec.maxDecodeCost().nativeBytes()),
-        rawReadback.codecCost(codecs));
 
     var storedRaw =
         admit(
@@ -392,7 +372,6 @@ class Ba2AdapterTest {
         storedRaw.plan(List.of(entry("Data/A.bin", 10), entry("Data/B.bin", 700)), CONTEXT);
     Admitted.Readback storedReadback = storedRaw.readback(storedPart, layout);
     assertEquals(Set.of(PayloadCodec.ZLIB), storedReadback.decodes());
-    assertEquals(zlibCodec.maxDecodeCost(), storedReadback.codecCost(codecs));
   }
 
   /** Admits a request for the family with the given global compression and no overrides. */

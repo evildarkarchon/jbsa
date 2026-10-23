@@ -12,7 +12,8 @@ import java.util.Objects;
  * NativeLz4} adapts the qualified LWJGL binding and {@link PortableLz4} lz4-java's pure-Java safe
  * provider (JBSA-CODEC-014). Production reaches an adapter only through the provider an {@link
  * AdmittedCodec} resolved, or through {@link Lz4Runtime#preflight} for the qualification-only
- * general frame; tests choose one with {@link #of}.
+ * general frame. Tests choose one the same way, through the module's one test factory, {@link
+ * AdmittedCodec#forProvider}, and never call {@link #of} themselves.
  *
  * <p>An adapter is a stateless singleton and keeps every piece of codec state per call or per
  * decoder, so concurrent calls never share mutable state. Every method borrows the caller's lease,

@@ -66,6 +66,10 @@ public final class IndexSession {
   private final List<StoredEntry> entries = new ArrayList<>();
   private final Set<NormalizedNameIdentity> identities = new HashSet<>();
   private final List<Span> spans = new ArrayList<>();
+
+  /** The codecs payload prefixes have admitted; the session's thread confinement guards it. */
+  private final ReadCodecs codecs = new ReadCodecs();
+
   private long expected = -1;
   private Charset encoding;
   private boolean noncanonical;
@@ -182,6 +186,11 @@ public final class IndexSession {
     return entries;
   }
 
+  /** Returns how many codec admissions this session has performed; a test seam. */
+  int codecAdmissions() {
+    return codecs.admissions();
+  }
+
   /** Rejects a loader whose declared, admitted and reported entry counts disagree. */
   private void checkCount(ArchiveMetadata metadata) throws ArchiveException {
     if (expected != entries.size() || metadata.entryCount() != expected)
@@ -264,14 +273,16 @@ public final class IndexSession {
       throws IOException {
     if (length < 0 || length > 128) throw new IllegalArgumentException("Payload prefix extent");
     ExactIo.end(offset, streamSize, input.size(), context);
-    // A raw block's wire and dispatch sizes are refused before its cost is charged, as the
-    // self-reserving decoder did, so an oversized block reports its codec limit, not capacity.
+    // A raw block's wire and dispatch sizes are refused before admission and before its cost is
+    // charged, so an oversized block reports its codec limit, not a capability or capacity
+    // failure. This is the block's only size check; the decode below trusts it.
     AdmittedCodec.checkDecodeSize(codec, streamSize, decodedSize, context);
-    // The codec is admitted when the prefix first needs it, so an LZ4 credit charges the provider
-    // admission pins. Every codec's decode cost, raw LZ4's whole block included, joins the prefix
-    // buffer in one reservation: the codecs never reserve, and one combined lease reaches the
-    // same total the old separate raw charge did, so the same ceiling is exhausted.
-    AdmittedCodec admitted = AdmittedCodec.admit(codec, "decode", context);
+    // The session admits each codec the first time a prefix needs it, so an LZ4 credit charges
+    // the provider admission pinned. Every codec's decode cost, raw LZ4's whole block included,
+    // joins the prefix buffer in one reservation, because the codecs never reserve for
+    // themselves; a raw block that does not fit therefore exhausts the same ceiling as the
+    // prefix buffer it decodes into.
+    AdmittedCodec admitted = codecs.admit(codec, context);
     AdmittedCodec.Cost cost = admitted.decodeCost(streamSize, decodedSize);
     try (var credit = budget.reserve(length + cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
       ByteBuffer prefix =
@@ -293,6 +304,9 @@ public final class IndexSession {
                 prefix.put(available);
               }
             },
+            // No cancellation point: the index walk polls no stop signal, so the streaming branch
+            // below has none either, and the block is bounded by the dispatch limit checked
+            // above, so one decode always finishes in bounded time.
             () -> {},
             credit,
             context);
