@@ -102,20 +102,32 @@ final class Codecs {
    */
   static Cost cost(AdmittedCodec codec, long decodedSize) {
     long bound = codec.bound(decodedSize);
-    // Lz4Raw admits its whole block, output bound, and HC state against the operation budget on
-    // every call, so the map charges nothing up front; a precharge would count them twice.
-    if (codec.codec() == PayloadCodec.LZ4_RAW) return new Cost(bound, 0, 0);
+    // Raw LZ4's real cost is its whole block, output bound and HC state; encode reserves it per
+    // call on the coordinator (see coordinatorPrecharges), never the codec itself.
     AdmittedCodec.Cost encode = codec.encodeCost(decodedSize);
     return new Cost(bound, encode.heapBytes(), encode.nativeBytes());
   }
 
   /**
    * Returns whether a transform-stage worker may run this encoder. Raw LZ4 stays on the
-   * coordinator, as BA2 always kept it: each call admits a whole block plus its multi-MiB buffers
-   * (native under the LWJGL provider, heap under the portable one) against the operation budget
-   * itself, so concurrent workers would multiply that peak outside the stage's headroom rule.
+   * coordinator, as BA2 always kept it: each call holds a whole block plus its multi-MiB buffers
+   * (native under the LWJGL provider, heap under the portable one), so concurrent workers would
+   * multiply that peak outside the stage's headroom rule.
    */
   static boolean workerEncodes(PayloadCodec codec) {
+    return codec != PayloadCodec.LZ4_RAW;
+  }
+
+  /**
+   * Returns whether the coordinator's all-or-nothing reservation covers this codec's {@link #cost}.
+   * Raw LZ4 is the exception: {@link #encode} reserves its cost separately, per call, just before
+   * the encoder runs. Folding it into the up-front reservation would change reported outcomes. That
+   * reservation is costed from the whole source, so an oversized raw block, or a DX10 texture whose
+   * chunks are each encoded separately, would fail {@code io.resource-capacity} up front instead of
+   * {@code codec.dispatch-limit} at its entry, or instead of succeeding chunk by chunk; and a raw
+   * exhaustion would preempt failures of entries stabilized before it.
+   */
+  static boolean coordinatorPrecharges(PayloadCodec codec) {
     return codec != PayloadCodec.LZ4_RAW;
   }
 
@@ -143,11 +155,12 @@ final class Codecs {
    * differ.
    *
    * @param codec the admitted codec, whose provider and profile identity the encoder uses
-   * @param budget the operation budget a borrowing encoder settles against
-   * @param admission a reservation already covering {@link #cost}'s heap and native bytes; only the
-   *     BSA LZ4 frame borrows it, and it may be null for the other codecs. Raw LZ4 admits its own
-   *     working set against {@code budget} instead
+   * @param budget the operation budget raw LZ4's per-call reservation draws on
+   * @param admission a reservation already covering {@link #cost}'s heap and native bytes, which
+   *     the encoder borrows; for raw LZ4 it covers none of them, because this method reserves raw
+   *     LZ4's cost against {@code budget} for the call (see {@link #coordinatorPrecharges})
    * @throws IOException a structured source-length, stall, codec, or sink failure
+   * @throws NullPointerException when {@code admission} is null
    */
   static void encode(
       AdmittedCodec codec,
@@ -159,14 +172,16 @@ final class Codecs {
       ResourceBudget.Lease admission,
       IoContext processing)
       throws IOException {
+    java.util.Objects.requireNonNull(admission, "admission");
     switch (codec.codec()) {
       case STORED -> PayloadWindows.transfer(input, decodedSize, sink, checkpoint, processing);
-      case ZLIB -> JdkZlib.encode(codec, input, decodedSize, sink, checkpoint, processing);
+      case ZLIB ->
+          JdkZlib.encode(codec, input, decodedSize, sink, checkpoint, admission, processing);
       case BSA_LZ4_FRAME -> {
         if (input == null)
           throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
         long[] read = {0};
-        BsaLz4Frame.encodePrecharged(
+        BsaLz4Frame.encode(
             codec,
             (offset, bytes) -> {
               // The encoder reads its source once, front to back; anything else is a JBSA bug.
@@ -178,7 +193,6 @@ final class Codecs {
             decodedSize,
             sink,
             checkpoint,
-            budget,
             admission,
             processing);
         requireEnd(input, checkpoint, processing);
@@ -186,19 +200,29 @@ final class Codecs {
       case LZ4_RAW -> {
         if (input == null)
           throw processing.failure(FailureKind.SOURCE, "source.invalid-channel", null);
-        Lz4Raw.encode(
-            (offset, bytes) -> {
-              // Raw LZ4 reads its whole block once from offset zero; anything else is a JBSA bug.
-              if (offset != 0)
-                throw processing.failure(FailureKind.INTERNAL, "operation.internal-failure", null);
-              readExact(input, bytes, checkpoint, processing);
-            },
-            decodedSize,
-            sink,
-            checkpoint,
-            budget,
-            processing,
-            LZ4_RAW_LEVEL);
+        // The reservation keeps the order the self-reserving encoder had: dispatch admission
+        // first, so an oversized block reports codec.dispatch-limit rather than the capacity
+        // failure its cost would raise, then cancellation, then the charge.
+        Lz4Raw.admitEncode(decodedSize, processing);
+        checkpoint.check();
+        Cost cost = cost(codec, decodedSize);
+        try (var lease = budget.reserve(cost.heap(), cost.nativeBytes(), 0, 0)) {
+          Lz4Raw.encode(
+              (offset, bytes) -> {
+                // Raw LZ4 reads its whole block once from offset zero; anything else is a JBSA
+                // bug.
+                if (offset != 0)
+                  throw processing.failure(
+                      FailureKind.INTERNAL, "operation.internal-failure", null);
+                readExact(input, bytes, checkpoint, processing);
+              },
+              decodedSize,
+              sink,
+              checkpoint,
+              lease,
+              processing,
+              LZ4_RAW_LEVEL);
+        }
         requireEnd(input, checkpoint, processing);
       }
     }

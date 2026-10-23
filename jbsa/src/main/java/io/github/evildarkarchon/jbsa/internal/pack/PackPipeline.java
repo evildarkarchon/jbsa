@@ -498,6 +498,8 @@ public final class PackPipeline {
     long nativeBytes = 0;
     if (!parallel)
       for (Planned<?> entry : planned) {
+        // A codec Codecs.encode reserves per call must not be charged here a second time.
+        if (!Codecs.coordinatorPrecharges(entry.codec())) continue;
         Codecs.Cost cost = codecs.cost(entry.codec(), entry.source().size());
         heap = Math.max(heap, cost.heap());
         nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
@@ -742,7 +744,9 @@ public final class PackPipeline {
       boolean coordinatorEncodes =
           entry.codec() != PayloadCodec.STORED
               && (chunked || !parallel || !Codecs.workerEncodes(entry.codec()));
-      if (!coordinatorEncodes) continue;
+      // Raw LZ4 is coordinator-encoded but reserved per call by Codecs.encode, kept apart from
+      // this reservation so its exhaustion outcomes stay where they were (#96).
+      if (!coordinatorEncodes || !Codecs.coordinatorPrecharges(entry.codec())) continue;
       Codecs.Cost cost = codecs.cost(entry.codec(), entry.source().size());
       heap = Math.max(heap, cost.heap() + 2L * PayloadWindows.WINDOW_BYTES);
       nativeBytes = Math.max(nativeBytes, cost.nativeBytes());
@@ -920,6 +924,8 @@ public final class PackPipeline {
     long heap = 0;
     long nativeBytes = 0;
     for (Planned<?> entry : planned) {
+      // A codec Codecs.encode reserves per call must not be charged here a second time.
+      if (!Codecs.coordinatorPrecharges(entry.codec())) continue;
       Codecs.Cost cost = codecs.cost(entry.codec(), entry.source().size());
       heap = Math.max(heap, cost.heap());
       nativeBytes = Math.max(nativeBytes, cost.nativeBytes());

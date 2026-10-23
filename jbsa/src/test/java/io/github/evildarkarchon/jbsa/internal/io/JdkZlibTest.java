@@ -25,13 +25,16 @@ final class JdkZlibTest {
   void invalidDataNamesThePinnedProviderProfile() throws Exception {
     byte[] stored = {1, 2, 3, 4};
     ArchiveException failure;
-    try (var decoder =
-        JdkZlib.decoder(
-            AdmittedCodec.admit(PayloadCodec.ZLIB, "decode", CONTEXT),
-            (offset, bytes) -> bytes.put(stored, (int) offset, bytes.remaining()),
-            stored.length,
-            8,
-            CONTEXT)) {
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT);
+        var lease = budget.reserve(JdkZlib.DECODE_HEAP_BYTES, JdkZlib.DECODE_NATIVE_BYTES, 0, 0);
+        var decoder =
+            JdkZlib.decoder(
+                AdmittedCodec.admit(PayloadCodec.ZLIB, "decode", CONTEXT),
+                (offset, bytes) -> bytes.put(stored, (int) offset, bytes.remaining()),
+                stored.length,
+                8,
+                lease,
+                CONTEXT)) {
       failure = assertThrows(ArchiveException.class, () -> decoder.read(ByteBuffer.allocate(8)));
     }
     // Resolved after the failure, so an unpinned process proves the failure pinned the same set.

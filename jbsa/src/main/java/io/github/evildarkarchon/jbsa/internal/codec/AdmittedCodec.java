@@ -222,8 +222,9 @@ public final class AdmittedCodec {
   }
 
   /**
-   * Returns one encode call's cost under an explicit provider. The LZ4 adapters reserve exactly
-   * this for their own calls, so the published cost and the charge cannot drift apart.
+   * Returns one encode call's cost under an explicit provider. Every caller reserves exactly this
+   * and lends the lease to the encoder, which never reserves for itself, so the published cost and
+   * the charge cannot drift apart (#96).
    *
    * @param provider the provider that runs the call; ignored by stored and zlib
    */

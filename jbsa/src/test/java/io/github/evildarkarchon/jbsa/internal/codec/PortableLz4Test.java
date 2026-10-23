@@ -63,19 +63,27 @@ final class PortableLz4Test {
     }
     for (byte[] invalid : new byte[][] {new byte[0], {0, 0, 0}, {16, 65}, hello}) {
       try (var budget = budget()) {
-        ArchiveException failure =
-            assertThrows(
-                ArchiveException.class,
-                () ->
-                    Lz4Raw.decode(
-                        Provider.PORTABLE,
-                        source(invalid),
-                        invalid.length,
-                        invalid == hello ? 4 : 5,
-                        (offset, bytes) -> fail("destination touched"),
-                        () -> {},
-                        budget,
-                        CONTEXT));
+        int size = invalid == hello ? 4 : 5;
+        ArchiveException failure;
+        try (var lease =
+            lease(
+                budget,
+                AdmittedCodec.forProvider(PayloadCodec.LZ4_RAW, Provider.PORTABLE)
+                    .decodeCost(invalid.length, size))) {
+          failure =
+              assertThrows(
+                  ArchiveException.class,
+                  () ->
+                      Lz4Raw.decode(
+                          Provider.PORTABLE,
+                          source(invalid),
+                          invalid.length,
+                          size,
+                          (offset, bytes) -> fail("destination touched"),
+                          () -> {},
+                          lease,
+                          CONTEXT));
+        }
         assertEquals(FailureKind.FORMAT, failure.primaryFailure().kind());
         assertEquals(
             Lz4Runtime.PORTABLE_PROFILE, failure.diagnostics().getFirst().values().get("profile"));
@@ -241,40 +249,48 @@ final class PortableLz4Test {
         "dependent-blocks", failure.diagnostics().getFirst().values().get("capabilityCause"));
   }
 
-  /** Too little heap fails as POLICY before the source or sink is touched; nothing is native. */
+  /**
+   * Too little heap fails as POLICY before the source or sink is touched; nothing is native. The
+   * caller's reservation of the portable cost is the only admission, so it is what refuses, and an
+   * encoder offered no admission refuses before either callback runs.
+   */
   @Test
   void refusesUnadmittedHeapBeforeEffects() throws Exception {
+    AdmittedCodec frame = AdmittedCodec.forProvider(PayloadCodec.BSA_LZ4_FRAME, Provider.PORTABLE);
+    AdmittedCodec raw = AdmittedCodec.forProvider(PayloadCodec.LZ4_RAW, Provider.PORTABLE);
+    assertEquals(0, frame.encodeCost(1).nativeBytes());
+    assertEquals(0, raw.encodeCost(1).nativeBytes());
     try (var budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 4096, 0, 0)) {
-      ArchiveException frame =
-          assertThrows(
-              ArchiveException.class,
-              () ->
-                  Lz4Frame.encode(
-                      Provider.PORTABLE,
-                      (offset, bytes) -> fail("source touched"),
-                      1,
-                      (offset, bytes) -> fail("sink touched"),
-                      () -> {},
-                      budget,
-                      null,
-                      CONTEXT,
-                      true));
-      assertEquals(FailureKind.POLICY, frame.primaryFailure().kind());
-      ArchiveException raw =
-          assertThrows(
-              ArchiveException.class,
-              () ->
-                  Lz4Raw.encode(
-                      Provider.PORTABLE,
-                      (offset, bytes) -> fail("source touched"),
-                      1,
-                      (offset, bytes) -> fail("sink touched"),
-                      () -> {},
-                      budget,
-                      CONTEXT,
-                      12));
-      assertEquals(FailureKind.POLICY, raw.primaryFailure().kind());
+      for (AdmittedCodec codec : new AdmittedCodec[] {frame, raw}) {
+        ArchiveException refused =
+            assertThrows(ArchiveException.class, () -> lease(budget, codec.encodeCost(1)));
+        assertEquals(FailureKind.POLICY, refused.primaryFailure().kind());
+      }
     }
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            Lz4Frame.encode(
+                Provider.PORTABLE,
+                (offset, bytes) -> fail("source touched"),
+                1,
+                (offset, bytes) -> fail("sink touched"),
+                () -> {},
+                null,
+                CONTEXT,
+                true));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            Lz4Raw.encode(
+                Provider.PORTABLE,
+                (offset, bytes) -> fail("source touched"),
+                1,
+                (offset, bytes) -> fail("sink touched"),
+                () -> {},
+                null,
+                CONTEXT,
+                12));
   }
 
   /** A decoder handed to another thread still decodes and closes exactly once. */
@@ -282,21 +298,26 @@ final class PortableLz4Test {
   void decoderMayBeConsumedAndClosedByAnotherThread() throws Exception {
     byte[] data = sample(200_000, 49);
     byte[] frame = frameEncode(Provider.PORTABLE, data, true);
-    var decoder =
-        Lz4Frame.decoder(Provider.PORTABLE, source(frame), frame.length, data.length, CONTEXT);
-    byte[] decoded =
-        java.util.concurrent.CompletableFuture.supplyAsync(
-                () -> {
-                  try (decoder) {
-                    return drain(decoder, data.length, 8192);
-                  } catch (java.io.IOException failure) {
-                    throw new java.util.concurrent.CompletionException(failure);
-                  }
-                })
-            .get(10, java.util.concurrent.TimeUnit.SECONDS);
-    assertArrayEquals(data, decoded);
-    assertThrows(
-        java.nio.channels.ClosedChannelException.class, () -> decoder.read(ByteBuffer.allocate(1)));
+    try (var budget = budget();
+        var lease = lease(budget, frameDecodeCost(Provider.PORTABLE, frame.length, data.length))) {
+      var decoder =
+          Lz4Frame.decoder(
+              Provider.PORTABLE, source(frame), frame.length, data.length, lease, CONTEXT);
+      byte[] decoded =
+          java.util.concurrent.CompletableFuture.supplyAsync(
+                  () -> {
+                    try (decoder) {
+                      return drain(decoder, data.length, 8192);
+                    } catch (java.io.IOException failure) {
+                      throw new java.util.concurrent.CompletionException(failure);
+                    }
+                  })
+              .get(10, java.util.concurrent.TimeUnit.SECONDS);
+      assertArrayEquals(data, decoded);
+      assertThrows(
+          java.nio.channels.ClosedChannelException.class,
+          () -> decoder.read(ByteBuffer.allocate(1)));
+    }
   }
 
   /**
@@ -375,66 +396,91 @@ final class PortableLz4Test {
     };
   }
 
-  /** Encodes one raw block at the Starfield level through the given provider. */
+  /** Reserves one call's cost from the ledger, as every codec caller must before the call. */
+  private static ResourceBudget.Lease lease(ResourceBudget budget, AdmittedCodec.Cost cost)
+      throws ArchiveException {
+    return budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
+  }
+
+  /** Returns one frame decoder's cost under the given provider. */
+  private static AdmittedCodec.Cost frameDecodeCost(
+      Provider provider, long storedSize, long decodedSize) {
+    return AdmittedCodec.forProvider(PayloadCodec.BSA_LZ4_FRAME, provider)
+        .decodeCost(storedSize, decodedSize);
+  }
+
+  /**
+   * Encodes one raw block at the Starfield level through the given provider, on a lease of that
+   * provider's encode cost drawn from {@code budget}.
+   */
   private static byte[] rawEncode(Provider provider, byte[] data, ResourceBudget budget)
       throws Exception {
     var output = new ByteArrayOutputStream();
-    Lz4Raw.encode(provider, source(data), data.length, sink(output), () -> {}, budget, CONTEXT, 12);
+    AdmittedCodec raw = AdmittedCodec.forProvider(PayloadCodec.LZ4_RAW, provider);
+    try (var lease = lease(budget, raw.encodeCost(data.length))) {
+      Lz4Raw.encode(
+          provider, source(data), data.length, sink(output), () -> {}, lease, CONTEXT, 12);
+    }
     return output.toByteArray();
   }
 
-  /** Decodes one raw block through the given provider. */
+  /**
+   * Decodes one raw block through the given provider, on a lease of that provider's decode cost
+   * drawn from {@code budget}.
+   */
   private static byte[] rawDecode(Provider provider, byte[] block, int size, ResourceBudget budget)
       throws Exception {
     var output = new ByteArrayOutputStream();
-    Lz4Raw.decode(
-        provider, source(block), block.length, size, sink(output), () -> {}, budget, CONTEXT);
+    AdmittedCodec raw = AdmittedCodec.forProvider(PayloadCodec.LZ4_RAW, provider);
+    try (var lease = lease(budget, raw.decodeCost(block.length, size))) {
+      Lz4Raw.decode(
+          provider, source(block), block.length, size, sink(output), () -> {}, lease, CONTEXT);
+    }
     return output.toByteArray();
   }
 
   /** Encodes one frame through the given provider under a ledger that fits either provider. */
   private static byte[] frameEncode(Provider provider, byte[] data, boolean bsa) throws Exception {
     var output = new ByteArrayOutputStream();
-    try (var budget = crossBudget()) {
+    AdmittedCodec frame = AdmittedCodec.forProvider(PayloadCodec.BSA_LZ4_FRAME, provider);
+    try (var budget = crossBudget();
+        var lease = lease(budget, frame.encodeCost(data.length))) {
       long count =
           Lz4Frame.encode(
-              provider,
-              source(data),
-              data.length,
-              sink(output),
-              () -> {},
-              budget,
-              null,
-              CONTEXT,
-              bsa);
+              provider, source(data), data.length, sink(output), () -> {}, lease, CONTEXT, bsa);
       assertEquals(output.size(), count);
     }
     return output.toByteArray();
   }
 
-  /** Decodes one whole frame through the given provider. */
+  /**
+   * Decodes one whole frame through the given provider, on a lease of its decoder cost plus the 64
+   * KiB heap window the portable one-shot decoder copies output through.
+   */
   private static byte[] frameDecode(Provider provider, byte[] frame, long size) throws Exception {
     var output = new ByteArrayOutputStream();
-    try (var budget = crossBudget()) {
+    AdmittedCodec.Cost decoder = frameDecodeCost(provider, frame.length, size);
+    long window = provider == Provider.PORTABLE ? 65536 : 0;
+    try (var budget = crossBudget();
+        var lease =
+            lease(
+                budget,
+                new AdmittedCodec.Cost(decoder.heapBytes() + window, decoder.nativeBytes()))) {
       assertEquals(
           size,
           Lz4Frame.decode(
-              provider,
-              source(frame),
-              frame.length,
-              size,
-              sink(output),
-              () -> {},
-              budget,
-              CONTEXT));
+              provider, source(frame), frame.length, size, sink(output), () -> {}, lease, CONTEXT));
     }
     return output.toByteArray();
   }
 
   /** Decodes through the incremental portable decoder with a fixed destination window. */
   private static byte[] streamDecode(byte[] frame, int size, int window) throws Exception {
-    try (var decoder =
-        Lz4Frame.decoder(Provider.PORTABLE, source(frame), frame.length, size, CONTEXT)) {
+    try (var budget = budget();
+        var lease = lease(budget, frameDecodeCost(Provider.PORTABLE, frame.length, size));
+        var decoder =
+            Lz4Frame.decoder(
+                Provider.PORTABLE, source(frame), frame.length, size, lease, CONTEXT)) {
       return drain(decoder, size, window);
     }
   }

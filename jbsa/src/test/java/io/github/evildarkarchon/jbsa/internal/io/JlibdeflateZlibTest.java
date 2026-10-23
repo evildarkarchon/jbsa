@@ -221,13 +221,17 @@ final class JlibdeflateZlibTest {
   /** Produces baseline JDK level-9 bytes through the production streaming adapter. */
   private static byte[] jdkEncode(byte[] data) throws Exception {
     var encoded = new java.io.ByteArrayOutputStream();
-    JdkZlib.encode(
-        AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
-        java.nio.channels.Channels.newChannel(new java.io.ByteArrayInputStream(data)),
-        data.length,
-        sink(encoded),
-        () -> {},
-        CONTEXT);
+    try (ResourceBudget budget = budget();
+        var lease = budget.reserve(JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES, 0, 0)) {
+      JdkZlib.encode(
+          AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", CONTEXT),
+          java.nio.channels.Channels.newChannel(new java.io.ByteArrayInputStream(data)),
+          data.length,
+          sink(encoded),
+          () -> {},
+          lease,
+          CONTEXT);
+    }
     return encoded.toByteArray();
   }
 

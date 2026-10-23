@@ -40,6 +40,26 @@ final class Lz4FrameTest {
     return budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
   }
 
+  /** Reserves one frame encode's cost for the provider admission pins, as its caller must. */
+  private static ResourceBudget.Lease reserveEncoder(ResourceBudget budget, long decodedSize)
+      throws ArchiveException {
+    AdmittedCodec.Cost cost =
+        AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "encode", CONTEXT).encodeCost(decodedSize);
+    return budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
+  }
+
+  /**
+   * Reserves one one-shot frame decode's credit: the decoder's cost, plus the 64 KiB heap window
+   * the portable one-shot copies output through.
+   */
+  private static ResourceBudget.Lease reserveOneShot(
+      ResourceBudget budget, long storedSize, long decodedSize) throws ArchiveException {
+    AdmittedCodec admitted = AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "decode", CONTEXT);
+    AdmittedCodec.Cost cost = admitted.decodeCost(storedSize, decodedSize);
+    long window = admitted.provider() == Lz4Runtime.Provider.PORTABLE ? 65536 : 0;
+    return budget.reserve(cost.heapBytes() + window, cost.nativeBytes(), 0, 0);
+  }
+
   @Test
   void decoderStateMayBeConsumedAndClosedByAnotherThread() throws Exception {
     byte[] data = new byte[200_000];
@@ -47,7 +67,7 @@ final class Lz4FrameTest {
     byte[] frame = encode(data);
     try (ResourceBudget budget = budget();
         ResourceBudget.Lease lease = reserveDecoder(budget, frame.length, data.length)) {
-      var decoder = Lz4Frame.decoder(source(frame), frame.length, data.length, CONTEXT);
+      var decoder = Lz4Frame.decoder(source(frame), frame.length, data.length, lease, CONTEXT);
       var result =
           CompletableFuture.supplyAsync(
               () -> {
@@ -102,12 +122,17 @@ final class Lz4FrameTest {
         decode(HexFormat.of().parseHex("04224d186040820500008068656c6c6f00000000"), 5));
   }
 
+  /**
+   * A cancelled decode leaves its caller's lease open and holds no credit of its own, so every
+   * credit returns once the caller closes the lease; a callback failure keeps operation identity.
+   */
   @Test
   void releasesDecoderCreditsAfterCancellationAndPreservesCallbackFailure() throws Exception {
     byte[] frame = encode(new byte[400000]);
     AtomicInteger checks = new AtomicInteger();
     IOException cancellation = new IOException("cancelled");
     try (ResourceBudget budget = budget()) {
+      var lease = reserveOneShot(budget, frame.length, 400000);
       assertSame(
           cancellation,
           assertThrows(
@@ -121,28 +146,34 @@ final class Lz4FrameTest {
                       () -> {
                         if (checks.incrementAndGet() == 3) throw cancellation;
                       },
-                      budget,
+                      lease,
                       CONTEXT)));
+      // The borrowed lease is still the caller's until it closes it.
+      assertThrows(
+          ArchiveException.class, () -> budget.reserve(HEAP_CEILING, NATIVE_CEILING, 0, 0));
+      lease.close();
       try (ResourceBudget.Lease returned = budget.reserve(HEAP_CEILING, NATIVE_CEILING, 0, 0)) {
         assertNotNull(returned);
       }
-      ArchiveException failure =
-          assertThrows(
-              ArchiveException.class,
-              () ->
-                  Lz4Frame.decode(
-                      source(frame),
-                      frame.length,
-                      400000,
-                      (offset, bytes) -> {
-                        throw new IllegalStateException("caller failure");
-                      },
-                      () -> {},
-                      budget,
-                      CONTEXT));
-      assertEquals(
-          "operation.internal-failure",
-          failure.primaryFailure().diagnosticIdentifier().orElseThrow());
+      try (var failing = reserveOneShot(budget, frame.length, 400000)) {
+        ArchiveException failure =
+            assertThrows(
+                ArchiveException.class,
+                () ->
+                    Lz4Frame.decode(
+                        source(frame),
+                        frame.length,
+                        400000,
+                        (offset, bytes) -> {
+                          throw new IllegalStateException("caller failure");
+                        },
+                        () -> {},
+                        failing,
+                        CONTEXT));
+        assertEquals(
+            "operation.internal-failure",
+            failure.primaryFailure().diagnosticIdentifier().orElseThrow());
+      }
     }
   }
 
@@ -182,30 +213,41 @@ final class Lz4FrameTest {
     assertThrows(ArchiveException.class, () -> decode(frame, data.length + 1));
   }
 
+  /**
+   * Memory is admitted only by the caller's reservation of the encode cost: with no capacity that
+   * admission is refused, and an encoder offered no admission refuses before touching its source or
+   * sink.
+   */
   @Test
   void refusesUnadmittedMemoryBeforeReadingOrWriting() throws Exception {
     try (ResourceBudget budget = new ResourceBudget(ResourceLimits.standard(), CONTEXT, 0, 0, 0)) {
       ArchiveException failure =
-          assertThrows(
-              ArchiveException.class,
-              () ->
-                  Lz4Frame.encode(
-                      (offset, bytes) -> fail("source touched"),
-                      1,
-                      (offset, bytes) -> fail("sink touched"),
-                      () -> {},
-                      budget,
-                      CONTEXT));
+          assertThrows(ArchiveException.class, () -> reserveEncoder(budget, 1));
       assertEquals(FailureKind.POLICY, failure.primaryFailure().kind());
     }
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            Lz4Frame.encode(
+                (offset, bytes) -> fail("source touched"),
+                1,
+                (offset, bytes) -> fail("sink touched"),
+                () -> {},
+                null,
+                CONTEXT));
   }
 
+  /**
+   * Cancellation is observed between windows, and the cancelled encoder leaves its caller's lease
+   * open and holds no credit of its own, so every credit returns once the caller closes the lease.
+   */
   @Test
   void returnsCreditsAfterCancellationAndChecksBetweenWindows() throws Exception {
     byte[] data = new byte[400000];
     AtomicInteger checkpoints = new AtomicInteger();
     IOException cancellation = new IOException("cancelled");
     try (ResourceBudget budget = budget()) {
+      var lease = reserveEncoder(budget, data.length);
       assertSame(
           cancellation,
           assertThrows(
@@ -218,9 +260,13 @@ final class Lz4FrameTest {
                       () -> {
                         if (checkpoints.incrementAndGet() == 3) throw cancellation;
                       },
-                      budget,
+                      lease,
                       CONTEXT)));
       assertEquals(3, checkpoints.get());
+      // The borrowed lease is still the caller's until it closes it.
+      assertThrows(
+          ArchiveException.class, () -> budget.reserve(HEAP_CEILING, NATIVE_CEILING, 0, 0));
+      lease.close();
       try (ResourceBudget.Lease returned = budget.reserve(HEAP_CEILING, NATIVE_CEILING, 0, 0)) {
         assertNotNull(returned);
       }
@@ -247,25 +293,27 @@ final class Lz4FrameTest {
     };
   }
 
-  /** Encodes under an isolated bounded ledger. */
+  /** Encodes on a lease of the encode cost from an isolated bounded ledger. */
   private static byte[] encode(byte[] data) throws Exception {
     var output = new ByteArrayOutputStream();
-    try (ResourceBudget budget = budget()) {
+    try (ResourceBudget budget = budget();
+        var lease = reserveEncoder(budget, data.length)) {
       long count =
-          Lz4Frame.encode(source(data), data.length, sink(output), () -> {}, budget, CONTEXT);
+          Lz4Frame.encode(source(data), data.length, sink(output), () -> {}, lease, CONTEXT);
       assertEquals(output.size(), count);
     }
     return output.toByteArray();
   }
 
-  /** Decodes under an isolated bounded ledger. */
+  /** Decodes on a lease of the one-shot decode credit from an isolated bounded ledger. */
   private static byte[] decode(byte[] frame, long size) throws Exception {
     var output = new ByteArrayOutputStream();
-    try (ResourceBudget budget = budget()) {
+    try (ResourceBudget budget = budget();
+        var lease = reserveOneShot(budget, frame.length, size)) {
       assertEquals(
           size,
           Lz4Frame.decode(
-              source(frame), frame.length, size, sink(output), () -> {}, budget, CONTEXT));
+              source(frame), frame.length, size, sink(output), () -> {}, lease, CONTEXT));
     }
     return output.toByteArray();
   }

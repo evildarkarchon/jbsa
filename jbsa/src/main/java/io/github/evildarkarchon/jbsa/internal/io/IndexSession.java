@@ -266,15 +266,15 @@ public final class IndexSession {
       throws IOException {
     if (length < 0 || length > 128) throw new IllegalArgumentException("Payload prefix extent");
     ExactIo.end(offset, streamSize, input.size(), context);
-    // The codec is admitted when the prefix first needs it, so a BSA frame's credit charges the
-    // provider admission pins. Raw LZ4 admits and reserves its own working set inside each decode
-    // call, so it charges nothing here.
-    AdmittedCodec admitted =
-        codec == PayloadCodec.LZ4_RAW ? null : AdmittedCodec.admit(codec, "decode", context);
-    AdmittedCodec.Cost cost =
-        admitted == null
-            ? new AdmittedCodec.Cost(0, 0)
-            : admitted.decodeCost(streamSize, decodedSize);
+    // A raw block's wire and dispatch sizes are refused before its cost is charged, as the
+    // self-reserving decoder did, so an oversized block reports its codec limit, not capacity.
+    if (codec == PayloadCodec.LZ4_RAW) Lz4Raw.admitDecode(streamSize, decodedSize, context);
+    // The codec is admitted when the prefix first needs it, so an LZ4 credit charges the provider
+    // admission pins. Every codec's decode cost, raw LZ4's whole block included, joins the prefix
+    // buffer in one reservation: the codecs never reserve, and one combined lease reaches the
+    // same total the old separate raw charge did, so the same ceiling is exhausted.
+    AdmittedCodec admitted = AdmittedCodec.admit(codec, "decode", context);
+    AdmittedCodec.Cost cost = admitted.decodeCost(streamSize, decodedSize);
     try (var credit = budget.reserve(length + cost.heapBytes(), cost.nativeBytes(), 0, 0)) {
       ByteBuffer prefix =
           ByteBuffer.allocate((int) Math.min(length, decodedSize))
@@ -295,7 +295,7 @@ public final class IndexSession {
                   }
                 },
                 () -> {},
-                budget,
+                credit,
                 context);
         case BSA_LZ4_FRAME -> {
           try (var decoder =
@@ -304,6 +304,7 @@ public final class IndexSession {
                   (relative, bytes) -> input.readExact(offset + relative, bytes),
                   streamSize,
                   decodedSize,
+                  credit,
                   context)) {
             while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
               // Only the bounded prefix is requested; complete validation belongs to content EOF.
@@ -317,6 +318,7 @@ public final class IndexSession {
                   (relative, bytes) -> input.readExact(offset + relative, bytes),
                   streamSize,
                   decodedSize,
+                  credit,
                   context)) {
             while (prefix.hasRemaining() && decoder.read(prefix) >= 0) {
               // Only the bounded prefix is requested; complete validation belongs to content EOF.

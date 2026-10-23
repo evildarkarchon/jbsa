@@ -31,15 +31,21 @@ public final class Lz4LaunchProbe {
   public static void main(String[] args) throws Exception {
     var context = IoContext.of(Path.of("probe.bin"), Operation.OPEN);
     BethesdaArchives.standard();
-    long size =
-        JdkZlib.encode(
-            // Admitting zlib has no side effect, so the zlib-only launch still never touches LZ4.
-            AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", context),
-            Channels.newChannel(new ByteArrayInputStream(new byte[] {42})),
-            1,
-            (offset, bytes) -> bytes.position(bytes.limit()),
-            () -> {},
-            context);
+    long size;
+    // A budget's native ceilings come from LZ4-free module facts, so charging zlib loads no LZ4.
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), context);
+        var lease = budget.reserve(JdkZlib.ENCODE_HEAP_BYTES, JdkZlib.ENCODE_NATIVE_BYTES, 0, 0)) {
+      size =
+          JdkZlib.encode(
+              // Admitting zlib has no side effect, so the zlib-only launch still never touches LZ4.
+              AdmittedCodec.admit(PayloadCodec.ZLIB, "encode", context),
+              Channels.newChannel(new ByteArrayInputStream(new byte[] {42})),
+              1,
+              (offset, bytes) -> bytes.position(bytes.limit()),
+              () -> {},
+              lease,
+              context);
+    }
     if (size == 0) throw new AssertionError("zlib disabled");
     if (args[0].startsWith("profiles")) {
       System.out.println(profiles(context));
@@ -83,13 +89,16 @@ public final class Lz4LaunchProbe {
   private static String profiles(IoContext context) throws Exception {
     byte[] invalid = {1, 2, 3, 4};
     String zlib;
-    try (var decoder =
-        JdkZlib.decoder(
-            AdmittedCodec.admit(PayloadCodec.ZLIB, "decode", context),
-            source(invalid),
-            invalid.length,
-            8,
-            context)) {
+    try (var budget = new ResourceBudget(ResourceLimits.standard(), context);
+        var lease = budget.reserve(JdkZlib.DECODE_HEAP_BYTES, JdkZlib.DECODE_NATIVE_BYTES, 0, 0);
+        var decoder =
+            JdkZlib.decoder(
+                AdmittedCodec.admit(PayloadCodec.ZLIB, "decode", context),
+                source(invalid),
+                invalid.length,
+                8,
+                lease,
+                context)) {
       decoder.read(ByteBuffer.allocate(8));
       throw new AssertionError("invalid zlib decoded");
     } catch (ArchiveException failure) {
@@ -116,30 +125,41 @@ public final class Lz4LaunchProbe {
     for (int index = 0; index < data.length; index++) data[index] = (byte) (index % 251);
     try (var budget =
         new ResourceBudget(ResourceLimits.standard(), context, 64L << 20, 64L << 20, 0)) {
-      byte[] block =
-          collect(
-              sink -> Lz4Raw.encode(source(data), data.length, sink, () -> {}, budget, context));
+      // Each call runs on a lease of the cost its admitted codec publishes, as production's do.
+      AdmittedCodec rawEncoder = AdmittedCodec.admit(PayloadCodec.LZ4_RAW, "encode", context);
+      byte[] block;
+      try (var lease = reserve(budget, rawEncoder.encodeCost(data.length))) {
+        block =
+            collect(
+                sink -> Lz4Raw.encode(source(data), data.length, sink, () -> {}, lease, context));
+      }
       ByteBuffer decoded = ByteBuffer.allocate(data.length);
-      Lz4Raw.decode(
-          source(block),
-          block.length,
-          data.length,
-          (offset, bytes) -> decoded.put(bytes),
-          () -> {},
-          budget,
-          context);
+      AdmittedCodec rawDecoder = AdmittedCodec.admit(PayloadCodec.LZ4_RAW, "decode", context);
+      try (var lease = reserve(budget, rawDecoder.decodeCost(block.length, data.length))) {
+        Lz4Raw.decode(
+            source(block),
+            block.length,
+            data.length,
+            (offset, bytes) -> decoded.put(bytes),
+            () -> {},
+            lease,
+            context);
+      }
       if (!Arrays.equals(data, decoded.array())) throw new AssertionError("raw round trip");
       AdmittedCodec encoder = AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "encode", context);
-      byte[] frame =
-          collect(
-              sink ->
-                  BsaLz4Frame.encode(
-                      encoder, source(data), data.length, sink, () -> {}, budget, context));
+      byte[] frame;
+      try (var lease = reserve(budget, encoder.encodeCost(data.length))) {
+        frame =
+            collect(
+                sink ->
+                    BsaLz4Frame.encode(
+                        encoder, source(data), data.length, sink, () -> {}, lease, context));
+      }
       AdmittedCodec decoding = AdmittedCodec.admit(PayloadCodec.BSA_LZ4_FRAME, "decode", context);
-      AdmittedCodec.Cost cost = decoding.decodeCost(frame.length, data.length);
-      try (var lease = budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
+      try (var lease = reserve(budget, decoding.decodeCost(frame.length, data.length));
           var decoder =
-              BsaLz4Frame.decoder(decoding, source(frame), frame.length, data.length, context)) {
+              BsaLz4Frame.decoder(
+                  decoding, source(frame), frame.length, data.length, lease, context)) {
         // One spare byte keeps the destination non-full, so the decoder can report terminal EOF
         // (which also validates exact frame consumption) instead of a zero-length read.
         ByteBuffer output = ByteBuffer.allocate(data.length + 1);
@@ -151,6 +171,12 @@ public final class Lz4LaunchProbe {
           throw new AssertionError("frame round trip");
       }
     }
+  }
+
+  /** Reserves one codec call's published cost, which the call then borrows as its lease. */
+  private static ResourceBudget.Lease reserve(ResourceBudget budget, AdmittedCodec.Cost cost)
+      throws ArchiveException {
+    return budget.reserve(cost.heapBytes(), cost.nativeBytes(), 0, 0);
   }
 
   /** Supplies exactly each requested bounded window. */
