@@ -72,3 +72,31 @@ graphify-out/
 /.claude/worktrees
 
 docs/Architecture Reviews
+
+.gradle
+**/build/
+!**/src/**/build/
+# The root build/ holds tracked tools, not Gradle output (Gradle writes to target/). Recorded
+# conformance evidence binds those tools by path and SHA-256, so they cannot move.
+!/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Avoid ignore Gradle wrapper properties
+!gradle-wrapper.properties
+
+# Cache of project
+.gradletasknamecache
+
+# Kotlin Gradle plugin session data (written into build-logic/ by every build)
+**/.kotlin/
+
+# Eclipse Gradle plugin generated files
+# Eclipse Core
+.project
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
