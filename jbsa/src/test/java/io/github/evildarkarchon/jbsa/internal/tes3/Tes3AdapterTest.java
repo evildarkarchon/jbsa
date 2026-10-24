@@ -45,6 +45,19 @@ class Tes3AdapterTest {
     }
   }
 
+  /**
+   * TES3 declares the streamed Emission, which shares raw bytes per part and charges splits the
+   * decoded size; the split cost adds a fixed allowance and the name bytes.
+   */
+  @Test
+  void declaresStreamedEmission() throws Exception {
+    var admitted = admitted(PackOptions.standard());
+    assertEquals(new Admitted.Emission.Streamed<>(), admitted.emission());
+    assertEquals(200, admitted.splitCost().fixed());
+    var key = admitted.plan(List.of(entry("abc", 1, 1)), CONTEXT).getFirst().key();
+    assertEquals(3, admitted.splitCost().nameCost().applyAsLong(key));
+  }
+
   /** A declared size beyond u32 fails in plan, before splitting or the decoded-size limit. */
   @Test
   void planRejectsSizesBeyondU32() throws Exception {

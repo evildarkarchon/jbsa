@@ -24,6 +24,10 @@ _Avoid_: Volume, chunk, split file
 Identical payloads within a pack referencing one stored copy instead of repeating it. Its scope (one Archive Part or the whole archive set) and its comparison key are intrinsic to the Archive Family, because they determine output bytes. A digest only shortlists candidates; sharing always requires exact byte equality.
 _Avoid_: Deduplication, compression
 
+**Emission**:
+How a pack produces an Archive Family's stored payloads relative to splitting: streamed while each Archive Part stages, or stabilized for the whole set before splitting, either as per-part stored records or as archive-set raw owners. It is intrinsic to the Archive Family, because split cost and Content Sharing scope depend on it.
+_Avoid_: Emission mode, pack strategy
+
 **Payload Codec**:
 The wire encoding of one stored entry payload: stored, zlib, the BSA LZ4 frame, or raw LZ4. Which Payload Codecs an entry may use is fixed by its Archive Family; which provider performs the encoding is fixed by the Codec Profile, never by the caller.
 _Avoid_: Compression type, codec provider

@@ -9,6 +9,7 @@ import io.github.evildarkarchon.jbsa.internal.io.PackSources;
 import io.github.evildarkarchon.jbsa.internal.io.PublicationTransaction;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.Channels;
@@ -28,7 +29,10 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Drives {@link PackPipeline} directly through the test-only {@link MemoryEncoder} adapter, so the
@@ -39,6 +43,12 @@ class PackPipelineTest {
 
   /** Counts every payload factory invocation made by the current test's sources. */
   private final AtomicInteger opens = new AtomicInteger();
+
+  /**
+   * The current test's source opens, as {@code "open <name>"}, interleaved with whatever else the
+   * test records, such as Progress Snapshots.
+   */
+  private final List<Object> trace = Collections.synchronizedList(new ArrayList<>());
 
   /**
    * The fixed sequence: admit, source planning, adapter plan, unmatched overrides, the empty entry
@@ -196,17 +206,59 @@ class PackPipelineTest {
     assertFalse(Files.exists(request.destination()), "an output was left");
   }
 
-  /** The three Splitting arms, driven by the adapter's declarative split cost. */
-  @Test
-  void splitArmsFormWholeEntryParts() throws Exception {
-    List<Admitted.Planned<String>> planned =
-        List.of(planned("a", 3), planned("b", 3), planned("c", 1));
-    assertEquals(List.of(3), sizes(planned, 0, new PackOptions.Splitting.FamilyDefault()));
-    assertEquals(List.of(1, 2), sizes(planned, 4, new PackOptions.Splitting.FamilyDefault()));
-    assertEquals(List.of(3), sizes(planned, 4, new PackOptions.Splitting.UpToBytes(0)));
-    assertEquals(List.of(2, 1), sizes(planned, 0, new PackOptions.Splitting.UpToBytes(6)));
-    assertEquals(List.of(1, 1, 1), sizes(planned, 0, new PackOptions.Splitting.LegacyPerEntry()));
+  /**
+   * The Streamed Emission carries stored, unframed payloads only. A streamed plan holding a
+   * compressed ({@code .z}) or framed ({@code .f}) entry is a programmer error caught once, before
+   * splitting and before any source is read: INTERNAL at PREFLIGHT, then zero CLEANUP progress, and
+   * no part is published. The stored entry {@code b} comes first in output order, so a check made
+   * while staging would already have read it.
+   */
+  @ParameterizedTest
+  @ValueSource(strings = {"a.z", "a.f"})
+  void streamedPlanOfANonStoredOrFramedEntryFailsFastAsInternal(String unsupported)
+      throws IOException {
+    var snapshots = new ArrayList<ProgressSnapshot>();
+    var request =
+        request(
+            temporary.resolve("streamed.mem"),
+            options(1, true, Map.of()),
+            limits(10),
+            1,
+            source(unsupported, 2),
+            source("b", 2));
 
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                PackPipeline.pack(
+                    request,
+                    new OperationControl(snapshots::add, () -> false),
+                    new MemoryEncoder(0)));
+
+    assertInternal(failure, OperationPhase.PREFLIGHT);
+    assertInstanceOf(IllegalStateException.class, failure.primaryFailure().cause().orElseThrow());
+    assertEquals(
+        List.of(
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 0, OptionalLong.empty()),
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 1, OptionalLong.empty()),
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 2, OptionalLong.empty()),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, OptionalLong.empty()),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, OptionalLong.of(0))),
+        snapshots);
+    assertEquals(0, opens.get(), "a source was read");
+    // The one-byte target would split each entry into its own part; neither part may exist.
+    try (var left = Files.list(temporary)) {
+      assertEquals(List.of(), left.toList(), "a part was published");
+    }
+  }
+
+  /**
+   * An explicit target splits a streamed pack into whole-entry parts, published under numbered
+   * names. The Splitting arms themselves are pinned by {@code SplitPlannerTest}.
+   */
+  @Test
+  void explicitSplitTargetPublishesNumberedParts() throws Exception {
     var report =
         PackPipeline.pack(
             request(
@@ -221,46 +273,6 @@ class PackPipelineTest {
     assertEquals(2, report.archiveParts().size());
     assertTrue(Files.exists(temporary.resolve("split.mem")));
     assertTrue(Files.exists(temporary.resolve("split2.mem")));
-  }
-
-  /**
-   * D9: a stabilized plan's preflight counts exactly the parts it is certain to publish. Predicted
-   * stored sizes split exactly; with an unknown encoded size only "never splits" and "no two
-   * entries fit one part" are certain, and any other plan is certain only of its first part.
-   */
-  @Test
-  void knownPartCountCoversOnlyCertainParts() throws Exception {
-    var context = IoContext.destination(Path.of("x").toAbsolutePath(), Operation.PACK);
-    var stored = List.of(planned("a", 3), planned("b", 3), planned("c", 1));
-    var cheap = new MemoryEncoder(4, false, new ArrayList<>(), 0).admit(null, context);
-    assertEquals(
-        2,
-        PackPipeline.knownPartCount(
-            stored, cheap, new PackOptions.Splitting.FamilyDefault(), false, context));
-
-    var encoded = List.of(encoded("a", 3), encoded("b", 3), encoded("c", 1));
-    assertEquals(
-        1,
-        PackPipeline.knownPartCount(
-            encoded, cheap, new PackOptions.Splitting.UpToBytes(0), false, context));
-    // A zero minimum cost lets entries share a part, so only the first part is certain.
-    assertEquals(
-        1,
-        PackPipeline.knownPartCount(
-            encoded, cheap, new PackOptions.Splitting.LegacyPerEntry(), false, context));
-    var costly = new MemoryEncoder(0, false, new ArrayList<>(), 200).admit(null, context);
-    assertEquals(
-        3,
-        PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.LegacyPerEntry(), false, context));
-    assertEquals(
-        3,
-        PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.UpToBytes(200), false, context));
-    assertEquals(
-        1,
-        PackPipeline.knownPartCount(
-            encoded, costly, new PackOptions.Splitting.UpToBytes(201), false, context));
   }
 
   /** Preflight checks exactly the known part set before any source payload is opened. */
@@ -603,6 +615,333 @@ class PackPipelineTest {
     assertEquals(2, report.archiveParts().size());
   }
 
+  /**
+   * Per-part stored records share only when their complete stored records, frame included, are
+   * byte-identical and they land in one Archive Part. A record shared in one part still costs its
+   * full stored size when splitting, and each part that holds it keeps its own copy.
+   */
+  @Test
+  void perPartRecordsShareIdenticalRecordsWithinOnePartOnly() throws Exception {
+    Path whole = temporary.resolve("records.mem");
+    PackPipeline.pack(
+        request(
+            whole,
+            options(0, true, Map.of()),
+            ResourceLimits.standard(),
+            1,
+            source("x", new byte[] {1, 2, 3, 4}),
+            source("y", new byte[] {1, 2, 3, 4}),
+            source("zz", new byte[] {1, 2, 3, 4}),
+            source("w", new byte[] {1, 2, 3, 5})),
+        OperationControl.standard(),
+        MemoryEncoder.perPartRecords(Long.MAX_VALUE));
+    var records = MemoryEncoder.read(whole);
+    // Output order is w, zz, y, x. x's record equals y's, so x references y's copy; zz has the
+    // same payload under a two-byte name, so its frame makes it a distinct record.
+    assertEquals(List.of("w", "zz", "y", "x"), records.stream().map(Record::name).toList());
+    assertEquals(records.get(2).offset(), records.get(3).offset());
+    assertEquals(3, records.stream().map(Record::offset).distinct().count());
+    assertEquals(8 + 4 * 16 + 3 * 5, Files.size(whole));
+    assertArrayEquals(new byte[] {1, 1, 2, 3, 5}, records.get(0).payload());
+    assertArrayEquals(new byte[] {2, 1, 2, 3, 4}, records.get(1).payload());
+    assertArrayEquals(new byte[] {1, 1, 2, 3, 4}, records.get(2).payload());
+    assertArrayEquals(new byte[] {1, 1, 2, 3, 4}, records.get(3).payload());
+
+    // Two five-byte records fit a ten-byte target, and the second shares the first's copy.
+    Path fits = temporary.resolve("fits.mem");
+    var together =
+        PackPipeline.pack(
+            request(
+                fits,
+                options(10, true, Map.of()),
+                ResourceLimits.standard(),
+                1,
+                source("x", new byte[] {1, 2, 3, 4}),
+                source("y", new byte[] {1, 2, 3, 4})),
+            OperationControl.standard(),
+            MemoryEncoder.perPartRecords(Long.MAX_VALUE));
+    assertEquals(1, together.archiveParts().size());
+    assertEquals(8 + 2 * 16 + 5, Files.size(fits));
+
+    // A nine-byte target splits them even though sharing would have stored only five bytes, and
+    // each part keeps its own copy of the record.
+    var apart =
+        PackPipeline.pack(
+            request(
+                temporary.resolve("apart.mem"),
+                options(9, true, Map.of()),
+                ResourceLimits.standard(),
+                1,
+                source("x", new byte[] {1, 2, 3, 4}),
+                source("y", new byte[] {1, 2, 3, 4})),
+            OperationControl.standard(),
+            MemoryEncoder.perPartRecords(Long.MAX_VALUE));
+    assertEquals(2, apart.archiveParts().size());
+    for (var part : apart.archiveParts()) {
+      assertEquals(8 + 16 + 5, part.byteSize());
+      assertArrayEquals(
+          new byte[] {1, 1, 2, 3, 4}, MemoryEncoder.read(part.path()).getFirst().payload());
+    }
+  }
+
+  /**
+   * Splitting charges each record's exact stabilized stored size, frame included, which for an
+   * encoded record is known only after stabilization. The sizes come from an unsplit pack's table,
+   * and a target of exactly their sum keeps both records together while one byte less splits them.
+   */
+  @Test
+  void perPartRecordSplitChargesTheExactStabilizedStoredSize() throws Exception {
+    byte[] zeros = new byte[4096];
+    byte[] pattern = new byte[4096];
+    for (int index = 0; index < pattern.length; index++) pattern[index] = (byte) (index % 7);
+
+    Path whole = temporary.resolve("measured.mem");
+    PackPipeline.pack(
+        request(
+            whole,
+            options(0, false, Map.of()),
+            ResourceLimits.standard(),
+            1,
+            source("a.z", zeros),
+            source("b.z", pattern)),
+        OperationControl.standard(),
+        MemoryEncoder.perPartRecords(Long.MAX_VALUE));
+    var records = MemoryEncoder.read(whole);
+    assertEquals(List.of("b.z", "a.z"), records.stream().map(Record::name).toList());
+    long first = records.get(0).payload().length;
+    long second = records.get(1).payload().length;
+    for (Record record : records) {
+      assertEquals(3, record.payload()[0], "each record starts with its frame");
+      assertTrue(record.payload().length < 4096, "a zlib record is smaller than its source");
+    }
+
+    var together =
+        PackPipeline.pack(
+            request(
+                temporary.resolve("exact.mem"),
+                options(first + second, false, Map.of()),
+                ResourceLimits.standard(),
+                1,
+                source("a.z", zeros),
+                source("b.z", pattern)),
+            OperationControl.standard(),
+            MemoryEncoder.perPartRecords(Long.MAX_VALUE));
+    assertEquals(1, together.archiveParts().size());
+
+    var split =
+        PackPipeline.pack(
+            request(
+                temporary.resolve("short.mem"),
+                options(first + second - 1, false, Map.of()),
+                ResourceLimits.standard(),
+                1,
+                source("a.z", zeros),
+                source("b.z", pattern)),
+            OperationControl.standard(),
+            MemoryEncoder.perPartRecords(Long.MAX_VALUE));
+    assertEquals(2, split.archiveParts().size());
+    assertEquals(8 + 16 + first, split.archiveParts().get(0).byteSize());
+    assertEquals(8 + 16 + second, split.archiveParts().get(1).byteSize());
+  }
+
+  /**
+   * A record {@code checkStored} rejects fails at its own PROCESSING ordinal, as soon as it is
+   * stabilized: no later entry's source is opened, and nothing is published.
+   */
+  @Test
+  void perPartRecordCheckStoredFailureKeepsItsProcessingOrdinal() {
+    Path target = temporary.resolve("rejected.mem");
+    // Output order is c, b, a; b's record is its one-byte frame plus three bytes, over the limit.
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                PackPipeline.pack(
+                    request(
+                        target,
+                        options(0, false, Map.of()),
+                        ResourceLimits.standard(),
+                        1,
+                        source("a", 1),
+                        source("b", 3),
+                        source("c", 1)),
+                    OperationControl.standard(),
+                    MemoryEncoder.perPartRecords(3)));
+    assertEquals(FailureKind.POLICY, failure.kind());
+    assertEquals(
+        Optional.of("memory.record-too-large"), failure.primaryFailure().diagnosticIdentifier());
+    assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
+    assertEquals(OptionalLong.of(1), failure.primaryFailure().ordinal());
+    assertEquals(List.of("open c", "open b"), trace);
+    assertFalse(Files.exists(target));
+  }
+
+  /**
+   * Stabilization is processing work: progress enters PROCESSING before the first source is read,
+   * and publication counts its entries in that same phase instead of entering it again.
+   */
+  @Test
+  void perPartRecordsEnterProcessingBeforeReadingAndPublishInIt() throws Exception {
+    var control = new OperationControl(trace::add, () -> false);
+    PackPipeline.pack(
+        request(
+            temporary.resolve("progress.mem"),
+            options(0, false, Map.of()),
+            ResourceLimits.standard(),
+            1,
+            source("a", 1),
+            source("b", 1)),
+        control,
+        MemoryEncoder.perPartRecords(Long.MAX_VALUE));
+    var none = OptionalLong.empty();
+    assertEquals(
+        List.of(
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 0, none),
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 1, none),
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 2, none),
+            snapshot(OperationPhase.PREFLIGHT, ProgressMetric.ENTRIES, 2, OptionalLong.of(2)),
+            snapshot(OperationPhase.PROCESSING, ProgressMetric.ENTRIES, 0, none),
+            snapshot(OperationPhase.PROCESSING, ProgressMetric.BYTES, 0, none),
+            // Stabilization reads every source in output order (b, a) before any part stages.
+            "open b",
+            "open a",
+            snapshot(OperationPhase.PROCESSING, ProgressMetric.BYTES, 1, none),
+            snapshot(OperationPhase.PROCESSING, ProgressMetric.ENTRIES, 1, none),
+            snapshot(OperationPhase.PROCESSING, ProgressMetric.BYTES, 2, none),
+            snapshot(OperationPhase.PROCESSING, ProgressMetric.ENTRIES, 2, none),
+            snapshot(OperationPhase.PROCESSING, ProgressMetric.ENTRIES, 2, OptionalLong.of(2)),
+            snapshot(OperationPhase.PROCESSING, ProgressMetric.BYTES, 2, OptionalLong.of(2)),
+            snapshot(OperationPhase.PUBLISHING, ProgressMetric.ARTIFACTS, 0, none),
+            snapshot(OperationPhase.PUBLISHING, ProgressMetric.ARTIFACTS, 1, none),
+            snapshot(OperationPhase.PUBLISHING, ProgressMetric.ARTIFACTS, 1, OptionalLong.of(1)),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 0, none),
+            snapshot(OperationPhase.CLEANUP, ProgressMetric.ARTIFACTS, 1, OptionalLong.of(1))),
+        trace);
+  }
+
+  /**
+   * The stable spool outlives every part's staging and closes before the Publication Commit: it is
+   * still on disk while the last part counts its last entry, and gone, with nothing published yet,
+   * once publication enters PUBLISHING.
+   */
+  @Test
+  void perPartRecordSpoolClosesAfterTheLastPartStagesAndBeforeCommit() throws Throwable {
+    Path spool = Files.createDirectory(temporary.resolve("spool"));
+    Path target = temporary.resolve("spooled.mem");
+    var observed = new ArrayList<SpoolObservation>();
+    var control =
+        new OperationControl(
+            snapshot ->
+                observed.add(
+                    new SpoolObservation(snapshot, holdsSpool(spool), Files.exists(target))),
+            () -> false);
+    // Three 40 001-byte records outgrow the spool's 64 KiB heap window, so it spills to a file.
+    // The 80 002-byte target puts c and b in the first part and a in the second.
+    var report =
+        withSpoolDirectory(
+            spool,
+            () ->
+                PackPipeline.pack(
+                    request(
+                        target,
+                        options(80_002, false, Map.of()),
+                        ResourceLimits.standard(),
+                        1,
+                        source("a", 40_000),
+                        source("b", 40_000),
+                        source("c", 40_000)),
+                    control,
+                    MemoryEncoder.perPartRecords(Long.MAX_VALUE)));
+    assertEquals(2, report.archiveParts().size());
+
+    var lastEntry =
+        observed.stream()
+            .filter(
+                seen ->
+                    seen.snapshot().phase() == OperationPhase.PROCESSING
+                        && seen.snapshot().metric() == ProgressMetric.ENTRIES
+                        && seen.snapshot().completed() == 3
+                        && seen.snapshot().total().isEmpty())
+            .findFirst()
+            .orElseThrow();
+    assertTrue(lastEntry.spool(), "the spool closed before the last part staged");
+    var publishing =
+        observed.stream()
+            .filter(seen -> seen.snapshot().phase() == OperationPhase.PUBLISHING)
+            .findFirst()
+            .orElseThrow();
+    assertFalse(publishing.spool(), "the spool was still open entering PUBLISHING");
+    assertFalse(publishing.published(), "a part was published before the spool closed");
+    assertFalse(holdsSpool(spool));
+    assertTrue(Files.exists(target));
+  }
+
+  /**
+   * A failure during stabilization leaves the spool to the operation template, which closes it with
+   * every other registered resource before CLEANUP begins; the failure stays primary with no
+   * cleanup evidence behind it.
+   */
+  @Test
+  void perPartRecordSpoolClosesThroughTheTemplateAfterAStabilizationFailure() throws Throwable {
+    Path spool = Files.createDirectory(temporary.resolve("spool"));
+    Path target = temporary.resolve("failed.mem");
+    var spoolAtFailure = new AtomicBoolean();
+    PackSource failing =
+        new PackSource.GeneratedEntry(
+            "f",
+            1,
+            () -> {
+              spoolAtFailure.set(holdsSpool(spool));
+              return new ReadableByteChannel() {
+                public int read(ByteBuffer bytes) throws IOException {
+                  throw new IOException("read");
+                }
+
+                public boolean isOpen() {
+                  return true;
+                }
+
+                public void close() {
+                  // Nothing to release.
+                }
+              };
+            });
+    var cleanup = new ArrayList<Boolean>();
+    var control =
+        new OperationControl(
+            snapshot -> {
+              if (snapshot.phase() == OperationPhase.CLEANUP) cleanup.add(holdsSpool(spool));
+            },
+            () -> false);
+    // Output order is a, b, f: a and b spill the spool to a file before f's read fails.
+    var failure =
+        assertThrows(
+            ArchiveException.class,
+            () ->
+                withSpoolDirectory(
+                    spool,
+                    () ->
+                        PackPipeline.pack(
+                            request(
+                                target,
+                                options(0, false, Map.of()),
+                                ResourceLimits.standard(),
+                                1,
+                                failing,
+                                source("b", 40_000),
+                                source("a", 40_000)),
+                            control,
+                            MemoryEncoder.perPartRecords(Long.MAX_VALUE))));
+    assertEquals(FailureKind.SOURCE, failure.kind());
+    assertEquals(OperationPhase.PROCESSING, failure.primaryFailure().phase());
+    assertEquals(OptionalLong.of(2), failure.primaryFailure().ordinal());
+    assertEquals(List.of(), failure.secondaryFailures());
+    assertTrue(spoolAtFailure.get(), "the spool had not spilled when the failing source opened");
+    assertEquals(List.of(false, false), cleanup, "the spool was open when CLEANUP began");
+    assertFalse(holdsSpool(spool));
+    assertFalse(Files.exists(target));
+  }
+
   /** Asserts a rejection before any source opens or output exists, returning the failure. */
   private ArchiveException assertRejected(
       MemoryEncoder encoder, PackRequest request, FailureKind kind, String identifier) {
@@ -638,42 +977,42 @@ class PackPipelineTest {
     assertEquals(List.of(), failure.artifacts());
   }
 
+  /**
+   * Runs {@code body} with {@code java.io.tmpdir} pointed at {@code scratch}, the directory where
+   * the pipeline opens its stable spool, so a test can watch the spool's spill file. Test classes
+   * run one at a time in one JVM, so nothing else reads the property meanwhile.
+   */
+  private static <T> T withSpoolDirectory(Path scratch, ThrowingSupplier<T> body) throws Throwable {
+    String previous = System.getProperty("java.io.tmpdir");
+    System.setProperty("java.io.tmpdir", scratch.toString());
+    try {
+      return body.get();
+    } finally {
+      System.setProperty("java.io.tmpdir", previous);
+    }
+  }
+
+  /** Returns whether the spool directory holds a spill file. */
+  private static boolean holdsSpool(Path spool) {
+    try (var files = Files.list(spool)) {
+      return files.findAny().isPresent();
+    } catch (IOException failure) {
+      throw new UncheckedIOException(failure);
+    }
+  }
+
+  /**
+   * One Progress Snapshot with what the file system held when it was delivered.
+   *
+   * @param spool whether the stable spool's spill file existed
+   * @param published whether the first part was visible at its destination
+   */
+  private record SpoolObservation(ProgressSnapshot snapshot, boolean spool, boolean published) {}
+
   /** One pack Progress Snapshot. */
   private static ProgressSnapshot snapshot(
       OperationPhase phase, ProgressMetric metric, long completed, OptionalLong total) {
     return new ProgressSnapshot(Operation.PACK, phase, metric, completed, total);
-  }
-
-  /** Returns part sizes for a split under the given family default target. */
-  private static List<Integer> sizes(
-      List<Admitted.Planned<String>> planned, long familyDefault, PackOptions.Splitting splitting)
-      throws ArchiveException {
-    var admitted =
-        new MemoryEncoder(familyDefault)
-            .admit(null, IoContext.destination(Path.of("x").toAbsolutePath(), Operation.PACK));
-    return PackPipeline.split(planned, admitted, splitting).stream().map(List::size).toList();
-  }
-
-  /** A planned stored entry of a given declared size, whose payload is never read. */
-  private static Admitted.Planned<String> planned(String name, long size) {
-    var entry =
-        new PackSources.Entry(
-            name,
-            name,
-            name.getBytes(StandardCharsets.US_ASCII),
-            0,
-            size,
-            (reader, processing) -> {
-              throw new AssertionError("Splitting must not read payloads");
-            },
-            IoContext.generated(name, Operation.PACK));
-    return new Admitted.Planned<>(entry, name, PayloadCodec.STORED, new byte[0]);
-  }
-
-  /** A planned zlib entry, whose stored size stays unknown until stabilization. */
-  private static Admitted.Planned<String> encoded(String name, long size) {
-    var stored = planned(name, size);
-    return new Admitted.Planned<>(stored.source(), name, PayloadCodec.ZLIB, new byte[0]);
   }
 
   /** Builds a request; the family and encoding are ignored by the memory adapter. */
@@ -730,13 +1069,14 @@ class PackPipelineTest {
     return source(name, new byte[(int) length]);
   }
 
-  /** A counted source with fixed bytes. */
+  /** A counted source with fixed bytes, which also traces {@code "open <name>"} when opened. */
   private PackSource source(String name, byte[] bytes) {
     return new PackSource.GeneratedEntry(
         name,
         bytes.length,
         () -> {
           opens.incrementAndGet();
+          trace.add("open " + name);
           return Channels.newChannel(new ByteArrayInputStream(bytes));
         });
   }
@@ -770,23 +1110,29 @@ class PackPipelineTest {
    * size, and an 8-byte NUL-padded name; payloads follow. Output order reverses Logical Plan Order,
    * so tests can tell the two apart, and the name "bad" breaks its only per-entry rule. The name
    * "boom" makes {@code plan} throw an {@link AssertionError}, standing in for a programmer error.
+   * Under the Streamed Emission, a name ending in {@code .z} is planned zlib-encoded and one ending
+   * in {@code .f} is planned with a one-byte frame, both of which the Streamed Emission rejects.
    *
    * @param defaultSplitTarget the FamilyDefault split target
    * @param refuse whether admission fails with UNSUPPORTED {@code memory.admit-refused}
    * @param events the adapter calls made, in order
    * @param fixedCost the fixed per-entry split cost
-   * @param setWide whether payloads are stabilized and share raw owners across the archive set with
-   *     a first-owner split cost, instead of streaming with per-part sharing
+   * @param emission the Emission the adapter declares, which fixes its Content Sharing scope and
+   *     basis and its split payload cost: Streamed (the TES3 settings), PerPartRecords (versioned
+   *     BSA), or SetOwners without a chunker (General BA2)
    * @param readback whether every staged part is read back; no reader recognizes MEM1, so a
    *     readback always fails
+   * @param maxRecord the largest stabilized stored record {@code checkStored} accepts; a larger one
+   *     fails with POLICY {@code memory.record-too-large}
    */
   private record MemoryEncoder(
       long defaultSplitTarget,
       boolean refuse,
       List<String> events,
       long fixedCost,
-      boolean setWide,
-      boolean readback)
+      Admitted.Emission<String> emission,
+      boolean readback,
+      long maxRecord)
       implements FamilyAdapter<String> {
     private static final int HEADER = 8;
     private static final int RECORD = 16;
@@ -800,13 +1146,45 @@ class PackPipelineTest {
     }
 
     MemoryEncoder(long defaultSplitTarget, boolean refuse, List<String> events, long fixedCost) {
-      this(defaultSplitTarget, refuse, events, fixedCost, false, false);
+      this(
+          defaultSplitTarget,
+          refuse,
+          events,
+          fixedCost,
+          new Admitted.Emission.Streamed<>(),
+          false,
+          Long.MAX_VALUE);
     }
 
     /** A set-wide stabilized encoder, optionally reading every part back. */
     static MemoryEncoder setWide(boolean readback) {
       return new MemoryEncoder(
-          0, false, Collections.synchronizedList(new ArrayList<>()), 0, true, readback);
+          0,
+          false,
+          Collections.synchronizedList(new ArrayList<>()),
+          0,
+          new Admitted.Emission.SetOwners<>(Optional.empty()),
+          readback,
+          Long.MAX_VALUE);
+    }
+
+    /**
+     * A per-part stored-record encoder, the versioned BSA settings. Each record is framed by one
+     * byte holding its name's length, so equal payloads under names of different lengths are
+     * distinct stored records; a name ending in {@code .z} is zlib-encoded, so its stored size is
+     * known only once stabilized.
+     *
+     * @param maxRecord the largest stored record, frame included, that {@code checkStored} accepts
+     */
+    static MemoryEncoder perPartRecords(long maxRecord) {
+      return new MemoryEncoder(
+          0,
+          false,
+          Collections.synchronizedList(new ArrayList<>()),
+          0,
+          new Admitted.Emission.PerPartRecords<>(),
+          false,
+          maxRecord);
     }
 
     @Override
@@ -830,20 +1208,21 @@ class PackPipelineTest {
         }
 
         @Override
-        public Emission emission() {
-          return setWide ? Emission.STABILIZED : Emission.STREAMING;
+        public Emission<String> emission() {
+          return emission;
         }
 
         @Override
         public SplitCost<String> splitCost() {
-          return new SplitCost<>(
-              fixedCost, name -> 0, setWide ? PayloadCost.UNIQUE_STORED : PayloadCost.DECODED);
+          return new SplitCost<>(fixedCost, name -> 0);
         }
 
         @Override
-        public Sharing sharing() {
-          return new Sharing(
-              setWide ? Sharing.Scope.ARCHIVE_SET : Sharing.Scope.PER_PART, Sharing.Basis.RAW);
+        public void checkStored(Planned<String> entry, IoContext processing)
+            throws ArchiveException {
+          // Stands in for a wire field too narrow for the record's exact stabilized size.
+          if (entry.storedSize() > maxRecord)
+            throw processing.failure(FailureKind.POLICY, "memory.record-too-large", null);
         }
 
         @Override
@@ -863,8 +1242,22 @@ class PackPipelineTest {
               throw context.failure(FailureKind.POLICY, "memory.bad-name", null);
             // Stands in for a programmer error inside an adapter, which no family rule describes.
             if (source.displayName().equals("boom")) throw new AssertionError("plan bug");
-            planned.add(
-                new Planned<>(source, source.displayName(), PayloadCodec.STORED, new byte[0]));
+            String name = source.displayName();
+            boolean streamed = emission instanceof Emission.Streamed<String>;
+            if (emission instanceof Emission.PerPartRecords<String>)
+              planned.add(
+                  new Planned<>(
+                      source,
+                      name,
+                      name.endsWith(".z") ? PayloadCodec.ZLIB : PayloadCodec.STORED,
+                      new byte[] {(byte) name.length()}));
+            // A streamed plan of a compressed or framed entry stands in for an adapter bug: the
+            // Streamed Emission carries stored, unframed payloads only.
+            else if (streamed && name.endsWith(".z"))
+              planned.add(new Planned<>(source, name, PayloadCodec.ZLIB, new byte[0]));
+            else if (streamed && name.endsWith(".f"))
+              planned.add(new Planned<>(source, name, PayloadCodec.STORED, new byte[] {1}));
+            else planned.add(new Planned<>(source, name, PayloadCodec.STORED, new byte[0]));
           }
           Collections.reverse(planned);
           return planned;
